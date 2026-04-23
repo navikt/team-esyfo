@@ -23,7 +23,27 @@ export default withMermaid(defineConfig({
       }
     ],
     search: {
-      provider: 'local'
+      provider: 'local',
+      options: {
+        detailedView: true,
+        translations: {
+          button: {
+            buttonText: 'Søk',
+            buttonAriaLabel: 'Søk'
+          },
+          modal: {
+            displayDetails: 'Vis detaljert liste',
+            resetButtonTitle: 'Nullstill søk',
+            backButtonTitle: 'Lukk søk',
+            noResultsText: 'Ingen resultater for',
+            footer: {
+              selectText: 'velg',
+              navigateText: 'naviger',
+              closeText: 'lukk'
+            }
+          }
+        }
+      }
     },
     editLink: {
       pattern: 'https://github.com/navikt/team-esyfo/edit/main/docs/:path',
