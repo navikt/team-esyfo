@@ -16,14 +16,26 @@ concurrency:
 permissions: {}
 
 jobs:
+  guard:
+    name: Branch guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    permissions: {}
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - run: echo "Deploying from main"
+
   build:
     name: Build docs
+    needs: guard
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # Full history for VitePress lastUpdated
       - uses: jdx/mise-action@1648a78a9c255c6a277ba90b18bfddbac41e3881 # v4.0.1
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Install dependencies
