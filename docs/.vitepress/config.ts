@@ -10,6 +10,9 @@ export default defineConfig({
   themeConfig: {
     socialLinks: [
       { icon: 'github', link: 'https://github.com/navikt/team-esyfo' }
-    ]
+    ],
+    footer: {
+      message: 'Laget av Team eSyfo'
+    }
   }
 })
