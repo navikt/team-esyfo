@@ -1,13 +1,14 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   title: 'Team eSyfo',
   description: 'Dokumentasjon for Team eSyfo',
   lang: 'nb',
   appearance: 'dark',
   base: '/team-esyfo/',
   lastUpdated: true,
-  mermaid: true,
+  mermaid: {},
   themeConfig: {
     nav: [
       { text: 'Wiki', link: '/' },
@@ -65,4 +66,4 @@ export default defineConfig({
       message: 'Laget av Team eSyfo ❤️'
     }
   }
-})
+}))
