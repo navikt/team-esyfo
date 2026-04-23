@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
+// withMermaid registrerer <Mermaid>-komponenten automatisk via en Vite-transform.
+// IKKE importer/registrer Mermaid manuelt i theme/index.ts — det gir hvit side.
 export default withMermaid(defineConfig({
   title: 'Team eSyfo',
   description: 'Dokumentasjon for Team eSyfo',
