@@ -12,6 +12,10 @@ export default defineConfig({
     search: {
       provider: 'local'
     },
+    editLink: {
+      pattern: 'https://github.com/navikt/team-esyfo/edit/main/docs/:path',
+      text: 'Rediger denne siden på GitHub'
+    },
     sidebar: [
       {
         text: 'Wiki',
