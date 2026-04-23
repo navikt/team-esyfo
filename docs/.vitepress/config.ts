@@ -12,7 +12,7 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/navikt/team-esyfo' }
     ],
     footer: {
-      message: 'Laget av Team eSyfo'
+      message: 'Laget av Team eSyfo ❤️'
     }
   }
 })
