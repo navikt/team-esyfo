@@ -1,0 +1,21 @@
+[tools]
+pnpm = "10"
+
+[tasks."wiki:install"]
+description = "Install wiki dependencies"
+run = "pnpm install"
+dir = "docs"
+sources = ["package.json", "pnpm-lock.yaml"]
+outputs = ["node_modules/.modules.yaml"]
+
+[tasks."wiki:dev"]
+description = "Start wiki dev server"
+depends = ["wiki:install"]
+run = "pnpm dev"
+dir = "docs"
+
+[tasks."wiki:build"]
+description = "Build wiki for production"
+depends = ["wiki:install"]
+run = "pnpm build"
+dir = "docs"
