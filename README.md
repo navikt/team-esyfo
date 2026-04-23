@@ -9,6 +9,6 @@
 ```bash
 mise install          # Installerer Node og pnpm
 pnpm --dir docs install  # Installerer avhengigheter
-mise run dev          # Starter utviklerserver
-mise run build        # Bygger for produksjon
+mise run wiki:dev          # Starter utviklerserver
+mise run wiki:build        # Bygger for produksjon
 ```

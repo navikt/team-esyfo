@@ -1,12 +1,12 @@
 [tools]
 pnpm = "10"
 
-[tasks.dev]
-description = "Run the docs dev server"
+[tasks."wiki:dev"]
+description = "Start wiki dev server"
 run = "pnpm dev"
 dir = "docs"
 
-[tasks.build]
-description = "Build the docs site"
+[tasks."wiki:build"]
+description = "Build wiki for production"
 run = "pnpm build"
 dir = "docs"
