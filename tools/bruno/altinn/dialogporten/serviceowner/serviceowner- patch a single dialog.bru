@@ -1,0 +1,35 @@
+meta {
+  name: serviceowner: patch a single dialog
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/serviceowner/dialogs/:dialogId
+  body: json
+  auth: inherit
+}
+
+params:path {
+  dialogId: {{dialogId}}
+}
+
+headers {
+  Content-Type: application/json-patch+json
+  ~If-Match: 4d7928c1-357d-40e0-8110-a1635f665ed7
+}
+
+body:json {
+  [
+    {
+      "operationType": "Add",
+      "path": "/status",
+      "op": "Add",
+      "value": "Completed"
+    }
+  ]
+}
+
+docs {
+  See the [rfc](https://datatracker.ietf.org/doc/html/rfc6902) for details.
+}

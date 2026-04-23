@@ -1,0 +1,16 @@
+meta {
+  name: serviceowner
+  seq: 6
+}
+
+auth {
+  mode: inherit
+}
+
+docs {
+  ## Note: Remember to exhange token before using the endpoints. See collection Docs for further information.
+  
+  When creating a new dialog, the `dialogId` collection variable will be set on success. The other endpoints will use this in their requests by default, and must be changed if you want to use a pre-existing dialog.
+  
+  When using `PATCH`, make sure to do a `GET` request first. This allows the `If-Match` header to be set.
+}

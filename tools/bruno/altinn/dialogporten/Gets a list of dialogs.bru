@@ -1,0 +1,44 @@
+meta {
+  name: Gets a list of dialogs
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/serviceowner/dialogs
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~serviceResource: 
+  ~party: 
+  ~endUserId: 
+  ~extendedStatus: 
+  ~externalReference: 
+  ~status: 
+  ~deleted: 
+  ~createdAfter: 
+  ~createdBefore: 
+  ~updatedAfter: 
+  ~updatedBefore: 
+  ~contentUpdatedAfter: 
+  ~contentUpdatedBefore: 
+  ~dueAfter: 
+  ~dueBefore: 
+  ~visibleAfter: 
+  ~visibleBefore: 
+  ~process: 
+  ~systemLabel: 
+  ~excludeApiOnly: 
+  ~search: 
+  ~serviceOwnerLabels: 
+  ~searchLanguageCode: 
+  ~orderBy: 
+  ~continuationToken: 
+  ~limit: 
+}
+
+auth:bearer {
+  token: {{token}}
+}

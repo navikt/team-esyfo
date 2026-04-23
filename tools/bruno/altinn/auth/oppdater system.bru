@@ -1,0 +1,112 @@
+meta {
+  name: oppdater system
+  type: http
+  seq: 4
+}
+
+put {
+  url: https://platform.tt02.altinn.no/authentication/api/v1/systemregister/vendor/{{systemId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "{{systemId}}",
+    "vendor": {
+      "id": "0192:{{systemLeverandoerOrgnr}}"
+    },
+    "name": {
+      "en": "KpfSys",
+      "nb": "KpfSys",
+      "nn": "KpfSys"
+    },
+    "description": {
+      "en": "KpfSys is good stuff",
+      "nb": "KpfSys er bra",
+      "nn": "KpfSys er morosamt"
+    },
+    "rights": [
+      {
+        "action": "read",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_dialog"
+          }
+        ]
+      },
+      {
+        "action": "subscribe",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_dialog"
+          }
+        ]
+      },
+      {
+        "action": "access",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppfolgingsplan"
+          }
+        ]
+      },
+      {
+        "action": "access",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_dialogmote"
+          }
+        ]
+      },
+      {
+        "action": "access",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppgi-narmesteleder"
+          }
+        ]
+      },
+      {
+        "action": "read",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppgi-narmesteleder"
+          }
+        ]
+      },
+      {
+        "action": "subscribe",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppgi-narmesteleder"
+          }
+        ]
+      }
+    ],
+    "clientId": ["{{clientId}}"]
+  }
+}
+
+script:pre-request {
+  if (!bru.hasVar("clientId")){
+    throw new Error("For å gjøre dette kallet må du sette variabelen clientId i requesten først. clientId settes i post-request scriptet til GET hent registrert system (eller manuelt i requesten).");
+  }
+  
+  const http = require("axios");
+  const tokenrespons = await http.get("https://esyfo-token.intern.dev.nav.no/systemregister")
+  req.setHeader("Authorization", "Bearer "+ tokenrespons.data);
+}
+
+docs {
+  Oppdater system (f.eks. Tigersys) i Altinn sitt systemregister.
+  
+  Swagger: https://docs.altinn.studio/nb/api/authentication/spec/#/SystemRegister
+}

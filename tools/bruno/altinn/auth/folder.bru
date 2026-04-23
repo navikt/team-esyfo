@@ -1,0 +1,20 @@
+meta {
+  name: auth
+  seq: 1
+}
+
+auth {
+  mode: inherit
+}
+
+docs {
+  # How to authenticate
+  
+  ## Dialogporten
+  
+  * Create a token for a test user [here](https://tokenx-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp:team-esyfo:arkivporten).
+  * Paste the token in the collection variable `testbrukerToken`
+  * Do the `GET dialogporten token exchange` request.
+  
+  This will set the `dialogportenToken` and `orgnummer` collection varialbes. The orgnummer will be used by default in other applicable requests. Override as needed.
+}

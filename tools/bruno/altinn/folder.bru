@@ -1,0 +1,26 @@
+meta {
+  name: altinn
+  seq: 2
+}
+
+auth {
+  mode: bearer
+}
+
+auth:bearer {
+  token: {{dialogportenToken}}
+}
+
+vars:pre-request {
+  systemId: 215649202_kpfSys
+  systemLeverandoerOrgnr: 215649202
+  systemKundeOrgnr: 311131788
+}
+
+docs {
+  # Collection for Altin
+  
+  See the docs in the subfolders for spesifics.
+  
+  [Swagger @ Altinn](https://altinn-dev-api.azure-api.net/dialogporten/swagger/index.html#/)
+}
