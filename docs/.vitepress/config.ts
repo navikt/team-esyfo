@@ -64,6 +64,21 @@ export default withMermaid(defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/navikt/team-esyfo' }
     ],
+    lastUpdated: {
+      text: 'Sist oppdatert',
+      formatOptions: {
+        dateStyle: 'long',
+        timeStyle: 'short',
+        forceLocale: true
+      }
+    },
+    outline: {
+      label: 'På denne siden'
+    },
+    docFooter: {
+      prev: 'Forrige side',
+      next: 'Neste side'
+    },
     footer: {
       message: 'Laget av Team eSyfo ❤️'
     }
