@@ -1,2 +1,10 @@
 [tools]
 pnpm = "10"
+
+[tasks.dev]
+run = "pnpm dev"
+dir = "docs"
+
+[tasks.build]
+run = "pnpm build"
+dir = "docs"
