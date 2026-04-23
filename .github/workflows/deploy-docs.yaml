@@ -37,6 +37,15 @@ jobs:
         with:
           fetch-depth: 0 # Full history for VitePress lastUpdated
       - uses: jdx/mise-action@1648a78a9c255c6a277ba90b18bfddbac41e3881 # v4.0.1
+      - name: Resolve pnpm store path
+        id: pnpm-store-path
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ steps.pnpm-store-path.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('docs/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Install dependencies
         working-directory: docs
