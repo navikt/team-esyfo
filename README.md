@@ -6,17 +6,9 @@
 
 ### Lokal utvikling
 
-Første gang:
-
 ```bash
-mise install
-cd docs
-pnpm install
-```
-
-Deretter:
-
-```bash
-mise run dev
-mise run build
+mise install          # Installerer Node og pnpm
+pnpm --dir docs install  # Installerer avhengigheter
+mise run dev          # Starter utviklerserver
+mise run build        # Bygger for produksjon
 ```
