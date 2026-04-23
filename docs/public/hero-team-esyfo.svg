@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Team eSyfo hero-illustrasjon</title>
+  <desc id="desc">Et dokument med medisinsk kors og sjekkliste for teamwiki.</desc>
+  <rect width="512" height="512" rx="128" fill="#1F1F28"/>
+  <rect x="112" y="72" width="288" height="368" rx="32" fill="#2B6CB0"/>
+  <rect x="144" y="120" width="224" height="272" rx="24" fill="#F7FAFC"/>
+  <rect x="192" y="88" width="128" height="48" rx="20" fill="#A0AEC0"/>
+  <path d="M256 180C256 168.954 264.954 160 276 160H292C303.046 160 312 168.954 312 180V196H328C339.046 196 348 204.954 348 216V232C348 243.046 339.046 252 328 252H312V268C312 279.046 303.046 288 292 288H276C264.954 288 256 279.046 256 268V252H240C228.954 252 220 243.046 220 232V216C220 204.954 228.954 196 240 196H256V180Z" fill="#C30000"/>
+  <rect x="184" y="320" width="72" height="16" rx="8" fill="#2B6CB0"/>
+  <rect x="184" y="352" width="144" height="16" rx="8" fill="#90CDF4"/>
+  <circle cx="344" cy="348" r="24" fill="#2F855A"/>
+  <path d="M334 348L341 355L356 340" stroke="#F7FAFC" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

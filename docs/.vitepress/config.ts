@@ -9,6 +9,16 @@ export default defineConfig({
   lastUpdated: true,
   mermaid: true,
   themeConfig: {
+    nav: [
+      { text: 'Wiki', link: '/' },
+      { text: 'Verktøy', link: '/verktoy' },
+      {
+        text: 'GitHub',
+        link: 'https://github.com/navikt/team-esyfo',
+        target: '_blank',
+        rel: 'noopener noreferrer'
+      }
+    ],
     search: {
       provider: 'local'
     },
@@ -39,6 +49,12 @@ export default defineConfig({
         text: 'Systemlandskap',
         items: [
           { text: 'Teknisk oversikt', link: '/systemlandskap' }
+        ]
+      },
+      {
+        text: 'Verktøy',
+        items: [
+          { text: 'API-testing og verktøy', link: '/verktoy' }
         ]
       }
     ],
