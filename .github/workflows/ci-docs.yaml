@@ -22,7 +22,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: jdx/mise-action@1648a78a9c255c6a277ba90b18bfddbac41e3881 # v4.0.1
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
       - name: Resolve pnpm store path
         id: pnpm-store-path
         run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
