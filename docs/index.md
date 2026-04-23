@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: Team eSyfo
-  text: Intern wiki for sykefraværsområdet
+  text: Wiki for ekstern sykefraværsoppfølgingen
   tagline: Felles oversikt over onboarding, domene, systemlandskap og verktøy for Team eSyfo.
   image:
     src: /hero-team-esyfo.svg
