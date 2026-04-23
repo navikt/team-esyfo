@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: Team eSyfo Wiki
-  text: Ekstern sykefraværs-oppfølging
+  text: Ekstern sykefraværsoppfølging
   tagline: Felles oversikt over onboarding, domene, systemlandskap og verktøy for Team eSyfo.
   actions:
     - theme: brand
