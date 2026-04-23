@@ -1,0 +1,44 @@
+meta {
+  name: dialogporten token exchange
+  type: http
+  seq: 6
+}
+
+get {
+  url: https://arkivporten.intern.dev.nav.no/dialogporten/token
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{testbrukerToken}}
+}
+
+script:post-response {
+  const body = res.getBody();
+  const atob = require("atob");
+  if (body != null) {
+    console.log("Setter dialogporten token..")
+    bru.setEnvVar("dialogportenToken", body)
+    
+    // Set org number based on the b64 encoded payload (second part) of the token
+    const parts = body.split(".");
+    if (parts.length < 2 ) {
+      console.log("No payload found in the token");
+      return;
+    }
+    const payload = atob(parts[1]);
+    const parsedPayload = JSON.parse(payload);
+    const orgNum = parsedPayload.consumer.ID.split(":")[1];// without prefix 
+   bru.setEnvVar("orgnummer", orgNum); 
+    console.log("Setter org.nr: "+ orgNum)
+    
+  } else {
+    console.error("Something went wrong!")
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

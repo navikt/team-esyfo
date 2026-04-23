@@ -1,0 +1,126 @@
+meta {
+  name: serviceowner: creates a new dialog
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/serviceowner/dialogs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "serviceResource": "urn:altinn:resource:{{ressurs}}",
+    "party": "urn:altinn:organization:identifier-no:{{orgnummer}}",
+    "externalReference": "localTest1",
+    "status": "RequiresAttention",
+    "isApiOnly": false,
+    "content": {
+      "title": {
+        "value": [
+          {
+            "value": "En test dialog",
+            "languageCode": "nb"
+          }
+        ],
+        "mediaType": "text/plain"
+      }
+    },
+    "transmissions": [
+      {
+        "externalReference": "localTest1",
+        "type": "Information",
+        "authorizationAttribute": "{{oppfolgingRessurs}}",
+        "sender": {
+          "actorType": "ServiceOwner"
+        },
+        "content": {
+          "title": {
+            "value": [
+              {
+                "value": "transmissionTitle",
+                "languageCode": "nb"
+              }
+            ],
+            "mediaType": "text/plain"
+          }
+        },
+        "attachments": [
+          {
+            "displayName": [
+              {
+                "value": "attachmentDisplayName.pdf",
+                "languageCode": "nb"
+              }
+            ],
+            "urls": [
+              {
+                "url": "https://www.nav.no",
+                "mediaType": "application/pdf",
+                "consumerType": "Gui"
+              },
+              {
+                "url": "https://www.nav.no",
+                "mediaType": "application/pdf",
+                "consumerType": "Api"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "guiActions": [
+      {
+        "action": "read",
+        "url": "https://www.nav.no",
+        "authorizationAttribute": "{{oppfolgingRessurs}}",
+        "isDeleteDialogAction": false,
+        "httpMethod": "GET",
+        "priority": "Primary",
+        "title": [
+          {
+              "value": "testTitle",
+              "languageCode": "nb"
+          }
+        ]
+      }
+    ],
+    "apiActions": [
+      {
+        "action": "get",
+        "authorizationAttribute": "{{oppfolgingRessurs}}",
+        "endpoints": [
+          {
+            "url": "https://www.nav.no",
+            "httpMethod": "GET",
+            "deprecated": false
+          }
+        ]
+      }
+    ]
+  }
+}
+
+script:pre-request {
+  
+  
+}
+
+script:post-response {
+  console.log("Sent body:")
+  console.log(req.body);
+  
+  const result = res.getBody();
+  
+  if (result == null || res.getStatus() != 201) {
+    console.error("Something went wrong..");
+    console.error(res.getStatus());
+    return;
+  }
+  
+  console.log("Setting dialogId to: ", result)
+  bru.setEnvVar("dialogId", result)
+  
+}

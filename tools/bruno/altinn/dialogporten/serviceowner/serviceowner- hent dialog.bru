@@ -1,0 +1,28 @@
+meta {
+  name: serviceowner: hent dialog
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/serviceowner/dialogs/{{dialogId}}
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  const response = res.getBody();
+  
+  if (response == null || res.getStatus() != 200) {
+    console.error("Something went wrong..");
+    return;
+  }
+  
+  const parsedRes = JSON.parse(response);
+  bru.setEnvVar("revisionNumber", parsedRes.revision);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

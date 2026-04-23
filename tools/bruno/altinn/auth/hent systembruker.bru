@@ -1,0 +1,23 @@
+meta {
+  name: hent systembruker
+  type: http
+  seq: 1
+}
+
+get {
+  url: https://platform.tt02.altinn.no/authentication/api/v1/systemuser/request/vendor/434bef46-9e04-4e5c-9b8e-dd5bcbda5e73
+  body: json
+  auth: none
+}
+
+script:pre-request {
+  const http = require("axios");
+  const tokenrespons = await http.get("https://esyfo-token.intern.dev.nav.no/systembruker-forespoersel")
+  req.setHeader("Authorization", "Bearer "+ tokenrespons.data);
+}
+
+docs {
+  Hent systembrukerforespørsel/systembruker (forespørselen må godkjennes før selve systembrukeren blir opprettet).
+  
+  Swagger: https://docs.altinn.studio/nb/api/authentication/spec/#/RequestSystemUser
+}

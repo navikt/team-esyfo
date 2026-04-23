@@ -1,0 +1,95 @@
+meta {
+  name: opprett systembruker
+  type: http
+  seq: 5
+}
+
+post {
+  url: https://platform.tt02.altinn.no/authentication/api/v1/systemuser/request/vendor
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "systemId": "{{systemId}}",
+    "partyOrgNo": "{{systemKundeOrgnr}}",
+    "rights": [
+      {
+        "action": "read",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_dialog"
+          }
+        ]
+      },
+      {
+        "action": "subscribe",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_dialog"
+          }
+        ]
+      },
+      {
+        "action": "access",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppfolgingsplan"
+          }
+        ]
+      },
+      {
+        "action": "access",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_dialogmote"
+          }
+        ]
+      },
+      {
+        "action": "access",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppgi-narmesteleder"
+          }
+        ]
+      },
+      {
+        "action": "read",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppgi-narmesteleder"
+          }
+        ]
+      },
+      {
+        "action": "subscribe",
+        "resource": [
+          {
+            "id": "urn:altinn:resource",
+            "value": "nav_syfo_oppgi-narmesteleder"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+script:pre-request {
+  const http = require("axios");
+  const tokenrespons = await http.get("https://esyfo-token.intern.dev.nav.no/systembruker-forespoersel")
+  req.setHeader("Authorization", "Bearer "+ tokenrespons.data);
+}
+
+docs {
+  Opprett systembrukerforespørsel (forespørselen må godkjennes før selve systembrukeren blir opprettet).
+  
+  Swagger: https://docs.altinn.studio/nb/api/authentication/spec/#/RequestSystemUser
+}

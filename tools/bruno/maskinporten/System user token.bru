@@ -1,0 +1,83 @@
+meta {
+  name: System user token
+  type: http
+  seq: 3
+}
+
+post {
+  url: https://test.maskinporten.no/token
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:form-urlencoded {
+  grant_type: urn:ietf:params:oauth:grant-type:jwt-bearer
+  assertion: {{jwt_signed}}
+}
+
+script:pre-request {
+  const { createSign, randomUUID } = require("crypto");
+  
+  // Helper: get environment variable (required by default)
+  const env = (name, required = true) => {
+      const value = bru.getEnvVar(name);
+      if (required && !value) throw new Error(`Missing env var '${name}'`);
+      return value;
+  };
+  const authority = "iso6523-actorid-upis";
+  const header = { alg: "RS256", kid: env("keyId"), typ: "JWT" };
+  const now = Math.floor(Date.now() / 1000);
+  const systemUserOrg = env("systemUserOrg", false);
+  
+  const payload = {
+      aud: "https://test.maskinporten.no/",
+      iss: env("clientId"),
+      scope: env("scope"),
+      iat: now,
+      exp: now + 180,
+      jti: randomUUID(),
+      authorization_details: [{
+        type: "urn:altinn:systemuser",
+        systemuser_org: {
+           authority : "iso6523-actorid-upis",  
+           ID: `0192:${systemUserOrg}`
+        }
+      }]
+  };
+  console.log(JSON.stringify(payload));
+  // Sign and set jwt_signed environment variable
+  const b64url = (v) => Buffer.from(typeof v === "string" ? v : JSON.stringify(v)).toString("base64url");
+  const input = [header, payload].map(b64url).join(".");
+  const privateKey  = env("privateKey");
+  const sig = createSign("RSA-SHA256").update(input).sign({ key: privateKey }, "base64url");
+  
+  bru.setEnvVar("jwt_signed", `${input}.${sig}`);
+  const http = require("axios");
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  # Create a system user token
+  
+  This extends the claims used in the token exhange for the `POST Token` request in this collection. In addition to the regular claims, an authorization_details field is set - which requests a *system user* (SU) token. This requires: 
+  
+  ## Requirements:
+  * a client from Maskinporten and registering it as a system in Altinn
+  * Creating a SU on behalf of a customer/user. The daglig leder of the organization the SU is created for, needs to log into Altinn and accept the creation of the SU.
+  
+  *More information about system user creation is found in the docs at [esyfo-dev-tolls](https://github.com/navikt/esyfo-dev-tools)*
+  
+  This requests requires the following variables to be set in the `maskinporten` environment:
+  
+  | Key         | Description                           |
+  |-------------|---------------------------------------|
+  |privateKey   |PEM used in Maskinporten               |
+  |clientId     |The client id connected to Maskinporten|
+  |keyId        |The id of the PEM in Maskinporten      |
+  |scope        |The scope you want for the token       |
+  |systemUserOrg|The organization for the SU            |
+}
