@@ -2,9 +2,11 @@
 pnpm = "10"
 
 [tasks.dev]
+description = "Run the docs dev server"
 run = "pnpm dev"
 dir = "docs"
 
 [tasks.build]
+description = "Build the docs site"
 run = "pnpm build"
 dir = "docs"
