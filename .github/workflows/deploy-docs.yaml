@@ -24,7 +24,7 @@ jobs:
     permissions: {}
     if: github.ref == 'refs/heads/main'
     steps:
-      - run: echo "Deploying from main"
+      - run: echo "::notice::Branch guard passed for ${GITHUB_REF}"
 
   build:
     name: Build docs

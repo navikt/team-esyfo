@@ -18,14 +18,14 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      # Effective only when the caller also grants pages: read; reusable workflow
+      # permissions are intersected with the caller's permissions.
       pages: read
     steps:
-      - if: ${{ inputs.deploy }}
+      - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: 0 # Full history for VitePress lastUpdated
-      - if: ${{ !inputs.deploy }}
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+          fetch-depth: ${{ fromJSON(inputs.deploy && '0' || '1') }} # Full history for VitePress lastUpdated on deploy
       - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
       - name: Resolve pnpm store path
         id: pnpm-store-path
