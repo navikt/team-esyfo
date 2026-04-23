@@ -6,9 +6,17 @@
 
 ### Lokal utvikling
 
+Første gang:
+
 ```bash
 mise install
 cd docs
 pnpm install
-pnpm dev
+```
+
+Deretter:
+
+```bash
+mise run dev
+mise run build
 ```
