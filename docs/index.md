@@ -3,11 +3,8 @@ layout: home
 
 hero:
   name: Team eSyfo Wiki
-  text: Ekstern sykefraværsoppfølgingen
+  text: Ekstern sykefraværs-oppfølging
   tagline: Felles oversikt over onboarding, domene, systemlandskap og verktøy for Team eSyfo.
-  image:
-    src: /hero-team-esyfo.svg
-    alt: Illustrasjon for Team eSyfo
   actions:
     - theme: brand
       text: Kom i gang →
