@@ -18,6 +18,8 @@ jobs:
     name: Build docs
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: jdx/mise-action@1648a78a9c255c6a277ba90b18bfddbac41e3881 # v4.0.1

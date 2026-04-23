@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Team eSyfo',
   description: 'Dokumentasjon for Team eSyfo',
-  lang: 'no',
+  lang: 'nb',
   appearance: 'dark',
   base: '/team-esyfo/',
   lastUpdated: true,
