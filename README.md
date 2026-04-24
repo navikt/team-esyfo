@@ -10,15 +10,8 @@ Dokumentasjon, verktøy og notebooks for Team eSyfo — ekstern sykefraværsoppf
 
 [📖 Team eSyfo Wiki](https://navikt.github.io/team-esyfo/)
 
-## Innhold
-
-| Mappe                      | Beskrivelse                                                                                                                       |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [`docs/`](docs/)           | [Team eSyfo Wiki](https://navikt.github.io/team-esyfo/) — VitePress-basert wiki med onboarding, domene, systemlandskap og verktøy |
-| [`notebooks/`](notebooks/) | Kotlin-notebooks for utforsking og analyse                                                                                        |
-| [`tools/`](tools/)         | Bruno API-samlinger for lokal testing                                                                                             |
-
 ## Les videre
 
 - [Wiki-oppsett](docs/README.md)
-- [Kom i gang med Kotlin Notebooks](notebooks/README.md)
+- [Kotlin Notebooks](notebooks/README.md)
+- [Bruno kolleksjon for lokal testing](tools/bruno/README.md)
