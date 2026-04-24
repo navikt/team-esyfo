@@ -1,39 +1,23 @@
-# notebooks
+# Kotlin Notebooks
 
-This project was created using the [Ktor Project Generator](https://start.ktor.io).
+Kotlin-notebooks for utforsking, demo og analyse i Team eSyfo.
 
-Here are some useful links to get you started:
+## Notebooks
 
-- [Ktor Documentation](https://ktor.io/docs/home.html)
-- [Ktor GitHub page](https://github.com/ktorio/ktor)
-- The [Ktor Slack chat](https://app.slack.com/client/T09229ZC6/C0A974TJ9). You'll need
-  to [request an invite](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) to join.
+| Notebook | Beskrivelse |
+|---|---|
+| [`coroutines/demo-coroutines.ipynb`](coroutines/demo-coroutines.ipynb) | Grunnleggende Kotlin coroutines |
+| [`coroutines/demo-cancellation.ipynb`](coroutines/demo-cancellation.ipynb) | Cancellation og feilhåndtering i coroutines |
+| [`coroutines/demo-kafka.ipynb`](coroutines/demo-kafka.ipynb) | Kafka-integrasjon med coroutines |
 
-## Features
+## Kjøring
 
-Here's a list of features included in this project:
+Prosjektet bruker Gradle med Ktor og kan kjøres som en vanlig applikasjon:
 
-| Name                                               | Description                                                 |
-|----------------------------------------------------|-------------------------------------------------------------|
-| [Routing](https://start.ktor.io/p/routing-default) | Allows to define structured routes and associated handlers. |
-
-## Building & Running
-
-To build or run the project, use one of the following tasks:
-
-| Task                                    | Description                                                          |
-|-----------------------------------------|----------------------------------------------------------------------|
-| `./gradlew test`                        | Run the tests                                                        |
-| `./gradlew build`                       | Build everything                                                     |
-| `./gradlew buildFatJar`                 | Build an executable JAR of the server with all dependencies included |
-| `./gradlew buildImage`                  | Build the docker image to use with the fat JAR                       |
-| `./gradlew publishImageToLocalRegistry` | Publish the docker image locally                                     |
-| `./gradlew run`                         | Run the server                                                       |
-| `./gradlew runDocker`                   | Run using the local docker image                                     |
-
-If the server starts successfully, you'll see the following output:
-
+```sh
+./gradlew build   # Bygg prosjektet
+./gradlew test    # Kjør tester
+./gradlew run     # Start serveren
 ```
-2024-12-04 14:32:45.584 [main] INFO  Application - Application started in 0.303 seconds.
-2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
-```
+
+Notebooks åpnes i IntelliJ IDEA med [Kotlin Notebook-plugin](https://kotlinlang.org/docs/kotlin-notebook-overview.html).
