@@ -1,4 +1,4 @@
-# Bruno – esyfo-dev-tools
+# Bruno kolleksjon
 
 API-samling for lokal testing mot Maskinporten og Altinn Dialogporten.
 
