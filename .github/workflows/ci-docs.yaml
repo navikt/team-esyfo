@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'docs/**'
-      - 'mise.toml'
+      - 'docs/package.json'
       - '.github/workflows/build-docs.yaml'
       - '.github/workflows/ci-docs.yaml'
   merge_group:

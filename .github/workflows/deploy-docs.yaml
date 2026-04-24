@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - 'mise.toml'
+      - 'docs/package.json'
       - '.github/workflows/build-docs.yaml'
       - '.github/workflows/deploy-docs.yaml'
   workflow_dispatch:
