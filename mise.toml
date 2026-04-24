@@ -1,4 +1,5 @@
 [tools]
+java = "temurin-25"
 pnpm = "10"
 
 [tasks."wiki:install"]
