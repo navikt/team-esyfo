@@ -1,6 +1,7 @@
 {
   "name": "team-esyfo-docs",
   "private": true,
+  "packageManager": "pnpm@10.32.1",
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",

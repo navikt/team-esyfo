@@ -26,16 +26,16 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: ${{ fromJSON(inputs.deploy && '0' || '1') }} # Full history for VitePress lastUpdated on deploy
-      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
-      - name: Resolve pnpm store path
-        id: pnpm-store-path
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
-          path: ${{ steps.pnpm-store-path.outputs.path }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('docs/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          package_json_file: docs/package.json
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: docs/pnpm-lock.yaml
       - if: ${{ inputs.deploy }}
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Install dependencies
