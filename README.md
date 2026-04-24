@@ -1,14 +1,3 @@
-# team-esyfo
+# Team eSyfo
 
-## Dokumentasjon
-
-📖 [Team eSyfo Wiki](https://navikt.github.io/team-esyfo/)
-
-### Lokal utvikling
-
-```bash
-mise install          # Installerer Node og pnpm
-pnpm --dir docs install  # Installerer avhengigheter
-mise run wiki:dev          # Starter utviklerserver
-mise run wiki:build        # Bygger for produksjon
-```
+[📖 Team eSyfo Wiki](https://navikt.github.io/team-esyfo/)
