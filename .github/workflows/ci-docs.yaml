@@ -23,9 +23,15 @@ jobs:
     with:
       deploy: false
 
+  build-notebooks:
+    name: Build notebooks
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-notebooks.yaml
+
   merge-gate:
     name: Merge gate
-    needs: [build]
+    needs: [build, build-notebooks]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -35,19 +41,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          result="build=${{ needs.build.result }}"
-          printf '%s\n' "$result"
-          case "${{ needs.build.result }}" in
-            success) ;;
-            cancelled)
-              echo "::error::Required job was cancelled: $result"
-              exit 1
-              ;;
-            skipped)
-              echo "Accepting skipped job result: $result"
-              ;;
-            *)
-              echo "::error::Required job failed: $result"
-              exit 1
-              ;;
-          esac
+          results=(
+            "build=${{ needs.build.result }}"
+            "build-notebooks=${{ needs.build-notebooks.result }}"
+          )
+          for result in "${results[@]}"; do
+            name="${result%%=*}"
+            status="${result#*=}"
+            printf '%s\n' "$result"
+            case "$status" in
+              success) ;;
+              cancelled)
+                echo "::error::Required job was cancelled: $result"
+                exit 1
+                ;;
+              skipped)
+                echo "Accepting skipped job result: $result"
+                ;;
+              *)
+                echo "::error::Required job failed: $result"
+                exit 1
+                ;;
+            esac
+          done
