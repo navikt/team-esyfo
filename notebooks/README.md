@@ -12,12 +12,12 @@ Kotlin-notebooks for utforsking, demo og analyse i Team eSyfo.
 
 ## Kjøring
 
-Prosjektet bruker Gradle med Ktor og kan kjøres som en vanlig applikasjon:
+Prosjektet bruker Gradle for å hente notebook-avhengigheter og verifisere at
+oppsettet bygger. Det er ikke lenger et Ktor-skjelett eller en kjørbar app i
+prosjektet:
 
 ```sh
-./gradlew build   # Bygg prosjektet
-./gradlew test    # Kjør tester
-./gradlew run     # Start serveren
+./gradlew build --no-daemon
 ```
 
 Notebooks åpnes i IntelliJ IDEA med [Kotlin Notebook-plugin](https://kotlinlang.org/docs/kotlin-notebook-overview.html).
