@@ -6,7 +6,7 @@ VitePress-basert wiki for Team eSyfo.
 
 ## Mise-oppgaver
 
-All wiki-utvikling kjøres via [mise](https://mise.jdx.dev/)-oppgaver definert i [`mise.toml`](../mise.toml):
+All wiki-utvikling kjøres via [mise](https://mise.jdx.dev/)-oppgaver definert i [`mise.toml`](https://github.com/navikt/team-esyfo/blob/main/mise.toml):
 
 | Oppgave                 | Beskrivelse                      |
 | ----------------------- | -------------------------------- |
