@@ -23,6 +23,7 @@ jobs:
     name: Build docs
     permissions:
       contents: read
+      pages: read
     uses: ./.github/workflows/build-docs.yaml
     with:
       deploy: false
