@@ -1,5 +1,8 @@
 # Team eSyfo
 
+[![CI Docs](https://github.com/navikt/team-esyfo/actions/workflows/ci-docs.yaml/badge.svg)](https://github.com/navikt/team-esyfo/actions/workflows/ci-docs.yaml)
+[![Deploy Docs](https://github.com/navikt/team-esyfo/actions/workflows/deploy-docs.yaml/badge.svg)](https://github.com/navikt/team-esyfo/actions/workflows/deploy-docs.yaml)
+
 Dokumentasjon, verktøy og notebooks for Team eSyfo — ekstern sykefraværsoppfølging i Nav.
 
 [📖 Team eSyfo Wiki](https://navikt.github.io/team-esyfo/)
