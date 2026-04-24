@@ -13,8 +13,7 @@ Kotlin-notebooks for utforsking, demo og analyse i Team eSyfo.
 ## Kjøring
 
 Prosjektet bruker Gradle for å hente notebook-avhengigheter og verifisere at
-oppsettet bygger. Det er ikke lenger et Ktor-skjelett eller en kjørbar app i
-prosjektet:
+oppsettet bygger:
 
 ```sh
 ./gradlew build --no-daemon
