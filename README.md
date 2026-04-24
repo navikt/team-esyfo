@@ -20,5 +20,5 @@ Dokumentasjon, verktøy og notebooks for Team eSyfo — ekstern sykefraværsoppf
 
 ## Les videre
 
-- [`docs/README.md`](docs/README.md) for flere detaljer om wiki-oppsett.
-- [`notebooks/README.md`](notebooks/README.md) for flere detaljer om Kotlin notebooks.
+- [Wiki-oppsett](docs/README.md)
+- [Kom i gang med Kotlin Notebooks](notebooks/README.md)
