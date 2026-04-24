@@ -11,6 +11,10 @@ updates:
       actions:
         patterns:
           - '*'
+    ignore:
+      - dependency-name: 'pnpm/action-setup'
+        update-types:
+          - 'version-update:semver-major'
 
   - package-ecosystem: npm
     directory: '/docs'
