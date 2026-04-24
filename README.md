@@ -3,6 +3,7 @@
 [![CI Docs](https://github.com/navikt/team-esyfo/actions/workflows/ci-docs.yaml/badge.svg)](https://github.com/navikt/team-esyfo/actions/workflows/ci-docs.yaml)
 [![Deploy Docs](https://github.com/navikt/team-esyfo/actions/workflows/deploy-docs.yaml/badge.svg)](https://github.com/navikt/team-esyfo/actions/workflows/deploy-docs.yaml)
 [![VitePress](https://img.shields.io/badge/VitePress-1.6-646CFF?logo=vitepress&logoColor=white)](https://vitepress.dev/)
+[![Bruno](https://img.shields.io/badge/Bruno-API%20Testing-F7B731?logo=bruno&logoColor=white)](https://www.usebruno.com/)
 
 Dokumentasjon, verktøy og notebooks for Team eSyfo — ekstern sykefraværsoppfølging i Nav.
 
