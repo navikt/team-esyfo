@@ -1,0 +1,39 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns:
+          - '*'
+
+  - package-ecosystem: npm
+    directory: '/docs'
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      vitepress:
+        patterns:
+          - 'vitepress'
+          - 'vitepress-plugin-*'
+      mermaid:
+        patterns:
+          - 'mermaid'
+
+  - package-ecosystem: gradle
+    directory: '/notebooks'
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      kotlin:
+        patterns:
+          - 'org.jetbrains.kotlin*'
