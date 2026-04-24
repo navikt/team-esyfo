@@ -10,6 +10,7 @@ export default withMermaid(defineConfig({
   appearance: 'dark',
   base: '/',
   lastUpdated: true,
+  srcExclude: ['README.md'],
   mermaid: {},
   themeConfig: {
     nav: [
