@@ -8,7 +8,7 @@ export default withMermaid(defineConfig({
   description: 'Dokumentasjon for Team eSyfo',
   lang: 'nb',
   appearance: 'dark',
-  base: '/',
+  base: '/team-esyfo/',
   lastUpdated: true,
   srcExclude: ['README.md'],
   mermaid: {},
