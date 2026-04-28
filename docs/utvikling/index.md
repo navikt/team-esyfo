@@ -32,13 +32,13 @@ Pull request-rutiner, GitHub Flow og konvensjoner for kodesamarbeid i teamet.
 
 ## Daglige plattformer
 
-[Google Cloud Console — eSYFO](https://console.nav.cloud.nais.io/team/team-esyfo) — Oversikt over apper, deploy og ressurser i NAIS
+[Google Cloud Console](https://console.nav.cloud.nais.io/team/team-esyfo) — Oversikt over apper, deploy og ressurser i NAIS
 
 [Bauta-rutiner i Slack](https://nav-it.slack.com/docs/T5LNAMWNA/F05QS0SG09F) — Vaktrutiner og beredskap
 
-[Grafana-dashboard eSYFO](https://grafana.nav.cloud.nais.io/d/eeivq822edhj4c/esyfo3a-error-summary?orgId=1&from=now-1h&to=now&timezone=browser&var-env=PD969E40991D5C4A8&var-selectedService=All&refresh=auto) — Feil og ytelse i sanntid
+[Grafana-dashboard](https://grafana.nav.cloud.nais.io/d/eeivq822edhj4c/esyfo3a-error-summary?orgId=1&from=now-1h&to=now&timezone=browser&var-env=PD969E40991D5C4A8&var-selectedService=All&refresh=auto) — Feil og ytelse i sanntid
 
-[GitHub-repoer for team eSYFO](https://github.com/orgs/navikt/teams/team-esyfo/repositories) — Alle repoer teamet har tilgang til
+[GitHub-repoer for team eSyfo](https://github.com/orgs/navikt/teams/team-esyfo/repositories) — Alle repoer teamet har tilgang til
 
 <style>
 .sections-grid {
