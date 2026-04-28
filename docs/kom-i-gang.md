@@ -15,6 +15,6 @@ Sørg for at du har tilgang til følgende verktøy og plattformer:
 
 ## Neste steg
 
-- Utforsk [utviklerseksjonen](./utvikling/index/) — frontend, backend og beste praksis
+- Utforsk [utviklerseksjonen](./utvikling/) — frontend, backend og beste praksis
 - Les om [domenet vårt](./domene) — forstå fagområdet teamet jobber med
 - Se [systemlandskapet](./systemlandskap) — teknisk oversikt over tjenester og integrasjoner
