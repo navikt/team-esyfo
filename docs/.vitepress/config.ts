@@ -16,7 +16,7 @@ export default withMermaid(defineConfig({
     nav: [
       { text: 'Wiki', link: '/' },
       { text: 'Verktøy', link: '/verktoy' },
-      { text: 'Frontend', link: '/frontend/' },
+      { text: 'Utvikling', link: '/utvikling/frontend/' },
       {
         text: 'GitHub',
         link: 'https://github.com/navikt/team-esyfo',
@@ -78,20 +78,34 @@ export default withMermaid(defineConfig({
         ]
       },
       {
-        text: 'Frontend',
+        text: 'Utvikling',
         collapsed: false,
         items: [
-          { text: 'Oversikt', link: '/frontend/' },
-          { text: 'Bygg og kjør', link: '/frontend/bygg-og-kjor' },
-          { text: 'Testing', link: '/frontend/testing' },
-          { text: 'Linting', link: '/frontend/linting' },
-          { text: 'Verktøy', link: '/frontend/verktoy' }
-        ]
-      },
-      {
-        text: 'Beste praksis',
-        items: [
-          { text: 'Pull requests', link: '/beste-praksis/pull-request' }
+          {
+            text: 'Frontend',
+            collapsed: false,
+            items: [
+              { text: 'Oversikt', link: '/utvikling/frontend/' },
+              { text: 'Bygg og kjør', link: '/utvikling/frontend/bygg-og-kjor' },
+              { text: 'Testing', link: '/utvikling/frontend/testing' },
+              { text: 'Linting', link: '/utvikling/frontend/linting' },
+              { text: 'Verktøy', link: '/utvikling/frontend/verktoy' }
+            ]
+          },
+          {
+            text: 'Backend',
+            collapsed: false,
+            items: [
+              { text: 'Oversikt', link: '/utvikling/backend/' }
+            ]
+          },
+          {
+            text: 'Beste praksis',
+            collapsed: false,
+            items: [
+              { text: 'Pull requests', link: '/utvikling/beste-praksis/pull-request' }
+            ]
+          }
         ]
       },
       {

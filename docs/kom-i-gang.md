@@ -14,9 +14,10 @@ Sørg for at du har tilgang til følgende verktøy og plattformer:
 
 ## Neste steg
 
-- Sett opp [lokal utvikling](./frontend/bygg-og-kjor) for frontend
+- Les om [domenet vårt](./domene) — forstå fagområdet teamet jobber med
+- Se [systemlandskapet](./systemlandskap) — teknisk oversikt over tjenester og integrasjoner
+- Utforsk [utviklerseksjonen](./utvikling/frontend/) — frontend, backend og beste praksis
 - Se [verktøy](./verktoy) for API-testing og snarveier
-- Les [beste praksis for PR](./beste-praksis/pull-request)
 
 :::details Skrivetips
 Denne siden bruker VitePress sin [markdown-syntax](https://vitepress.dev/guide/markdown).
