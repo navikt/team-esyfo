@@ -30,11 +30,6 @@ features:
     details: Se teknisk oversikt over tjenester, integrasjoner, dataflyt og viktige avhengigheter.
     link: /systemlandskap
     linkText: Se teknisk oversikt
-  - icon: 🔧
-    title: Verktøy og API-testing
-    details: Finn utviklerverktøy, API-samlinger og nyttige snarveier for lokal utvikling og testing.
-    link: /verktoy
-    linkText: Åpne verktøy
   - icon: 🧑‍💻
     title: Utviklerhåndbok
     details: Alt om utvikling i teamet — frontend, backend og beste praksis for kode og pull requests.

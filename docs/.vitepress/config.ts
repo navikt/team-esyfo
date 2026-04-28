@@ -15,7 +15,7 @@ export default withMermaid(defineConfig({
   themeConfig: {
     nav: [
       { text: 'Wiki', link: '/' },
-      { text: 'Verktøy', link: '/verktoy' },
+      { text: 'Repositories', link: '/repositories' },
       { text: 'Utvikling', link: '/utvikling/' },
       {
         text: 'GitHub',
@@ -97,7 +97,8 @@ export default withMermaid(defineConfig({
             text: 'Backend',
             collapsed: false,
             items: [
-              { text: 'Oversikt', link: '/utvikling/backend/' }
+              { text: 'Oversikt', link: '/utvikling/backend/' },
+              { text: 'API-testing (Bruno)', link: '/utvikling/backend/#api-testing-med-bruno' }
             ]
           },
           {
@@ -115,12 +116,7 @@ export default withMermaid(defineConfig({
           { text: 'Repo-oversikt', link: '/repositories' }
         ]
       },
-      {
-        text: 'Verktøy',
-        items: [
-          { text: 'API-testing og verktøy', link: '/verktoy' }
-        ]
-      }
+
     ],
     socialLinks: [
       { icon: 'github', link: 'https://github.com/navikt/team-esyfo' }

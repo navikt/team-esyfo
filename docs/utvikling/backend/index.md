@@ -8,6 +8,16 @@ I team eSYFO bruker vi **Kotlin** som hovedspråk for backend-utvikling, med [Kt
 
 Se [repo-oversikten](/repositories) for en komplett liste over backend-repoer (filtrert med topic `backend`).
 
+## API-testing med Bruno
+
+Bruno-samlingen ligger i repoet under [`tools/bruno`](https://github.com/navikt/team-esyfo/tree/main/tools/bruno) og kan brukes til å teste kall mot relevante API-er og hjelpeverktøy.
+
+### Typiske bruksområder
+
+- utforske eksisterende requests og miljøoppsett
+- teste integrasjoner lokalt
+- dele nyttige kall mellom teammedlemmer
+
 ## Oppsett
 
 _Kommer snart — lokalt oppsett, avhengigheter og konfigurasjon._
