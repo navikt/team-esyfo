@@ -16,7 +16,7 @@ export default withMermaid(defineConfig({
     nav: [
       { text: 'Wiki', link: '/' },
       { text: 'Verktøy', link: '/verktoy' },
-      { text: 'Utvikling', link: '/utvikling/frontend/' },
+      { text: 'Utvikling', link: '/utvikling/' },
       {
         text: 'GitHub',
         link: 'https://github.com/navikt/team-esyfo',
@@ -81,6 +81,7 @@ export default withMermaid(defineConfig({
         text: 'Utvikling',
         collapsed: false,
         items: [
+          { text: 'Oversikt', link: '/utvikling/' },
           {
             text: 'Frontend',
             collapsed: false,

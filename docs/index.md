@@ -38,7 +38,7 @@ features:
   - icon: 🧑‍💻
     title: Utviklerhåndbok
     details: Alt om utvikling i teamet — frontend, backend og beste praksis for kode og pull requests.
-    link: /utvikling/frontend/
+    link: /utvikling/
     linkText: Til utvikling
   - icon: 📚
     title: Repositories
