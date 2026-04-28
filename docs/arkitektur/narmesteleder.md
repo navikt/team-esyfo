@@ -1,56 +1,39 @@
-# Nærmeste leder — arkitekturnotater
+# Nærmeste leder
 
-<!-- UTREDNING: Disse notatene er resultatet av verifisering av PlantUML-diagrammet
-     fra esyfo-dev-tools.wiki. Brukes som grunnlag for Mermaid-konvertering i neste fase. -->
+Nærmeste leder-løsningen håndterer relasjoner mellom sykmeldt og nærmeste leder. Målene er:
 
-## Funn fra verifisering (fase 2g)
+- **Motta nye relasjoner** fra eksisterende metoder (Altinn, sykmelding, narmesteleder-app)
+- **Ta imot relasjoner fra frontender/LPS** i vår app og sende tilbake
+- **Kunne kutte koblingen** til dagens system når alle avhengigheter er over
 
-### Repos — status
+## Dataflyt
 
-| Repository | Status | Eier |
-|---|---|---|
-| `esyfo-narmesteleder` | ✅ Aktiv | team-esyfo |
-| `narmesteleder` | ✅ Aktiv | team-sykmelding |
-| `syfonlaltinn` | ✅ Aktiv | team-sykmelding |
-| `nl-republisher` / `nl-replublisher` | ❌ Finnes ikke | — |
+```mermaid
+sequenceDiagram
+    participant LPS as LPS
+    participant esyfo as esyfo-narmesteleder<br/>(team-esyfo)
+    participant DB as Database
+    participant nl as narmesteleder<br/>(team-sykmelding)
+    participant altinn as syfonlaltinn<br/>(team-sykmelding)
 
-### Kafka-topics — faktiske navn
+    Note over esyfo,altinn: Kafka-topics med teamsykmelding.*-prefiks
 
-Alle topics har `teamsykmelding.`-prefiks:
+    altinn->>nl: syfo-narmesteleder
+    activate nl
+    nl->>esyfo: syfo-narmesteleder-leesah
+    deactivate nl
 
-| Topic i diagram | Faktisk topic-navn | Merknad |
-|---|---|---|
-| `esfo-narmesteleder` | `teamsykmelding.syfo-narmesteleder` | ⚠️ Feil prefiks i diagram (`esfo-` → `syfo-`) |
-| `esfo-narmesteleder-leesah` | — | ❌ Finnes ikke som eget topic |
-| `syfo-narmesteleder` | `teamsykmelding.syfo-narmesteleder` | ✅ Korrekt (med prefiks) |
-| `syfo-narmesteleder-leessah` | `teamsykmelding.syfo-narmesteleder-leesah` | ⚠️ Skrivefeil: «leessah» → «leesah» |
+    esyfo->>DB: Lagrer NL-relasjon
+    esyfo-->>esyfo: syfo-sendt-sykmelding (konsumerer)
 
-### Faktisk flyt (verifisert fra kildekode)
-
-```
-syfonlaltinn (team-sykmelding / Altinn2)
-  → publiserer til: teamsykmelding.syfo-narmesteleder
-
-narmesteleder (team-sykmelding)
-  → konsumerer: teamsykmelding.syfo-narmesteleder
-  → publiserer: teamsykmelding.syfo-narmesteleder-leesah
-
-esyfo-narmesteleder (team-esyfo API)
-  → konsumerer: teamsykmelding.syfo-narmesteleder-leesah
-  → konsumerer: teamsykmelding.syfo-sendt-sykmelding
-  → publiserer: teamsykmelding.syfo-narmesteleder (NL-relasjoner fra LPS)
+    LPS->>esyfo: POST /api/narmesteleder
+    esyfo->>DB: Lagrer NL-relasjon
+    esyfo->>nl: syfo-narmesteleder
+    Note right of esyfo: Publiserer NL-relasjoner<br/>fra LPS tilbake til felles topic
 ```
 
-### Avvik fra PlantUML-diagram
-
-1. **`nl-replublisher` finnes ikke** — komponenten er aldri opprettet, eller fjernet. Flyten den skulle ivareta (republisere fra leesah til esyfo-topic) ser ut til å ikke være implementert.
-2. **Topic-prefiks feil** — diagrammet bruker `esfo-` men faktisk prefiks er `teamsykmelding.syfo-`.
-3. **Skrivefeil** — `leessah` i diagrammet skal være `leesah`.
-4. **Nytt topic** — `esyfo-narmesteleder` konsumerer også `teamsykmelding.syfo-sendt-sykmelding` (ikke i diagrammet).
-
-### Anbefaling for Mermaid-konvertering (neste fase)
-
-- Fjern `nl-replublisher` fra diagrammet
-- Korriger alle topic-navn til faktiske verdier med `teamsykmelding.`-prefiks
-- Legg til `syfo-sendt-sykmelding`-topic som kilde for `esyfo-narmesteleder`
-- Marker flyten som «designforslag» der den avviker fra det som faktisk er implementert
+::: warning Avvik fra opprinnelig design
+- **`nl-republisher`** ble aldri implementert — komponenten finnes ikke i noe repo.
+- **Topic-prefikser** er korrigert fra `esfo-` til `teamsykmelding.syfo-*`.
+- **`syfo-sendt-sykmelding`** er tillagt — `esyfo-narmesteleder` konsumerer dette topicet, men det var ikke med i det opprinnelige diagrammet.
+:::

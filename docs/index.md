@@ -35,4 +35,14 @@ features:
     details: Finn utviklerverktøy, API-samlinger og nyttige snarveier for lokal utvikling og testing.
     link: /verktoy
     linkText: Åpne verktøy
+  - icon: 🧑‍💻
+    title: Frontend-håndbok
+    details: Vår frontend-stack med Next.js, testing, linting og verktøy for lokal utvikling.
+    link: /frontend/
+    linkText: Til frontend
+  - icon: 📚
+    title: Repositories
+    details: Komplett oversikt over alle teamets repoer, gruppert etter type og med topic-badges.
+    link: /repositories
+    linkText: Se repositories
 ---

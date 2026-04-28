@@ -16,6 +16,7 @@ export default withMermaid(defineConfig({
     nav: [
       { text: 'Wiki', link: '/' },
       { text: 'Verktøy', link: '/verktoy' },
+      { text: 'Frontend', link: '/frontend/' },
       {
         text: 'GitHub',
         link: 'https://github.com/navikt/team-esyfo',
@@ -72,7 +73,31 @@ export default withMermaid(defineConfig({
       {
         text: 'Systemlandskap',
         items: [
-          { text: 'Teknisk oversikt', link: '/systemlandskap' }
+          { text: 'Teknisk oversikt', link: '/systemlandskap' },
+          { text: 'Nærmeste leder', link: '/arkitektur/narmesteleder' }
+        ]
+      },
+      {
+        text: 'Frontend',
+        collapsed: false,
+        items: [
+          { text: 'Oversikt', link: '/frontend/' },
+          { text: 'Bygg og kjør', link: '/frontend/bygg-og-kjor' },
+          { text: 'Testing', link: '/frontend/testing' },
+          { text: 'Linting', link: '/frontend/linting' },
+          { text: 'Verktøy', link: '/frontend/verktoy' }
+        ]
+      },
+      {
+        text: 'Beste praksis',
+        items: [
+          { text: 'Pull requests', link: '/beste-praksis/pull-request' }
+        ]
+      },
+      {
+        text: 'Repositories',
+        items: [
+          { text: 'Repo-oversikt', link: '/repositories' }
         ]
       },
       {
