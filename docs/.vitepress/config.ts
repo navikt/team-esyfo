@@ -71,7 +71,6 @@ export default withMermaid(
 					items: [
 						{ text: "Teknisk oversikt", link: "/systemlandskap" },
 						{ text: "Nærmeste leder", link: "/arkitektur/narmesteleder" },
-						{ text: "Repositories", link: "/repositories" },
 					],
 				},
 				{
@@ -104,6 +103,7 @@ export default withMermaid(
 								},
 							],
 						},
+						{ text: "Repositories", link: "/utvikling/repositories" },
 						{
 							text: "Beste praksis",
 							collapsed: false,

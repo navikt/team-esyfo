@@ -6,7 +6,7 @@ Denne seksjonen er under utvikling. Innholdet vil bli utvidet etter hvert.
 
 I team eSYFO bruker vi **Kotlin** som hovedspråk for backend-utvikling, med [Ktor](https://ktor.io/) og [Spring Boot](https://spring.io/projects/spring-boot) som rammeverk.
 
-Se [repo-oversikten](/repositories) for en komplett liste over backend-repoer (filtrert med topic `backend`).
+Se [repo-oversikten](/utvikling/repositories) for en komplett liste over backend-repoer (filtrert med topic `backend`).
 
 ## API-testing med Bruno
 
