@@ -6,11 +6,11 @@ Teamets teknologivalg og konvensjoner for frontend, backend og samarbeid. Her fi
 
 Utviklerhåndbøker vi skal følge med og ta i bruk bestepraksis.
 
-[Nais utvikler dokumentasjon](https://doc.nais.io)
+[Nais utvikler dokumentasjon](https://doc.nais.io) - plattform, deploy og infrastruktur
 
-[Security Playbook](https://sikkerhet.nav.no)
+[Security Playbook](https://sikkerhet.nav.no) - sikkerhetskrav, bestepraksis, golden path
 
-[Copilot i Nav](https://min-copilot.ansatt.nav.no)
+[Copilot i Nav](https://min-copilot.ansatt.nav.no) - KI-assisert utviling, oversikt av KI-bruk
 
 ## Seksjoner
 
