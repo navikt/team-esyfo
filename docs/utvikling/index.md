@@ -4,7 +4,9 @@ Teamets teknologivalg og konvensjoner for frontend, backend og samarbeid. Her fi
 
 ## Håndbøker
 
+:::warning Følg med
 Vi skal følge utviklerhåndbøker og ta i bruk beste praksis.
+:::
 
 [Nais utvikler dokumentasjon](https://doc.nais.io) - plattform, deploy og infrastruktur
 
