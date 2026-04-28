@@ -25,14 +25,14 @@ features:
     details: Les om sentrale begreper, ansvar og avgrensninger i domenet teamet jobber med.
     link: /domene
     linkText: Utforsk domenet
-  - icon: 🏗️
-    title: Systemlandskap
-    details: Se teknisk oversikt over tjenester, integrasjoner, dataflyt og viktige avhengigheter.
-    link: /systemlandskap
-    linkText: Se teknisk oversikt
   - icon: 🧑‍💻
     title: Utviklerhåndbok
     details: Alt om utvikling i teamet — frontend, backend og beste praksis for kode og pull requests.
     link: /utvikling/
     linkText: Til utvikling
+  - icon: 🏗️
+    title: Systemlandskap
+    details: Se teknisk oversikt over tjenester, integrasjoner, dataflyt og viktige avhengigheter.
+    link: /systemlandskap
+    linkText: Se teknisk oversikt
 ---
