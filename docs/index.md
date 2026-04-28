@@ -35,9 +35,4 @@ features:
     details: Alt om utvikling i teamet — frontend, backend og beste praksis for kode og pull requests.
     link: /utvikling/
     linkText: Til utvikling
-  - icon: 📚
-    title: Repositories
-    details: Komplett oversikt over alle teamets repoer, gruppert etter type og med topic-badges.
-    link: /repositories
-    linkText: Se repositories
 ---

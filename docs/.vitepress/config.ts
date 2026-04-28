@@ -15,7 +15,7 @@ export default withMermaid(defineConfig({
   themeConfig: {
     nav: [
       { text: 'Wiki', link: '/' },
-      { text: 'Repositories', link: '/repositories' },
+      { text: 'Systemlandskap', link: '/systemlandskap' },
       { text: 'Utvikling', link: '/utvikling/' },
       {
         text: 'GitHub',
@@ -74,7 +74,8 @@ export default withMermaid(defineConfig({
         text: 'Systemlandskap',
         items: [
           { text: 'Teknisk oversikt', link: '/systemlandskap' },
-          { text: 'Nærmeste leder', link: '/arkitektur/narmesteleder' }
+          { text: 'Nærmeste leder', link: '/arkitektur/narmesteleder' },
+          { text: 'Repositories', link: '/repositories' }
         ]
       },
       {
@@ -108,12 +109,6 @@ export default withMermaid(defineConfig({
               { text: 'Pull requests', link: '/utvikling/beste-praksis/pull-request' }
             ]
           }
-        ]
-      },
-      {
-        text: 'Repositories',
-        items: [
-          { text: 'Repo-oversikt', link: '/repositories' }
         ]
       },
 
