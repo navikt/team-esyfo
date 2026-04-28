@@ -8,10 +8,12 @@
 
 Dokumentasjon, verktøy og notebooks for Team eSyfo — ekstern sykefraværsoppfølging i Nav.
 
-[📖 Team eSyfo Wiki](https://navikt.github.io/team-esyfo/)
+📖 [Team eSyfo Wiki](https://navikt.github.io/team-esyfo/)
 
 ## Les videre
 
-- [Wiki-oppsett](docs/README.md)
-- [Kotlin Notebooks](notebooks/README.md)
-- [Bruno kolleksjon for lokal testing](tools/bruno/README.md)
+[Wiki-oppsett](docs/README.md) — Hvordan denne wiki er satt opp
+
+[Kotlin Notebooks](notebooks/README.md)
+
+[Bruno kolleksjon for lokal testing](tools/bruno/README.md)

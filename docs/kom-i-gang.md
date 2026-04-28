@@ -1,35 +1,20 @@
 # Kom i gang
 
-Denne siden er en plassholder for onboarding og praktisk oppstart i teamet.
+Velkommen til team eSYFO! Denne siden hjelper deg med å komme raskt i gang med utvikling og daglig arbeid.
 
-## Foreslått innhold
+## Våre viktigste apper til daglig bruk
 
-- hvordan sette opp lokal utvikling
-- oversikt over verktøy og tilganger
-- rutiner for deploy, varsling og støtte
+Sørg for at du har tilgang til følgende verktøy og plattformer:
 
-## Tips for skriving
+[GitHub Projects](https://github.com/orgs/navikt/projects/157/views/8) — Oversikt av våre oppgaver i GitHub Projects
 
-:::tip Tips
-Start med korte steg-for-steg-guider før siden utvides med mer detaljert dokumentasjon.
-:::
+[Mural](https://app.mural.co/) — Monday commit, retro, skisser
 
-:::info Eksempel
-Bruk `info` for nyttig bakgrunnsinformasjon som hjelper leseren å forstå konteksten.
-:::
+[Loop](https://loop.cloud.microsoft) — Møtenotater
 
-:::warning Husk
-Beskriv forutsetninger tydelig når en oppgave krever tilgang, roller eller lokal konfigurasjon.
-:::
 
-:::danger Unngå dette
-Ikke legg inn hemmeligheter, tokens eller andre sensitive detaljer i wikien.
-:::
+## Neste steg
 
-:::details Vis syntaks
-````md
-:::tip Tips
-Kort og nyttig råd.
-:::
-````
-:::
+- Utforsk [utviklerseksjonen](./utvikling/) — frontend, backend og beste praksis
+- Les om [domenet vårt](./domene) — forstå fagområdet teamet jobber med
+- Se [systemlandskapet](./systemlandskap) — teknisk oversikt over tjenester og integrasjoner

@@ -20,3 +20,7 @@ description = "Build wiki for production"
 depends = ["wiki:install"]
 run = "pnpm build"
 dir = "docs"
+
+[tasks."wiki:verify"]
+description = "Verify wiki (dead links, build errors)"
+depends = ["wiki:build"]
