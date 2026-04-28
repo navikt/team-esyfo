@@ -6,7 +6,7 @@ Velkommen til team eSYFO! Denne siden hjelper deg med å komme raskt i gang med 
 
 Sørg for at du har tilgang til følgende verktøy og plattformer:
 
-[📽️ GitHub Projects](https://github.com/orgs/navikt/projects/157/views/8) - Oversikt av våre oppgaver i GitHub Projects
+[GitHub Projects](https://github.com/orgs/navikt/projects/157/views/8) - Oversikt av våre oppgaver i GitHub Projects
 
 [Mural](https://app.mural.co/) - Monday commit, retro, skisser
 
