@@ -170,27 +170,11 @@ Applikasjon i FSS som håndterer og lagrer digitale oppfølgingsplaner
 
 ## 🧩 Microfrontend
 
-### [aktivitetskrav-mikrofrontend](https://github.com/navikt/aktivitetskrav-mikrofrontend)
-
-Mikrofrontend for aktivitetskrav
-
-🟦 typescript
-
-### [dialogmote-mikrofrontend](https://github.com/navikt/dialogmote-mikrofrontend)
-
-Mikrofrontends for dialogmøter og møtebehov
-
-👥 team-esyfo · 🧩 microfrontend
-
 ### [esyfo-microfrontends](https://github.com/navikt/esyfo-microfrontends)
 
 *Ingen beskrivelse*
 
 🧩 microfrontend · 👥 team-esyfo · 🤖 team-esyfo-copilot
-
-### [meroppfolging-mikrofrontend](https://github.com/navikt/meroppfolging-mikrofrontend)
-
-Mikrofrontend for mer oppfølging
 
 🟦 typescript
 
