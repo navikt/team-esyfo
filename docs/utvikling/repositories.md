@@ -1,9 +1,5 @@
 # Repositories
 
-:::warning Auto-generert
-Denne oversikten er basert på data fra esyfo-cli. Ikke rediger denne siden direkte — den vil overskrives ved neste generering.
-:::
-
 ## 🌐 Frontend
 
 ### [aktivitetskrav-frontend](https://github.com/navikt/aktivitetskrav-frontend)
