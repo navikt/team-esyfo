@@ -1,35 +1,35 @@
 # Kom i gang
 
-Denne siden er en plassholder for onboarding og praktisk oppstart i teamet.
+Velkommen til team eSYFO! Denne siden hjelper deg med å komme raskt i gang med utvikling og daglig arbeid.
 
-## Foreslått innhold
+## Tilganger og daglige plattformer
 
-- hvordan sette opp lokal utvikling
-- oversikt over verktøy og tilganger
-- rutiner for deploy, varsling og støtte
+Sørg for at du har tilgang til følgende verktøy og plattformer:
 
-## Tips for skriving
+- [Google Cloud Console — eSYFO](https://console.nav.cloud.nais.io/team/team-esyfo) — Oversikt over apper, deploy og ressurser i NAIS
+- [Bauta-rutiner i Slack](https://nav-it.slack.com/docs/T5LNAMWNA/F05QS0SG09F) — Vaktrutiner og beredskap
+- [Grafana-dashboard eSYFO](https://grafana.nav.cloud.nais.io/d/eeivq822edhj4c/esyfo3a-error-summary?orgId=1&from=now-1h&to=now&timezone=browser&var-env=PD969E40991D5C4A8&var-selectedService=All&refresh=auto) — Feil og ytelse i sanntid
+- [GitHub-repoer for team eSYFO](https://github.com/orgs/navikt/teams/team-esyfo/repositories) — Alle repoer teamet har tilgang til
+- [Trello](https://trello.com/b/TH0pSLG0/esyfo) — Oppgavetavle og sprint-planlegging
 
-:::tip Tips
-Start med korte steg-for-steg-guider før siden utvides med mer detaljert dokumentasjon.
-:::
+## Neste steg
 
-:::info Eksempel
-Bruk `info` for nyttig bakgrunnsinformasjon som hjelper leseren å forstå konteksten.
-:::
+- Sett opp [lokal utvikling](./frontend/bygg-og-kjor) for frontend
+- Se [verktøy](./verktoy) for API-testing og snarveier
+- Les [beste praksis for PR](./beste-praksis/pull-request)
 
-:::warning Husk
-Beskriv forutsetninger tydelig når en oppgave krever tilgang, roller eller lokal konfigurasjon.
-:::
+:::details Skrivetips
+Denne siden bruker VitePress sin [markdown-syntax](https://vitepress.dev/guide/markdown).
 
-:::danger Unngå dette
-Ikke legg inn hemmeligheter, tokens eller andre sensitive detaljer i wikien.
-:::
-
-:::details Vis syntaks
-````md
+```md
 :::tip Tips
 Kort og nyttig råd.
 :::
-````
+```
+
+- `:::tip` — nyttige råd
+- `:::info` — bakgrunnsinformasjon
+- `:::warning` — forutsetninger og advarsler
+- `:::danger` — ting som må unngås
+- `:::details` — skjulbart innhold
 :::
