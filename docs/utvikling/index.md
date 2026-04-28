@@ -4,7 +4,7 @@ Teamets teknologivalg og konvensjoner for frontend, backend og samarbeid. Her fi
 
 ## Håndbøker
 
-Utviklerhåndbøker vi skal følge med og ta i bruk bestepraksis.
+Vi skal følge utviklerhåndbøker og ta i bruk beste praksis.
 
 [Nais utvikler dokumentasjon](https://doc.nais.io) - plattform, deploy og infrastruktur
 
@@ -28,17 +28,17 @@ Kotlin-applikasjoner med Ktor og Spring Boot, deployed til NAIS-plattformen.
 
 Pull request-rutiner, GitHub Flow og konvensjoner for kodesamarbeid i teamet.
 
-## Daglige platformer
-
-- [Google Cloud Console — eSYFO](https://console.nav.cloud.nais.io/team/team-esyfo) — Oversikt over apper, deploy og ressurser i NAIS
--
-- [Bauta-rutiner i Slack](https://nav-it.slack.com/docs/T5LNAMWNA/F05QS0SG09F) — Vaktrutiner og beredskap
--
-- [Grafana-dashboard eSYFO](https://grafana.nav.cloud.nais.io/d/eeivq822edhj4c/esyfo3a-error-summary?orgId=1&from=now-1h&to=now&timezone=browser&var-env=PD969E40991D5C4A8&var-selectedService=All&refresh=auto) — Feil og ytelse i sanntid
--
-- [GitHub-repoer for team eSYFO](https://github.com/orgs/navikt/teams/team-esyfo/repositories) — Alle repoer teamet har tilgang til og enten har admin- eller lesetilgang.
-
 </div>
+
+## Daglige plattformer
+
+[Google Cloud Console — eSYFO](https://console.nav.cloud.nais.io/team/team-esyfo) — Oversikt over apper, deploy og ressurser i NAIS
+
+[Bauta-rutiner i Slack](https://nav-it.slack.com/docs/T5LNAMWNA/F05QS0SG09F) — Vaktrutiner og beredskap
+
+[Grafana-dashboard eSYFO](https://grafana.nav.cloud.nais.io/d/eeivq822edhj4c/esyfo3a-error-summary?orgId=1&from=now-1h&to=now&timezone=browser&var-env=PD969E40991D5C4A8&var-selectedService=All&refresh=auto) — Feil og ytelse i sanntid
+
+[GitHub-repoer for team eSYFO](https://github.com/orgs/navikt/teams/team-esyfo/repositories) — Alle repoer teamet har tilgang til
 
 <style>
 .sections-grid {
