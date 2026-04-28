@@ -13,23 +13,33 @@ sequenceDiagram
     participant LPS as LPS
     participant esyfo as esyfo-narmesteleder<br/>(team-esyfo)
     participant DB as Database
+    participant t_nl as «Kafka»<br/>syfo-narmesteleder
+    participant t_leesah as «Kafka»<br/>syfo-narmesteleder-leesah
+    participant t_sm as «Kafka»<br/>syfo-sendt-sykmelding
     participant nl as narmesteleder<br/>(team-sykmelding)
     participant altinn as syfonlaltinn<br/>(team-sykmelding)
 
-    Note over esyfo,altinn: Kafka-topics med teamsykmelding.*-prefiks
+    rect rgb(240, 248, 255)
+    Note over altinn,esyfo: Kafka-flyt inn
 
-    altinn->>nl: syfo-narmesteleder
+    altinn->>t_nl: publish
+    nl-->>t_nl: consume
     activate nl
-    nl->>esyfo: syfo-narmesteleder-leesah
+    nl->>t_leesah: publish
     deactivate nl
-
+    esyfo-->>t_leesah: consume
+    esyfo-->>t_sm: consume
     esyfo->>DB: Lagrer NL-relasjon
-    esyfo-->>esyfo: syfo-sendt-sykmelding (konsumerer)
+    end
+
+    rect rgb(255, 248, 240)
+    Note over LPS,esyfo: LPS-flyt ut
 
     LPS->>esyfo: POST /api/narmesteleder
     esyfo->>DB: Lagrer NL-relasjon
-    esyfo->>nl: syfo-narmesteleder
+    esyfo->>t_nl: publish
     Note right of esyfo: Publiserer NL-relasjoner<br/>fra LPS tilbake til felles topic
+    end
 ```
 
 ::: warning Avvik fra opprinnelig design

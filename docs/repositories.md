@@ -34,6 +34,8 @@ Oversikt over din bedrifts sykmeldte
 
 *Ingen beskrivelse*
 
+🌐 frontend
+
 ### [meroppfolging-frontend](https://github.com/navikt/meroppfolging-frontend)
 
 *Ingen beskrivelse*
@@ -182,9 +184,13 @@ Mikrofrontend for aktivitetskrav
 
 Mikrofrontends for dialogmøter og møtebehov
 
+👥 team-esyfo · 🧩 microfrontend
+
 ### [esyfo-microfrontends](https://github.com/navikt/esyfo-microfrontends)
 
 *Ingen beskrivelse*
+
+🧩 microfrontend · 👥 team-esyfo · 🤖 team-esyfo-copilot
 
 ### [meroppfolging-mikrofrontend](https://github.com/navikt/meroppfolging-mikrofrontend)
 
@@ -224,6 +230,8 @@ Oversikt over API-dok som NAV eksponerer eksternt
 
 Generate PDF from Oppfolgingsplaner from LPS
 
+👥 team-esyfo
+
 ### [team-esyfo](https://github.com/navikt/team-esyfo)
 
 *Ingen beskrivelse*
@@ -231,3 +239,5 @@ Generate PDF from Oppfolgingsplaner from LPS
 ### [teamesyfo-github-actions-workflows](https://github.com/navikt/teamesyfo-github-actions-workflows)
 
 *Ingen beskrivelse*
+
+👥 team-esyfo
