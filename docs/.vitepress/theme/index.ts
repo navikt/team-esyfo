@@ -14,10 +14,10 @@ export default {
 			createMermaidRenderer({
 				theme: isDark.value ? "dark" : "forest",
 				sequence: {
-					useMaxWidth: true,
+					useMaxWidth: false,
 				},
 				flowchart: {
-					useMaxWidth: true,
+					useMaxWidth: false,
 				},
 			});
 		};
