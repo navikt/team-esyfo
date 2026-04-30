@@ -23,9 +23,6 @@ importers:
       debug:
         specifier: ^4.4.3
         version: 4.4.3
-      mermaid:
-        specifier: ^11.14.0
-        version: 11.14.0
       vite:
         specifier: ^8.0.10
         version: 8.0.10

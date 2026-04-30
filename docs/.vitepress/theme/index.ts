@@ -1,4 +1,19 @@
-import DefaultTheme from 'vitepress/theme'
-import './custom.css'
+import type { Theme } from "vitepress";
+import DefaultTheme from "vitepress/theme";
+import { defineComponent, h } from "vue";
+import MermaidOverlay from "./MermaidOverlay.vue";
+import "./custom.css";
 
-export default DefaultTheme
+const MermaidOverlayLayout = defineComponent({
+	name: "MermaidOverlayLayout",
+	setup() {
+		return () => h(DefaultTheme.Layout, null, {
+			"layout-bottom": () => h(MermaidOverlay),
+		});
+	},
+});
+
+export default {
+	extends: DefaultTheme,
+	Layout: MermaidOverlayLayout,
+} satisfies Theme;

@@ -7,3 +7,8 @@
   max-width: 100%;
   white-space: nowrap;
 }
+
+.vp-doc .mermaid svg:hover {
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
