@@ -23,9 +23,6 @@ importers:
       debug:
         specifier: ^4.4.3
         version: 4.4.3
-      svg-pan-zoom:
-        specifier: ^3.6.2
-        version: 3.6.2
       vite:
         specifier: ^8.0.10
         version: 8.0.10
@@ -1390,9 +1387,6 @@ packages:
   superjson@2.2.6:
     resolution: {integrity: sha512-H+ue8Zo4vJmV2nRjpx86P35lzwDT3nItnIsocgumgr0hHMQ+ZGq5vrERg9kJBo5AWGmxZDhzDo+WVIJqkB0cGA==}
     engines: {node: '>=16'}
-
-  svg-pan-zoom@3.6.2:
-    resolution: {integrity: sha512-JwnvRWfVKw/Xzfe6jriFyfey/lWJLq4bUh2jwoR5ChWQuQoOH8FEh1l/bEp46iHHKHEJWIyFJETbazraxNWECg==}
 
   tabbable@6.4.0:
     resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
@@ -2933,8 +2927,6 @@ snapshots:
   superjson@2.2.6:
     dependencies:
       copy-anything: 4.0.5
-
-  svg-pan-zoom@3.6.2: {}
 
   tabbable@6.4.0: {}
 
