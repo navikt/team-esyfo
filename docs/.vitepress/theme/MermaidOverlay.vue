@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 const MERMAID_SVG_SELECTOR = ".mermaid svg";
 
@@ -23,15 +23,17 @@ const close = () => {
 	svgContent.value = "";
 };
 
-const onBackdropClick = (e: MouseEvent) => {
-	if ((e.target as HTMLElement).classList.contains("mermaid-overlay")) {
-		close();
-	}
-};
-
 const onKeydown = (e: KeyboardEvent) => {
 	if (e.key === "Escape") close();
 };
+
+watch(isOpen, (open) => {
+	if (open) {
+		document.addEventListener("keydown", onKeydown);
+	} else {
+		document.removeEventListener("keydown", onKeydown);
+	}
+});
 
 const attachClickHandlers = () => {
 	for (const svg of document.querySelectorAll<SVGSVGElement>(
@@ -49,8 +51,6 @@ onMounted(() => {
 
 	observer = new MutationObserver(() => attachClickHandlers());
 	observer.observe(document.body, { childList: true, subtree: true });
-
-	document.addEventListener("keydown", onKeydown);
 });
 
 onBeforeUnmount(() => {
@@ -68,7 +68,7 @@ onBeforeUnmount(() => {
 				role="dialog"
 				aria-modal="true"
 				aria-label="Mermaid-diagram i fullskjerm"
-				@click="onBackdropClick"
+				@click.self="close"
 			>
 				<button
 					class="mermaid-overlay__close"
