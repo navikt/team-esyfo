@@ -7,3 +7,21 @@
   max-width: 100%;
   white-space: nowrap;
 }
+
+.vp-doc .mermaid {
+  width: 100%;
+  min-height: 24rem;
+  overflow: hidden;
+}
+
+.vp-doc .mermaid svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  cursor: grab;
+}
+
+.vp-doc .mermaid svg:active {
+  cursor: grabbing;
+}
