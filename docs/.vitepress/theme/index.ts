@@ -1,8 +1,8 @@
-import { h, nextTick, watch } from "vue";
 import type { Theme } from "vitepress";
 import { useData } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import { createMermaidRenderer } from "vitepress-mermaid-renderer";
+import { h, nextTick, watch } from "vue";
 import "./custom.css";
 
 export default {
@@ -13,12 +13,6 @@ export default {
 		const initMermaid = () => {
 			createMermaidRenderer({
 				theme: isDark.value ? "dark" : "forest",
-				sequence: {
-					useMaxWidth: false,
-				},
-				flowchart: {
-					useMaxWidth: false,
-				},
 			});
 		};
 
