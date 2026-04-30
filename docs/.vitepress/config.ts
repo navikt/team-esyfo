@@ -12,7 +12,11 @@ export default withMermaid(
 		base: "/team-esyfo/",
 		lastUpdated: true,
 		srcExclude: ["README.md"],
-		mermaid: {},
+		mermaid: {
+			zoom: {
+				enabled: true,
+			},
+		},
 		themeConfig: {
 			nav: [
 				{ text: "Kom i gang", link: "/" },
