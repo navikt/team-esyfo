@@ -1,6 +1,8 @@
 import { defineConfig } from "vitepress";
+import { withMermaid } from "vitepress-plugin-mermaid";
 
-export default defineConfig({
+export default withMermaid(
+	defineConfig({
 		title: "Team eSyfo",
 		description: "Dokumentasjon for Team eSyfo",
 		lang: "nb",
@@ -134,4 +136,6 @@ export default defineConfig({
 				message: "Laget av Team eSyfo ❤️",
 			},
 		},
-	});
+		mermaid: {},
+	}),
+);

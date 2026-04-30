@@ -9,8 +9,9 @@
 		"preview": "vitepress preview"
 	},
 	"devDependencies": {
+		"svg-pan-zoom": "^3.6.2",
 		"vite": "^8.0.10",
 		"vitepress": "^1.6.4",
-		"vitepress-mermaid-renderer": "^1.1.23"
+		"vitepress-plugin-mermaid": "^2.0.17"
 	}
 }

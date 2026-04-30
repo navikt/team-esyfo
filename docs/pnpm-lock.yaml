@@ -8,15 +8,18 @@ importers:
 
   .:
     devDependencies:
+      svg-pan-zoom:
+        specifier: ^3.6.2
+        version: 3.6.2
       vite:
         specifier: ^8.0.10
         version: 8.0.10
       vitepress:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.51.0)(lightningcss@1.32.0)(postcss@8.5.10)(search-insights@2.17.3)
-      vitepress-mermaid-renderer:
-        specifier: ^1.1.23
-        version: 1.1.23(mermaid@11.14.0)(vue@3.5.33)
+      vitepress-plugin-mermaid:
+        specifier: ^2.0.17
+        version: 2.0.17(mermaid@11.14.0)(vitepress@1.6.4(@algolia/client-search@5.51.0)(lightningcss@1.32.0)(postcss@8.5.10)(search-insights@2.17.3))
 
 packages:
 
@@ -115,6 +118,9 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@braintree/sanitize-url@6.0.4':
+    resolution: {integrity: sha512-s3jaWicZd0pkP0jf5ysyHUI/RE7MHos6qlToFcGWXVp+ykHOy77OUMrfbgJ9it2C5bow7OIQwYYaHjk9XlBQ2A==}
 
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
@@ -315,6 +321,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@mermaid-js/mermaid-mindmap@9.3.0':
+    resolution: {integrity: sha512-IhtYSVBBRYviH1Ehu8gk69pMDF8DSRqXBRDMWrEfHoaMruHeaP2DXA3PBnuwsMaCdPQhlUUcy/7DBLAEIXvCAw==}
 
   '@mermaid-js/parser@1.1.0':
     resolution: {integrity: sha512-gxK9ZX2+Fex5zu8LhRQoMeMPEHbc73UKZ0FQ54YrQtUxE1VVhMwzeNtKRPAu5aXks4FasbMe4xB4bWrmq6Jlxw==}
@@ -1250,6 +1259,9 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  non-layered-tidy-tree-layout@2.0.2:
+    resolution: {integrity: sha512-gkXMxRzUH+PB0ax9dUN0yYF0S25BqeAYqhgMaLUFmpXLEk7Fcu8f4emJuOAY0V8kjDICxROIKsTAKsV/v355xw==}
+
   oniguruma-to-es@3.1.1:
     resolution: {integrity: sha512-bUH8SDvPkH3ho3dvwJwfonjlQ4R80vjyvrU8YpxuROddv55vAEJrTuCuCVUhhsHbtlD9tGGbaNApGQckXhS8iQ==}
 
@@ -1351,6 +1363,9 @@ packages:
   superjson@2.2.6:
     resolution: {integrity: sha512-H+ue8Zo4vJmV2nRjpx86P35lzwDT3nItnIsocgumgr0hHMQ+ZGq5vrERg9kJBo5AWGmxZDhzDo+WVIJqkB0cGA==}
     engines: {node: '>=16'}
+
+  svg-pan-zoom@3.6.2:
+    resolution: {integrity: sha512-JwnvRWfVKw/Xzfe6jriFyfey/lWJLq4bUh2jwoR5ChWQuQoOH8FEh1l/bEp46iHHKHEJWIyFJETbazraxNWECg==}
 
   tabbable@6.4.0:
     resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
@@ -1475,12 +1490,11 @@ packages:
       yaml:
         optional: true
 
-  vitepress-mermaid-renderer@1.1.23:
-    resolution: {integrity: sha512-yY2AP8dagi7k/tfkxkR2Ct++uPP7g4kV2zgWs7Q7UOEr1KeyWgGkHsJtdFMnBKJjVzRAdvvEu3wxD8zysBsWnQ==}
-    engines: {node: '>=16.0.0'}
+  vitepress-plugin-mermaid@2.0.17:
+    resolution: {integrity: sha512-IUzYpwf61GC6k0XzfmAmNrLvMi9TRrVRMsUyCA8KNXhg/mQ1VqWnO0/tBVPiX5UoKF1mDUwqn5QV4qAJl6JnUg==}
     peerDependencies:
-      mermaid: ^11.0.0
-      vue: ^3.0.0
+      mermaid: 10 || 11
+      vitepress: ^1.0.0 || ^1.0.0-alpha
 
   vitepress@1.6.4:
     resolution: {integrity: sha512-+2ym1/+0VVrbhNyRoFFesVvBvHAVMZMK0rw60E3X/5349M1GuVdKeazuksqopEdvkKwKGs21Q729jX81/bkBJg==}
@@ -1657,6 +1671,9 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@braintree/sanitize-url@6.0.4':
+    optional: true
+
   '@braintree/sanitize-url@7.1.2': {}
 
   '@chevrotain/cst-dts-gen@12.0.0':
@@ -1796,6 +1813,17 @@ snapshots:
       mlly: 1.8.2
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@mermaid-js/mermaid-mindmap@9.3.0':
+    dependencies:
+      '@braintree/sanitize-url': 6.0.4
+      cytoscape: 3.33.2
+      cytoscape-cose-bilkent: 4.1.0(cytoscape@3.33.2)
+      cytoscape-fcose: 2.2.0(cytoscape@3.33.2)
+      d3: 7.9.0
+      khroma: 2.1.0
+      non-layered-tidy-tree-layout: 2.0.2
+    optional: true
 
   '@mermaid-js/parser@1.1.0':
     dependencies:
@@ -2722,6 +2750,9 @@ snapshots:
 
   nanoid@3.3.11: {}
 
+  non-layered-tidy-tree-layout@2.0.2:
+    optional: true
+
   oniguruma-to-es@3.1.1:
     dependencies:
       emoji-regex-xs: 1.0.0
@@ -2870,6 +2901,8 @@ snapshots:
     dependencies:
       copy-anything: 4.0.5
 
+  svg-pan-zoom@3.6.2: {}
+
   tabbable@6.4.0: {}
 
   tinyexec@1.1.1: {}
@@ -2942,10 +2975,12 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  vitepress-mermaid-renderer@1.1.23(mermaid@11.14.0)(vue@3.5.33):
+  vitepress-plugin-mermaid@2.0.17(mermaid@11.14.0)(vitepress@1.6.4(@algolia/client-search@5.51.0)(lightningcss@1.32.0)(postcss@8.5.10)(search-insights@2.17.3)):
     dependencies:
       mermaid: 11.14.0
-      vue: 3.5.33
+      vitepress: 1.6.4(@algolia/client-search@5.51.0)(lightningcss@1.32.0)(postcss@8.5.10)(search-insights@2.17.3)
+    optionalDependencies:
+      '@mermaid-js/mermaid-mindmap': 9.3.0
 
   vitepress@1.6.4(@algolia/client-search@5.51.0)(lightningcss@1.32.0)(postcss@8.5.10)(search-insights@2.17.3):
     dependencies:
