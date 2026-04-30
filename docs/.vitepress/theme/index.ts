@@ -1,6 +1,6 @@
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
-import { h, nextTick, onBeforeUnmount, onMounted } from "vue";
+import { defineComponent, h, nextTick, onBeforeUnmount, onMounted } from "vue";
 import "./custom.css";
 
 type SvgPanZoomModule = typeof import("svg-pan-zoom");
@@ -201,11 +201,16 @@ function useMermaidPanZoom() {
 	});
 }
 
-export default {
-	extends: DefaultTheme,
-	Layout: () => {
+const MermaidPanZoomLayout = defineComponent({
+	name: "MermaidPanZoomLayout",
+	setup() {
 		useMermaidPanZoom();
 
-		return h(DefaultTheme.Layout);
+		return () => h(DefaultTheme.Layout);
 	},
+});
+
+export default {
+	extends: DefaultTheme,
+	Layout: MermaidPanZoomLayout,
 } satisfies Theme;
