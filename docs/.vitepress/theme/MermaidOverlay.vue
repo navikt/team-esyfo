@@ -96,20 +96,24 @@ onBeforeUnmount(() => {
 }
 
 .mermaid-overlay__content {
-	max-width: 95vw;
-	max-height: 90vh;
+	width: 95vw;
+	height: 90vh;
 	background: var(--vp-c-bg);
 	border-radius: 8px;
 	padding: 1.5rem;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 	overflow: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .mermaid-overlay__content :deep(svg) {
 	display: block;
-	width: 100%;
-	height: auto;
 	max-width: 100%;
+	max-height: 100%;
+	width: auto;
+	height: auto;
 }
 
 .mermaid-overlay__close {
