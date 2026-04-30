@@ -136,6 +136,5 @@ export default withMermaid(
 				message: "Laget av Team eSyfo ❤️",
 			},
 		},
-		mermaid: {},
 	}),
 );
