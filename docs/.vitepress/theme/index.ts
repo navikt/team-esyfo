@@ -13,6 +13,12 @@ export default {
 		const initMermaid = () => {
 			createMermaidRenderer({
 				theme: isDark.value ? "dark" : "forest",
+				sequence: {
+					useMaxWidth: true,
+				},
+				flowchart: {
+					useMaxWidth: true,
+				},
 			});
 		};
 
