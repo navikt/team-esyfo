@@ -16,6 +16,6 @@ Sørg for at du har tilgang til følgende verktøy og plattformer:
 ## Neste steg
 
 - Utforsk [utviklerseksjonen](./utvikling/) — frontend, backend og beste praksis
-- Se [områdeoversikten](./omrader/) — forstå fagområdene teamet jobber med
-- Se [tidslinjen](./tidslinje) — når ulike områder er relevante i sykefraværsforløpet
+- Se [områdeoversikten](./omrader/) — forstå områdene teamet jobber med
 - Se [fellestjenester](./omrader/fellestjenester/) — felles tjenester, avhengigheter og crossdomain-apper
+- Se [verktøy](./verktoy/) — Hovmester, CI/CD og teamverktøy

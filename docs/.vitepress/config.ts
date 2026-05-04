@@ -26,6 +26,7 @@ export default withMermaid(
 			nav: [
 				{ text: "Kom i gang", link: "/kom-i-gang" },
 				{ text: "Områder", link: "/omrader/" },
+				{ text: "Verktøy", link: "/verktoy/" },
 				{ text: "Utvikling", link: "/utvikling/" },
 				{
 					text: "GitHub",

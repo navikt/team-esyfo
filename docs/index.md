@@ -21,8 +21,8 @@ features:
     link: /kom-i-gang
     linkText: Til onboarding
   - icon: 📖
-    title: Fagområder
-    details: Oversikt over alle fagområder teamet eier — fra aktivitetskrav til oppfølgingsplan.
+    title: Områder
+    details: Oversikt over alle områder teamet eier — fra aktivitetskrav til oppfølgingsplan.
     link: /omrader/
     linkText: Se alle områder
   - icon: 🧑‍💻
