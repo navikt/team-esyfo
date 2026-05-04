@@ -2,6 +2,7 @@ import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import { defineComponent, h } from "vue";
 import MermaidOverlay from "./MermaidOverlay.vue";
+import Timeline from "../components/Timeline.vue";
 import "./custom.css";
 
 const MermaidOverlayLayout = defineComponent({
@@ -16,4 +17,7 @@ const MermaidOverlayLayout = defineComponent({
 export default {
 	extends: DefaultTheme,
 	Layout: MermaidOverlayLayout,
+	enhanceApp({ app }) {
+		app.component("Timeline", Timeline);
+	},
 } satisfies Theme;
