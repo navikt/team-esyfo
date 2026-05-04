@@ -31,12 +31,12 @@ Når kriteriene er oppfylt, får den sykmeldte en notifikasjon og en SMS om at N
 Den sykmeldte ser en microfrontend på [Min side](https://www.nav.no/minside) med lenke til kartleggingsskjemaet:
 
 ::: tip Storybook 🎨
-[Se hvordan det ser ut før besvarelse →](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-ikke-svart)
+[Se hvordan det ser ut før sykmeldt har svart →](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-ikke-svart)
 :::
 
 ### 4. ✍️ Besvarelse
 
-Den sykmeldte klikker seg videre til [kartleggingsskjemaet](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal) og svarer på spørsmålene. Etter besvarelse får den sykmeldte et kort tilbakemeldingsskjema via Lumi om hvordan det var å svare.
+Den sykmeldte klikker seg videre til kartleggingsskjemaet og svarer på spørsmålene.
 
 ::: tip Demo 🎯
 [Prøv kartleggingsskjemaet i demo →](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal)
@@ -61,7 +61,7 @@ Nav-veileder får tilgang til svarene i Modia og bruker dem i oppfølgingen av d
 | Oppfølgingstilfelle | En sammenhengende sykefraværsperiode for én person, beregnet av iSyfo. Kan inneholde flere sykmeldinger og friske dager. |
 | Kandidat            | En sykmeldt som oppfyller kriteriene for kartlegging, basert på oppfølgingstilfellets varighet                           |
 | Kandidatstatus      | Angir om personen kan besvare kartleggingsskjemaet                                                                       |
-| Microfrontend | UI-paneler fra eSyfo integrert på Min side. Hvilke paneler som vises avhenger av hva som er aktivert for den sykmeldte. |
+| Microfrontend       | UI-paneler fra eSyfo integrert på Min side. Hvilke paneler som vises avhenger av hva som er aktivert for den sykmeldte.  |
 | Lumi                | Personvernvennlig spørreundersøkelse som samler inn tilbakemelding om kartleggingsopplevelsen                            |
 
 ::: info 🔧 Teknisk oversikt
