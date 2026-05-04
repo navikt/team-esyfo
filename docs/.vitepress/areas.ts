@@ -33,6 +33,26 @@ export const areas: Area[] = [
 		description:
 			"Spørsmål til den sykmeldte tidlig i forløpet. Gir Nav og arbeidsgiver bedre grunnlag for oppfølging.",
 		path: "/omrader/kartleggingssporsmal/",
+		subpages: [
+			{ text: "Teknisk", link: "/omrader/kartleggingssporsmal/teknisk" },
+		],
+		dependencies: [
+			{
+				system: "ismeroppfolging (team iSyfo)",
+				direction: "inn",
+				description: "Produserer kandidat-hendelser via Kafka",
+			},
+			{
+				system: "Min side (team navno)",
+				direction: "ut",
+				description: "Microfrontend vises i Min side",
+			},
+			{
+				system: "syfomodiaperson (team iSyfo)",
+				direction: "ut",
+				description: "Veileder ser kartleggingssvar",
+			},
+		],
 	},
 	{
 		id: "dine-sykmeldte",
