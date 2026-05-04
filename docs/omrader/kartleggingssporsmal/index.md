@@ -8,12 +8,39 @@ Kartleggingsspørsmålene samler inn informasjon fra den sykmeldte tidlig i syke
 
 ## Brukerreisen
 
-1. **Automatisk vurdering** — Systemet sjekker om den sykmeldte oppfyller kriteriene for kartlegging. Vurderingen tar hensyn til hvor lenge personen har vært sykmeldt, alder og hvilket Nav-kontor som følger opp.
-2. **Varsel** — Når kriteriene er oppfylt, får den sykmeldte en SMS og en notifikasjon om at kartleggingen er klar.
-3. **Kartlegging tilgjengelig** — Den sykmeldte ser en melding på Min side med lenke til kartleggingsskjemaet.
-4. **Besvarelse** — Den sykmeldte klikker seg videre og svarer på spørsmålene.
-5. **Fullført** — Etter besvarelse endres meldingen på Min side til å vise at kartleggingen er gjennomført.
-6. **Svarene brukes** — Nav-veileder får tilgang til svarene og bruker dem i oppfølgingen av den sykmeldte.
+::: tip 🎯 Prøv selv
+[Åpne demo-kartleggingen →](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal)
+:::
+
+### 1. 🔍 Automatisk vurdering
+
+Systemet sjekker om den sykmeldte oppfyller kriteriene for kartlegging. Vurderingen tar hensyn til hvor lenge personen har vært sykmeldt, alder og hvilket Nav-kontor som følger opp.
+
+### 2. 📲 Varsel
+
+Når kriteriene er oppfylt, får den sykmeldte en SMS og en melding om at kartleggingen er klar.
+
+### 3. 🏠 Kartlegging på Min side
+
+Den sykmeldte ser en microfrontend på [Min side](https://www.nav.no/minside) med lenke til kartleggingsskjemaet:
+
+> [Se hvordan det ser ut før besvarelse (Storybook) →](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-ikke-svart)
+
+### 4. ✍️ Besvarelse
+
+Den sykmeldte klikker seg videre til [kartleggingsskjemaet](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal) og svarer på spørsmålene. Etter besvarelse får den sykmeldte en kort tilbakemeldings-undersøkelse via Lumi om hvordan det var å svare.
+
+### 5. ✅ Fullført
+
+Etter besvarelse oppdateres microfrontenden på Min side:
+
+> [Se hvordan det ser ut etter besvarelse (Storybook) →](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-svart)
+
+### 6. 👀 Svarene brukes
+
+Nav-veileder får tilgang til svarene i Modia og bruker dem i oppfølgingen av den sykmeldte.
+
+---
 
 ## Viktige begreper
 
@@ -21,26 +48,16 @@ Kartleggingsspørsmålene samler inn informasjon fra den sykmeldte tidlig i syke
 |--------|-----------|
 | Kandidat | En sykmeldt som oppfyller kriteriene for kartlegging, basert på sykmeldingsvarighet |
 | Kandidat-status | Angir om personen kan besvare kartleggingsskjemaet |
-| Lumi | Personvernvennlig spørreundersøkelse som brukes inne i kartleggingsskjemaet |
+| Microfrontend | Meldingen den sykmeldte ser på Min side — eid av oss, vist i en annen apps kontekst |
+| Lumi | Personvernvennlig survey som samler inn tilbakemelding om kartleggingsopplevelsen |
 
 ## Brukergrupper
 
 | Brukergruppe | Rolle |
 |---|---|
-| Den sykmeldte | Mottar varsel, besvarer kartleggingsskjemaet |
+| Den sykmeldte | Mottar varsel, besvarer kartleggingsskjemaet via Min side |
 | Nav-veileder | Ser svarene i Modia og bruker dem i oppfølgingen |
 | Arbeidsgiver | Får indirekte nytte via veileders oppfølging |
-
-## Slik ser det ut
-
-Kartleggingen vises som en melding på Min side. Her er eksempler fra designbiblioteket:
-
-- [Før den sykmeldte har svart (Storybook)](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-ikke-svart)
-- [Etter at den sykmeldte har svart (Storybook)](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-svart)
-
-## Demo
-
-Prøv kartleggingsskjemaet i demomiljøet: [demo.ekstern.dev.nav.no/syk/kartleggingssporsmal](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal)
 
 ## Teknisk dokumentasjon
 
