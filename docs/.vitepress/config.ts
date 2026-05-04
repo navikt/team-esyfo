@@ -1,5 +1,19 @@
 import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-plugin-mermaid";
+import { areas } from "./areas";
+
+function buildAreaSidebar() {
+	return areas.map((area) => ({
+		text: `${area.emoji} ${area.name}`,
+		collapsed: true,
+		items: [
+			{ text: "Oversikt", link: area.path },
+			...(area.id === "narmeste-leder"
+				? [{ text: "Teknisk", link: "/omrader/narmeste-leder/teknisk" }]
+				: []),
+		],
+	}));
+}
 
 export default withMermaid(
 	defineConfig({
@@ -13,9 +27,9 @@ export default withMermaid(
 		themeConfig: {
 			nav: [
 				{ text: "Kom i gang", link: "/" },
+				{ text: "Områder", link: "/omrader/" },
+				{ text: "Tidslinje", link: "/tidslinje" },
 				{ text: "Utvikling", link: "/utvikling/" },
-				{ text: "Domene", link: "/domene" },
-				{ text: "Systemlandskap", link: "/systemlandskap" },
 				{
 					text: "GitHub",
 					link: "https://github.com/navikt/team-esyfo",
@@ -60,14 +74,17 @@ export default withMermaid(
 					items: [{ text: "Onboarding", link: "/kom-i-gang" }],
 				},
 				{
-					text: "Domene",
-					items: [{ text: "Domenebeskrivelser", link: "/domene" }],
+					text: "Områder",
+					items: [
+						{ text: "Oversikt", link: "/omrader/" },
+						...buildAreaSidebar(),
+					],
 				},
 				{
-					text: "Systemlandskap",
+					text: "Forløp og avhengigheter",
 					items: [
-						{ text: "Teknisk oversikt", link: "/systemlandskap" },
-						{ text: "Nærmeste leder", link: "/arkitektur/narmesteleder" },
+						{ text: "Tidslinje", link: "/tidslinje" },
+						{ text: "Avhengigheter", link: "/avhengigheter" },
 					],
 				},
 				{

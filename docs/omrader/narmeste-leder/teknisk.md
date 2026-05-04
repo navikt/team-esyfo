@@ -1,4 +1,4 @@
-# Nærmeste leder
+# Nærmeste leder — teknisk oversikt
 
 Nærmeste leder-løsningen håndterer relasjoner mellom sykmeldt og nærmeste leder. Målene er:
 

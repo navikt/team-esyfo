@@ -16,5 +16,6 @@ Sørg for at du har tilgang til følgende verktøy og plattformer:
 ## Neste steg
 
 - Utforsk [utviklerseksjonen](./utvikling/) — frontend, backend og beste praksis
-- Les om [domenet vårt](./domene) — forstå fagområdet teamet jobber med
-- Se [systemlandskapet](./systemlandskap) — teknisk oversikt over tjenester og integrasjoner
+- Se [områdeoversikten](./omrader/) — forstå fagområdene teamet jobber med
+- Se [tidslinjen](./tidslinje) — når ulike områder er relevante i sykefraværsforløpet
+- Se [avhengigheter](./avhengigheter) — teamets avhengigheter til andre team og systemer
