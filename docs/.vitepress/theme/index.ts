@@ -1,16 +1,17 @@
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import { defineComponent, h } from "vue";
-import MermaidOverlay from "./MermaidOverlay.vue";
 import Timeline from "../components/Timeline.vue";
+import MermaidOverlay from "./MermaidOverlay.vue";
 import "./custom.css";
 
 const MermaidOverlayLayout = defineComponent({
 	name: "MermaidOverlayLayout",
 	setup() {
-		return () => h(DefaultTheme.Layout, null, {
-			"layout-bottom": () => h(MermaidOverlay),
-		});
+		return () =>
+			h(DefaultTheme.Layout, null, {
+				"layout-bottom": () => h(MermaidOverlay),
+			});
 	},
 });
 

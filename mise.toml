@@ -21,6 +21,12 @@ depends = ["wiki:install"]
 run = "pnpm build"
 dir = "docs"
 
+[tasks."wiki:check"]
+description = "Lint and format wiki source files"
+depends = ["wiki:install"]
+run = "pnpm exec biome check --fix"
+dir = "docs"
+
 [tasks."wiki:verify"]
 description = "Verify wiki (dead links, build errors)"
 depends = ["wiki:build"]

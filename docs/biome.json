@@ -1,7 +1,7 @@
 {
 	"$schema": "https://biomejs.dev/schemas/latest/schema.json",
 	"files": {
-		"includes": ["docs/**"]
+		"includes": [".vitepress/**", "!.vitepress/dist", "!.vitepress/cache"]
 	},
 	"linter": {
 		"enabled": true,
@@ -14,7 +14,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["**/*.vue"],
+			"includes": [".vitepress/**/*.vue"],
 			"linter": {
 				"rules": {
 					"correctness": {
