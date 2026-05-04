@@ -11,8 +11,8 @@ Team eSyfo bruker GitHub Actions for bygg, test og deploy til NAIS-plattformen.
 
 ## Innhold (planlagt)
 
-- Workflow-struktur og gjenbrukbare workflows
-- Deploy til dev og prod
-- Feature-branch-deploys
+- Oppbygging og gjenbruk av GitHub Actions-arbeidsflyter
+- Utrulling til dev- og produksjonsmiljø
+- Utrulling fra feature-brancher
 - Hemmeligheter og miljøvariabler
-- Overvåkning av pipelines
+- Overvåkning av kjøringer
