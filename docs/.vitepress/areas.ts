@@ -7,6 +7,12 @@ export interface Area {
 	phase: Phase;
 	description: string;
 	path: string;
+	subpages?: { text: string; link: string }[];
+	dependencies?: {
+		system: string;
+		direction: "inn" | "ut" | "begge";
+		description: string;
+	}[];
 }
 
 export const areas: Area[] = [
@@ -45,6 +51,7 @@ export const areas: Area[] = [
 		description:
 			"Relasjonshåndtering mellom sykmeldt og nærmeste leder. Sikrer riktig kobling mellom partene.",
 		path: "/omrader/narmeste-leder/",
+		subpages: [{ text: "Teknisk", link: "/omrader/narmeste-leder/teknisk" }],
 	},
 	{
 		id: "motebehov",
@@ -74,13 +81,13 @@ export const areas: Area[] = [
 		path: "/omrader/mer-oppfolging/",
 	},
 	{
-		id: "delt-infrastruktur",
-		name: "Delt infrastruktur",
+		id: "fellestjenester",
+		name: "Fellestjenester",
 		emoji: "🔧",
 		phase: "continuous",
 		description:
 			"Felles tjenester og infrastruktur som brukes på tvers av områdene. Tidligere kalt «crossdomain».",
-		path: "/omrader/delt-infrastruktur/",
+		path: "/omrader/fellestjenester/",
 	},
 ];
 
@@ -96,4 +103,20 @@ export const phaseColors: Record<Phase, string> = {
 	mid: "yellow",
 	late: "orange",
 	continuous: "blue",
+};
+
+export const phaseDescriptions: Record<Phase, string> = {
+	early:
+		"Fokus på tidlig aktivitet og kartlegging. Arbeidsgiver og Nav samler grunnlag for videre oppfølging.",
+	mid: "Dialog og planlegging. Partene avklarer behov for møte og lager en oppfølgingsplan med tiltak og mål.",
+	late: "Sykepengene nærmer seg slutt. Den sykmeldte trenger informasjon om videre valg og rettigheter.",
+	continuous:
+		"Dine sykmeldte, nærmeste leder og fellestjenester er aktive gjennom hele forløpet og støtter de andre områdene.",
+};
+
+export const phaseWeeks: Record<Phase, { start: number; end: number }> = {
+	early: { start: 0, end: 8 },
+	mid: { start: 8, end: 26 },
+	late: { start: 26, end: 52 },
+	continuous: { start: 0, end: 52 },
 };

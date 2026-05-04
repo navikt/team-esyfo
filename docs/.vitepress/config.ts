@@ -8,9 +8,7 @@ function buildAreaSidebar() {
 		collapsed: true,
 		items: [
 			{ text: "Oversikt", link: area.path },
-			...(area.id === "narmeste-leder"
-				? [{ text: "Teknisk", link: "/omrader/narmeste-leder/teknisk" }]
-				: []),
+			...(area.subpages ?? []),
 		],
 	}));
 }
@@ -26,9 +24,8 @@ export default withMermaid(
 		srcExclude: ["README.md"],
 		themeConfig: {
 			nav: [
-				{ text: "Kom i gang", link: "/" },
+				{ text: "Kom i gang", link: "/kom-i-gang" },
 				{ text: "Områder", link: "/omrader/" },
-				{ text: "Tidslinje", link: "/tidslinje" },
 				{ text: "Utvikling", link: "/utvikling/" },
 				{
 					text: "GitHub",
@@ -66,10 +63,6 @@ export default withMermaid(
 			},
 			sidebar: [
 				{
-					text: "Wiki",
-					items: [{ text: "Hjem", link: "/" }],
-				},
-				{
 					text: "Kom i gang",
 					items: [{ text: "Onboarding", link: "/kom-i-gang" }],
 				},
@@ -81,10 +74,12 @@ export default withMermaid(
 					],
 				},
 				{
-					text: "Forløp og avhengigheter",
+					text: "Verktøy",
+					collapsed: false,
 					items: [
-						{ text: "Tidslinje", link: "/tidslinje" },
-						{ text: "Avhengigheter", link: "/avhengigheter" },
+						{ text: "Oversikt", link: "/verktoy/" },
+						{ text: "Hovmester", link: "/verktoy/hovmester" },
+						{ text: "CI/CD", link: "/verktoy/ci-cd" },
 					],
 				},
 				{

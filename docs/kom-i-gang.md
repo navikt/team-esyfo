@@ -1,6 +1,6 @@
 # Kom i gang
 
-Velkommen til team eSYFO! Denne siden hjelper deg med å komme raskt i gang med utvikling og daglig arbeid.
+Velkommen til Team eSyfo! Denne siden hjelper deg med å komme raskt i gang med utvikling og daglig arbeid.
 
 ## Våre viktigste apper til daglig bruk
 
@@ -18,4 +18,4 @@ Sørg for at du har tilgang til følgende verktøy og plattformer:
 - Utforsk [utviklerseksjonen](./utvikling/) — frontend, backend og beste praksis
 - Se [områdeoversikten](./omrader/) — forstå fagområdene teamet jobber med
 - Se [tidslinjen](./tidslinje) — når ulike områder er relevante i sykefraværsforløpet
-- Se [avhengigheter](./avhengigheter) — teamets avhengigheter til andre team og systemer
+- Se [fellestjenester](./omrader/fellestjenester/) — felles tjenester, avhengigheter og crossdomain-apper
