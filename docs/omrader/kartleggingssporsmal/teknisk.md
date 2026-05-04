@@ -28,6 +28,8 @@ sequenceDiagram
     rect rgb(248, 255, 240)
     Note over bruker,backend: Besvarelse
 
+    esyfovarsel->>micro: Aktiverer microfrontend (meroppfølging-widget)
+    micro->>backend: Henter kandidat-status (on load)
     bruker->>micro: Ser kartleggings-widget på Min side
     micro->>bro: Klikker videre til skjema
     Note right of bro: TokenX-autentisering
@@ -61,14 +63,7 @@ sequenceDiagram
 | [bro-frontend](https://github.com/navikt/bro-frontend) | Kartleggingsskjema (TokenX-autentisert) |
 | [meroppfolging-backend](https://github.com/navikt/meroppfolging-backend) | Lagrer svar og publiserer til Kafka |
 | [syfomodiaperson](https://github.com/navikt/syfomodiaperson) | Viser svar til Nav-veileder (eid av team sykefravær) |
-
-## Miljøer
-
-| Miljø | URL |
-|-------|-----|
-| Prod | https://www.nav.no/syk/kartleggingssporsmal |
-| Dev | https://www.ekstern.dev.nav.no/syk/kartleggingssporsmal |
-| Demo | https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal |
+| [Lumi](https://aksel.nav.no/komponenter/lumi-survey) | Tilbakemeldingswidget for brukerundersøkelser |
 
 ## API-dokumentasjon
 
