@@ -4,11 +4,11 @@ layout: home
 hero:
   name: Team eSyfo Wiki
   text: Ekstern sykefraværsoppfølging
-  tagline: Felles oversikt over onboarding, domene, systemlandskap og verktøy for Team eSyfo.
+  tagline: Felles oversikt over områder, utvikling og verktøy for Team eSyfo.
   actions:
     - theme: brand
-      text: Kom i gang →
-      link: /kom-i-gang
+      text: Områdeoversikt →
+      link: /omrader/
     - theme: alt
       text: GitHub
       link: https://github.com/navikt/team-esyfo
@@ -17,22 +17,22 @@ hero:
 features:
   - icon: 🚀
     title: Kom i gang
-    details: Få en rask start med onboarding, tilganger, rutiner og praktiske tips for nye teammedlemmer.
+    details: Onboarding, tilganger, verktøy og praktiske tips for nye teammedlemmer.
     link: /kom-i-gang
-    linkText: Se onboarding
+    linkText: Til onboarding
   - icon: 📖
-    title: Domene og fagområde
-    details: Les om sentrale begreper, ansvar og avgrensninger i domenet teamet jobber med.
-    link: /domene
-    linkText: Utforsk domenet
+    title: Områder
+    details: Oversikt over alle områder teamet eier — fra aktivitetskrav til oppfølgingsplan.
+    link: /omrader/
+    linkText: Se alle områder
   - icon: 🧑‍💻
-    title: Utviklerhåndbok
-    details: Alt om utvikling i teamet — frontend, backend og beste praksis for kode og pull requests.
+    title: Utvikling
+    details: Frontend, backend, beste praksis og utviklerverktøy for teamet.
     link: /utvikling/
     linkText: Til utvikling
-  - icon: 🏗️
-    title: Systemlandskap
-    details: Se teknisk oversikt over tjenester, integrasjoner, dataflyt og viktige avhengigheter.
-    link: /systemlandskap
-    linkText: Se teknisk oversikt
+  - icon: 🛠️
+    title: Verktøy
+    details: Hovmester, CI/CD og andre verktøy som støtter teamets arbeidsprosesser.
+    link: /verktoy/
+    linkText: Se verktøy
 ---

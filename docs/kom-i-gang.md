@@ -1,6 +1,6 @@
 # Kom i gang
 
-Velkommen til team eSYFO! Denne siden hjelper deg med å komme raskt i gang med utvikling og daglig arbeid.
+Velkommen til Team eSyfo! Denne siden hjelper deg med å komme raskt i gang med utvikling og daglig arbeid.
 
 ## Våre viktigste apper til daglig bruk
 
@@ -16,5 +16,6 @@ Sørg for at du har tilgang til følgende verktøy og plattformer:
 ## Neste steg
 
 - Utforsk [utviklerseksjonen](./utvikling/) — frontend, backend og beste praksis
-- Les om [domenet vårt](./domene) — forstå fagområdet teamet jobber med
-- Se [systemlandskapet](./systemlandskap) — teknisk oversikt over tjenester og integrasjoner
+- Se [områdeoversikten](./omrader/) — forstå områdene teamet jobber med
+- Se [fellestjenester](./omrader/fellestjenester/) — felles tjenester, avhengigheter og crossdomain-apper
+- Se [verktøy](./verktoy/) — Hovmester, CI/CD og teamverktøy

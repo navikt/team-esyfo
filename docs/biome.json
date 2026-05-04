@@ -1,0 +1,28 @@
+{
+	"$schema": "https://biomejs.dev/schemas/latest/schema.json",
+	"files": {
+		"includes": [".vitepress/**", "!.vitepress/dist", "!.vitepress/cache"]
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"correctness": {
+				"noUnusedImports": "error",
+				"noUnusedVariables": "error"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": [".vitepress/**/*.vue"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off"
+					}
+				}
+			}
+		}
+	]
+}

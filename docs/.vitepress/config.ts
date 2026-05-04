@@ -1,5 +1,14 @@
 import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-plugin-mermaid";
+import { areas } from "./areas";
+
+function buildAreaSidebar() {
+	return areas.map((area) => ({
+		text: `${area.emoji} ${area.name}`,
+		collapsed: true,
+		items: [{ text: "Oversikt", link: area.path }, ...(area.subpages ?? [])],
+	}));
+}
 
 export default withMermaid(
 	defineConfig({
@@ -12,10 +21,10 @@ export default withMermaid(
 		srcExclude: ["README.md"],
 		themeConfig: {
 			nav: [
-				{ text: "Kom i gang", link: "/" },
+				{ text: "Kom i gang", link: "/kom-i-gang" },
+				{ text: "Områder", link: "/omrader/" },
+				{ text: "Verktøy", link: "/verktoy/" },
 				{ text: "Utvikling", link: "/utvikling/" },
-				{ text: "Domene", link: "/domene" },
-				{ text: "Systemlandskap", link: "/systemlandskap" },
 				{
 					text: "GitHub",
 					link: "https://github.com/navikt/team-esyfo",
@@ -52,22 +61,23 @@ export default withMermaid(
 			},
 			sidebar: [
 				{
-					text: "Wiki",
-					items: [{ text: "Hjem", link: "/" }],
-				},
-				{
 					text: "Kom i gang",
 					items: [{ text: "Onboarding", link: "/kom-i-gang" }],
 				},
 				{
-					text: "Domene",
-					items: [{ text: "Domenebeskrivelser", link: "/domene" }],
+					text: "Områder",
+					items: [
+						{ text: "Oversikt", link: "/omrader/" },
+						...buildAreaSidebar(),
+					],
 				},
 				{
-					text: "Systemlandskap",
+					text: "Verktøy",
+					collapsed: false,
 					items: [
-						{ text: "Teknisk oversikt", link: "/systemlandskap" },
-						{ text: "Nærmeste leder", link: "/arkitektur/narmesteleder" },
+						{ text: "Oversikt", link: "/verktoy/" },
+						{ text: "Hovmester", link: "/verktoy/hovmester" },
+						{ text: "CI/CD", link: "/verktoy/ci-cd" },
 					],
 				},
 				{
