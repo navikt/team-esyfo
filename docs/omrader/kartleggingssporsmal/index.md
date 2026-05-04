@@ -21,7 +21,7 @@ Kartleggingsspørsmålene samler inn informasjon fra den sykmeldte tidlig i syke
 |--------|-----------|
 | Kandidat | En sykmeldt som oppfyller kriteriene for kartlegging, basert på sykmeldingsvarighet |
 | Kandidat-status | Angir om personen kan besvare kartleggingsskjemaet |
-| Lumi | Verktøyet som viser spørsmålene. Svarene lagres personvernvennlig etter besvarelse |
+| Lumi | Personvernvennlig spørreundersøkelse som brukes inne i kartleggingsskjemaet |
 
 ## Brukergrupper
 
@@ -33,7 +33,7 @@ Kartleggingsspørsmålene samler inn informasjon fra den sykmeldte tidlig i syke
 
 ## Slik ser det ut
 
-Kartleggingen vises som en microfrontend på Min side. Her er eksempler:
+Kartleggingen vises som en melding på Min side. Her er eksempler fra designbiblioteket:
 
 - [Før den sykmeldte har svart (Storybook)](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-ikke-svart)
 - [Etter at den sykmeldte har svart (Storybook)](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-svart)
