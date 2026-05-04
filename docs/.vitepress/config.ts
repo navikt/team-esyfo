@@ -6,10 +6,7 @@ function buildAreaSidebar() {
 	return areas.map((area) => ({
 		text: `${area.emoji} ${area.name}`,
 		collapsed: true,
-		items: [
-			{ text: "Oversikt", link: area.path },
-			...(area.subpages ?? []),
-		],
+		items: [{ text: "Oversikt", link: area.path }, ...(area.subpages ?? [])],
 	}));
 }
 
