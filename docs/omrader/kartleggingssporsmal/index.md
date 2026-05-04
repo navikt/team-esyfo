@@ -24,7 +24,7 @@ Systemet ([ismeroppfolging](https://github.com/navikt/ismeroppfolging), eid av t
 
 ### 2. 📲 Varsel
 
-Når kriteriene er oppfylt, får den sykmeldte en SMS om at Nav har sendt noen spørsmål, med oppfordring om å logge inn på Nav for å svare.
+Når kriteriene er oppfylt, får den sykmeldte en notifikasjon og en SMS om at Nav har sendt noen spørsmål, med oppfordring om å logge inn på Nav for å svare.
 
 ### 3. 🏠 Kartlegging på Min side
 
@@ -36,7 +36,7 @@ Den sykmeldte ser en microfrontend på [Min side](https://www.nav.no/minside) me
 
 ### 4. ✍️ Besvarelse
 
-Den sykmeldte klikker seg videre til [kartleggingsskjemaet](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal) og svarer på spørsmålene. Etter besvarelse får den sykmeldte en kort tilbakemeldings-undersøkelse via Lumi om hvordan det var å svare.
+Den sykmeldte klikker seg videre til [kartleggingsskjemaet](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal) og svarer på spørsmålene. Etter besvarelse får den sykmeldte et kort tilbakemeldingsskjema via Lumi om hvordan det var å svare.
 
 ::: tip Demo 🎯
 [Prøv kartleggingsskjemaet i demo →](https://demo.ekstern.dev.nav.no/syk/kartleggingssporsmal)
@@ -54,17 +54,15 @@ Etter besvarelse oppdateres microfrontenden på Min side:
 
 Nav-veileder får tilgang til svarene i Modia og bruker dem i oppfølgingen av den sykmeldte.
 
----
-
 ## Viktige begreper
 
-| Begrep | Forklaring |
-|--------|-----------|
+| Begrep              | Forklaring                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Oppfølgingstilfelle | En sammenhengende sykefraværsperiode for én person, beregnet av iSyfo. Kan inneholde flere sykmeldinger og friske dager. |
-| Kandidat | En sykmeldt som oppfyller kriteriene for kartlegging, basert på oppfølgingstilfellets varighet |
-| Kandidat-status | Angir om personen kan besvare kartleggingsskjemaet |
-| Microfrontend | Meldingen den sykmeldte ser på Min side — eid av oss, vist i en annen apps kontekst |
-| Lumi | Personvernvennlig survey som samler inn tilbakemelding om kartleggingsopplevelsen |
+| Kandidat            | En sykmeldt som oppfyller kriteriene for kartlegging, basert på oppfølgingstilfellets varighet                           |
+| Kandidatstatus      | Angir om personen kan besvare kartleggingsskjemaet                                                                       |
+| Microfrontend | UI-paneler fra eSyfo integrert på Min side. Hvilke paneler som vises avhenger av hva som er aktivert for den sykmeldte. |
+| Lumi                | Personvernvennlig spørreundersøkelse som samler inn tilbakemelding om kartleggingsopplevelsen                            |
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)

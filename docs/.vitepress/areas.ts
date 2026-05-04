@@ -38,17 +38,17 @@ export const areas: Area[] = [
 		],
 		dependencies: [
 			{
-				system: "ismeroppfolging (team sykefravær)",
+				system: "ismeroppfolging (team iSyfo)",
 				direction: "inn",
 				description: "Produserer kandidat-hendelser via Kafka",
 			},
 			{
-				system: "Min side (team min-side)",
+				system: "Min side (team navno)",
 				direction: "ut",
 				description: "Microfrontend vises i Min side",
 			},
 			{
-				system: "syfomodiaperson (team sykefravær)",
+				system: "syfomodiaperson (team iSyfo)",
 				direction: "ut",
 				description: "Veileder ser kartleggingssvar",
 			},
