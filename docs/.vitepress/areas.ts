@@ -53,6 +53,7 @@ export const areas: Area[] = [
 		path: "/omrader/narmeste-leder/",
 		subpages: [{ text: "Teknisk", link: "/omrader/narmeste-leder/teknisk" }],
 	},
+	// I Timeline.vue vises dette som DM1 (tidlig, frivillig), DM2 (midt, obligatorisk), DM3 (sen, frivillig)
 	{
 		id: "motebehov",
 		name: "Møtebehov / Dialogmøte",

@@ -61,7 +61,7 @@ Fasemapping:
 
 | Fase | Label | Ikon |
 |------|-------|------|
-| `early` | Tidlig | 🟢 |
+| `early` | Tidlig fase | 🟢 |
 | `mid` | Midtveis | 🟡 |
 | `late` | Sen fase | 🟠 |
 | `continuous` | Gjennomgående | 🔵 |
@@ -81,7 +81,7 @@ Legg til et nytt objekt i `areas`-arrayen i `docs/.vitepress/areas.ts`:
 },
 ```
 
-Plasser det nye området sortert etter fase-rekkefølge (early → mid → late → continuous), og alfabetisk innenfor samme fase.
+Plasser det nye området sortert etter fase-rekkefølge (early → mid → late → continuous), og følg eksisterende mønstre i arrayen for plassering innenfor samme fase.
 
 ### 3. Språkvask
 
@@ -95,7 +95,7 @@ Bruk `/klarsprak` på beskrivelsen og formålsteksten i `index.md`. Sikre:
 
 Etter opprettelse, informer brukeren:
 
-> **Merk:** Forsiden (`docs/index.md`) genereres fra `areas.ts`, men kan ikke oppdateres automatisk på grunn av VitePress-begrensninger. Sjekk om forsiden trenger manuell synkronisering.
+> **Merk:** Forsiden (`docs/index.md`) har manuell frontmatter som ikke oppdateres automatisk fra `areas.ts`. Sjekk om forsiden trenger manuell oppdatering etter at et nytt område er lagt til.
 
 ## Grenser
 
