@@ -1,54 +1,86 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { withBase } from "vitepress";
-import { areas, phaseLabels, phaseColors, phaseWeeks, phaseDescriptions, type Phase } from "../areas";
+import { computed } from "vue";
+import {
+	areas,
+	type Phase,
+	phaseColors,
+	phaseDescriptions,
+	phaseLabels,
+	phaseWeeks,
+} from "../areas";
 
 const allPhases: Phase[] = ["early", "mid", "late", "continuous"];
 
 interface TimelineItem {
-  id: string;
-  name: string;
-  emoji: string;
-  path: string;
-  badge?: string;
+	id: string;
+	name: string;
+	emoji: string;
+	path: string;
+	badge?: string;
 }
 
 // Dialogmøte-items definert lokalt — lenker alle til samme side
 const dialogmoteItems: Record<Phase, TimelineItem[]> = {
-  early: [
-    { id: "dm1", name: "Dialogmøte 1", emoji: "📅", path: "/omrader/motebehov/", badge: "frivillig" },
-  ],
-  mid: [
-    { id: "dm2", name: "Dialogmøte 2", emoji: "📅", path: "/omrader/motebehov/", badge: "obligatorisk" },
-  ],
-  late: [
-    { id: "dm3", name: "Dialogmøte 3", emoji: "📅", path: "/omrader/motebehov/", badge: "frivillig" },
-  ],
-  continuous: [],
+	early: [
+		{
+			id: "dm1",
+			name: "Dialogmøte 1",
+			emoji: "📅",
+			path: "/omrader/motebehov/",
+			badge: "frivillig",
+		},
+	],
+	mid: [
+		{
+			id: "dm2",
+			name: "Dialogmøte 2",
+			emoji: "📅",
+			path: "/omrader/motebehov/",
+			badge: "obligatorisk",
+		},
+	],
+	late: [
+		{
+			id: "dm3",
+			name: "Dialogmøte 3",
+			emoji: "📅",
+			path: "/omrader/motebehov/",
+			badge: "frivillig",
+		},
+	],
+	continuous: [],
 };
 
 const itemsByPhase = computed(() => {
-  const grouped: Record<Phase, TimelineItem[]> = { early: [], mid: [], late: [], continuous: [] };
-  for (const area of areas) {
-    // Filtrer bort motebehov — erstattes av DM-items
-    if (area.id === "motebehov") continue;
-    grouped[area.phase].push({
-      id: area.id,
-      name: area.name,
-      emoji: area.emoji,
-      path: area.path,
-    });
-  }
-  // Injiser dialogmøte-items i riktig fase
-  for (const phase of allPhases) {
-    grouped[phase].push(...dialogmoteItems[phase]);
-  }
-  return grouped;
+	const grouped: Record<Phase, TimelineItem[]> = {
+		early: [],
+		mid: [],
+		late: [],
+		continuous: [],
+	};
+	for (const area of areas) {
+		// Filtrer bort motebehov — erstattes av DM-items
+		if (area.id === "motebehov") continue;
+		grouped[area.phase].push({
+			id: area.id,
+			name: area.name,
+			emoji: area.emoji,
+			path: area.path,
+		});
+	}
+	// Injiser dialogmøte-items i riktig fase
+	for (const phase of allPhases) {
+		grouped[phase].push(...dialogmoteItems[phase]);
+	}
+	return grouped;
 });
 
 function phaseDescription(phase: Phase): string {
-  const weeks = phaseWeeks[phase];
-  return phase === "continuous" ? "Hele forløpet" : `${weeks.start}–${weeks.end} uker`;
+	const weeks = phaseWeeks[phase];
+	return phase === "continuous"
+		? "Hele forløpet"
+		: `${weeks.start}–${weeks.end} uker`;
 }
 </script>
 
