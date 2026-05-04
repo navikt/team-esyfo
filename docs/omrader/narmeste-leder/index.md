@@ -29,7 +29,4 @@ Nærmeste leder-området håndterer relasjonen mellom sykmeldt og nærmeste lede
 
 - [Teknisk oversikt og dataflyt](./teknisk) — Mermaid-diagram over Kafka-flyt og integrasjoner
 
----
 
-> [!NOTE]
-> Denne siden er under utvikling. Legg til skisser og flere detaljer etter hvert som området dokumenteres.

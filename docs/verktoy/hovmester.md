@@ -2,11 +2,6 @@
 
 Hovmester er teamets AI-assisterte utviklingsverktøy. Det koordinerer spesialiserte agenter for planlegging, implementasjon og kvalitetssikring.
 
-## Kom i gang
-
-> [!NOTE]
-> Denne siden er under utvikling. Dokumentasjon for oppsett og bruk kommer snart.
-
 ## Agenter
 
 | Agent | Rolle |

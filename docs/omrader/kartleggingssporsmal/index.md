@@ -24,7 +24,4 @@ Kartleggingsspørsmålene samler inn informasjon fra den sykmeldte tidlig i forl
 - Den sykmeldte
 - Nav-veileder
 
----
 
-> [!NOTE]
-> Denne siden er under utvikling. Legg til skisser, flytdiagrammer og tekniske detaljer etter hvert som området dokumenteres.

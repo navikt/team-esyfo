@@ -27,7 +27,4 @@ Oppfølgingsplanen dokumenterer tiltak og mål for tilbakeføring til arbeid. Pl
 - Nav-veileder (mottaker)
 - Fastlege (mottaker)
 
----
 
-> [!NOTE]
-> Denne siden er under utvikling. Legg til skisser, flytdiagrammer og tekniske detaljer etter hvert som området dokumenteres.

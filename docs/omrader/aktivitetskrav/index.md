@@ -24,7 +24,4 @@ Aktivitetskravet sikrer at den sykmeldte vurderer muligheten for aktivitet så t
 - Den sykmeldte
 - Arbeidsgiver / nærmeste leder
 
----
 
-> [!NOTE]
-> Denne siden er under utvikling. Legg til skisser, flytdiagrammer og tekniske detaljer etter hvert som området dokumenteres.
