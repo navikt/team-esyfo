@@ -26,6 +26,7 @@ export default withMermaid(
 				{ text: "Utvikling", link: "/utvikling/" },
 				{ text: "Dataanalyse", link: "/dataanalyse/" },
 				{ text: "Verktøy", link: "/verktoy/" },
+				{ text: "Ordbok", link: "/ordbok" },
 				{
 					text: "GitHub",
 					link: "https://github.com/navikt/team-esyfo",
