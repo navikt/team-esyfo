@@ -23,7 +23,7 @@ Møtebehov-området lar partene melde fra om behov for dialogmøte. Når enten d
 ## Brukergrupper
 
 - Den sykmeldte
-- Arbeidsgiver / nærmeste leder
+- Arbeidsgiver / nærmesteleder
 - Nav-veileder
 
 

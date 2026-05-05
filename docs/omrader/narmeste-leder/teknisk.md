@@ -1,6 +1,6 @@
-# Nærmeste leder — teknisk oversikt
+# Nærmesteleder — teknisk oversikt
 
-Nærmeste leder-løsningen håndterer relasjoner mellom sykmeldt og nærmeste leder. Målene er:
+Nærmesteleder-løsningen håndterer relasjoner mellom sykmeldt og nærmesteleder. Målene er:
 
 - **Motta nye relasjoner** fra eksisterende metoder (Altinn, sykmelding, narmesteleder-app)
 - **Ta imot relasjoner fra frontender/LPS** i vår app og sende tilbake

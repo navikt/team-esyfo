@@ -8,7 +8,7 @@ Oppfølgingsplan hjelper arbeidsgiver og arbeidstaker med å samle tiltak, mål 
 
 ## Brukerreiser
 
-### Arbeidsgiver (nærmeste leder)
+### Arbeidsgiver (nærmesteleder)
 
 ::: tip 🎯 Prøv selv
 - [Demo: opprett ny plan →](https://demo.ekstern.dev.nav.no/syk/oppfolgingsplan/1/ny-plan)
@@ -17,7 +17,7 @@ Oppfølgingsplan hjelper arbeidsgiver og arbeidstaker med å samle tiltak, mål 
 
 #### 1. ✍️ Lage utkast
 
-Arbeidsgiver (nærmeste leder) går inn via [Dine sykmeldte](https://www.nav.no/arbeidsgiver/sykmeldte), velger en ansatt og starter oppfølgingsplanen. I appen fyller nærmeste leder ut mål, arbeidsoppgaver og tiltak. Backend lagrer innholdet som et utkast som kan redigeres over tid.
+Arbeidsgiver (nærmesteleder) går inn via [Dine sykmeldte](https://www.nav.no/arbeidsgiver/sykmeldte), velger en ansatt og starter oppfølgingsplanen. I appen fyller nærmesteleder ut mål, arbeidsoppgaver og tiltak. Backend lagrer innholdet som et utkast som kan redigeres over tid.
 
 - Utkast slettes automatisk etter fire måneder hvis det ikke ferdigstilles
 

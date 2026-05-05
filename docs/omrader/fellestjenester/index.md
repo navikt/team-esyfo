@@ -58,7 +58,7 @@ Team iSyfo eier den interne sykefraværsoppfølgingen — altså Nav-veiledernes
 
 | Avhengighet | Retning | Beskrivelse |
 |-------------|---------|-------------|
-| Nærmeste leder (Kafka) | Sykmelding → eSyfo | NL-relasjoner publiseres på felles Kafka-topic |
+| Nærmesteleder (Kafka) | Sykmelding → eSyfo | NL-relasjoner publiseres på felles Kafka-topic |
 | Sykmeldinger (Kafka) | Sykmelding → eSyfo | Sendte sykmeldinger konsumeres av esyfo-narmesteleder |
 | Altinn NL-skjema | Sykmelding → eSyfo | NL-relasjoner fra Altinn via Kafka |
 
@@ -75,4 +75,4 @@ Team iSyfo eier den interne sykefraværsoppfølgingen — altså Nav-veiledernes
 ---
 
 > [!TIP]
-> Se [nærmeste leder — teknisk](/omrader/narmeste-leder/teknisk) for et detaljert Kafka-flytdiagram.
+> Se [nærmesteleder — teknisk](/omrader/narmeste-leder/teknisk) for et detaljert Kafka-flytdiagram.
