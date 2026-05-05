@@ -40,7 +40,7 @@ Oversikt over din bedrifts sykmeldte
 
 ### [narmesteleder-frontend](https://github.com/navikt/narmesteleder-frontend)
 
-Next.js-frontend app for registrering og oppdatering av nærmeste leder for sykmeldte ansatte. Støtter både forhåndsutfylte skjemaer fra Dialogporten og tomme skjemaer fra Min side - arbeidsgiver.
+Next.js-frontend app for registrering og oppdatering av nærmesteleder for sykmeldte ansatte. Støtter både forhåndsutfylte skjemaer fra Dialogporten og tomme skjemaer fra Min side - arbeidsgiver.
 
 🟦 typescript · 🚀 nextjs
 

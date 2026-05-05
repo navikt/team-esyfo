@@ -80,14 +80,41 @@ export const areas: Area[] = [
 		description:
 			"Arbeidsgivers oversikt over sykmeldte ansatte. En app som brukes gjennom hele sykefraværsforløpet.",
 		path: "/omrader/dine-sykmeldte/",
+		subpages: [{ text: "Teknisk", link: "/omrader/dine-sykmeldte/teknisk" }],
+		dependencies: [
+			{
+				system: "dinesykmeldte-backend",
+				direction: "inn",
+				description:
+					"Leverer oversikt, sykmeldinger, søknader og aktivitetsvarsler til frontend",
+			},
+			{
+				system: "dinesykmeldte-sidemeny",
+				direction: "inn",
+				description:
+					"Gir felles sidemeny og layout på detaljsidene for sykmeldt",
+			},
+			{
+				system: "syfo-oppfolgingsplan-frontend",
+				direction: "ut",
+				description:
+					"Arbeidsgiver kan gå videre til oppfølgingsplan fra sideoversikten",
+			},
+			{
+				system: "dialogmote-frontend",
+				direction: "ut",
+				description:
+					"Arbeidsgiver kan gå videre til dialogmøter fra sideoversikten",
+			},
+		],
 	},
 	{
 		id: "narmeste-leder",
-		name: "Nærmeste leder",
+		name: "Nærmesteleder",
 		emoji: "🤝",
 		phase: "continuous",
 		description:
-			"Relasjonshåndtering mellom sykmeldt og nærmeste leder. Sikrer riktig kobling mellom partene.",
+			"Relasjonshåndtering mellom sykmeldt og nærmesteleder. Sikrer riktig kobling mellom partene.",
 		path: "/omrader/narmeste-leder/",
 		subpages: [{ text: "Teknisk", link: "/omrader/narmeste-leder/teknisk" }],
 	},
@@ -173,7 +200,7 @@ export const phaseDescriptions: Record<Phase, string> = {
 	mid: "Dialog og planlegging. Partene avklarer behov for møte og lager en oppfølgingsplan med tiltak og mål.",
 	late: "Sykepengene nærmer seg slutt. Den sykmeldte trenger informasjon om videre valg og rettigheter.",
 	continuous:
-		"Dine sykmeldte, nærmeste leder og fellestjenester er aktive gjennom hele forløpet og støtter de andre områdene.",
+		"Dine sykmeldte, nærmesteleder og fellestjenester er aktive gjennom hele forløpet og støtter de andre områdene.",
 };
 
 export const phaseWeeks: Record<Phase, { start: number; end: number }> = {
