@@ -109,6 +109,29 @@ export const areas: Area[] = [
 		description:
 			"Plan for oppfølging mellom arbeidsgiver og arbeidstaker. Dokumenterer tiltak og mål for tilbakeføring til arbeid.",
 		path: "/omrader/oppfolgingsplan/",
+		subpages: [{ text: "Teknisk", link: "/omrader/oppfolgingsplan/teknisk" }],
+		dependencies: [
+			{
+				system: "dinesykmeldte",
+				direction: "inn",
+				description: "Arbeidsgiver starter oppfølgingsplan fra oversikten over sykmeldte ansatte",
+			},
+			{
+				system: "Dokumentporten",
+				direction: "ut",
+				description: "Arkiverer delte planer og returnerer journalpostId",
+			},
+			{
+				system: "IsDialogmelding",
+				direction: "ut",
+				description: "Sender planen til fastlege som PDF",
+			},
+			{
+				system: "Aareg",
+				direction: "inn",
+				description: "Leverer stillingstittel og stillingsprosent når planen opprettes",
+			},
+		],
 	},
 	{
 		id: "mer-oppfolging",
