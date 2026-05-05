@@ -24,7 +24,7 @@ Når vurderingen er klar, får den sykmeldte en notifikasjon og SMS om at Nav ha
 
 ### 3. 🏠 Status på Min side
 
-Etter innlogging på nav.no ser den sykmeldte en microfrontend på [Min side](https://www.nav.no/minside) med gjeldende status og lenke til aktivitetskrav-siden. Panelet vises kun for relevante statuser — ved `IKKE_OPPFYLT` skjules det.
+Etter innlogging på nav.no ser den sykmeldte en microfrontend på [Min side](https://www.nav.no/minside) med gjeldende status og lenke til aktivitetskrav-siden. Panelet vises kun for relevante statuser — når aktivitetskravet ikke er oppfylt, skjules det.
 
 ::: tip Storybook 🎨
 [Se hvordan det ser ut med ny vurdering →](https://navikt.github.io/esyfo-microfrontends/?path=/story/aktivitetskrav--ny-vurdering)
