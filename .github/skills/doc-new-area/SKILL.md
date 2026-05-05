@@ -97,21 +97,40 @@ Opprett `docs/omrader/{id}/teknisk.md` med denne malen:
 
 ## Dataflyt
 
+### 1. {Fase-tittel}
+
 \`\`\`mermaid
 sequenceDiagram
     participant a as {System A}
     participant b as {System B}
-    participant c as {System C}
+    actor bruker as {Menneske-aktør}
 
-    rect rgb(240, 248, 255)
-    Note over a,b: {Fase 1}
     a->>b: {hendelse/kall}
-    end
+    b->>bruker: {hendelse/kall}
+\`\`\`
 
-    rect rgb(248, 255, 240)
-    Note over b,c: {Fase 2}
-    b->>c: {hendelse/kall}
-    end
+### 2. {Fase-tittel}
+
+\`\`\`mermaid
+sequenceDiagram
+    actor bruker as {Menneske-aktør}
+    participant c as {System C}
+    participant d as {System D}
+
+    bruker->>c: {handling}
+    c->>d: {kall}
+\`\`\`
+
+### 3. {Fase-tittel}
+
+\`\`\`mermaid
+sequenceDiagram
+    participant d as {System D}
+    participant e as {System E}
+    actor veileder as Nav-veileder
+
+    d->>e: {hendelse/kall}
+    e-->>veileder: {resultat}
 \`\`\`
 
 ## Kafka-topics
@@ -129,9 +148,11 @@ sequenceDiagram
 ```
 
 Mermaid-tips:
+- Del opp i separate diagrammer per logisk fase — enklere å lese og fungerer i dark mode
+- Bruk `actor` for mennesker (strekfigur) og `participant` for systemer (boks)
 - Bruk norske verb i pilene: «lytter», «sender», «lagrer», «publiserer»
-- Grupper steg i `rect`-blokker med farger for lesbarhet
 - Marker autentisering med `Note right of`: TokenX, Azure AD
+- Unngå hardkodede farger (`rect rgb(...)`) — de er vanskelige å lese i dark mode
 
 ### 3. Registrer i areas.ts
 
