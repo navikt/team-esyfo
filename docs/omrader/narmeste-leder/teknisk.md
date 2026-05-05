@@ -19,7 +19,7 @@ sequenceDiagram
     participant nl as narmesteleder<br/>(team-sykmelding)
     participant altinn as syfonlaltinn<br/>(team-sykmelding)
 
-    rect rgb(240, 248, 255)
+    rect transparent
     Note over altinn,esyfo: Kafka-flyt inn
 
     altinn->>t_nl: publish
@@ -32,7 +32,7 @@ sequenceDiagram
     esyfo->>DB: Lagrer NL-relasjon
     end
 
-    rect rgb(255, 248, 240)
+    rect transparent
     Note over LPS,esyfo: LPS-flyt ut
 
     LPS->>esyfo: POST /api/narmesteleder

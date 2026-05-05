@@ -4,29 +4,30 @@ Kartleggingsspørsmål-systemet identifiserer sykmeldte som kvalifiserer for kar
 
 ## Dataflyt
 
+### 1. Kandidatvurdering og varsling
+
 ```mermaid
 sequenceDiagram
     participant ismo as ismeroppfolging<br/>(team iSyfo)
     participant varselbus as «Kafka»<br/>team-esyfo.varselbus
     participant esyfovarsel as esyfovarsel
-    participant bruker as Den sykmeldte
-    participant micro as esyfo-microfrontends<br/>(Min side)
-    participant bro as bro-frontend
-    participant backend as meroppfolging-backend
-    participant db as PostgreSQL
-    participant svartopic as «Kafka»<br/>team-esyfo.kartleggingssporsmal-svar
-    participant modia as syfomodiaperson<br/>(team iSyfo)
-
-    rect rgb(240, 248, 255)
-    Note over ismo,esyfovarsel: Kandidatvurdering og varsling
+    actor bruker as Den sykmeldte
 
     ismo->>varselbus: SM_KARTLEGGINGSSPORSMAL hendelse
     esyfovarsel-->>varselbus: lytter
     esyfovarsel->>bruker: OPPGAVE-notifikasjon + SMS
-    end
+```
 
-    rect rgb(248, 255, 240)
-    Note over bruker,backend: Besvarelse
+### 2. Besvarelse
+
+```mermaid
+sequenceDiagram
+    participant esyfovarsel as esyfovarsel
+    actor bruker as Den sykmeldte
+    participant micro as esyfo-microfrontends<br/>(Min side)
+    participant bro as bro-frontend
+    participant backend as meroppfolging-backend
+    participant db as PostgreSQL
 
     esyfovarsel->>micro: Aktiverer microfrontend (meroppfølging-widget)
     micro->>backend: Henter kandidatstatus (ved lasting)
@@ -35,15 +36,21 @@ sequenceDiagram
     Note right of bro: TokenX-autentisering
     bro->>backend: Sender svar
     backend->>db: Lagrer svar
-    end
+```
 
-    rect rgb(255, 248, 240)
-    Note over backend,modia: Svar til veileder
+### 3. Svar til veileder
+
+```mermaid
+sequenceDiagram
+    participant backend as meroppfolging-backend
+    participant svartopic as «Kafka»<br/>kartleggingssporsmal-svar
+    participant modia as syfomodiaperson<br/>(team iSyfo)
+    actor veileder as Nav-veileder
 
     backend->>svartopic: Publiserer svar
     modia-->>svartopic: lytter
     Note right of modia: Azure AD API
-    end
+    modia-->>veileder: viser kartleggingssvar
 ```
 
 ## Kafka-topics

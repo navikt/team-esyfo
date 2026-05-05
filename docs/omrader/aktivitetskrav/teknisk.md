@@ -4,22 +4,16 @@ Aktivitetskrav-systemet mottar vurderinger fra iSyfo, lagrer dem i aktivitetskra
 
 ## Dataflyt
 
+### 1. Vurdering og lagring
+
 ```mermaid
 sequenceDiagram
     participant isak as isaktivitetskrav<br/>(team iSyfo)
-    participant vurderingtopic as «Kafka»<br/>teamsykefravr.aktivitetskrav-vurdering
-    participant varseltopic as «Kafka»<br/>teamsykefravr.aktivitetskrav-varsel
+    participant vurderingtopic as «Kafka»<br/>aktivitetskrav-vurdering
+    participant varseltopic as «Kafka»<br/>aktivitetskrav-varsel
     participant backend as aktivitetskrav-backend
     participant db as PostgreSQL
     participant varselbus as «Kafka»<br/>team-esyfo.varselbus
-    participant esyfovarsel as esyfovarsel
-    participant micro as esyfo-microfrontends<br/>(Min side)
-    participant frontend as aktivitetskrav-frontend
-    participant bruker as Den sykmeldte
-    participant modia as syfomodiaperson<br/>(team iSyfo)
-
-    rect rgb(240, 248, 255)
-    Note over isak,db: Vurdering og lagring
 
     isak->>vurderingtopic: publiserer vurdering
     backend-->>vurderingtopic: lytter
@@ -27,10 +21,17 @@ sequenceDiagram
     backend-->>varseltopic: lytter
     backend->>db: lagrer vurdering og varsel
     backend->>varselbus: publiserer SM_AKTIVITETSPLIKT
-    end
+```
 
-    rect rgb(248, 255, 240)
-    Note over esyfovarsel,micro: Varsling og Min side
+### 2. Varsling og Min side
+
+```mermaid
+sequenceDiagram
+    participant varselbus as «Kafka»<br/>team-esyfo.varselbus
+    participant esyfovarsel as esyfovarsel
+    participant micro as esyfo-microfrontends<br/>(Min side)
+    participant backend as aktivitetskrav-backend
+    actor bruker as Den sykmeldte
 
     esyfovarsel-->>varselbus: lytter
     esyfovarsel->>bruker: sender notifikasjon og SMS
@@ -38,24 +39,37 @@ sequenceDiagram
     micro->>backend: henter gjeldende status
     Note right of micro: OBO-token mot backend
     bruker->>micro: ser status på Min side
-    end
+```
 
-    rect rgb(255, 248, 240)
-    Note over bruker,db: Detaljer og historikk
+### 3. Detaljer og historikk
+
+```mermaid
+sequenceDiagram
+    actor bruker as Den sykmeldte
+    participant frontend as aktivitetskrav-frontend
+    participant backend as aktivitetskrav-backend
+    participant db as PostgreSQL
 
     bruker->>frontend: åpner /syk/aktivitetskrav
     Note right of frontend: TokenX-autentisering
     frontend->>backend: henter historikk
     frontend->>backend: markerer som lest
     backend->>db: leser og oppdaterer data
-    end
+```
 
-    rect rgb(255, 240, 248)
-    Note over backend,modia: Status til veileder
+### 4. Status til veileder
 
+```mermaid
+sequenceDiagram
+    actor veileder as Nav-veileder
+    participant modia as syfomodiaperson<br/>(team iSyfo)
+    participant backend as aktivitetskrav-backend
+
+    veileder->>modia: åpner sykefraværsoppfølging
     modia->>backend: henter aktivitetskrav-status
     Note right of modia: Azure AD API
-    end
+    backend-->>modia: returnerer status
+    modia-->>veileder: viser aktivitetskrav-status
 ```
 
 ## Kafka-topics

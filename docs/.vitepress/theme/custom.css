@@ -17,12 +17,11 @@
 	transition: opacity 0.15s;
 }
 
-.dark .vp-doc .mermaid rect[style*="rgb(2"] {
-	fill: rgba(255, 255, 255, 0.05) !important;
-}
-
 .dark .vp-doc .mermaid .messageText,
 .dark .vp-doc .mermaid .noteText,
+.dark .vp-doc .mermaid .labelText,
+.dark .vp-doc .mermaid .loopText,
+.dark .vp-doc .mermaid tspan,
 .dark .vp-doc .mermaid text {
 	fill: var(--vp-c-text-1) !important;
 }
