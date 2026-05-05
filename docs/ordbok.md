@@ -26,7 +26,7 @@ Beskjed om noe arbeidsgiver bør følge opp, for eksempel en søknad eller aktiv
 
 ### Altinn {#altinn}
 
-Kanal der arbeidsgivere historisk har meldt inn nærmesteleder.
+Altinn er en ekstern plattform for innsending og utveksling av meldinger mellom virksomheter og offentlige tjenester, blant annet brukt i løsninger for nærmeste leder.
 
 ---
 
@@ -38,13 +38,7 @@ Personen som er sykmeldt og som nærmesteleder følger opp.
 
 ### Dialogmøte {#dialogmote}
 
-Møte mellom sykmeldt, arbeidsgiver og eventuelt Nav for å avklare videre oppfølging.
-
----
-
-### Dialogmøte 2 {#dialogmote-2}
-
-Lovpålagt møte senest innen 26 uker.
+Møte mellom sykmeldt, arbeidsgiver og eventuelt Nav for å avklare videre oppfølging. Dialogmøte 2 er lovpålagt og skal skje senest innen 26 uker.
 
 ---
 
@@ -150,17 +144,12 @@ Innmeldt behov for dialogmøte fra en av partene.
 
 ---
 
-### NAIS {#nais}
+### Nais {#nais}
 
 Navs applikasjonsplattform basert på Kubernetes.
 
 ---
 
-### NL-relasjon {#nl-relasjon}
-
-Koblingen mellom en sykmeldt arbeidstaker og deres nærmesteleder.
-
----
 
 ### Oppfølgingsplan {#oppfolgingsplan}
 
@@ -180,12 +169,6 @@ Oppfølging i sluttfasen av sykepengeperioden, fra varselperioden og fram mot ma
 
 ---
 
-### Sideoversikt {#sideoversikt}
-
-Felles sidemeny på detaljsidene for én sykmeldt.
-
----
-
 ### Stillingsinformasjon {#stillingsinformasjon}
 
 Stillingstittel og stillingsprosent som backend henter fra Aareg.
@@ -198,26 +181,8 @@ Mekanisme for token-utveksling som lar frontender kalle backend-API-er på vegne
 
 ---
 
-### Unntak {#unntak}
-
-Vurdering der Nav mener at aktivitetskravet ikke skal gjelde i den aktuelle situasjonen.
-
----
-
-### Utkast {#utkast}
-
-Midlertidig versjon av planen som lagres før den sendes inn.
-
----
-
 ### Varselbus {#varselbus}
 
 Felles Kafka-topic der hendelser publiseres for varsling via eSyfovarsel.
-
----
-
-### Veivalg {#veivalg}
-
-Alternativer den sykmeldte kan vurdere (tilbake i arbeid, AAP, etc.).
 
 </div>

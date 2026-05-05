@@ -30,7 +30,7 @@ Fra oversikten kan arbeidsgiver åpne en ansatt og se sykmeldinger, søknader og
 
 #### 5. 🔀 Går videre til andre oppfølgingsflater
 
-Fra [sideoversikten](/ordbok#sideoversikt) kan nærmesteleder navigere videre til:
+Fra sideoversikten kan nærmesteleder navigere videre til:
 
 - [Oppfølgingsplaner](/omrader/oppfolgingsplan/)
 - [Dialogmøter](/ordbok#dialogmote)

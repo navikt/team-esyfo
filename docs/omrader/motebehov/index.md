@@ -8,13 +8,13 @@
 
 ## Dialogmøtene i sykefraværsforløpet
 
-| Møte | Tidspunkt | Type |
-|------|-----------|------|
+| Møte         | Tidspunkt                  | Type                                         |
+| ------------ | -------------------------- | -------------------------------------------- |
 | Dialogmøte 1 | Tidlig fase (innen 7 uker) | Frivillig — arbeidsgiver innkaller ved behov |
-| Dialogmøte 2 | Midtveis (senest 26 uker) | Obligatorisk — Nav innkaller |
-| Dialogmøte 3 | Sen fase (ved behov) | Frivillig — partene kan be om det |
+| Dialogmøte 2 | Midtveis (senest 26 uker)  | Obligatorisk — Nav innkaller                 |
+| Dialogmøte 3 | Sen fase (ved behov)       | Frivillig — partene kan be om det            |
 
-[Dialogmøte 2](/ordbok#dialogmote-2) er det eneste lovpålagte møtet. Dialogmøte 1 og 3 gjennomføres bare når en av partene ser behov for det.
+[Dialogmøte 2](/ordbok#dialogmote) er det eneste lovpålagte møtet. Dialogmøte 1 og 3 gjennomføres bare når en av partene ser behov for det.
 
 ## Dette området handler om
 

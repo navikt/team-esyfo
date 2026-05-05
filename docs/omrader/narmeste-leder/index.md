@@ -8,7 +8,7 @@ Nærmesteleder-området håndterer relasjonen mellom sykmeldt og nærmesteleder.
 
 ## Dette området handler om
 
-- Motta og lagre [relasjoner](/ordbok#nl-relasjon) mellom sykmeldt og nærmesteleder
+- Motta og lagre relasjoner mellom sykmeldt og nærmesteleder
 - Håndtere endringer i lederrelasjoner (bytte av leder, avslutning)
 - Tilby data til andre tjenester som trenger lederinformasjon
 

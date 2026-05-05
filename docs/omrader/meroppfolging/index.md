@@ -20,7 +20,7 @@ Den sykmeldte får varsel når sykepengene nærmer seg slutt. Varslet leder vide
 
 #### 2. 📅 Ser maksdato og hva som skjer videre
 
-På siden ser brukeren når sykepengene tar slutt og informasjon om mulige [veier videre](/ordbok#veivalg). Hvis brukeren ikke har tilgang til skjemaet, vises en informasjonsside i stedet.
+På siden ser brukeren når sykepengene tar slutt og informasjon om mulige veier videre. Hvis brukeren ikke har tilgang til skjemaet, vises en informasjonsside i stedet.
 
 #### 3. ✍️ Svarer om situasjonen videre
 

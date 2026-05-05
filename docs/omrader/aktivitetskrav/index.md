@@ -16,7 +16,7 @@ En sykmeldt har aktivitetsplikt — det betyr at den sykmeldte skal være i akti
 
 ### 1. 🧭 Vurdering hos Nav
 
-Nav-veileder vurderer [aktivitetskravet](/ordbok#aktivitetskrav) i [isaktivitetskrav](https://github.com/navikt/isaktivitetskrav) (eid av team iSyfo). Vurderingen kan ende med oppfylt, ikke oppfylt, [unntak](/ordbok#unntak) eller [forhåndsvarsel](/ordbok#forhandsvarsel). Noen vurderinger har en frist som den sykmeldte må forholde seg til.
+Nav-veileder vurderer [aktivitetskravet](/ordbok#aktivitetskrav) i [isaktivitetskrav](https://github.com/navikt/isaktivitetskrav) (eid av team iSyfo). Vurderingen kan ende med oppfylt, ikke oppfylt, unntak eller [forhåndsvarsel](/ordbok#forhandsvarsel). Noen vurderinger har en frist som den sykmeldte må forholde seg til.
 
 ### 2. 📲 Varsel
 

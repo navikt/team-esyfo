@@ -17,7 +17,7 @@
 
 #### 1. ✍️ Lage utkast
 
-Arbeidsgiver (nærmesteleder) går inn via [Dine sykmeldte](https://www.nav.no/arbeidsgiver/sykmeldte), velger en ansatt og starter oppfølgingsplanen. I appen fyller nærmesteleder ut mål, arbeidsoppgaver og tiltak. Backend lagrer innholdet som et [utkast](/ordbok#utkast) som kan redigeres over tid.
+Arbeidsgiver (nærmesteleder) går inn via [Dine sykmeldte](https://www.nav.no/arbeidsgiver/sykmeldte), velger en ansatt og starter oppfølgingsplanen. I appen fyller nærmesteleder ut mål, arbeidsoppgaver og tiltak. Backend lagrer innholdet som et utkast som kan redigeres over tid.
 
 - Utkast slettes automatisk etter fire måneder hvis det ikke ferdigstilles
 

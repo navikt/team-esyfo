@@ -209,7 +209,10 @@ export const areas: Area[] = [
 			"Felles tjenester og infrastruktur som brukes på tvers av områdene.",
 		path: "/omrader/fellestjenester/",
 		subpages: [
-			{ text: "Token tjeneste", link: "/omrader/fellestjenester/token-tjeneste" },
+			{
+				text: "Token tjeneste",
+				link: "/omrader/fellestjenester/token-tjeneste",
+			},
 		],
 	},
 ];
