@@ -47,14 +47,9 @@ Når arbeidsgiver oppretter planen, får den sykmeldte et varsel. Den sykmeldte 
 
 Den sykmeldte kan se mål, arbeidsoppgaver og tiltak som arbeidsgiver har fylt ut.
 
-## Viktige begreper
-
-| Begrep | Forklaring |
-|--------|-----------|
-| Oppfølgingsplan | Felles plan med mål, tiltak og vurderinger for å komme tilbake i arbeid |
-| Utkast | Midlertidig versjon av planen som lagres før den sendes inn |
-| Journalpost | Referanse til planen etter at den er arkivert i Dokumentporten |
-| Stillingsinformasjon | Stillingstittel og stillingsprosent som backend henter fra Aareg |
+::: tip 📖 Ordbok
+Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+:::
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)

@@ -37,16 +37,10 @@ Fra sideoversikten kan nærmesteleder navigere videre til:
 
 Dine sykmeldte fungerer dermed som inngang til flere deler av arbeidsgiveroppfølgingen.
 
-## Viktige begreper
-
-| Begrep | Forklaring |
-|--------|-----------|
-| Den sykmeldte | Personen som er sykmeldt og som nærmesteleder følger opp |
-| Aktivitetsvarsel | Beskjed om noe arbeidsgiver bør følge opp, for eksempel en søknad eller aktivitet i forløpet |
-| Sideoversikt | Felles sidemeny på detaljsidene for én sykmeldt |
-| Lesestatus | Markering som viser om arbeidsgiver har åpnet en sykmelding, søknad eller beskjed |
+::: tip 📖 Ordbok
+Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+:::
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)
 :::
-

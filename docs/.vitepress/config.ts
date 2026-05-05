@@ -73,6 +73,10 @@ export default withMermaid(
 					],
 				},
 				{
+					text: "Ordbok",
+					items: [{ text: "Begreper", link: "/ordbok" }],
+				},
+				{
 					text: "Verktøy",
 					collapsed: false,
 					items: [

@@ -26,14 +26,6 @@ Disse applikasjonene betjener flere områder:
 - Fellesbiblioteker og utilities som brukes av flere apper
 - Infrastruktur og plattformkonfigurasjon (NAIS-oppsett, overvåkning)
 
-## Viktige begreper
-
-| Begrep | Forklaring |
-|--------|-----------|
-| Crossdomain | Tidligere navn på dette området |
-| Fellesbibliotek | Kode som deles mellom flere applikasjoner i teamet |
-| NAIS | Navs applikasjonsplattform basert på Kubernetes |
-
 ## Brukergrupper
 
 - Utviklere i Team eSyfo
@@ -73,6 +65,10 @@ Team iSyfo eier den interne sykefraværsoppfølgingen — altså Nav-veiledernes
 | Azure AD | Intern | Autentisering mellom tjenester |
 
 ---
+
+::: tip 📖 Ordbok
+Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+:::
 
 > [!TIP]
 > Se [nærmesteleder — teknisk](/omrader/narmeste-leder/teknisk) for et detaljert Kafka-flytdiagram.

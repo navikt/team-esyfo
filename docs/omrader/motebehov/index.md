@@ -22,18 +22,12 @@ Dialogmøte 2 er det eneste lovpålagte møtet. Dialogmøte 1 og 3 gjennomføres
 - Gi Nav-veileder oversikt over hvem som har meldt behov
 - Støtte prosessen rundt innkalling til dialogmøte
 
-## Viktige begreper
-
-| Begrep | Forklaring |
-|--------|-----------|
-| Dialogmøte | Møte mellom sykmeldt, arbeidsgiver og eventuelt Nav for å avklare videre oppfølging |
-| Møtebehov | Innmeldt behov for dialogmøte fra en av partene |
-| Dialogmøte 2 | Lovpålagt møte senest innen 26 uker |
-
 ## Brukergrupper
 
 - Den sykmeldte
 - Arbeidsgiver / nærmesteleder
 - Nav-veileder
 
-
+::: tip 📖 Ordbok
+Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+:::
