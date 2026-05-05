@@ -16,3 +16,41 @@
 	opacity: 0.85;
 	transition: opacity 0.15s;
 }
+
+.dark .vp-doc .mermaid .messageText,
+.dark .vp-doc .mermaid .noteText,
+.dark .vp-doc .mermaid .labelText,
+.dark .vp-doc .mermaid .loopText,
+.dark .vp-doc .mermaid tspan,
+.dark .vp-doc .mermaid text,
+.dark .mermaid-overlay__content .messageText,
+.dark .mermaid-overlay__content .noteText,
+.dark .mermaid-overlay__content .labelText,
+.dark .mermaid-overlay__content .loopText,
+.dark .mermaid-overlay__content tspan,
+.dark .mermaid-overlay__content text {
+	fill: var(--vp-c-text-1) !important;
+}
+
+.dark .vp-doc .mermaid .actor,
+.dark .mermaid-overlay__content .actor {
+	fill: var(--vp-c-bg-soft) !important;
+	stroke: var(--vp-c-border) !important;
+}
+
+.dark .vp-doc .mermaid .actor-line,
+.dark .mermaid-overlay__content .actor-line {
+	stroke: var(--vp-c-border) !important;
+}
+
+.dark .vp-doc .mermaid .messageLine0,
+.dark .vp-doc .mermaid .messageLine1,
+.dark .mermaid-overlay__content .messageLine0,
+.dark .mermaid-overlay__content .messageLine1 {
+	stroke: var(--vp-c-text-2) !important;
+}
+
+.dark .vp-doc .mermaid .arrowheadPath,
+.dark .mermaid-overlay__content .arrowheadPath {
+	fill: var(--vp-c-text-2) !important;
+}

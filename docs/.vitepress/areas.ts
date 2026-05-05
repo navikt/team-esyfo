@@ -24,6 +24,24 @@ export const areas: Area[] = [
 		description:
 			"Tidlig krav om aktivitet ved sykmelding. Sikrer at den sykmeldte vurderer aktivitet så tidlig som mulig i forløpet.",
 		path: "/omrader/aktivitetskrav/",
+		subpages: [{ text: "Teknisk", link: "/omrader/aktivitetskrav/teknisk" }],
+		dependencies: [
+			{
+				system: "isaktivitetskrav (team iSyfo)",
+				direction: "inn",
+				description: "Produserer vurderinger og forhåndsvarsler via Kafka",
+			},
+			{
+				system: "Min side (team navno)",
+				direction: "ut",
+				description: "Microfrontend viser status for aktivitetskrav",
+			},
+			{
+				system: "syfomodiaperson (team iSyfo)",
+				direction: "ut",
+				description: "Veileder ser status for aktivitetskrav",
+			},
+		],
 	},
 	{
 		id: "kartleggingssporsmal",
