@@ -30,6 +30,11 @@ features:
     details: Frontend, backend, beste praksis og utviklerverktøy for teamet.
     link: /utvikling/
     linkText: Til utvikling
+  - icon: 📊
+    title: Dataanalyse
+    details: Datafortellinger, pipeline og verktøy for teamets datascientist.
+    link: /dataanalyse/
+    linkText: Til dataanalyse
   - icon: 🛠️
     title: Verktøy
     details: Hovmester, CI/CD og andre verktøy som støtter teamets arbeidsprosesser.
