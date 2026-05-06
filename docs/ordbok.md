@@ -18,10 +18,6 @@ Beskjed om noe arbeidsgiver bør følge opp, for eksempel en søknad eller aktiv
 
 Kanal der arbeidsgivere historisk har meldt inn nærmesteleder.
 
-### Crossdomain {#crossdomain}
-
-Tidligere navn på fellestjenester-området.
-
 ### Den sykmeldte {#den-sykmeldte}
 
 Personen som er sykmeldt og som nærmesteleder følger opp.

@@ -206,7 +206,7 @@ export const areas: Area[] = [
 		emoji: "🔧",
 		phase: "continuous",
 		description:
-			"Felles tjenester og infrastruktur som brukes på tvers av områdene. Tidligere kalt «crossdomain».",
+			"Felles tjenester og infrastruktur som brukes på tvers av områdene.",
 		path: "/omrader/fellestjenester/",
 		subpages: [
 			{ text: "Token tjeneste", link: "/omrader/fellestjenester/token-tjeneste" },

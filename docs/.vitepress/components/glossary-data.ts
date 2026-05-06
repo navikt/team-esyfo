@@ -1,10 +1,8 @@
 export const glossary: Record<string, string> = {
-	"den-sykmeldte":
-		"Personen som er sykmeldt og som nærmesteleder følger opp",
+	"den-sykmeldte": "Personen som er sykmeldt og som nærmesteleder følger opp",
 	microfrontend:
 		"Lite UI-panel på Min side som viser status og lenke til detaljer",
-	oppfolgingstilfelle:
-		"Sammenhengende sykefraværsperiode beregnet av iSyfo",
+	oppfolgingstilfelle: "Sammenhengende sykefraværsperiode beregnet av iSyfo",
 	aktivitetskrav:
 		"Krav om at den sykmeldte skal vurdere aktivitet tidlig i sykefraværet",
 	forhandsvarsel: "Varsel om mulig stans av sykepenger",
@@ -21,16 +19,13 @@ export const glossary: Record<string, string> = {
 	dialogmote: "Møte mellom sykmeldt, arbeidsgiver og eventuelt Nav",
 	motebehov: "Innmeldt behov for dialogmøte fra en av partene",
 	"dialogmote-2": "Lovpålagt møte senest innen 26 uker",
-	"nl-relasjon":
-		"Koblingen mellom sykmeldt arbeidstaker og nærmesteleder",
+	"nl-relasjon": "Koblingen mellom sykmeldt arbeidstaker og nærmesteleder",
 	lps: "Leder- og personalstøtte — system som sender inn NL-relasjoner",
 	altinn: "Kanal der arbeidsgivere historisk har meldt inn nærmesteleder",
-	oppfolgingsplan:
-		"Felles plan med mål og tiltak for å komme tilbake i arbeid",
+	oppfolgingsplan: "Felles plan med mål og tiltak for å komme tilbake i arbeid",
 	utkast: "Midlertidig versjon av planen før innsending",
 	journalpost: "Referanse til planen etter arkivering i Dokumentporten",
 	stillingsinformasjon: "Stillingstittel og -prosent hentet fra Aareg",
-	crossdomain: "Tidligere navn på fellestjenester-området",
 	fellesbibliotek: "Kode som deles mellom flere applikasjoner i teamet",
 	nais: "Navs applikasjonsplattform basert på Kubernetes",
 };
