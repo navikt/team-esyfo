@@ -136,7 +136,10 @@ export const areas: Area[] = [
 		description:
 			"Plan for oppfølging mellom arbeidsgiver og arbeidstaker. Dokumenterer tiltak og mål for tilbakeføring til arbeid.",
 		path: "/omrader/oppfolgingsplan/",
-		subpages: [{ text: "Teknisk", link: "/omrader/oppfolgingsplan/teknisk" }],
+		subpages: [
+			{ text: "Teknisk", link: "/omrader/oppfolgingsplan/teknisk" },
+			{ text: "Dataanalyse", link: "/omrader/oppfolgingsplan/dataanalyse" },
+		],
 		dependencies: [
 			{
 				system: "dinesykmeldte",

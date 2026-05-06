@@ -111,6 +111,7 @@ export default withMermaid(
 							],
 						},
 						{ text: "Repositories", link: "/utvikling/repositories" },
+					{ text: "Dataanalyse", link: "/utvikling/dataanalyse" },
 						{
 							text: "Beste praksis",
 							collapsed: false,
