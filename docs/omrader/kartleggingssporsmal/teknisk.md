@@ -4,7 +4,21 @@ Kartleggingsspørsmål-systemet identifiserer sykmeldte som kvalifiserer for kar
 
 ## Dataflyt
 
-### 1. Kandidatvurdering og varsling
+### 1. Kandidatstatus og skjemavariant
+
+```mermaid
+sequenceDiagram
+    participant ismo as ismeroppfolging<br/>(team iSyfo)
+    participant kandidattopic as «Kafka»<br/>ismeroppfolging-kartleggingssporsmal-kandidat
+    participant backend as meroppfolging-backend
+    participant db as PostgreSQL
+
+    ismo->>kandidattopic: Publiserer kandidatstatus + skjemavariant
+    backend-->>kandidattopic: lytter
+    backend->>db: Lagrer kandidat med skjemavariant
+```
+
+### 2. Varsling
 
 ```mermaid
 sequenceDiagram
@@ -18,7 +32,7 @@ sequenceDiagram
     esyfovarsel->>bruker: OPPGAVE-notifikasjon + SMS
 ```
 
-### 2. Besvarelse
+### 3. Besvarelse
 
 ```mermaid
 sequenceDiagram
@@ -38,7 +52,7 @@ sequenceDiagram
     backend->>db: Lagrer svar
 ```
 
-### 3. Svar til veileder
+### 4. Svar til veileder
 
 ```mermaid
 sequenceDiagram
@@ -47,18 +61,20 @@ sequenceDiagram
     participant modia as syfomodiaperson<br/>(team iSyfo)
     actor veileder as Nav-veileder
 
-    backend->>svartopic: Publiserer svar
+    backend->>svartopic: Publiserer melding om at sykmeldt har svart
     modia-->>svartopic: lytter
+    modia->>backend: Henter svar via API
     Note right of modia: Azure AD API
     modia-->>veileder: viser kartleggingssvar
 ```
 
 ## Kafka-topics
 
-| Topic                                  | Retning | Beskrivelse                                                    |
-| -------------------------------------- | ------- | -------------------------------------------------------------- |
-| `team-esyfo.varselbus`                 | Inn     | Mottar `SM_KARTLEGGINGSSPORSMAL`-hendelser fra ismeroppfolging |
-| `team-esyfo.kartleggingssporsmal-svar` | Ut      | Publiserer kartleggingssvar til syfomodiaperson                |
+| Topic                                  | Retning | Beskrivelse                                                              |
+| -------------------------------------- | ------- | ------------------------------------------------------------------------ |
+| `teamsykefravr.ismeroppfolging-kartleggingssporsmal-kandidat` | Inn | Mottar kandidatstatus og skjemavariant fra ismeroppfolging |
+| `team-esyfo.varselbus`                 | Inn     | Mottar `SM_KARTLEGGINGSSPORSMAL`-hendelser fra ismeroppfolging            |
+| `team-esyfo.kartleggingssporsmal-svar` | Ut      | Publiserer melding om at sykmeldt har svart, til syfomodiaperson         |
 
 ## Systemer
 
