@@ -94,7 +94,7 @@ API for managing narmesteleder connection
 
 ### [esyfo-token-tjeneste](https://github.com/navikt/esyfo-token-tjeneste)
 
-*Ingen beskrivelse*
+API for å hente Maskinporten-token til systembrukere i `dev`-miljøet.
 
 🟧 kotlin · ⚡ ktor
 
