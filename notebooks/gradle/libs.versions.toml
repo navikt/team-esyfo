@@ -1,6 +1,6 @@
 [versions]
 kotlin-version = "2.3.21"
-coroutines = "1.10.2"
+coroutines = "1.11.0"
 logback-version = "1.5.32"
 
 [libraries]
