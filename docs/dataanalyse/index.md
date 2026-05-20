@@ -8,11 +8,11 @@ Teknisk dokumentasjon for teamets dataanalyser og datafortellinger.
 
 ## Verktøy
 
-| Verktøy | Bruksområde |
-|---------|-------------|
-| Python | Analysekode og datatransformasjoner |
-| Quarto | Publisering av datafortellinger (notebooks → HTML) |
-| Airflow | Orkestrering av daglige kjøringer (DAGs) |
+| Verktøy | Bruksområde                                        |
+| ------- | -------------------------------------------------- |
+| Python  | Analysekode og datatransformasjoner                |
+| Quarto  | Publisering av datafortellinger (notebooks → HTML) |
+| Airflow | Orkestrering av daglige kjøringer (DAGs)           |
 
 ## Pipeline
 
@@ -46,10 +46,6 @@ isyfo-analyse/
 3. **Lag DAG** – Opprett en Airflow DAG i `dags/` som kjører analysen daglig. Se `dags/oppfolgingsplan_dag.py` for eksempel.
 4. **Test lokalt** – Kjør analysen lokalt med `quarto render` for å verifisere at rapporten ser riktig ut.
 5. **Push og deploy** – Merge til main. Airflow plukker opp ny DAG automatisk, og rapporten publiseres til data.ansatt.nav.no.
-
-## Målgruppe
-
-Utviklere og datascientist som skal opprette eller vedlikeholde analyser.
 
 ## Lenker
 
