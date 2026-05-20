@@ -23,8 +23,9 @@ export default withMermaid(
 			nav: [
 				{ text: "Kom i gang", link: "/kom-i-gang" },
 				{ text: "Områder", link: "/omrader/" },
-				{ text: "Verktøy", link: "/verktoy/" },
 				{ text: "Utvikling", link: "/utvikling/" },
+				{ text: "Dataanalyse", link: "/dataanalyse/" },
+				{ text: "Verktøy", link: "/verktoy/" },
 				{
 					text: "GitHub",
 					link: "https://github.com/navikt/team-esyfo",
@@ -121,6 +122,13 @@ export default withMermaid(
 								},
 							],
 						},
+					],
+				},
+				{
+					text: "Dataanalyse",
+					collapsed: false,
+					items: [
+						{ text: "Oversikt", link: "/dataanalyse/" },
 					],
 				},
 			],
