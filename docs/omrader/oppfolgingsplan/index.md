@@ -1,6 +1,6 @@
 # 📝 Oppfølgingsplan
 
-**Fase:** Midtveis 🟡
+**Fase:** Tidlig 🟢
 
 ## Formål
 

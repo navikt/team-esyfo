@@ -8,6 +8,7 @@ import {
 	phaseDescriptions,
 	phaseLabels,
 	phaseWeeks,
+	timelineExtras,
 } from "../areas";
 
 const allPhases: Phase[] = ["early", "mid", "late", "continuous"];
@@ -17,40 +18,7 @@ interface TimelineItem {
 	name: string;
 	emoji: string;
 	path: string;
-	badge?: string;
 }
-
-// Dialogmøte-items definert lokalt — lenker alle til samme side
-const dialogmoteItems: Record<Phase, TimelineItem[]> = {
-	early: [
-		{
-			id: "dm1",
-			name: "Dialogmøte 1",
-			emoji: "📅",
-			path: "/omrader/motebehov/",
-			badge: "frivillig",
-		},
-	],
-	mid: [
-		{
-			id: "dm2",
-			name: "Dialogmøte 2",
-			emoji: "📅",
-			path: "/omrader/motebehov/",
-			badge: "obligatorisk",
-		},
-	],
-	late: [
-		{
-			id: "dm3",
-			name: "Dialogmøte 3",
-			emoji: "📅",
-			path: "/omrader/motebehov/",
-			badge: "frivillig",
-		},
-	],
-	continuous: [],
-};
 
 const itemsByPhase = computed(() => {
 	const grouped: Record<Phase, TimelineItem[]> = {
@@ -60,8 +28,6 @@ const itemsByPhase = computed(() => {
 		continuous: [],
 	};
 	for (const area of areas) {
-		// Filtrer bort motebehov — erstattes av DM-items
-		if (area.id === "motebehov") continue;
 		grouped[area.phase].push({
 			id: area.id,
 			name: area.name,
@@ -69,9 +35,13 @@ const itemsByPhase = computed(() => {
 			path: area.path,
 		});
 	}
-	// Injiser dialogmøte-items i riktig fase
-	for (const phase of allPhases) {
-		grouped[phase].push(...dialogmoteItems[phase]);
+	for (const extra of timelineExtras) {
+		grouped[extra.phase].push({
+			id: extra.id,
+			name: extra.name,
+			emoji: extra.emoji,
+			path: extra.path,
+		});
 	}
 	return grouped;
 });
@@ -126,9 +96,6 @@ function phaseDescription(phase: Phase): string {
             >
               <span class="area-emoji" aria-hidden="true">{{ item.emoji }}</span>
               <span class="area-name">{{ item.name }}</span>
-              <span v-if="item.badge" class="area-badge" :class="`area-badge--${item.badge}`">
-                {{ item.badge }}
-              </span>
             </a>
           </div>
         </div>
@@ -337,26 +304,7 @@ function phaseDescription(phase: Phase): string {
   white-space: nowrap;
 }
 
-/* ─── Badge ─── */
-.area-badge {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
-  line-height: 1.2;
-}
 
-.area-badge--frivillig {
-  background: var(--tl-badge-frivillig-bg);
-  color: var(--tl-badge-frivillig-text);
-}
-
-.area-badge--obligatorisk {
-  background: var(--tl-badge-oblig-bg);
-  color: var(--tl-badge-oblig-text);
-}
 </style>
 
 <!-- Non-scoped block for dark mode CSS custom properties (must target :root) -->
@@ -376,10 +324,6 @@ function phaseDescription(phase: Phase): string {
   --tl-header-text: #1a1a1a;
   --tl-card-border: rgba(128, 128, 128, 0.15);
   --tl-card-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --tl-badge-frivillig-bg: #e8f5e9;
-  --tl-badge-frivillig-text: #2e7d32;
-  --tl-badge-oblig-bg: #fff3e0;
-  --tl-badge-oblig-text: #e65100;
 }
 
 .dark {
@@ -397,9 +341,5 @@ function phaseDescription(phase: Phase): string {
   --tl-header-text: #f0f0f0;
   --tl-card-border: rgba(255, 255, 255, 0.08);
   --tl-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  --tl-badge-frivillig-bg: rgba(76, 175, 80, 0.2);
-  --tl-badge-frivillig-text: #a5d6a7;
-  --tl-badge-oblig-bg: rgba(255, 152, 0, 0.2);
-  --tl-badge-oblig-text: #ffcc80;
 }
 </style>

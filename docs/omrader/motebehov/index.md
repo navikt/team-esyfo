@@ -6,6 +6,16 @@
 
 Møtebehov-området lar partene melde fra om behov for dialogmøte. Når enten den sykmeldte, arbeidsgiver eller Nav mener det er behov for et møte, registreres dette her.
 
+## Dialogmøtene i sykefraværsforløpet
+
+| Møte | Tidspunkt | Type |
+|------|-----------|------|
+| Dialogmøte 1 | Tidlig fase (innen 7 uker) | Frivillig — arbeidsgiver innkaller ved behov |
+| Dialogmøte 2 | Midtveis (senest 26 uker) | Obligatorisk — Nav innkaller |
+| Dialogmøte 3 | Sen fase (ved behov) | Frivillig — partene kan be om det |
+
+Dialogmøte 2 er det eneste lovpålagte møtet. Dialogmøte 1 og 3 gjennomføres bare når en av partene ser behov for det.
+
 ## Dette området handler om
 
 - La den sykmeldte og arbeidsgiver melde inn behov for dialogmøte

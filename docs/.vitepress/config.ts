@@ -127,9 +127,7 @@ export default withMermaid(
 				{
 					text: "Dataanalyse",
 					collapsed: false,
-					items: [
-						{ text: "Oversikt", link: "/dataanalyse/" },
-					],
+					items: [{ text: "Oversikt", link: "/dataanalyse/" }],
 				},
 			],
 			socialLinks: [
