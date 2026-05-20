@@ -118,21 +118,21 @@ export const areas: Area[] = [
 		path: "/omrader/narmeste-leder/",
 		subpages: [{ text: "Teknisk", link: "/omrader/narmeste-leder/teknisk" }],
 	},
-	// I Timeline.vue vises dette som DM1 (tidlig, frivillig), DM2 (midt, obligatorisk), DM3 (sen, frivillig)
 	{
 		id: "motebehov",
-		name: "Møtebehov / Dialogmøte",
+		name: "Møtebehov",
 		emoji: "📅",
 		phase: "mid",
 		description:
 			"Vurdering av behov for dialogmøte mellom partene. Brukes når det er tid for å avklare videre oppfølging.",
 		path: "/omrader/motebehov/",
 	},
+
 	{
 		id: "oppfolgingsplan",
 		name: "Oppfølgingsplan",
 		emoji: "📝",
-		phase: "mid",
+		phase: "early",
 		description:
 			"Plan for oppfølging mellom arbeidsgiver og arbeidstaker. Dokumenterer tiltak og mål for tilbakeføring til arbeid.",
 		path: "/omrader/oppfolgingsplan/",
@@ -144,7 +144,8 @@ export const areas: Area[] = [
 			{
 				system: "dinesykmeldte",
 				direction: "inn",
-				description: "Arbeidsgiver starter oppfølgingsplan fra oversikten over sykmeldte ansatte",
+				description:
+					"Arbeidsgiver starter oppfølgingsplan fra oversikten over sykmeldte ansatte",
 			},
 			{
 				system: "Dokumentporten",
@@ -159,7 +160,8 @@ export const areas: Area[] = [
 			{
 				system: "Aareg",
 				direction: "inn",
-				description: "Leverer stillingstittel og stillingsprosent når planen opprettes",
+				description:
+					"Leverer stillingstittel og stillingsprosent når planen opprettes",
 			},
 		],
 	},
@@ -200,7 +202,7 @@ export const phaseColors: Record<Phase, string> = {
 export const phaseDescriptions: Record<Phase, string> = {
 	early:
 		"Fokus på tidlig aktivitet og kartlegging. Arbeidsgiver og Nav samler grunnlag for videre oppfølging.",
-	mid: "Dialog og planlegging. Partene avklarer behov for møte og lager en oppfølgingsplan med tiltak og mål.",
+	mid: "Dialog og avklaring. Partene vurderer behov for dialogmøte og avklarer videre oppfølging.",
 	late: "Sykepengene nærmer seg slutt. Den sykmeldte trenger informasjon om videre valg og rettigheter.",
 	continuous:
 		"Dine sykmeldte, nærmesteleder og fellestjenester er aktive gjennom hele forløpet og støtter de andre områdene.",
@@ -212,3 +214,25 @@ export const phaseWeeks: Record<Phase, { start: number; end: number }> = {
 	late: { start: 26, end: 52 },
 	continuous: { start: 0, end: 52 },
 };
+
+/**
+ * Ekstra tidslinjepunkter som vises i Timeline-komponenten,
+ * men som IKKE er egne fagområder (skal ikke i sidebar/områdeliste).
+ */
+export interface TimelineExtra {
+	id: string;
+	name: string;
+	emoji: string;
+	phase: Phase;
+	path: string;
+}
+
+export const timelineExtras: TimelineExtra[] = [
+	{
+		id: "dialogmote-2",
+		name: "Dialogmøte 2",
+		emoji: "🤝",
+		phase: "mid",
+		path: "/omrader/motebehov/",
+	},
+];
