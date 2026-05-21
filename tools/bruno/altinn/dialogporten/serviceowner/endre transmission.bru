@@ -1,0 +1,80 @@
+meta {
+  name: endre transmission
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/v1/serviceowner/dialogs/{{dialogId}}/transmissions/{{transmissionId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "019e011c-564c-71be-8605-339ef4618907",
+    "createdAt": "2026-05-07T06:24:55.3581520Z",
+    "extendedType": "OPPFOLGINGSPLAN",
+    "externalReference": "061ec615-4875-4307-8881-d9df36dfc4b6",
+    "type": "Information",
+    "sender": {
+      "actorType": "ServiceOwner"
+    },
+    "content": {
+      "title": {
+        "value": [
+          {
+            "value": "Oppfølgingsplan for Rask Abbedisse",
+            "languageCode": "nb"
+          }
+        ],
+        "mediaType": "text/plain"
+      },
+      "summary": {
+        "value": [
+          {
+            "value": "LYDIG AUTORITET har opprettet en oppfølgingsplan for Rask Abbedisse på \"Dine sykmeldte\" hos Nav opprettet den 07.05.2026",
+            "languageCode": "nb"
+          }
+        ],
+        "mediaType": "text/plain"
+      }
+    },
+    "attachments": [
+      {
+        "id": "019e011c-583c-7389-aba9-c42d22734f8a",
+        "displayName": [
+          {
+            "value": "Oppfølgingsplan.pdf",
+            "languageCode": "nb"
+          }
+        ],
+        "urls": [
+          {
+            "id": "019e011c-583e-7778-9928-9c12fb258e23",
+            "url": "https://syfo-dokumentporten.ekstern.dev.nav.no/api/v1/documents/53472c94-9574-4886-ad5f-937268d0d051",
+            "mediaType": "application/pdf",
+            "consumerType": "Api"
+          },
+          {
+            "id": "019e011c-583e-7778-992e-9269076dc980",
+            "url": "https://nav.no",
+            "mediaType": "application/pdf",
+            "consumerType": "Gui"
+          }
+        ],
+        "expiresAt": "2026-09-07T22:00:00.0000000Z"
+      }
+    ],
+    "isSilentUpdate": true
+  }
+}
+
+vars:pre-request {
+  transmissionId: 019e011c-564c-71be-8605-339ef4618907
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
