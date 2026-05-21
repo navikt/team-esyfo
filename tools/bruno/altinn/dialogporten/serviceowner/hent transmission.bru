@@ -1,0 +1,20 @@
+meta {
+  name: hent transmission
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/serviceowner/dialogs/{{dialogId}}/transmissions/{{transmissionId}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  transmissionId: 019e011c-564c-71be-8605-339ef4618907
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

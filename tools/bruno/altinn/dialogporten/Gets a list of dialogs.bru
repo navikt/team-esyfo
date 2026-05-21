@@ -7,7 +7,7 @@ meta {
 get {
   url: {{baseUrl}}/api/v1/serviceowner/dialogs
   body: none
-  auth: bearer
+  auth: inherit
 }
 
 params:query {
@@ -37,8 +37,4 @@ params:query {
   ~orderBy: 
   ~continuationToken: 
   ~limit: 
-}
-
-auth:bearer {
-  token: {{token}}
 }

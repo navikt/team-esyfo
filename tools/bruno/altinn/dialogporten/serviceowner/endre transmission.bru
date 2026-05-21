@@ -1,0 +1,80 @@
+meta {
+  name: endre transmission
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/v1/serviceowner/dialogs/{{dialogId}}/transmissions/{{transmissionId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "",
+    "createdAt": "",
+    "extendedType": "",
+    "externalReference": "",
+    "type": "",
+    "sender": {
+      "actorType": "ServiceOwner"
+    },
+    "content": {
+      "title": {
+        "value": [
+          {
+            "value": "",
+            "languageCode": "nb"
+          }
+        ],
+        "mediaType": "text/plain"
+      },
+      "summary": {
+        "value": [
+          {
+            "value": "",
+            "languageCode": "nb"
+          }
+        ],
+        "mediaType": ""
+      }
+    },
+    "attachments": [
+      {
+        "id": "",
+        "displayName": [
+          {
+            "value": "",
+            "languageCode": ""
+          }
+        ],
+        "urls": [
+          {
+            "id": "",
+            "url": "",
+            "mediaType": "",
+            "consumerType": "Api"
+          },
+          {
+            "id": "",
+            "url": "",
+            "mediaType": "",
+            "consumerType": "Gui"
+          }
+        ],
+        "expiresAt": ""
+      }
+    ],
+    "isSilentUpdate": true
+  }
+}
+
+vars:pre-request {
+  transmissionId: 019e011c-564c-71be-8605-339ef4618907
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
