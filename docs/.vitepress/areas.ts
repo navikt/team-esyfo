@@ -173,6 +173,32 @@ export const areas: Area[] = [
 		description:
 			"Oppfølging i sen fase når sykepengene nærmer seg slutt. Hjelper den sykmeldte med videre valg.",
 		path: "/omrader/mer-oppfolging/",
+		subpages: [{ text: "Teknisk", link: "/omrader/mer-oppfolging/teknisk" }],
+		dependencies: [
+			{
+				system: "sykepengedager-informasjon",
+				direction: "inn",
+				description:
+					"Leverer informasjon om gjenstående sykepengedager via Kafka til backend og maksdato via API til frontend",
+			},
+			{
+				system: "esyfovarsel",
+				direction: "ut",
+				description:
+					"Konsumerer varsel-hendelser fra Kafka-topicet team-esyfo.varselbus og sender varsler til den sykmeldte",
+			},
+			{
+				system: "syfomodiaperson (team iSyfo)",
+				direction: "ut",
+				description: "Nav-veileder ser svar fra mer oppfølging i Modia",
+			},
+			{
+				system: "ismeroppfolging (team iSyfo)",
+				direction: "ut",
+				description:
+					"Konsumerer Kafka-topicet team-esyfo.sen-oppfolging-svar og bruker svarene i videre oppfølging av sykmeldte",
+			},
+		],
 	},
 	{
 		id: "fellestjenester",
