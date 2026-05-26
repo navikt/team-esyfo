@@ -166,14 +166,14 @@ export const areas: Area[] = [
 		],
 	},
 	{
-		id: "mer-oppfolging",
+		id: "meroppfolging",
 		name: "Meroppfølging",
 		emoji: "🔔",
 		phase: "late",
 		description:
 			"Oppfølging i sen fase når sykepengene nærmer seg slutt. Hjelper den sykmeldte med videre valg.",
-		path: "/omrader/mer-oppfolging/",
-		subpages: [{ text: "Teknisk", link: "/omrader/mer-oppfolging/teknisk" }],
+		path: "/omrader/meroppfolging/",
+		subpages: [{ text: "Teknisk", link: "/omrader/meroppfolging/teknisk" }],
 		dependencies: [
 			{
 				system: "sykepengedager-informasjon",
