@@ -1,22 +1,22 @@
-# 🔔 Mer oppfølging
+# 🔔 Meroppfølging
 
 **Fase:** Sen 🟠
 
 ## Formål
 
-Mer oppfølging hjelper den sykmeldte når sykepengene nærmer seg slutt. Løsningen viser maksdato for sykepenger, forklarer hvilke valg som finnes videre og lar brukeren si fra om behov for mer oppfølging fra Nav.
+Meroppfølging hjelper den sykmeldte når sykepengene nærmer seg slutt. Løsningen viser maksdato for sykepenger, forklarer hvilke valg som finnes videre og lar brukeren si fra om behov for meroppfølging fra Nav.
 
 ## Brukerreiser
 
 ### Den sykmeldte
 
 ::: tip 🎯 Prøv selv
-- [Demo: Mer oppfølging →](https://demo.ekstern.dev.nav.no/syk/meroppfolging/snart-slutt-pa-sykepengene)
+- [Demo: Meroppfølging →](https://demo.ekstern.dev.nav.no/syk/meroppfolging/snart-slutt-pa-sykepengene)
 :::
 
 #### 1. 📬 Får beskjed i sen fase
 
-Den sykmeldte får varsel når sykepengene nærmer seg slutt. Varslet leder videre til siden for mer oppfølging på nav.no.
+Den sykmeldte får varsel når sykepengene nærmer seg slutt. Varslet leder videre til siden for meroppfølging på nav.no.
 
 #### 2. 📅 Ser maksdato og hva som skjer videre
 
@@ -24,7 +24,7 @@ På siden ser brukeren når sykepengene tar slutt og informasjon om mulige veier
 
 #### 3. ✍️ Svarer om situasjonen videre
 
-Brukeren svarer på spørsmål om situasjonen etter maksdato og om det er behov for mer oppfølging fra Nav.
+Brukeren svarer på spørsmål om situasjonen etter maksdato og om det er behov for meroppfølging fra Nav.
 
 #### 4. ✅ Får kvittering
 

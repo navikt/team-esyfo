@@ -167,7 +167,7 @@ export const areas: Area[] = [
 	},
 	{
 		id: "mer-oppfolging",
-		name: "Mer oppfølging",
+		name: "Meroppfølging",
 		emoji: "🔔",
 		phase: "late",
 		description:
@@ -190,7 +190,7 @@ export const areas: Area[] = [
 			{
 				system: "syfomodiaperson (team iSyfo)",
 				direction: "ut",
-				description: "Nav-veileder ser svar fra mer oppfølging i Modia",
+				description: "Nav-veileder ser svar fra meroppfølging i Modia",
 			},
 			{
 				system: "ismeroppfolging (team iSyfo)",
