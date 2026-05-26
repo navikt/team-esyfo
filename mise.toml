@@ -1,6 +1,7 @@
 [tools]
 java = "temurin-25"
-pnpm = "10"
+pnpm = "11.3.0"
+node = "24"
 
 [tasks."wiki:install"]
 description = "Install wiki dependencies"
