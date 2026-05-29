@@ -15,15 +15,7 @@ mise run format
 
 ## Hva brukes i praksis?
 
-[Ktlint](https://pinterest.github.io/ktlint/latest/) er vanligst i backend-repoene våre. Det er standardmønsteret i mange Ktor- og Spring Boot-repoer.
-
-Det finnes likevel avvik:
-
-- `oppfolgingsplan-backend` bruker Detekt
-- `syfobrukertilgang` bruker Detekt
-- `lps-oppfolgingsplan-mottak` bruker både ktlint og Spotless
-
-Skriv derfor ikke nye regler eller scripts uten å sjekke hva repoet allerede bruker.
+[Ktlint](https://pinterest.github.io/ktlint/latest/) er vår standardbibliotek for linting.
 
 ## Praktisk råd
 
