@@ -346,11 +346,3 @@ Utviklerverktøy, infrastruktur og delte ressurser.
 </div>
 
 </div>
-
-<details class="deprecated-section">
-<summary>⚠️ Deprecated / arkivert</summary>
-<div class="deprecated-card">
-<h4><a href="https://github.com/navikt/esyfo-dev-tools">esyfo-dev-tools</a></h4>
-<p>Tidligere utviklerverktøy — nå arkivert. Funksjonalitet flyttet til esyfo-cli.</p>
-</div>
-</details>
