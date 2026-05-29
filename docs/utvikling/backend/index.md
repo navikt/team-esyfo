@@ -2,7 +2,7 @@
 
 I team eSYFO er backend-repoene våre Kotlin-applikasjoner. De fleste bruker [Ktor](https://ktor.io/), og noen bruker [Spring Boot](https://spring.io/projects/spring-boot). Java 21 er vanligst, men det finnes avvik.
 
-Se [repo-oversikten](/utvikling/repositories) for aktive backend-repoer og eierskap.
+Se [repo-oversikten](/utvikling/repositories) for aktive backendrepoer og eierskap.
 
 🚀 [Bygg og kjør lokalt](./bygg-og-kjor) — Kom i gang med mise, Docker og Colima
 
