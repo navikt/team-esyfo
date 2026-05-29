@@ -106,8 +106,15 @@ export default withMermaid(
 							items: [
 								{ text: "Oversikt", link: "/utvikling/backend/" },
 								{
+									text: "Bygg og kjør",
+									link: "/utvikling/backend/bygg-og-kjor",
+								},
+								{ text: "Testing", link: "/utvikling/backend/testing" },
+								{ text: "Linting", link: "/utvikling/backend/linting" },
+								{ text: "Verktøy", link: "/utvikling/backend/verktoy" },
+								{
 									text: "API-testing (Bruno)",
-									link: "/utvikling/backend/#api-testing-med-bruno",
+									link: "/utvikling/backend/verktoy#bruno",
 								},
 							],
 						},

@@ -21,6 +21,6 @@ Hovmester aktiveres via Copilot CLI (`@hovmester`) og delegerer oppgaver til rik
 
 Hovmester distribuerer instruksjoner, skills og agenter til teamets repoer via en GitHub Actions-workflow. Hvert repo som bruker Hovmester har en `.github/workflows/hovmester-sync.yml` som kjører daglig og oppretter en PR hvis noe har endret seg.
 
-Workflowen synkroniserer kun filer under `.github/` (agenter, instruksjoner, skills og issue-templates). Den endrer aldri workflows eller annen kode.
+Workflowen synkroniserer filer under `.github/` — det vil si agenter, instruksjoner, skills og issue-templates. Den endrer aldri workflows eller applikasjonskode.
 
 Les mer om oppsett og konfigurasjon i [Hovmester README](https://github.com/navikt/hovmester#readme).
