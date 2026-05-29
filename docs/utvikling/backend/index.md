@@ -1,15 +1,25 @@
 # Backend
 
-I team eSYFO bruker vi **Kotlin** som hovedspråk for backend-utvikling, med [Ktor](https://ktor.io/) og [Spring Boot](https://spring.io/projects/spring-boot) som rammeverk.
+I team eSYFO er backend-repoene våre Kotlin-applikasjoner. De fleste bruker [Ktor](https://ktor.io/), og noen bruker [Spring Boot](https://spring.io/projects/spring-boot). Java 21 er vanligst, men det finnes avvik.
 
-Se [repo-oversikten](/utvikling/repositories) for en komplett liste over backend-repoer (filtrert med topic `backend`).
+Se [repooversikten](/utvikling/repositories) for aktive backendrepoer og eierskap.
+
+🚀 [Bygg og kjør lokalt](./bygg-og-kjor) — Kom i gang med mise, Docker og Colima
+
+🧪 [Testing](./testing) — Hvordan vi vanligvis kjører tester, og hvilke unntak som finnes
+
+🧹 [Linting og formatering](./linting) — Ktlint er vanligst, men ikke eneste variant
+
+🛠️ [Backend-verktøy](./verktoy) — IntelliJ, Bruno, k9s og andre nyttige hjelpemidler
 
 ## API-testing med Bruno
 
-Bruno-samlingen ligger i repoet under [`tools/bruno`](https://github.com/navikt/team-esyfo/tree/main/tools/bruno) og kan brukes til å teste kall mot relevante API-er og hjelpeverktøy.
+Bruno-samlingen ligger i repoet under [`tools/bruno`](https://github.com/navikt/team-esyfo/tree/main/tools/bruno).
 
-### Typiske bruksområder
+Bruk Bruno når du vil:
 
 - utforske eksisterende requests og miljøoppsett
 - teste integrasjoner lokalt
 - dele nyttige kall mellom teammedlemmer
+
+Se [Backend-verktøy](./verktoy#bruno) for kort oppsett og lenker videre.

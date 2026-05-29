@@ -2,6 +2,8 @@
 
 Teamets teknologivalg og konvensjoner for frontend, backend og samarbeid. Her finner du oversikt over stacken vi bruker og hvordan vi jobber med kode.
 
+I [repooversikt](repositories) for du en kort sammendrag hva slags repoer vi eier / jobber med.
+
 ## Håndbøker
 
 Vi skal følge utviklerhåndbøker og ta i bruk beste praksis.
