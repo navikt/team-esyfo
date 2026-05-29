@@ -1,223 +1,321 @@
 # Repositories
 
+Oversikt over alle repoer som Team eSyfo eier og vedlikeholder, gruppert etter type.
+
 ## 🌐 Frontend
+
+Brukervendte applikasjoner — alle bygget med Next.js og TypeScript.
+
+---
 
 ### [aktivitetskrav-frontend](https://github.com/navikt/aktivitetskrav-frontend)
 
-*Ingen beskrivelse*
+Viser status for aktivitetskravet (krav om yrkesrettet aktivitet) for innloggede brukere på Min side.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [bro-frontend](https://github.com/navikt/bro-frontend)
 
-Frontend for behovsrettet oppfølging
+Frontend for behovsrettet oppfølging — lar sykmeldte og arbeidsgivere melde behov for dialogmøte.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [dialogmote-frontend](https://github.com/navikt/dialogmote-frontend)
 
-Dialogmøte app for arbeidsgiver og arbeidstaker
+Dialogmøte-app for arbeidsgiver og arbeidstaker — viser innkallinger, referat og svar.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [dinesykmeldte](https://github.com/navikt/dinesykmeldte)
 
-Oversikt over din bedrifts sykmeldte
+Oversikt over din bedrifts sykmeldte — arbeidsgivers inngangsport til sykefraværsoppfølging.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [dinesykmeldte-sidemeny](https://github.com/navikt/dinesykmeldte-sidemeny)
 
-*Ingen beskrivelse*
+<!-- TODO: Beskrivelse mangler — verifiser med teamet -->
+Sidemeny-komponent brukt i dinesykmeldte-konteksten.
 
-🌐 frontend
+`TypeScript`
+
+---
 
 ### [meroppfolging-frontend](https://github.com/navikt/meroppfolging-frontend)
 
-*Ingen beskrivelse*
+App for sykmeldte som nærmer seg slutten på sykepengeperioden. Viser maksdato, samler inn svar om situasjonen videre og lar brukeren be om oppfølging fra Nav.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [narmesteleder-frontend](https://github.com/navikt/narmesteleder-frontend)
 
-Next.js-frontend app for registrering og oppdatering av nærmesteleder for sykmeldte ansatte. Støtter både forhåndsutfylte skjemaer fra Dialogporten og tomme skjemaer fra Min side - arbeidsgiver.
+Registrering og oppdatering av nærmeste leder for sykmeldte ansatte. Støtter forhåndsutfylte skjemaer fra Dialogporten og tomme skjemaer fra Min side – arbeidsgiver.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [oppfolgingsplan-lps-demo](https://github.com/navikt/oppfolgingsplan-lps-demo)
 
-Demo application to showcase LPS oppfølgingsplan
+Demo-applikasjon for å vise hvordan LPS-leverandører sender oppfølgingsplaner til Nav.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [syfo-oppfolgingsplan-frontend](https://github.com/navikt/syfo-oppfolgingsplan-frontend)
 
-Dette er frontend for oppfølgingsplan som ble utviklet fra sommer 2025
+Ny frontend for oppfølgingsplan, utviklet fra sommer 2025. Erstatter den eldre oppfølgingsplan-frontenden.
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
+
+---
 
 ### [syfojanitor-frontend](https://github.com/navikt/syfojanitor-frontend)
 
-*Ingen beskrivelse*
+Intern admin-app for å lukke åpne dialogmøter manuelt (krever UUID og personident).
 
-🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js`
 
-:::details Deprecated
+---
+
+<details>
+<summary>⚠️ Deprecated frontend-repoer</summary>
 
 ### [oppfolgingsplan-frontend](https://github.com/navikt/oppfolgingsplan-frontend)
 
-*Ingen beskrivelse*
+<!-- TODO: Beskrivelse mangler -->
+Erstattet av `syfo-oppfolgingsplan-frontend`.
 
-⚠️ deprecated · 🟦 typescript · 🚀 nextjs
+`TypeScript` `Next.js` `deprecated`
 
-:::
+</details>
 
 ## ⚙️ Backend
 
+API-er og bakgrunnstjenester — Kotlin med enten Spring Boot eller Ktor.
+
+---
+
 ### [aktivitetskrav-backend](https://github.com/navikt/aktivitetskrav-backend)
 
-Backend-tjeneste for aktivitetskrav (krav om yrkesrettet aktivitet) i sykefraværsoppfølgingen
+Backend-tjeneste for aktivitetskrav (krav om yrkesrettet aktivitet) i sykefraværsoppfølgingen.
 
-🟧 kotlin · 🌱 spring-boot
+`Kotlin` `Spring Boot`
+
+---
 
 ### [dinesykmeldte-backend](https://github.com/navikt/dinesykmeldte-backend)
 
-Backend for dinesykmeldte
+Backend for dinesykmeldte — aggregerer sykmeldingsdata for arbeidsgivere.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor`
+
+---
 
 ### [esyfo-narmesteleder](https://github.com/navikt/esyfo-narmesteleder)
 
-API for managing narmesteleder connection
+API for håndtering av nærmeste leder-koblinger mellom arbeidsgiver og sykmeldt.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor`
+
+---
 
 ### [esyfo-token-tjeneste](https://github.com/navikt/esyfo-token-tjeneste)
 
-*Ingen beskrivelse*
+Hjelpetjeneste for å hente Maskinporten-tokens i dev-miljøet. Krever NaisDevice.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor`
+
+---
 
 ### [esyfovarsel](https://github.com/navikt/esyfovarsel)
 
-Ansvarlig for å håndtere varsler for SYFO-domenet
+Håndterer varsler (SMS, e-post) for SYFO-domenet — dialogmøter, aktivitetskrav m.m.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor`
+
+---
 
 ### [lps-oppfolgingsplan-mottak](https://github.com/navikt/lps-oppfolgingsplan-mottak)
 
-*Ingen beskrivelse*
+Mottar oppfølgingsplaner fra eksterne LPS-leverandører (lønnssystem-leverandører) og videresender til Nav og/eller fastlege.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor` `PostgreSQL` `Kafka`
+
+---
 
 ### [meroppfolging-backend](https://github.com/navikt/meroppfolging-backend)
 
-Backend for meroppfolging-frontend
+Backend for meroppfolging-frontend — lagrer svar og håndterer oppfølgingsforespørsler.
 
-🟧 kotlin · 🌱 spring-boot
+`Kotlin` `Spring Boot`
+
+---
 
 ### [oppfolgingsplan-backend](https://github.com/navikt/oppfolgingsplan-backend)
 
-*Ingen beskrivelse*
+Lagring og prosessering av oppfølgingsplaner. Overtok funksjonalitet fra syfooppfolgingsplanservice (GCP).
 
-🟧 kotlin · 🌱 spring-boot
+`Kotlin` `Spring Boot`
+
+---
 
 ### [syfo-dokumentporten](https://github.com/navikt/syfo-dokumentporten)
 
-*Ingen beskrivelse*
+<!-- TODO: Verifiser beskrivelse med teamet -->
+Dokumenttjeneste for oppfølgingsplaner — håndterer lagring og uthenting av plan-dokumenter.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor` `PostgreSQL`
+
+---
 
 ### [syfo-oppfolgingsplan-backend](https://github.com/navikt/syfo-oppfolgingsplan-backend)
 
-*Ingen beskrivelse*
+Backend for den nye oppfølgingsplan-løsningen. Brukes av arbeidsgiver, sykmeldt og Nav-veileder.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor` `PostgreSQL` `Kafka`
+
+---
 
 ### [syfobrukertilgang](https://github.com/navikt/syfobrukertilgang)
 
-Håndterer tilgang til sykefraværsoppfølgingen for brukere i Selvbetjeningssone
+Håndterer tilgangskontroll til sykefraværsoppfølgingen for brukere i selvbetjeningssonen.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor`
+
+---
 
 ### [syfomotebehov](https://github.com/navikt/syfomotebehov)
 
-Syfomotebehov er en mikrotjeneste som lagrer data om behovet for et dialogmøte
+Lagrer og eksponerer data om behov for dialogmøte — brukes av bro-frontend.
 
-🟧 kotlin · 🌱 spring-boot
+`Kotlin` `Spring Boot`
+
+---
 
 ### [syfojanitor-backend](https://github.com/navikt/syfojanitor-backend)
 
-*Ingen beskrivelse*
+Backend for syfojanitor — mottar forespørsler om å lukke dialogmøter via Kafka.
 
-🟧 kotlin · ⚡ ktor
+`Kotlin` `Ktor` `Kafka` `PostgreSQL`
+
+---
 
 ### [sykepengedager-informasjon](https://github.com/navikt/sykepengedager-informasjon)
 
-Aggregering og distribusjon av informasjon om sykepengedager
+Aggregerer og distribuerer informasjon om gjenstående sykepengedager (maksdato).
 
-🟧 kotlin · 🌱 spring-boot
+`Kotlin` `Spring Boot`
 
-:::details Deprecated
+---
+
+<details>
+<summary>⚠️ Deprecated backend-repoer</summary>
 
 ### [syfooppfolgingsplanservice](https://github.com/navikt/syfooppfolgingsplanservice)
 
-Applikasjon i FSS som håndterer og lagrer digitale oppfølgingsplaner
+Gammel applikasjon i FSS som håndterte og lagret digitale oppfølgingsplaner. Erstattes av `oppfolgingsplan-backend`.
 
-⚠️ deprecated · 🟧 kotlin · 🌱 spring-boot
+`Kotlin` `Spring Boot` `deprecated`
 
-:::
+</details>
 
 ## 🧩 Microfrontend
 
+Mikrofronter som kjører inne i andre applikasjoner (Min side).
+
+---
+
 ### [esyfo-microfrontends](https://github.com/navikt/esyfo-microfrontends)
 
-*Ingen beskrivelse*
+Astro SSR-monorepo for eSyfo-mikrofronter (aktivitetskrav, dialogmøte og meroppfølging), integrert på Min side.
 
-🧩 microfrontend · 👥 team-esyfo · 🤖 team-esyfo-copilot
+`TypeScript` `Astro`
 
-🟦 typescript
+---
 
 ## 🧱 Monorepo
 
+Tverrfaglige prosjekter med både frontend og backend i ett repo.
+
+---
+
 ### [lumi](https://github.com/navikt/lumi)
 
-Personvernvennlig survey-infrastruktur for NAV
+Personvernvennlig survey-infrastruktur for Nav — brukes til å samle tilbakemeldinger uten å lagre persondata.
 
-🟧 kotlin · ⚡ ktor · 🧱 monorepo · 🟦 typescript
+`Kotlin` `Ktor` `TypeScript` `Monorepo`
 
-## 📦 Other
+---
+
+## 📦 Verktøy og annet
+
+Utviklerverktøy, infrastruktur og delte ressurser.
+
+---
 
 ### [esyfo-cli](https://github.com/navikt/esyfo-cli)
 
-*Ingen beskrivelse*
+CLI-verktøykasse for team-esyfo — lokale hjelpescripts for utvikling (krever Bun).
 
-### [esyfo-dev-tools](https://github.com/navikt/esyfo-dev-tools)
+`TypeScript` `Bun`
 
-*Ingen beskrivelse*
+---
 
 ### [esyfo-proxy](https://github.com/navikt/esyfo-proxy)
 
-Proxy backend for Esyfo
+Proxy-backend for eSyfo — ruter trafikk mellom frontender og backend-tjenester.
 
-🟦 typescript
+`TypeScript`
+
+---
 
 ### [nav-ekstern-api-dok](https://github.com/navikt/nav-ekstern-api-dok)
 
-Oversikt over API-dok som NAV eksponerer eksternt
+Oversikt over API-dokumentasjon som Nav eksponerer eksternt.
+
+---
 
 ### [syfooppdfgen](https://github.com/navikt/syfooppdfgen)
 
-Generate PDF from Oppfolgingsplaner from LPS
+Genererer PDF fra oppfølgingsplaner mottatt fra LPS-leverandører.
 
-👥 team-esyfo
+---
 
 ### [team-esyfo](https://github.com/navikt/team-esyfo)
 
-*Ingen beskrivelse*
+Denne wikien — dokumentasjon, runbooks og onboarding for Team eSyfo.
+
+`VitePress` `Markdown`
+
+---
 
 ### [teamesyfo-github-actions-workflows](https://github.com/navikt/teamesyfo-github-actions-workflows)
 
-*Ingen beskrivelse*
+Delte GitHub Actions-workflows brukt på tvers av teamets repoer.
 
-👥 team-esyfo
+`GitHub Actions`
+
+---
+
+<details>
+<summary>⚠️ Deprecated / arkivert</summary>
+
+### [esyfo-dev-tools](https://github.com/navikt/esyfo-dev-tools)
+
+Tidligere utviklerverktøy — nå arkivert. Funksjonalitet flyttet til `esyfo-cli`.
+
+`archived`
+
+</details>
