@@ -188,7 +188,7 @@ API-er og bakgrunnstjenester — Kotlin med enten Spring Boot eller Ktor.
 
 <div class="repo-card">
 <h4><a href="https://github.com/navikt/esyfo-token-tjeneste">esyfo-token-tjeneste</a></h4>
-<p>Hjelpetjeneste for å hente Maskinporten-tokens i dev-miljøet. Krever NaisDevice.</p>
+<p>API for å hente Maskinporten-token til systembrukere i `dev`-miljøet.</p>
 <div class="tech-badges"><span>Kotlin</span><span>Ktor</span></div>
 </div>
 
