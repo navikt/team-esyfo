@@ -36,13 +36,9 @@ Når svarene er sendt inn, lagres de i backend. Brukeren får en kvittering som 
 
 Nav-veileder henter svarene via syfomodiaperson. Svarene gir et bedre grunnlag for videre oppfølging i [sen fase](/ordbok#sen-oppfolging) av sykefraværet.
 
-## Viktige begreper
-
-| Begrep         | Forklaring                                                                                                  |
-| -------------- | ----------------------------------------------------------------------------------------------------------- |
-| Maksdato       | Datoen da retten til sykepenger utløper                                                                     |
-| Sen oppfølging | Oppfølging i sluttfasen av sykepengeperioden, fra varselperioden og fram mot maksdato                       |
-| 39-ukersvarsel | Varsel som sendes før maksdato for å gjøre den sykmeldte oppmerksom på at sykepengeperioden går mot slutten |
+::: tip 📖 Ordbok
+Se [Maksdato](/ordbok#maksdato), [Sen oppfølging](/ordbok#sen-oppfolging) og [39-ukersvarsel](/ordbok#39-ukersvarsel) i ordboken.
+:::
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)

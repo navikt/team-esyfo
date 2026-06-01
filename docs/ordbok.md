@@ -2,6 +2,8 @@
 
 Her finner du forklaringer på begreper som brukes i Team eSyfos dokumentasjon. Begrepene er sortert alfabetisk og lenkes til fra andre sider.
 
+<div class="ordbok-page">
+
 ---
 
 ### 39-ukersvarsel {#39-ukersvarsel}
@@ -217,3 +219,5 @@ Felles Kafka-topic der hendelser publiseres for varsling via eSyfovarsel.
 ### Veivalg {#veivalg}
 
 Alternativer den sykmeldte kan vurdere (tilbake i arbeid, AAP, etc.).
+
+</div>

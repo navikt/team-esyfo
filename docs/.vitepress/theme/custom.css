@@ -1,9 +1,9 @@
-/* Ordbok-styling */
-.vp-doc hr + h3 {
+/* Ordbok-styling (scoped til ordbok-siden) */
+.vp-doc .ordbok-page hr + h3 {
 	margin-top: 16px;
 }
 
-.vp-doc h3 + p {
+.vp-doc .ordbok-page h3 + p {
 	margin-top: 4px;
 	color: var(--vp-c-text-2);
 }

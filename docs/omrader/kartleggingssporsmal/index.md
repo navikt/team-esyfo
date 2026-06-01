@@ -68,17 +68,8 @@ Kartleggingsspørsmål kan ha flere varianter. Per nå finnes det:
 
 Hvilken variant den sykmeldte får bestemmes av feltet `skjemavariant` i Kafka-meldingen fra `ismeroppfolging-kartleggingssporsmal-kandidat`-topicen.
 
-## Viktige begreper
-
-| Begrep              | Forklaring                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Kandidat            | En sykmeldt som oppfyller kriteriene for kartlegging, basert på oppfølgingstilfellets varighet                           |
-| Kandidatstatus      | Angir om personen kan besvare kartleggingsskjemaet                                                                       |
-| Microfrontend       | UI-paneler fra eSyfo integrert på Min side. Hvilke paneler som vises avhenger av hva som er aktivert for den sykmeldte.  |
-| Lumi                | Personvernvennlig spørreundersøkelse som samler inn tilbakemelding om kartleggingsopplevelsen                            |
-
 ::: tip 📖 Ordbok
-Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+Se [Kandidat](/ordbok#kandidat), [Kandidatstatus](/ordbok#kandidatstatus), [Microfrontend](/ordbok#microfrontend) og [Lumi](/ordbok#lumi) i ordboken.
 :::
 
 ::: info 🔧 Teknisk oversikt
