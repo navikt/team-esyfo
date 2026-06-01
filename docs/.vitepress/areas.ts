@@ -208,6 +208,9 @@ export const areas: Area[] = [
 		description:
 			"Felles tjenester og infrastruktur som brukes på tvers av områdene. Tidligere kalt «crossdomain».",
 		path: "/omrader/fellestjenester/",
+		subpages: [
+			{ text: "Token tjeneste", link: "/omrader/fellestjenester/token-tjeneste" },
+		],
 	},
 ];
 

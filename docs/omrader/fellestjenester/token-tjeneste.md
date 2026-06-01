@@ -1,4 +1,4 @@
-# 👥 esyfo-token-tjeneste
+# 👥 Token tjeneste
 
 **Fase:** Gjennomgående 🔵
 
@@ -21,4 +21,4 @@ konteksten blir da som en LPS mot våre tjenester.
 #### Begrensninger
 - `lps-oppfolgingsplan-mottak` benytter ikke systembruker, så token vil ikke
 være gyldig der. Burde kreve små endringer i token-tjenesten for å støtte dette, dersom noen har lyst.
-- Kan ikke brukes direkte mot Altinn/Dialogporten. 
+- Kan ikke brukes direkte mot Altinn/Dialogporten.
