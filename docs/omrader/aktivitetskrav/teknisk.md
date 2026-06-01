@@ -1,6 +1,6 @@
 # Aktivitetskrav — teknisk oversikt
 
-Aktivitetskrav-systemet mottar vurderinger fra iSyfo, lagrer dem i aktivitetskrav-backend, varsler den sykmeldte og viser status i microfrontend og frontend.
+Aktivitetskrav-systemet mottar vurderinger fra iSyfo, lagrer dem i aktivitetskrav-backend, varsler den sykmeldte og viser status i [microfrontend](/ordbok#microfrontend) og frontend.
 
 ## Dataflyt
 

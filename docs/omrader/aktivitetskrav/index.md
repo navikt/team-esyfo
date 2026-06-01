@@ -16,7 +16,7 @@ En sykmeldt har aktivitetsplikt — det betyr at den sykmeldte skal være i akti
 
 ### 1. 🧭 Vurdering hos Nav
 
-Nav-veileder vurderer aktivitetskravet i [isaktivitetskrav](https://github.com/navikt/isaktivitetskrav) (eid av team iSyfo). Vurderingen kan ende med oppfylt, ikke oppfylt, unntak eller forhåndsvarsel. Noen vurderinger har en frist som den sykmeldte må forholde seg til.
+Nav-veileder vurderer [aktivitetskravet](/ordbok#aktivitetskrav) i [isaktivitetskrav](https://github.com/navikt/isaktivitetskrav) (eid av team iSyfo). Vurderingen kan ende med oppfylt, ikke oppfylt, unntak eller [forhåndsvarsel](/ordbok#forhandsvarsel). Noen vurderinger har en frist som den sykmeldte må forholde seg til.
 
 ### 2. 📲 Varsel
 
@@ -24,7 +24,7 @@ Når vurderingen er klar, får den sykmeldte en notifikasjon og SMS om at Nav ha
 
 ### 3. 🏠 Status på Min side
 
-Etter innlogging på nav.no ser den sykmeldte en microfrontend på [Min side](https://www.nav.no/minside) med gjeldende status og lenke til aktivitetskrav-siden. Panelet vises kun for relevante statuser — når aktivitetskravet ikke er oppfylt, skjules det.
+Etter innlogging på nav.no ser den sykmeldte en [microfrontend](/ordbok#microfrontend) på [Min side](https://www.nav.no/minside) med gjeldende status og lenke til aktivitetskrav-siden. Panelet vises kun for relevante statuser — når aktivitetskravet ikke er oppfylt, skjules det.
 
 ::: tip Storybook 🎨
 [Se hvordan det ser ut med ny vurdering →](https://navikt.github.io/esyfo-microfrontends/?path=/story/aktivitetskrav--ny-vurdering)
@@ -40,16 +40,11 @@ Den sykmeldte klikker seg videre til [aktivitetskrav-frontend](https://github.co
 
 ### 5. 👀 Status brukes videre
 
-Når den sykmeldte har åpnet siden, markeres varselet som lest. Nav-veileder kan samtidig se status for aktivitetskrav i Modia.
+Når den sykmeldte har åpnet siden, markeres varselet som lest. Nav-veileder kan samtidig se status for aktivitetskrav i [Modia](/ordbok#modia).
 
-## Viktige begreper
-
-| Begrep | Forklaring |
-|--------|-----------|
-| Aktivitetskrav | Krav om at den sykmeldte skal vurdere aktivitet tidlig i sykefraværet |
-| Forhåndsvarsel | Varsel om mulig stans av sykepenger hvis aktivitetskravet ikke er oppfylt |
-| Unntak | Vurdering der Nav mener at aktivitetskravet ikke skal gjelde i den aktuelle situasjonen |
-| Microfrontend | Lite UI-panel på Min side som viser status og lenke til detaljer |
+::: tip 📖 Ordbok
+Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+:::
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)

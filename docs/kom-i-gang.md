@@ -17,5 +17,5 @@ Sørg for at du har tilgang til følgende verktøy og plattformer:
 
 - Utforsk [utviklerseksjonen](./utvikling/) — frontend, backend og beste praksis
 - Se [områdeoversikten](./omrader/) — forstå områdene teamet jobber med
-- Se [fellestjenester](./omrader/fellestjenester/) — felles tjenester, avhengigheter og crossdomain-apper
+- Se [fellestjenester](./omrader/fellestjenester/) — felles tjenester og avhengigheter
 - Se [verktøy](./verktoy/) — Hovmester, CI/CD og teamverktøy

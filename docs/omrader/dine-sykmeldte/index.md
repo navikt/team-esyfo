@@ -22,7 +22,7 @@ Arbeidsgiver får en samlet liste over sykmeldte ansatte med navn, startdato for
 
 #### 3. 🔔 Ser varsler og uleste beskjeder
 
-Andre systemer publiserer aktivitetsvarsler (for eksempel nye søknader eller hendelser i sykefraværsforløpet) til Kafka. Varslene vises som uleste beskjeder i oversikten og markeres som lest når nærmesteleder åpner dem.
+Andre systemer publiserer [aktivitetsvarsler](/ordbok#aktivitetsvarsel) (for eksempel nye søknader eller hendelser i sykefraværsforløpet) til Kafka. Varslene vises som uleste beskjeder i oversikten og markeres som lest når nærmesteleder åpner dem.
 
 #### 4. 📄 Åpner en ansatt og ser detaljer
 
@@ -33,20 +33,14 @@ Fra oversikten kan arbeidsgiver åpne en ansatt og se sykmeldinger, søknader og
 Fra sideoversikten kan nærmesteleder navigere videre til:
 
 - [Oppfølgingsplaner](/omrader/oppfolgingsplan/)
-- Dialogmøter
+- [Dialogmøter](/ordbok#dialogmote)
 
 Dine sykmeldte fungerer dermed som inngang til flere deler av arbeidsgiveroppfølgingen.
 
-## Viktige begreper
-
-| Begrep | Forklaring |
-|--------|-----------|
-| Den sykmeldte | Personen som er sykmeldt og som nærmesteleder følger opp |
-| Aktivitetsvarsel | Beskjed om noe arbeidsgiver bør følge opp, for eksempel en søknad eller aktivitet i forløpet |
-| Sideoversikt | Felles sidemeny på detaljsidene for én sykmeldt |
-| Lesestatus | Markering som viser om arbeidsgiver har åpnet en sykmelding, søknad eller beskjed |
+::: tip 📖 Ordbok
+Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+:::
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)
 :::
-

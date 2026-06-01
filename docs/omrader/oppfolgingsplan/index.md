@@ -4,7 +4,7 @@
 
 ## Formål
 
-Oppfølgingsplan hjelper arbeidsgiver og arbeidstaker med å samle tiltak, mål og vurderinger for tilrettelegging og veien tilbake til arbeid. Løsningen brukes fra Dine sykmeldte og Ditt sykefravær, og planen kan deles med Nav eller fastlege når det er behov.
+[Oppfølgingsplan](/ordbok#oppfolgingsplan) hjelper arbeidsgiver og arbeidstaker med å samle tiltak, mål og vurderinger for tilrettelegging og veien tilbake til arbeid. Løsningen brukes fra [Dine sykmeldte](/ordbok#dine-sykmeldte) og [Ditt sykefravær](/ordbok#ditt-sykefravaer), og planen kan deles med Nav eller fastlege når det er behov.
 
 ## Brukerreiser
 
@@ -23,11 +23,11 @@ Arbeidsgiver (nærmesteleder) går inn via [Dine sykmeldte](https://www.nav.no/a
 
 #### 2. ✅ Opprette oppfølgingsplan
 
-Når innholdet er klart, sender arbeidsgiver inn planen. Backend lagrer planen, sletter utkastet og henter stillingsinformasjon fra Aareg. Arbeidstaker får varsel om at planen er opprettet.
+Når innholdet er klart, sender arbeidsgiver inn planen. Backend lagrer planen, sletter utkastet og henter [stillingsinformasjon](/ordbok#stillingsinformasjon) fra Aareg. Arbeidstaker får varsel om at planen er opprettet.
 
 #### 3. 📤 Dele med Nav (valgfritt)
 
-Arbeidsgiver kan velge å dele planen med Nav. Backend genererer en PDF og arkiverer den i Dokumentporten. Nav-veileder kan deretter se planen i Modia.
+Arbeidsgiver kan velge å dele planen med Nav. Backend genererer en PDF og arkiverer den i [Dokumentporten](/ordbok#dokumentporten). Nav-veileder kan deretter se planen i [Modia](/ordbok#modia).
 
 #### 4. 📤 Dele med fastlege (valgfritt)
 
@@ -47,15 +47,12 @@ Når arbeidsgiver oppretter planen, får den sykmeldte et varsel. Den sykmeldte 
 
 Den sykmeldte kan se mål, arbeidsoppgaver og tiltak som arbeidsgiver har fylt ut.
 
-## Viktige begreper
-
-| Begrep | Forklaring |
-|--------|-----------|
-| Oppfølgingsplan | Felles plan med mål, tiltak og vurderinger for å komme tilbake i arbeid |
-| Utkast | Midlertidig versjon av planen som lagres før den sendes inn |
-| Journalpost | Referanse til planen etter at den er arkivert i Dokumentporten |
-| Stillingsinformasjon | Stillingstittel og stillingsprosent som backend henter fra Aareg |
+::: tip 📖 Ordbok
+Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
+:::
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)
 :::
+
+Planen arkiveres som en [journalpost](/ordbok#journalpost) ved deling med Nav.

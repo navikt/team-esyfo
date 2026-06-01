@@ -1,3 +1,13 @@
+/* Ordbok-styling (scoped til ordbok-siden) */
+.vp-doc .ordbok-page hr + h3 {
+	margin-top: 16px;
+}
+
+.vp-doc .ordbok-page h3 + p {
+	margin-top: 4px;
+	color: var(--vp-c-text-2);
+}
+
 :root {
 	--vp-home-hero-name-color: transparent;
 	--vp-home-hero-name-background: -webkit-linear-gradient(

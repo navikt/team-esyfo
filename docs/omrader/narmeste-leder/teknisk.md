@@ -2,7 +2,7 @@
 
 Nærmesteleder-løsningen håndterer relasjoner mellom sykmeldt og nærmesteleder. Målene er:
 
-- **Motta nye relasjoner** fra eksisterende metoder (Altinn, sykmelding, narmesteleder-app)
+- **Motta nye relasjoner** fra eksisterende metoder ([Altinn](/ordbok#altinn), sykmelding, narmesteleder-app)
 - **Ta imot relasjoner fra frontender/LPS** i vår app og sende tilbake
 - **Kunne kutte koblingen** til dagens system når alle avhengigheter er over
 

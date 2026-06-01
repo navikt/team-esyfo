@@ -16,7 +16,7 @@ Kartleggingsspørsmålene samler inn informasjon fra **den sykmeldte** tidlig i 
 
 ### 1. 🔍 Automatisk vurdering
 
-Systemet ([ismeroppfolging](https://github.com/navikt/ismeroppfolging), eid av team iSyfo) sjekker om den sykmeldte oppfyller kriteriene for kartlegging.
+Systemet ([ismeroppfolging](https://github.com/navikt/ismeroppfolging), eid av team [iSyfo](/ordbok#isyfo)) sjekker om den sykmeldte oppfyller kriteriene for kartlegging.
 
 **Målgruppe:** Alle sykmeldte i Norge ved uke 6, uansett gradering, bortsett fra de som:
 
@@ -31,7 +31,7 @@ Når kriteriene er oppfylt, får den sykmeldte en notifikasjon og en SMS om at N
 
 ### 3. 🏠 Kartlegging på Min side
 
-Den sykmeldte ser en microfrontend på [Min side](https://www.nav.no/minside) med lenke til kartleggingsskjemaet:
+Den sykmeldte ser en [microfrontend](/ordbok#microfrontend) på [Min side](https://www.nav.no/minside) med lenke til kartleggingsskjemaet:
 
 ::: tip Storybook 🎨
 [Se hvordan det ser ut før sykmeldt har svart →](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-ikke-svart)
@@ -55,7 +55,7 @@ Etter besvarelse oppdateres microfrontenden på Min side:
 
 ### 6. 👀 Svarene brukes
 
-Nav-veileder får tilgang til svarene i Modia og bruker dem i oppfølgingen av den sykmeldte.
+Nav-veileder får tilgang til svarene i [Modia](/ordbok#modia) og bruker dem i oppfølgingen av den sykmeldte.
 
 ## Skjemavarianter
 
@@ -68,17 +68,12 @@ Kartleggingsspørsmål kan ha flere varianter. Per nå finnes det:
 
 Hvilken variant den sykmeldte får bestemmes av feltet `skjemavariant` i Kafka-meldingen fra `ismeroppfolging-kartleggingssporsmal-kandidat`-topicen.
 
-## Viktige begreper
-
-| Begrep              | Forklaring                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Kandidat            | En sykmeldt som oppfyller kriteriene for kartlegging, basert på oppfølgingstilfellets varighet                           |
-| Kandidatstatus      | Angir om personen kan besvare kartleggingsskjemaet                                                                       |
-| Microfrontend       | UI-paneler fra eSyfo integrert på Min side. Hvilke paneler som vises avhenger av hva som er aktivert for den sykmeldte.  |
-| Lumi                | Personvernvennlig spørreundersøkelse som samler inn tilbakemelding om kartleggingsopplevelsen                            |
+::: tip 📖 Ordbok
+Se [Kandidat](/ordbok#kandidat), [Kandidatstatus](/ordbok#kandidatstatus), [Microfrontend](/ordbok#microfrontend) og [Lumi](/ordbok#lumi) i ordboken.
+:::
 
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)
 :::
 
-
+Etter besvarelse samles det inn tilbakemelding via [Lumi](/ordbok#lumi) for å forbedre kartleggingsopplevelsen.

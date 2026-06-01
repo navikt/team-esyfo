@@ -1,6 +1,6 @@
 # Frontend
 
-I team eSYFO bruker vi [Next.js](https://nextjs.org/) som React-rammeverk for å utvikle webapplikasjoner. Unntaket er microfrontends, som bygges med [Astro](https://astro.build/).
+I team eSYFO bruker vi [Next.js](https://nextjs.org/) som React-rammeverk for å utvikle webapplikasjoner. Unntaket er [microfrontends](/ordbok#microfrontend), som bygges med [Astro](https://astro.build/).
 
 Se [repooversikten](/utvikling/repositories) for aktive frontendrepoer og eierskap.
 

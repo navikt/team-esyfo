@@ -20,7 +20,7 @@ Vi skal følge utviklerhåndbøker og ta i bruk beste praksis.
 
 ### 🖥️ [Frontend](./frontend/)
 
-Next.js og Astro-baserte microfrontends hostet på NAIS. Biome for linting/formatering og Vitest for testing.
+Next.js og Astro-baserte [microfrontends](/ordbok#microfrontend) hostet på [NAIS](/ordbok#nais). Biome for linting/formatering og Vitest for testing.
 
 ### ⚙️ [Backend](./backend/)
 
