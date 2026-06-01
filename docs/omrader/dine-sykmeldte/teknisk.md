@@ -1,6 +1,6 @@
 # Dine sykmeldte — teknisk oversikt
 
-Dine sykmeldte består av en Next.js-frontend, et internt GraphQL-lag i frontendappen, en Ktor-backend og en delt <Term id="sideoversikt">sidemeny</Term>. Backend lagrer og leser data fra PostgreSQL og holder oversikten oppdatert ved å konsumere hendelser fra Kafka.
+Dine sykmeldte består av en Next.js-frontend, et internt GraphQL-lag i frontendappen, en Ktor-backend og en delt [sidemeny](/ordbok#sideoversikt). Backend lagrer og leser data fra PostgreSQL og holder oversikten oppdatert ved å konsumere hendelser fra Kafka.
 
 ## Dataflyt
 
@@ -52,7 +52,7 @@ sequenceDiagram
 
 ### 3. Aktivitetsvarsler via Kafka
 
-<Term id="aktivitetsvarsel">Aktivitetsvarsler</Term> er beskjeder som forteller nærmesteleder at noe har skjedd — for eksempel en ny søknad eller en hendelse i sykefraværsforløpet. Andre tjenester publiserer varsler til Kafka, backend konsumerer dem og viser dem som uleste beskjeder i oversikten.
+[Aktivitetsvarsler](/ordbok#aktivitetsvarsel) er beskjeder som forteller nærmesteleder at noe har skjedd — for eksempel en ny søknad eller en hendelse i sykefraværsforløpet. Andre tjenester publiserer varsler til Kafka, backend konsumerer dem og viser dem som uleste beskjeder i oversikten.
 
 ```mermaid
 sequenceDiagram

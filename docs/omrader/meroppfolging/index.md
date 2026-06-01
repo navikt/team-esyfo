@@ -4,7 +4,7 @@
 
 ## Formål
 
-Meroppfølging hjelper <Term id="den-sykmeldte">den sykmeldte</Term> når sykepengene nærmer seg slutt. Løsningen viser <Term id="maksdato">maksdato</Term> for sykepenger, forklarer hvilke valg som finnes videre og lar brukeren si fra om behov for meroppfølging fra Nav.
+Meroppfølging hjelper [den sykmeldte](/ordbok#den-sykmeldte) når sykepengene nærmer seg slutt. Løsningen viser [maksdato](/ordbok#maksdato) for sykepenger, forklarer hvilke valg som finnes videre og lar brukeren si fra om behov for meroppfølging fra Nav.
 
 ## Brukerreiser
 
@@ -20,7 +20,7 @@ Den sykmeldte får varsel når sykepengene nærmer seg slutt. Varslet leder vide
 
 #### 2. 📅 Ser maksdato og hva som skjer videre
 
-På siden ser brukeren når sykepengene tar slutt og informasjon om mulige <Term id="veivalg">veier videre</Term>. Hvis brukeren ikke har tilgang til skjemaet, vises en informasjonsside i stedet.
+På siden ser brukeren når sykepengene tar slutt og informasjon om mulige [veier videre](/ordbok#veivalg). Hvis brukeren ikke har tilgang til skjemaet, vises en informasjonsside i stedet.
 
 #### 3. ✍️ Svarer om situasjonen videre
 
@@ -34,7 +34,7 @@ Når svarene er sendt inn, lagres de i backend. Brukeren får en kvittering som 
 
 #### 1. 👀 Ser svarene i Modia
 
-Nav-veileder henter svarene via syfomodiaperson. Svarene gir et bedre grunnlag for videre oppfølging i <Term id="sen-oppfolging">sen fase</Term> av sykefraværet.
+Nav-veileder henter svarene via syfomodiaperson. Svarene gir et bedre grunnlag for videre oppfølging i [sen fase](/ordbok#sen-oppfolging) av sykefraværet.
 
 ## Viktige begreper
 

@@ -1,6 +1,6 @@
 # 📖 Ordbok
 
-Her finner du forklaringer på begreper som brukes i Team eSyfos dokumentasjon. Begrepene er sortert alfabetisk og lenkes til fra andre sider via tooltips — hold over et <Term id="maksdato">understreket begrep</Term> for å se forklaringen.
+Her finner du forklaringer på begreper som brukes i Team eSyfos dokumentasjon. Begrepene er sortert alfabetisk og lenkes til fra andre sider.
 
 ---
 

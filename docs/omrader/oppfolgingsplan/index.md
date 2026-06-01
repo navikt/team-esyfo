@@ -4,7 +4,7 @@
 
 ## Formål
 
-<Term id="oppfolgingsplan">Oppfølgingsplan</Term> hjelper arbeidsgiver og arbeidstaker med å samle tiltak, mål og vurderinger for tilrettelegging og veien tilbake til arbeid. Løsningen brukes fra <Term id="dine-sykmeldte">Dine sykmeldte</Term> og <Term id="ditt-sykefravaer">Ditt sykefravær</Term>, og planen kan deles med Nav eller fastlege når det er behov.
+[Oppfølgingsplan](/ordbok#oppfolgingsplan) hjelper arbeidsgiver og arbeidstaker med å samle tiltak, mål og vurderinger for tilrettelegging og veien tilbake til arbeid. Løsningen brukes fra [Dine sykmeldte](/ordbok#dine-sykmeldte) og [Ditt sykefravær](/ordbok#ditt-sykefravaer), og planen kan deles med Nav eller fastlege når det er behov.
 
 ## Brukerreiser
 
@@ -17,17 +17,17 @@
 
 #### 1. ✍️ Lage utkast
 
-Arbeidsgiver (nærmesteleder) går inn via [Dine sykmeldte](https://www.nav.no/arbeidsgiver/sykmeldte), velger en ansatt og starter oppfølgingsplanen. I appen fyller nærmesteleder ut mål, arbeidsoppgaver og tiltak. Backend lagrer innholdet som et <Term id="utkast">utkast</Term> som kan redigeres over tid.
+Arbeidsgiver (nærmesteleder) går inn via [Dine sykmeldte](https://www.nav.no/arbeidsgiver/sykmeldte), velger en ansatt og starter oppfølgingsplanen. I appen fyller nærmesteleder ut mål, arbeidsoppgaver og tiltak. Backend lagrer innholdet som et [utkast](/ordbok#utkast) som kan redigeres over tid.
 
 - Utkast slettes automatisk etter fire måneder hvis det ikke ferdigstilles
 
 #### 2. ✅ Opprette oppfølgingsplan
 
-Når innholdet er klart, sender arbeidsgiver inn planen. Backend lagrer planen, sletter utkastet og henter <Term id="stillingsinformasjon">stillingsinformasjon</Term> fra Aareg. Arbeidstaker får varsel om at planen er opprettet.
+Når innholdet er klart, sender arbeidsgiver inn planen. Backend lagrer planen, sletter utkastet og henter [stillingsinformasjon](/ordbok#stillingsinformasjon) fra Aareg. Arbeidstaker får varsel om at planen er opprettet.
 
 #### 3. 📤 Dele med Nav (valgfritt)
 
-Arbeidsgiver kan velge å dele planen med Nav. Backend genererer en PDF og arkiverer den i <Term id="dokumentporten">Dokumentporten</Term>. Nav-veileder kan deretter se planen i <Term id="modia">Modia</Term>.
+Arbeidsgiver kan velge å dele planen med Nav. Backend genererer en PDF og arkiverer den i [Dokumentporten](/ordbok#dokumentporten). Nav-veileder kan deretter se planen i [Modia](/ordbok#modia).
 
 #### 4. 📤 Dele med fastlege (valgfritt)
 
@@ -55,4 +55,4 @@ Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)
 :::
 
-Planen arkiveres som en <Term id="journalpost">journalpost</Term> ved deling med Nav.
+Planen arkiveres som en [journalpost](/ordbok#journalpost) ved deling med Nav.

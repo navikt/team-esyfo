@@ -4,7 +4,7 @@
 
 ## Formål
 
-<Term id="motebehov">Møtebehov</Term>-området lar partene melde fra om behov for <Term id="dialogmote">dialogmøte</Term>. Når enten den sykmeldte, arbeidsgiver eller Nav mener det er behov for et møte, registreres dette her.
+[Møtebehov](/ordbok#motebehov)-området lar partene melde fra om behov for [dialogmøte](/ordbok#dialogmote). Når enten den sykmeldte, arbeidsgiver eller Nav mener det er behov for et møte, registreres dette her.
 
 ## Dialogmøtene i sykefraværsforløpet
 
@@ -14,7 +14,7 @@
 | Dialogmøte 2 | Midtveis (senest 26 uker) | Obligatorisk — Nav innkaller |
 | Dialogmøte 3 | Sen fase (ved behov) | Frivillig — partene kan be om det |
 
-<Term id="dialogmote-2">Dialogmøte 2</Term> er det eneste lovpålagte møtet. Dialogmøte 1 og 3 gjennomføres bare når en av partene ser behov for det.
+[Dialogmøte 2](/ordbok#dialogmote-2) er det eneste lovpålagte møtet. Dialogmøte 1 og 3 gjennomføres bare når en av partene ser behov for det.
 
 ## Dette området handler om
 
