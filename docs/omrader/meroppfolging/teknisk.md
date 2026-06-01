@@ -1,6 +1,6 @@
 # Meroppfølging — teknisk oversikt
 
-Meroppfølging-systemet gir den sykmeldte informasjon i sen fase av sykefraværet, viser maksdato for sykepenger og lagrer svar om behov for videre oppfølging. Backend henter grunnlag fra Kafka, frontend henter maksdato direkte fra API-et til sykepengedager-informasjon, og backend gjør svarene tilgjengelige både i API-er og Kafka-topics.
+Meroppfølging-systemet gir den sykmeldte informasjon i <Term id="sen-oppfolging">sen fase</Term> av sykefraværet, viser <Term id="maksdato">maksdato</Term> for sykepenger og lagrer svar om behov for videre oppfølging. Backend henter grunnlag fra Kafka, frontend henter maksdato direkte fra API-et til sykepengedager-informasjon, og backend gjør svarene tilgjengelige både i API-er og Kafka-topics.
 
 ## Dataflyt
 

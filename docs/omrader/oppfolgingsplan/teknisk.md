@@ -1,6 +1,6 @@
 # Oppfølgingsplan — teknisk oversikt
 
-Oppfølgingsplan-systemet lagrer utkast og planer, henter stillingsinformasjon fra Aareg, varsler via Kafka og deler ferdige planer med Nav eller fastlege.
+Oppfølgingsplan-systemet lagrer <Term id="utkast">utkast</Term> og planer, henter <Term id="stillingsinformasjon">stillingsinformasjon</Term> fra Aareg, varsler via Kafka og deler ferdige planer med Nav eller fastlege.
 
 ## Arbeidsgiverdataflyt
 

@@ -14,7 +14,7 @@ Start med å lese README-en i repoet du skal jobbe i. Backend-repoene våre er i
 - mange aktive backend-repoer har `mise`-oppsett
 - mange Ktor-repoer har `docker-compose.yml`, ofte også en egen Kafka-compose-fil
 - noen repoer krever lokale støttetjenester
-- noen repoer er vanskelige å kjøre fullt lokalt på grunn av avhengigheter i NAIS
+- noen repoer er vanskelige å kjøre fullt lokalt på grunn av avhengigheter i <Term id="nais">NAIS</Term>
 
 ## Finn riktige kommandoer først
 

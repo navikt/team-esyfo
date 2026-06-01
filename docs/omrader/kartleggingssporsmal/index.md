@@ -16,7 +16,7 @@ Kartleggingsspørsmålene samler inn informasjon fra **den sykmeldte** tidlig i 
 
 ### 1. 🔍 Automatisk vurdering
 
-Systemet ([ismeroppfolging](https://github.com/navikt/ismeroppfolging), eid av team iSyfo) sjekker om den sykmeldte oppfyller kriteriene for kartlegging.
+Systemet ([ismeroppfolging](https://github.com/navikt/ismeroppfolging), eid av team <Term id="isyfo">iSyfo</Term>) sjekker om den sykmeldte oppfyller kriteriene for kartlegging.
 
 **Målgruppe:** Alle sykmeldte i Norge ved uke 6, uansett gradering, bortsett fra de som:
 
@@ -31,7 +31,7 @@ Når kriteriene er oppfylt, får den sykmeldte en notifikasjon og en SMS om at N
 
 ### 3. 🏠 Kartlegging på Min side
 
-Den sykmeldte ser en microfrontend på [Min side](https://www.nav.no/minside) med lenke til kartleggingsskjemaet:
+Den sykmeldte ser en <Term id="microfrontend">microfrontend</Term> på [Min side](https://www.nav.no/minside) med lenke til kartleggingsskjemaet:
 
 ::: tip Storybook 🎨
 [Se hvordan det ser ut før sykmeldt har svart →](https://navikt.github.io/esyfo-microfrontends/?path=/story/meroppf%C3%B8lging--kartlegging-ikke-svart)
@@ -55,7 +55,7 @@ Etter besvarelse oppdateres microfrontenden på Min side:
 
 ### 6. 👀 Svarene brukes
 
-Nav-veileder får tilgang til svarene i Modia og bruker dem i oppfølgingen av den sykmeldte.
+Nav-veileder får tilgang til svarene i <Term id="modia">Modia</Term> og bruker dem i oppfølgingen av den sykmeldte.
 
 ## Skjemavarianter
 
@@ -84,3 +84,5 @@ Se [Ordbok](/ordbok) for forklaring av begreper brukt på denne siden.
 ::: info 🔧 Teknisk oversikt
 Dataflyt, Kafka-topics og systemer → [teknisk side](./teknisk)
 :::
+
+Etter besvarelse samles det inn tilbakemelding via <Term id="lumi">Lumi</Term> for å forbedre kartleggingsopplevelsen.

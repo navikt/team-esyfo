@@ -23,8 +23,8 @@ Disse applikasjonene betjener flere områder:
 
 - Felles autentisering og autorisasjon (token-håndtering, tilgangsstyring)
 - Delte Kafka-konsumenter og -produsenter
-- Fellesbiblioteker og utilities som brukes av flere apper
-- Infrastruktur og plattformkonfigurasjon (NAIS-oppsett, overvåkning)
+- <Term id="fellesbibliotek">Fellesbiblioteker</Term> og utilities som brukes av flere apper
+- Infrastruktur og plattformkonfigurasjon (<Term id="nais">NAIS</Term>-oppsett, overvåkning)
 
 ## Brukergrupper
 
@@ -37,7 +37,7 @@ Disse applikasjonene betjener flere områder:
 
 ### Team iSyfo (intern sykefraværsoppfølging)
 
-Team iSyfo eier den interne sykefraværsoppfølgingen — altså Nav-veiledernes verktøy. Mange av Team eSyfos tjenester leverer data som iSyfo konsumerer, og omvendt.
+Team <Term id="isyfo">iSyfo</Term> eier den interne sykefraværsoppfølgingen — altså Nav-veiledernes verktøy. Mange av Team eSyfos tjenester leverer data som iSyfo konsumerer, og omvendt.
 
 | Avhengighet              | Retning       | Beskrivelse                               |
 | ------------------------ | ------------- | ----------------------------------------- |
