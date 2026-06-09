@@ -5,7 +5,7 @@ Dette er nødvendig for å ivareta personværnet til vedkommende planen gjelder.
 
 ## Prosess for dataretting
 Når en oppfølgingsplan mottas, vil den etter noe tid bli sendt til `Dokumentporten`, som igjen 
-sender en beskjed til arbeidsgiver i `Dialogporten`, med en lenke til PDF-en.
+sender en beskjed til arbeidsgiver i `Dialogporten`. Denne inneholder en lenke til PDF-en.
 Dersom oppfølgingsplanen i tillegg er delt med Nav, vil den også bli sendt til `Dokarkiv`.
 
 For å utilgjengeliggjøre en feilregistrert plan, gjøres følgende:
