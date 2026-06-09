@@ -139,6 +139,7 @@ export const areas: Area[] = [
 		subpages: [
 			{ text: "Dataanalyse", link: "/omrader/oppfolgingsplan/dataanalyse" },
 			{ text: "Teknisk", link: "/omrader/oppfolgingsplan/teknisk" },
+			{ text: "Dataretting", link: "/omrader/oppfolgingsplan/dataretting" }
 		],
 		dependencies: [
 			{
