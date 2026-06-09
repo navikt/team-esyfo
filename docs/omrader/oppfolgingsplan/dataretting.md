@@ -12,4 +12,4 @@ For å utilgjengeliggjøre en feilregistrert plan, gjøres følgende:
 1. Opprett en flyway-migrering i `syfo-oppfolgingsplan-backend` som setter feltene `oppfolgingsplan.feilregistrert` og `oppfolgingsplan.feilregistrert_aarsak`.
 2. Opprett en flyway-migrering i `syfo-dokumentporten` som setter feltet `document.delete_performed`
 3. Dersom planen er delt med nav (feltet `oppfolgingsplan.journalpost_id` er satt i `syfo-oppfolgingsplan-backend`), må dokumentet settes som 
-feilregistrert i `Dokarkiv`. Dette kan gjøres av `Brukerstøtte` i `Gosys`. Tilordne dem i en Jira-sak, og spør om de kan bistå.
+feilregistrert i `Dokarkiv`. Dette kan gjøres av `funksjonell brukerstøtte` i `Gosys`. Tilordne gruppen i en Jira-sak, og spør om de kan bistå.
