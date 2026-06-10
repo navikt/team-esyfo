@@ -24,6 +24,7 @@ export default withMermaid(
 				{ text: "Kom i gang", link: "/kom-i-gang" },
 				{ text: "Områder", link: "/omrader/" },
 				{ text: "Utvikling", link: "/utvikling/" },
+				{ text: "Design", link: "/design/" },
 				{ text: "Dataanalyse", link: "/dataanalyse/" },
 				{ text: "Verktøy", link: "/verktoy/" },
 				{ text: "Ordbok", link: "/ordbok" },
@@ -72,10 +73,6 @@ export default withMermaid(
 						{ text: "Oversikt", link: "/omrader/" },
 						...buildAreaSidebar(),
 					],
-				},
-				{
-					text: "Ordbok",
-					items: [{ text: "Begreper", link: "/ordbok" }],
 				},
 				{
 					text: "Verktøy",
@@ -137,9 +134,18 @@ export default withMermaid(
 					],
 				},
 				{
+					text: "Design",
+					collapsed: false,
+					items: [{ text: "Oversikt", link: "/design/" }],
+				},
+				{
 					text: "Dataanalyse",
 					collapsed: false,
 					items: [{ text: "Oversikt", link: "/dataanalyse/" }],
+				},
+				{
+					text: "Ordbok",
+					items: [{ text: "Begreper", link: "/ordbok" }],
 				},
 			],
 			socialLinks: [

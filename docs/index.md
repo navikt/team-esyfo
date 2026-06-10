@@ -30,6 +30,11 @@ features:
     details: Frontend, backend, beste praksis og utviklerverktøy for teamet.
     link: /utvikling/
     linkText: Til utvikling
+  - icon: 🎨
+    title: Design
+    details: Designressurser, arbeidsmåter og Figma-oversikt for teamet.
+    link: /design/
+    linkText: Til design
   - icon: 📊
     title: Dataanalyse
     details: Datafortellinger, pipeline og verktøy for teamets datascientist.
