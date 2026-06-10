@@ -1,7 +1,7 @@
 # Dataretting ved feilregistrering av oppfølgingsplan
 
 Dersom en oppfølgingsplan er registrert på feil person, må det gjøres en dataretting. 
-Dette er nødvendig for å ivareta personværnet til vedkommende planen gjelder.
+Dette er nødvendig for å ivareta personvernet til vedkommende planen gjelder.
 
 ## Prosess for dataretting
 Når en oppfølgingsplan mottas, vil den etter noe tid bli sendt til `Dokumentporten`, som igjen 
