@@ -24,6 +24,7 @@ export default withMermaid(
 				{ text: "Kom i gang", link: "/kom-i-gang" },
 				{ text: "Områder", link: "/omrader/" },
 				{ text: "Utvikling", link: "/utvikling/" },
+				{ text: "Design", link: "/design/" },
 				{ text: "Dataanalyse", link: "/dataanalyse/" },
 				{ text: "Verktøy", link: "/verktoy/" },
 				{ text: "Ordbok", link: "/ordbok" },
@@ -135,6 +136,11 @@ export default withMermaid(
 							],
 						},
 					],
+				},
+				{
+					text: "Design",
+					collapsed: false,
+					items: [{ text: "Oversikt", link: "/design/" }],
 				},
 				{
 					text: "Dataanalyse",
