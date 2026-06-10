@@ -75,10 +75,6 @@ export default withMermaid(
 					],
 				},
 				{
-					text: "Ordbok",
-					items: [{ text: "Begreper", link: "/ordbok" }],
-				},
-				{
 					text: "Verktøy",
 					collapsed: false,
 					items: [
@@ -146,6 +142,10 @@ export default withMermaid(
 					text: "Dataanalyse",
 					collapsed: false,
 					items: [{ text: "Oversikt", link: "/dataanalyse/" }],
+				},
+				{
+					text: "Ordbok",
+					items: [{ text: "Begreper", link: "/ordbok" }],
 				},
 			],
 			socialLinks: [
