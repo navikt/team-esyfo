@@ -110,7 +110,7 @@ Markering som viser om arbeidsgiver har åpnet en sykmelding, søknad eller besk
 
 ### LPS {#lps}
 
-Leder- og personalstøtte — et system som kan sende inn NL-relasjoner.
+Lønn- og personalsystem — et system som kan sende inn nærmeste leder relasjoner (NL-relasjoner).
 
 ---
 
