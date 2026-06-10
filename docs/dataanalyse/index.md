@@ -49,5 +49,5 @@ isyfo-analyse/
 
 ## Lenker
 
-- [Alle datafortellinger for Syfo](https://data.ansatt.nav.no/search?text=syfo&preferredType=story)
+- [Datamarkedsplassen seksjon for arbeid og helse](https://data.ansatt.nav.no/productArea/de0e2c65-aece-4972-854b-d713cf5e7bcd)
 - [Dataanalyse i oppfølgingsplan (fagside)](/omrader/oppfolgingsplan/dataanalyse)
