@@ -30,7 +30,7 @@ Når du har funnet tasken du trenger, kjører du den slik:
 mise run <task>
 ```
 
-Noen repoer har også egne tasks for for eksempel `flyway-info`, `flyway-repair`, auth-hjelpere eller pre-commit hooks.
+Noen repoer har også egne tasks for eksempel `flyway-info`, `flyway-repair`, auth-hjelpere eller pre-commit hooks.
 
 ## Docker og Colima
 
