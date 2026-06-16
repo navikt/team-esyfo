@@ -12,6 +12,7 @@ Hovmester er teamets AI-agentpipeline for assistert utvikling. Du gir én oppgav
 - **Konditor** 🎂 — Frontend-utvikler. UI, Aksel-komponenter, state og tilgjengelighet.
 - **Inspektører** 🔬 — Kryssmodell-review. Opus gjennomgår GPT-kode, og GPT gjennomgår Opus-kode.
 - **Designer** ✏️ — Designhjelp, Figma-skisser og visuelle konsepter.
+- **Doctor Who** 🕰️ — Produktleder-agent. Teamstatus, prioritering, OKR, workshops/retro og discovery. Leser teamets `team-kontekst`-skill ved oppstart.
 
 ## Bruk
 
