@@ -58,8 +58,8 @@ der før du bruker et begrep — **gjett aldri** på hva et akronym betyr.
 
 ## Rapportkadens
 
-`<f.eks. ukesoversikt mandager; tertialstatus mot mål ved tertialslutt>`
-<!-- TODO: fyll inn teamets faktiske rapportrytme. -->
+Ikke fastsatt i denne fila ennå. Spør brukeren om teamets rapportrytme
+(ukesoversikt / tertialstatus) én gang, og foreslå å legge svaret inn her.
 
 ## Slik bruker agenten denne
 
