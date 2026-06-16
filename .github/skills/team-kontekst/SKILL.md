@@ -90,8 +90,9 @@ Epics samler deloppgaver via Parent/Sub-issues. Bruk `issue-management`- og
 
 ## Apper teamet eier
 
-Autoritativ, gruppert liste (frontend / backend / felles / verktøy) med
-forretningsbeskrivelse per repo: **`docs/utvikling/repositories.md`**
+Autoritativ liste gruppert etter type (Frontend, Backend, Microfrontend,
+Monorepo, Dataanalyse, Verktøy og annet) med forretningsbeskrivelse per repo:
+**`docs/utvikling/repositories.md`**
 (<https://navikt.github.io/team-esyfo/utvikling/repositories>).
 
 Les den fila for å finne riktig repo — aldri gjett på hvilke apper teamet eier.
@@ -152,11 +153,36 @@ wikien skjer via PR — **spør først** før du oppretter PR.
 
 ## Områdeinndeling
 
-Sykefraværsforløpet er delt i områder (aktivitetskrav, oppfølgingsplan,
+Sykefraværsforløpet er delt i åtte områder (aktivitetskrav, oppfølgingsplan,
 møtebehov, nærmeste leder, kartleggingsspørsmål, meroppfølging, dine-sykmeldte,
 fellestjenester): **`docs/omrader/index.md`**
 (<https://navikt.github.io/team-esyfo/omrader/>). Bruk områdene som ramme når
 status og prioritering skal knyttes til forløpet.
+
+Hvert område har vanligvis to sider å hente dybde fra:
+
+- `docs/omrader/<område>/index.md` — **brukerreisen** (hvem utløser hva, fase, formål)
+- `docs/omrader/<område>/teknisk.md` — **teknisk dybde** (systemer, repoer, Kafka-topics)
+
+Noen områder har mer: f.eks. `oppfolgingsplan/` har også `dataanalyse.md` og
+`dataretting.md`. Les den relevante undersiden før du svarer på områdespørsmål —
+det er ofte raskere og mer presist enn å lese kode.
+
+## Wiki som kunnskapsbase
+
+`docs/`-wikien er teamets samlede kunnskap, ikke bare de filene som er lenket
+over. **Søk i den** (f.eks. `grep -ri "<begrep>" docs/`) før du svarer på
+teamspesifikke spørsmål — der finnes blant annet:
+
+- `docs/kom-i-gang.md` — onboarding, tilganger og de viktigste appene til daglig
+- `docs/utvikling/backend/` og `frontend/` — bygg/kjør, linting, testing, verktøy
+- `docs/utvikling/beste-praksis/pull-request.md` — teamets PR-praksis
+- `docs/verktoy/` — CI/CD og verktøyoppsett
+- `docs/dataanalyse/` — hvordan analyser lages (pipeline, mappestruktur)
+- `docs/design/` — Figma og designkilder
+
+Pek på/siter den relevante wiki-siden i svar, og foreslå å oppdatere wikien (PR —
+spør først) hvis du oppdager at den er utdatert eller mangler noe.
 
 ## Domeneordbok og akronymer
 
@@ -175,6 +201,8 @@ Ikke fastsatt i denne fila ennå. Spør brukeren om teamets rapportrytme
   dokumentasjonsarbeid: bruk denne som inngang, og les de lenkede kildene ved behov.
 - **Tavlas felter/opsjoner** (inkl. Måleparameter = mål) hentes dynamisk fra
   Projects v2 — aldri hardkodet.
+- **Teamspesifikke spørsmål** (område, app, praksis): søk i `docs/`-wikien først
+  (`grep -ri` / les relevant `teknisk.md`), deretter app-kode ved behov.
 - **App-kode** hentes read-only via `gh api`/`gh search code` når et spørsmål
   gjelder en konkret app; klon kun som siste utvei etter avklaring.
 - **Mangler et felt her** (tavle-guide, kadens): spør brukeren én gang, og
@@ -185,6 +213,8 @@ Ikke fastsatt i denne fila ennå. Spør brukeren om teamets rapportrytme
 ### ✅ Alltid
 - Behandle wikien som kilden for fag/apper/ordbok og **tavla** som kilden for
   oppgaver/mål/status; denne fila er kart, ikke kopi
+- Søk i `docs/`-wikien (inkl. per-område `teknisk.md`) før du svarer på
+  teamspesifikke spørsmål — wikien er teamets samlede kunnskap
 - Les tavlas felter/opsjoner dynamisk — aldri hardkod felt-/opsjon-ID-er
 - Slå opp domenebegreper i ordboka
 - Hent kode fra andre repoer **read-only** — `gh api`/`gh search code` som default
