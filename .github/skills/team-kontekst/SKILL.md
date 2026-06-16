@@ -90,8 +90,7 @@ Epics samler deloppgaver via Parent/Sub-issues. Bruk `issue-management`- og
 
 ## Apper teamet eier
 
-Autoritativ liste gruppert etter type (Frontend, Backend, Microfrontend,
-Monorepo, Dataanalyse, Verktøy og annet) med forretningsbeskrivelse per repo:
+Autoritativ liste gruppert etter type, med forretningsbeskrivelse per repo:
 **`docs/utvikling/repositories.md`**
 (<https://navikt.github.io/team-esyfo/utvikling/repositories>).
 
@@ -103,36 +102,38 @@ Les den fila for å finne riktig repo — aldri gjett på hvilke apper teamet ei
 gjelder en konkret app (f.eks. «hva bør vi gjøre i oppfølgingsplan?») ved å hente
 **ekte kode read-only** fra søsken-repoer via `gh` (bruker din innlogging).
 
-**Default — ingen lokal skriving** (`gh api` / `gh search code`):
+**Default — kun lesing (`gh api` GET / `gh search code`):**
 
 ```bash
-# Søk i et apprepo
+# Søk i et apprepo (iboende read-only)
 gh search code --repo navikt/syfo-oppfolgingsplan-backend "BehovForOppfolging"
-# Les en fil
+# Les en fil (GET — endrer ingenting)
 gh api repos/navikt/syfo-oppfolgingsplan-backend/contents/README.md \
   --jq '.content' | base64 -d
 ```
 
-Disse skriver ingenting lokalt og kan aldri endre app-repoet — foretrekk dem.
+Bruk `gh api` **kun til GET (lesing)** og `gh search code` (alltid read-only).
+`gh api` er en generell REST-klient — **aldri** `-X POST/PUT/PATCH/DELETE` eller
+request-body mot en annen app; det ville endre remote og bryte sideeffekt-løftet.
 
 **Siste utvei — midlertidig klon (spør først):** trengs det bred kode-kontekst
-som `gh api` ikke dekker, spør brukeren, klon til en unik temp-mappe og **rydd
-opp etterpå**:
+som `gh api` GET ikke dekker, spør brukeren, klon til en unik temp-mappe og rydd
+opp uansett utfall (`trap`):
 
 ```bash
-dir=$(mktemp -d) && gh repo clone navikt/syfo-oppfolgingsplan-backend "$dir" -- --depth 1
+dir=$(mktemp -d); trap 'rm -rf "$dir"' EXIT
+gh repo clone navikt/syfo-oppfolgingsplan-backend "$dir" -- --depth 1
 # ... les filer i "$dir" ...
-rm -rf "$dir"
 ```
 
 Slå opp riktig repo-navn i `repositories.md` først (oppfølgingsplan finnes i flere
 repoer: `syfo-oppfolgingsplan-frontend`/`-backend` er de nye, `oppfolgingsplan-*`
 og `syfooppfolgingsplanservice` er eldre/under utfasing).
 
-> **Grenser:** kun lesing fra andre repoer. `gh api`/`gh search code` er default
-> (ingen lokal skriving). Klon kun som siste utvei, etter avklaring, til egen
-> temp-mappe som ryddes opp. Aldri `git push`/PR/commit mot en annen app fra
-> team-esyfo-kontekst — foreslå heller at arbeidet flyttes til appens eget repo.
+> **Grenser:** kun lesing fra andre repoer — `gh api` GET / `gh search code`.
+> Klon kun som siste utvei, etter avklaring, til egen temp-mappe som ryddes opp.
+> Aldri skrive-verb (`gh api -X POST/…`), `git push`, PR eller commit mot en
+> annen app fra team-esyfo-kontekst — foreslå heller at arbeidet flyttes dit.
 
 ## Dokumentasjon — hvor og hva
 
@@ -153,36 +154,27 @@ wikien skjer via PR — **spør først** før du oppretter PR.
 
 ## Områdeinndeling
 
-Sykefraværsforløpet er delt i åtte områder (aktivitetskrav, oppfølgingsplan,
-møtebehov, nærmeste leder, kartleggingsspørsmål, meroppfølging, dine-sykmeldte,
-fellestjenester): **`docs/omrader/index.md`**
-(<https://navikt.github.io/team-esyfo/omrader/>). Bruk områdene som ramme når
-status og prioritering skal knyttes til forløpet.
+Sykefraværsforløpet er delt i flere områder (aktivitetskrav, oppfølgingsplan,
+møtebehov, …) — se **`docs/omrader/index.md`**
+(<https://navikt.github.io/team-esyfo/omrader/>) for gjeldende liste. Bruk
+områdene som ramme når status og prioritering skal knyttes til forløpet.
 
-Hvert område har vanligvis to sider å hente dybde fra:
-
-- `docs/omrader/<område>/index.md` — **brukerreisen** (hvem utløser hva, fase, formål)
-- `docs/omrader/<område>/teknisk.md` — **teknisk dybde** (systemer, repoer, Kafka-topics)
-
-Noen områder har mer: f.eks. `oppfolgingsplan/` har også `dataanalyse.md` og
-`dataretting.md`. Les den relevante undersiden før du svarer på områdespørsmål —
-det er ofte raskere og mer presist enn å lese kode.
+Et område har typisk en `index.md` (**brukerreisen** — hvem utløser hva, fase,
+formål) og ofte en `teknisk.md` (**teknisk dybde** — systemer, repoer,
+Kafka-topics). Ikke alle har `teknisk.md`, og noen har mer (f.eks.
+`oppfolgingsplan/` har også `dataanalyse.md` og `dataretting.md`) — sjekk hva som
+ligger i områdemappa. Les den relevante undersiden før du svarer på
+områdespørsmål; det er ofte raskere og mer presist enn å lese kode.
 
 ## Wiki som kunnskapsbase
 
-`docs/`-wikien er teamets samlede kunnskap, ikke bare de filene som er lenket
-over. **Søk i den** (f.eks. `grep -ri "<begrep>" docs/`) før du svarer på
-teamspesifikke spørsmål — der finnes blant annet:
-
-- `docs/kom-i-gang.md` — onboarding, tilganger og de viktigste appene til daglig
-- `docs/utvikling/backend/` og `frontend/` — bygg/kjør, linting, testing, verktøy
-- `docs/utvikling/beste-praksis/pull-request.md` — teamets PR-praksis
-- `docs/verktoy/` — CI/CD og verktøyoppsett
-- `docs/dataanalyse/` — hvordan analyser lages (pipeline, mappestruktur)
-- `docs/design/` — Figma og designkilder
-
-Pek på/siter den relevante wiki-siden i svar, og foreslå å oppdatere wikien (PR —
-spør først) hvis du oppdager at den er utdatert eller mangler noe.
+`docs/`-wikien er teamets samlede kunnskap, ikke bare filene som er lenket over.
+**Søk i den først** (f.eks. `grep -ri "<begrep>" docs/`) når du svarer på
+teamspesifikke spørsmål, og siter den relevante siden. I tillegg til kildene over
+finnes blant annet `docs/kom-i-gang.md` (onboarding, tilganger, viktigste apper)
+og `docs/utvikling/` (backend/frontend bygg-kjør-linting-testing,
+`beste-praksis/pull-request.md`). Oppdager du at wikien er utdatert eller mangler
+noe: foreslå en oppdatering (PR — spør først).
 
 ## Domeneordbok og akronymer
 
@@ -227,5 +219,6 @@ Ikke fastsatt i denne fila ennå. Spør brukeren om teamets rapportrytme
 ### 🚫 Aldri
 - Duplisere app-lista, ordboka eller områdene hit — pek på kilden
 - Hardkode tavlas feltstruktur (ID-er, opsjon-ID-er, verbose måleparameter-tekster)
-- Push/PR/endring i en *annen* app fra team-esyfo-kontekst — kun lesing
+- Skrive mot en *annen* app fra team-esyfo-kontekst — `gh api -X POST/…`, push,
+  PR eller commit. Kun lesing (`gh api` GET / `gh search code`)
 - Gjette på domeneakronymer som står i ordboka — slå opp i stedet
