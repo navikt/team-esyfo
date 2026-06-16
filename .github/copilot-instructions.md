@@ -41,4 +41,6 @@ bruker et begrep, og **gjett aldri** på hva et akronym betyr.
   `hovmester-sync.yml`. **Rediger ikke synkede filer for hånd** — endre dem i
   hovmester. Lokale, ikke-synkede skills (som `team-kontekst`) eies av dette
   repoet og overlever sync.
-- Dokumentendringer: følg eksisterende VitePress-struktur under `docs/`.
+- Dokumentendringer: følg eksisterende VitePress-struktur under `docs/`. Nytt
+  fagområde scaffoldes med `/doc-new-area`; bruk `/readme-update` og `/klarsprak`
+  for henholdsvis repo-dok og språkvask.
