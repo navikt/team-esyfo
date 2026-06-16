@@ -23,10 +23,17 @@ Teamets eneste tavle. Alle issues fra repoets maler legges automatisk på den
 prioritering og status** — ikke wikien.
 
 **Hvordan lese den:** felter, opsjoner og ID-er er volatile og hentes alltid
-dynamisk ved kjøring (se `team-status`-skillen → `references/projects-v2.md` for
-`gh project`/GraphQL-oppskrifter). **Aldri hardkod felt-/opsjon-ID-er.**
-Strukturen under er kart, ikke fasit — verifiser navn live, de endres når noen
-omdøper en kolonne.
+dynamisk ved kjøring. Bruk `team-status`-skillen → `references/projects-v2.md`
+hvis den er synket inn (kommer via `product`-collectionen), ellers direkte:
+
+```bash
+gh project view 157 --owner navikt --format json
+gh project field-list 157 --owner navikt --format json   # felt- og opsjonsnavn
+gh project item-list 157 --owner navikt --format json --limit 200
+```
+
+**Aldri hardkod felt-/opsjon-ID-er.** Strukturen under er kart, ikke fasit —
+verifiser navn live, de endres når noen omdøper en kolonne.
 
 ### Faner (views) — hva de er til
 
@@ -50,8 +57,8 @@ omdøper en kolonne.
 - **Tertial:** `T1 - 2026`, `T2 - 2026`, `T3 - 2026` — knytter arbeid til tertialet.
 - **Måleparameter:** teamets **tertialmål / key results** ligger her som
   single-select-opsjoner (ikke i et eget måldokument). Les opsjonene live for å
-  se gjeldende mål. Drift er et eksplisitt mål her (én opsjon handler om å
-  prioritere ≥50 % kapasitet til vedlikehold/forbedring).
+  se gjeldende mål — de er tertial-spesifikke og endres. Drift/vedlikehold kan
+  være representert både som en Måleparameter og via `BAU`-taggen.
 - **Tags:** `Etterlevelse`, `BAU` (= business as usual / **drift**), `Bug`,
   `Dataretting`, `AID`, `Sommerferie`.
 - **Start date / End date / Estimate:** planlegging.
@@ -93,7 +100,9 @@ Les den fila for å finne riktig repo — aldri gjett på hvilke apper teamet ei
 
 @doctor-who kjører i team-esyfo-arbeidskopien, men kan svare på spørsmål som
 gjelder en konkret app (f.eks. «hva bør vi gjøre i oppfølgingsplan?») ved å hente
-**ekte kode read-only** fra søsken-repoer via `gh` (bruker din innlogging):
+**ekte kode read-only** fra søsken-repoer via `gh` (bruker din innlogging).
+
+**Default — ingen lokal skriving** (`gh api` / `gh search code`):
 
 ```bash
 # Søk i et apprepo
@@ -101,17 +110,28 @@ gh search code --repo navikt/syfo-oppfolgingsplan-backend "BehovForOppfolging"
 # Les en fil
 gh api repos/navikt/syfo-oppfolgingsplan-backend/contents/README.md \
   --jq '.content' | base64 -d
-# Eller midlertidig klon for dypere kontekst, og forkast etterpå
-gh repo clone navikt/syfo-oppfolgingsplan-backend /tmp/oppf && ls /tmp/oppf
+```
+
+Disse skriver ingenting lokalt og kan aldri endre app-repoet — foretrekk dem.
+
+**Siste utvei — midlertidig klon (spør først):** trengs det bred kode-kontekst
+som `gh api` ikke dekker, spør brukeren, klon til en unik temp-mappe og **rydd
+opp etterpå**:
+
+```bash
+dir=$(mktemp -d) && gh repo clone navikt/syfo-oppfolgingsplan-backend "$dir" -- --depth 1
+# ... les filer i "$dir" ...
+rm -rf "$dir"
 ```
 
 Slå opp riktig repo-navn i `repositories.md` først (oppfølgingsplan finnes i flere
 repoer: `syfo-oppfolgingsplan-frontend`/`-backend` er de nye, `oppfolgingsplan-*`
 og `syfooppfolgingsplanservice` er eldre/under utfasing).
 
-> **Grenser:** kun lesing fra andre repoer. Aldri push, PR eller endring i en
-> annen app fra team-esyfo-kontekst — foreslå heller at arbeidet flyttes til
-> appens eget repo. Midlertidige kloner ryddes opp.
+> **Grenser:** kun lesing fra andre repoer. `gh api`/`gh search code` er default
+> (ingen lokal skriving). Klon kun som siste utvei, etter avklaring, til egen
+> temp-mappe som ryddes opp. Aldri `git push`/PR/commit mot en annen app fra
+> team-esyfo-kontekst — foreslå heller at arbeidet flyttes til appens eget repo.
 
 ## Dokumentasjon — hvor og hva
 
@@ -155,7 +175,8 @@ Ikke fastsatt i denne fila ennå. Spør brukeren om teamets rapportrytme
   dokumentasjonsarbeid: bruk denne som inngang, og les de lenkede kildene ved behov.
 - **Tavlas felter/opsjoner** (inkl. Måleparameter = mål) hentes dynamisk fra
   Projects v2 — aldri hardkodet.
-- **App-kode** hentes read-only via `gh` når et spørsmål gjelder en konkret app.
+- **App-kode** hentes read-only via `gh api`/`gh search code` når et spørsmål
+  gjelder en konkret app; klon kun som siste utvei etter avklaring.
 - **Mangler et felt her** (tavle-guide, kadens): spør brukeren én gang, og
   foreslå å legge svaret inn i riktig kilde (PR — spør først).
 
@@ -166,11 +187,12 @@ Ikke fastsatt i denne fila ennå. Spør brukeren om teamets rapportrytme
   oppgaver/mål/status; denne fila er kart, ikke kopi
 - Les tavlas felter/opsjoner dynamisk — aldri hardkod felt-/opsjon-ID-er
 - Slå opp domenebegreper i ordboka
-- Hent kode fra andre repoer **read-only**
+- Hent kode fra andre repoer **read-only** — `gh api`/`gh search code` som default
 
 ### ⚠️ Spør først
 - Oppdatere denne fila eller wiki-dokumenter (via PR)
 - Opprette issues eller endre tavle-felter
+- Klone et annet repo lokalt (siste utvei; bruk egen temp-mappe og rydd opp)
 
 ### 🚫 Aldri
 - Duplisere app-lista, ordboka eller områdene hit — pek på kilden
