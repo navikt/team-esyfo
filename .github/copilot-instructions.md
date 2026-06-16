@@ -29,7 +29,7 @@ bruker et begrep, og **gjett aldri** på hva et akronym betyr.
   OKR, workshops/retro og discovery. Den leser den lokale **`team-kontekst`**-
   skillen (`.github/skills/team-kontekst/`) ved oppstart; den er teamets
   autoritative oppsett (tavle, app-liste, ordbok, områder, kadens).
-- Teamets prosjekttavle: `navikt/157` (autoritativ kilde: `team-kontekst`-skillen).
+- Teamets prosjekttavle: se `team-kontekst`-skillen (autoritativ kilde for tavle-peker).
 - Øvrige agenter (hovmester, souschef, kokk, konditor, inspektører, designer,
   barista) er dokumentert i `docs/verktoy/hovmester.md`.
 
