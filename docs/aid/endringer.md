@@ -136,6 +136,7 @@ Hver endring har:
 - **Hvorfor:** Lar oss måle effekten av pakken på en etterprøvbar måte.
 - **Realiserer:** Selve A/B-testen (infrastruktur).
 - **Status:** Under arbeid (aktiv i testmiljø).
+- **Les mer:** [Flaggskipet som verktøy](/verktoy/flaggskipet)
 - **Spor:** [flaggskipet#5](https://github.com/navikt/flaggskipet/issues/5)
 
 ### 16. Måling 🟡 {#e16}
