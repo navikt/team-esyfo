@@ -126,7 +126,7 @@ Hver endring har:
 - **Hvorfor:** Møter den sykmeldte der de faktisk er.
 - **Realiserer:** Gjør [endring 9–11](#e9) synlige der brukeren er.
 - **Status:** Kanskje. Uavklart om den skal handle kun om oppfølgingsplan, eller om medvirkning bredere (også aktivitetskrav og dialogmøte).
-- **Spor:** Ingen oppgave ennå.
+- **Spor:** [team-esyfo#140](https://github.com/navikt/team-esyfo/issues/140)
 
 ## På tvers
 
