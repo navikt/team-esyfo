@@ -68,7 +68,7 @@ Hver endring har:
 - **Hvorfor:** Synliggjør verdien, og rammer inn deling med lege positivt — legen får bedre grunnlag for riktig gradert sykmelding.
 - **Realiserer:** [Synliggjøre verdien; framing av deling med lege](./dulte-tiltak#leder)
 - **Status:** Planlagt.
-- **Spor:** Ingen oppgave ennå.
+- **Spor:** [oppfolgingsplan-frontend#889](https://github.com/navikt/syfo-oppfolgingsplan-frontend/issues/889)
 
 ### 8. Frivillig evalueringsvarsel 🟡 {#e8}
 
@@ -86,7 +86,7 @@ Hver endring har:
 - **Hvorfor:** Styrker forståelsen av egen rolle og plikt.
 - **Realiserer:** [Medvirkningsplikt; rolleforståelse](./dulte-tiltak#arbeidstaker)
 - **Status:** Planlagt. Merk: få sykmeldte er inne på oppfølgingsplan-siden før en plan finnes — se endring 14.
-- **Spor:** Ingen oppgave ennå.
+- **Spor:** [oppfolgingsplan-frontend#890](https://github.com/navikt/syfo-oppfolgingsplan-frontend/issues/890)
 
 ### 10. «Forbered deg til samtalen» ⚪ {#e10}
 
@@ -94,7 +94,7 @@ Hver endring har:
 - **Hvorfor:** Gjør det lettere å delta aktivt i egen oppfølging.
 - **Realiserer:** [Forberedelsesskjema; samtaleguide](./dulte-tiltak#arbeidstaker)
 - **Status:** Planlagt.
-- **Spor:** Ingen oppgave ennå.
+- **Spor:** [oppfolgingsplan-frontend#890](https://github.com/navikt/syfo-oppfolgingsplan-frontend/issues/890)
 
 ### 11. «Slik bidrar du i oppfølgingen» – med aktiv plan ⚪ {#e11}
 
@@ -102,7 +102,7 @@ Hver endring har:
 - **Hvorfor:** Holder den sykmeldte aktiv gjennom hele forløpet.
 - **Realiserer:** [Positive konsekvenser av oppfølging](./dulte-tiltak#arbeidstaker)
 - **Status:** Planlagt.
-- **Spor:** Ingen oppgave ennå.
+- **Spor:** [oppfolgingsplan-frontend#890](https://github.com/navikt/syfo-oppfolgingsplan-frontend/issues/890)
 
 ### 12. Synliggjøre at leder har meldt «plan ikke aktuell» ⚪ {#e12}
 
@@ -110,7 +110,7 @@ Hver endring har:
 - **Hvorfor:** Åpenhet, og en mulighet for den sykmeldte til å reagere.
 - **Realiserer:** Henger sammen med [behovsvurderingen (endring 6)](#e6).
 - **Status:** Planlagt.
-- **Spor:** Ingen oppgave ennå.
+- **Spor:** [oppfolgingsplan-frontend#888](https://github.com/navikt/syfo-oppfolgingsplan-frontend/issues/888)
 
 ### 13. Be arbeidsgiver om å lage en plan 🔵 {#e13}
 
