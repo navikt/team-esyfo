@@ -1,6 +1,6 @@
 # 🎯 AID-oppdraget – dulting for bedre sykefraværsoppfølging
 
-**AID** (Arbeids- og inkluderingsdepartementet) har gitt team eSyfo i oppdrag å utforske **dulting** — små, ærlige dult basert på adferdspsykologi — for å øke etterlevelsen av regelverket i sykefraværsoppfølgingen. Målet er at flere arbeidsgivere følger opp tilretteleggingsplikten sin, og at flere sykmeldte bidrar gjennom medvirkningsplikten.
+**AID** (Arbeids- og inkluderingsdepartementet) har gitt team eSyfo i oppdrag å utforske **[dulting](/ordbok#dulting)** — små, ærlige dult basert på adferdspsykologi — for å øke etterlevelsen av regelverket i sykefraværsoppfølgingen. Målet er at flere arbeidsgivere følger opp [tilretteleggingsplikten](/ordbok#tilretteleggingsplikt) sin, og at flere sykmeldte bidrar gjennom [medvirkningsplikten](/ordbok#medvirkningsplikt).
 
 Denne delen av wikien dokumenterer AID-oppdraget: hva vi prøver ut, hvorfor, og hvordan vi måler det.
 
