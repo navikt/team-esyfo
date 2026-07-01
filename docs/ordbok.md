@@ -30,6 +30,12 @@ Altinn er en ekstern plattform for innsending og utveksling av meldinger mellom 
 
 ---
 
+### Behovsvurdering {#behovsvurdering}
+
+En vurdering av om det er behov for et tiltak. I [AID-oppdraget](/aid/) gjelder det om en [oppfølgingsplan](#oppfolgingsplan) er nødvendig: arbeidsgiver kan aktivt melde fra at en plan ikke trengs nå, og kan ombestemme seg senere.
+
+---
+
 ### Den sykmeldte {#den-sykmeldte}
 
 Personen som er sykmeldt og som nærmesteleder følger opp.
@@ -57,6 +63,12 @@ Den sykmeldtes inngang til sykmeldinger, søknader og oppfølging på nav.no.
 ### Dokumentporten {#dokumentporten}
 
 Tjeneste for å gjøre dokumenter tilgjengelige for arbeidsgiver via Altinn Dialogporten.
+
+---
+
+### Dulting {#dulting}
+
+Å bruke små, ærlige dult (nudging) basert på adferdspsykologi for å gjøre det lettere å ta gode valg — for eksempel et fornuftig standardvalg eller en påminnelse til rett tid. Utforskes i [AID-oppdraget](/aid/).
 
 ---
 
@@ -126,6 +138,12 @@ Datoen da retten til sykepenger utløper.
 
 ---
 
+### Medvirkningsplikt {#medvirkningsplikt}
+
+Den sykmeldtes plikt til å bidra aktivt i egen oppfølging, blant annet å medvirke til å finne løsninger og til å lage og følge opp [oppfølgingsplanen](#oppfolgingsplan). Hjemlet i arbeidsmiljøloven § 2-3.
+
+---
+
 ### Microfrontend {#microfrontend}
 
 Lite UI-panel på Min side som viser status og lenke til detaljer.
@@ -172,6 +190,18 @@ Oppfølging i sluttfasen av sykepengeperioden, fra varselperioden og fram mot ma
 ### Stillingsinformasjon {#stillingsinformasjon}
 
 Stillingstittel og stillingsprosent som backend henter fra Aareg.
+
+---
+
+### Tilretteleggingsplikt {#tilretteleggingsplikt}
+
+Arbeidsgivers plikt til å legge til rette arbeidet så langt det er mulig, slik at en sykmeldt kan være helt eller delvis i jobb. Hjemlet i arbeidsmiljøloven § 4-6.
+
+---
+
+### Tiltakspakke {#tiltakspakke}
+
+En samling tiltak i [AID-oppdraget](/aid/) som lanseres og A/B-testes sammen, slik at effekten måles for pakken som helhet. Se [funksjonelle endringer](/aid/endringer).
 
 ---
 

@@ -23,6 +23,7 @@ export default withMermaid(
 			nav: [
 				{ text: "Kom i gang", link: "/kom-i-gang" },
 				{ text: "Områder", link: "/omrader/" },
+				{ text: "AID", link: "/aid/" },
 				{ text: "Utvikling", link: "/utvikling/" },
 				{ text: "Design", link: "/design/" },
 				{ text: "Dataanalyse", link: "/dataanalyse/" },
@@ -72,6 +73,16 @@ export default withMermaid(
 					items: [
 						{ text: "Oversikt", link: "/omrader/" },
 						...buildAreaSidebar(),
+					],
+				},
+				{
+					text: "AID",
+					collapsed: false,
+					items: [
+						{ text: "Oversikt", link: "/aid/" },
+						{ text: "Funksjonelle endringer", link: "/aid/endringer" },
+						{ text: "Dulte-tiltak (nudgelab)", link: "/aid/dulte-tiltak" },
+						{ text: "Måling", link: "/aid/maaling" },
 					],
 				},
 				{
