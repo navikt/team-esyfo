@@ -92,6 +92,7 @@ export default withMermaid(
 						{ text: "Oversikt", link: "/verktoy/" },
 						{ text: "Hovmester", link: "/verktoy/hovmester" },
 						{ text: "CI/CD", link: "/verktoy/ci-cd" },
+						{ text: "Flaggskipet", link: "/verktoy/flaggskipet" },
 					],
 				},
 				{
