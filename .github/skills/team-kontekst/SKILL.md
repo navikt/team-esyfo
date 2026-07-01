@@ -1,6 +1,6 @@
 ---
 name: team-kontekst
-description: "Team-esyfos autoritative oppsett for @doctor-who — tavlestruktur (navikt/157), arbeidsrytme, mål/drift, issue-hierarki, apper teamet eier, kode-oppslag på tvers av repoer, domeneordbok og dokumentasjonskonvensjoner. Lastes ved oppstart av status-, prioriterings-, mål-, discovery- og dokumentasjonsarbeid."
+description: "Team-esyfos autoritative oppsett for @doctor-who — tavlestruktur (navikt/157), arbeidsrytme, mål/drift, issue-hierarki, apper teamet eier, kode-oppslag på tvers av repoer, domeneordbok, AID-oppdraget og dokumentasjonskonvensjoner. Lastes ved oppstart av status-, prioriterings-, mål-, discovery- og dokumentasjonsarbeid."
 ---
 
 # Team-kontekst — esyfo
@@ -165,6 +165,34 @@ Kafka-topics). Ikke alle har `teknisk.md`, og noen har mer (f.eks.
 `oppfolgingsplan/` har også `dataanalyse.md` og `dataretting.md`) — sjekk hva som
 ligger i områdemappa. Les den relevante undersiden før du svarer på
 områdespørsmål; det er ofte raskere og mer presist enn å lese kode.
+
+## AID-oppdraget (dulting)
+
+**AID** (Arbeids- og inkluderingsdepartementet) har gitt team eSyfo i oppdrag å
+utforske **dulting** (nudging) for å øke etterlevelsen av regelverket. Første
+leveranse er **Tiltakspakke 1 for oppfølgingsplan**: flere endringer som
+A/B-testes mot en kontrollgruppe, randomisert på underenhet, med pilot i Troms
+og Finnmark. Alt shippes kontinuerlig, men er skrudd **av i prod** og **på i
+dev/lokal**.
+
+**Kilde til sannhet:** wikien under **`docs/aid/`**
+(<https://navikt.github.io/team-esyfo/aid/>) — `index` (oppdrag, mål,
+spilleregler, A/B-design), `endringer` (funksjonelle endringer med status og
+spor til tavla), `dulte-tiltak` (nudgelab-registeret) og `maaling`. Les den før
+du svarer på AID-spørsmål.
+
+**Begrepsmodell (viktig):** `tiltakspakke → dulte-tiltak (nudgelab) →
+funksjonelle endringer (våre) → issues`. **Reserver «tiltak» for nudgelab sine
+dulte-tiltak** — teamets eget nivå heter **funksjonelle endringer**.
+
+**På tavla:** AID-arbeid tagges **Tag = AID**, og AID-fanen er
+programoversikten (ingen topp-epic — wiki + fane er oversikten). Nye AID-issues
+får Tag = AID, og `endringer`-siden lenker hver endring til sporet (epic/issue).
+
+**Sentrale apper:** `flaggskipet` (A/B-motoren — avgjør tiltaks- vs
+kontrollgruppe per underenhet), `syfo-oppfolgingsplan-frontend`/`-backend`,
+`dinesykmeldte`(`-backend`) og `esyfovarsel`. Slå opp i
+`docs/utvikling/repositories.md` for detaljer.
 
 ## Wiki som kunnskapsbase
 
