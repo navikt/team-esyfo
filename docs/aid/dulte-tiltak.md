@@ -19,18 +19,18 @@ Brukerreisen for nærmeste leder, i sju steg:
 | Steg | Dulte-tiltak | Adferdsforankring | Realiseres av |
 |------|--------------|-------------------|---------------|
 | 1 | Fjerne usikkerhet og oppmuntre til tidlig kontakt | Selvbestemmelse | [Kom i gang-boks](./endringer#e1) |
-| 2 | Endre landingssiden til den aktuelle sykmeldte, og gjøre menyen om til handlingsknapper («Lag oppfølgingsplan») | Implementeringsintensjon | [Varsel/oppgave](./endringer#e4) |
+| 2 | Endre landingssiden til den aktuelle sykmeldte, og gjøre menyen om til handlingsknapper («Lag oppfølgingsplan») | Implementeringsintensjon | [Varsel/oppgave](./endringer#e3) |
 | 2–3 | Forbedre rolleforståelse og ansvar | Boosting | [Ditt ansvar](./endringer#e2) |
-| 3 | Informasjon om hvordan og hvorfor man tar kontakt (og hva man ikke bør ta opp) | Selvbestemmelse / beslutningsvegring | [Ditt ansvar](./endringer#e2), [Oppfølgingsplan-forside](./endringer#e7) |
+| 3 | Informasjon om hvordan og hvorfor man tar kontakt (og hva man ikke bør ta opp) | Selvbestemmelse / beslutningsvegring | [Ditt ansvar](./endringer#e2), [Oppfølgingsplan-forside](./endringer#e6) |
 | 3 | Spille på sosiale normer («de fleste ledere som lykkes, tar kontakt tidlig») | Sosiale normer | Ikke tildelt ennå |
-| 3–4 | Synliggjøre verdien av oppfølgingsplanen | Selvbestemmelse / her-og-nå-bias | [Oppfølgingsplan-forside](./endringer#e7) |
-| 3 | Synliggjøre unntak, så oppfølgingsplan blir standardvalget | Standardvalg | [Behovsvurdering](./endringer#e6) |
-| 4 | Gi spesifikke råd om en god plan; vekt på hva den ansatte *kan* gjøre | Standardvalg | [Oppfølgingsplan-forside](./endringer#e7) |
-| 3–4 | Påminnelse om å lage plan, som standardvalg man kan melde seg av | Påminnelser | [Påminnelse](./endringer#e3), [Varsel/oppgave](./endringer#e4) |
-| 5 | Bedre informasjon om hvorfor man deler planen | Selvbestemmelse | [Oppfølgingsplan-forside](./endringer#e7) |
-| 5 | Ramme inn deling med fastlege: gir bedre grunnlag for riktig gradert sykmelding | Framing | [Oppfølgingsplan-forside](./endringer#e7) |
-| 6 | Bedre informasjon om hvorfor man bør evaluere og følge opp | Framing / konsekvensframing / prospektteori | [Evalueringsvarsel](./endringer#e8) |
-| 7 | Informasjon om hvorfor man deler oppdatert plan | Framing | [Oppfølgingsplan-forside](./endringer#e7) |
+| 3–4 | Synliggjøre verdien av oppfølgingsplanen | Selvbestemmelse / her-og-nå-bias | [Oppfølgingsplan-forside](./endringer#e6) |
+| 3 | Synliggjøre unntak, så oppfølgingsplan blir standardvalget | Standardvalg | [Behovsvurdering](./endringer#e5) |
+| 4 | Gi spesifikke råd om en god plan; vekt på hva den ansatte *kan* gjøre | Standardvalg | [Oppfølgingsplan-forside](./endringer#e6) |
+| 3–4 | Påminnelse om å lage plan, som standardvalg man kan melde seg av | Påminnelser | [Påminnelse](./endringer#e3), [Varsel/oppgave](./endringer#e3) |
+| 5 | Bedre informasjon om hvorfor man deler planen | Selvbestemmelse | [Oppfølgingsplan-forside](./endringer#e6) |
+| 5 | Ramme inn deling med fastlege: gir bedre grunnlag for riktig gradert sykmelding | Framing | [Oppfølgingsplan-forside](./endringer#e6) |
+| 6 | Bedre informasjon om hvorfor man bør evaluere og følge opp | Framing / konsekvensframing / prospektteori | [Evalueringsvarsel](./endringer#e7) |
+| 7 | Informasjon om hvorfor man deler oppdatert plan | Framing | [Oppfølgingsplan-forside](./endringer#e6) |
 
 ## Arbeidstaker (den sykmeldte) {#arbeidstaker}
 
@@ -48,11 +48,11 @@ Brukerreisen for den sykmeldte, i åtte steg:
 | Steg | Dulte-tiltak | Adferdsforankring | Realiseres av |
 |------|--------------|-------------------|---------------|
 | 2–3 | Fjerne usikkerhet og oppmuntre til tidlig kontakt i sykmeldingen | Selvbestemmelse / framing | Info i selve sykmeldingen eies av et annet team |
-| 3–4 | Informasjon om medvirkningsplikten | Boosting | [Slik bidrar du (uten plan)](./endringer#e9) |
-| 3–4 | Informasjon om lederens ansvar og rolle | Boosting | [Slik bidrar du (uten plan)](./endringer#e9) |
-| 4 | Samtaleguide (Idébanken) for å trygge den ansatte i dialog | — | [Forbered deg](./endringer#e10) |
-| 4–5 | Forberedelsesskjema: hva bør du tenke på når du lager plan med lederen | Selvbestemmelse / framing | [Forbered deg](./endringer#e10) |
-| 5 | Synliggjøre positive konsekvenser av oppfølgingsplan | Prospektteori | [Slik bidrar du (med plan)](./endringer#e11) |
+| 3–4 | Informasjon om medvirkningsplikten | Boosting | [Slik bidrar du (uten plan)](./endringer#e8) |
+| 3–4 | Informasjon om lederens ansvar og rolle | Boosting | [Slik bidrar du (uten plan)](./endringer#e8) |
+| 4 | Samtaleguide (Idébanken) for å trygge den ansatte i dialog | — | [Forbered deg](./endringer#e8) |
+| 4–5 | Forberedelsesskjema: hva bør du tenke på når du lager plan med lederen | Selvbestemmelse / framing | [Forbered deg](./endringer#e8) |
+| 5 | Synliggjøre positive konsekvenser av oppfølgingsplan | Prospektteori | [Slik bidrar du (med plan)](./endringer#e8) |
 | 3 | Varsel om å lage plan (for eksempel en påminnelse i sykmeldingskvitteringen) | Påminnelse | Sykmeldt-varsling er ikke i pakke 1 nå |
 | 8 | Evalueringsside der den sykmeldte velger hvilke tiltak som fungerte | — | Del av [målingen](./maaling) |
 
