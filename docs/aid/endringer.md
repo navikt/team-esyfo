@@ -2,13 +2,13 @@
 
 Dette er de **funksjonelle endringene** i Tiltakspakke 1: det vi faktisk bygger for å realisere [dulte-tiltakene](./dulte-tiltak) fra nudgelab. Hver endring er **1:1 med en funksjonell oppgave** på tavla (epic for kryssrepo/større, story for frittstående), så alt kan testes funksjonelt.
 
-Tabellene er gruppert etter hvem endringen er for. Kolonnene: **Hvor** (appen/flaten endringen gjøres i — flere med «+» når den spenner apper) · **Hva** brukeren møter · **Figma** · **Spor** (oppgaven/epicen der status og detaljer lever).
+Tabellene er gruppert etter hvem endringen er for. Kolonnene: **Hvor** (appen/flaten endringen gjøres i — flere med «+» når den spenner apper) · **Hva** brukeren møter · **Figma** · **Oppgave** (issuet eller epicen på tavla der status og detaljer lever).
 
 > **Hvorfor (dulten bak):** hver endring realiserer ett eller flere [dulte-tiltak](./dulte-tiltak). Den siden forklarer intensjonen og adferdsforankringen, og peker tilbake til hver endring under «Realiseres av».
 
 ## For arbeidsgiver (nærmeste leder)
 
-| Endring | Hvor | Hva | Figma | Spor |
+| Endring | Hvor | Hva | Figma | Oppgave |
 |---------|------|-----|-------|------|
 | <span id="e1"></span>**Kom i gang-boks øverst** | Dine sykmeldte | Boks øverst som oppfordrer til tidlig oppfølging | [🎨](https://www.figma.com/design/FKUh739hCdxz3DfoDzxRx3/AID-Oppf%C3%B8lginsplan?node-id=1187-8558) | [#742](https://github.com/navikt/dinesykmeldte/issues/742) |
 | <span id="e2"></span>**«Ditt ansvar»-seksjon nederst** | Dine sykmeldte | Ansvarsseksjon nederst (erstatter film/tips): lag plan, dialogmøte 1, tilrettelegg, følg opp — med nav.no-lenker | [🎨](https://www.figma.com/design/FKUh739hCdxz3DfoDzxRx3/AID-Oppf%C3%B8lginsplan?node-id=1187-8558) | [#743](https://github.com/navikt/dinesykmeldte/issues/743) |
@@ -20,7 +20,7 @@ Tabellene er gruppert etter hvem endringen er for. Kolonnene: **Hvor** (appen/fl
 
 ## For den sykmeldte (arbeidstaker)
 
-| Endring | Hvor | Hva | Figma | Spor |
+| Endring | Hvor | Hva | Figma | Oppgave |
 |---------|------|-----|-------|------|
 | <span id="e8"></span>**Innhold til den sykmeldte** | Oppfølgingsplan | Veiledning uten aktiv plan (bidra + medvirkningsplikt), hjelp til å forberede samtalen (Idébanken), og med aktiv plan. *Merk: få er inne før en plan finnes — se Mikrofrontend* | [🎨](https://www.figma.com/design/FKUh739hCdxz3DfoDzxRx3/AID-Oppf%C3%B8lginsplan?node-id=1211-15333) | [#890](https://github.com/navikt/syfo-oppfolgingsplan-frontend/issues/890) |
 | <span id="e9"></span>**Synliggjøre «plan ikke aktuell»** | Oppfølgingsplan | Viser den sykmeldte at leder har meldt at plan ikke trengs, med mulighet til å kontakte Nav. Kun på siden — ikke SMS/e-post | [🎨](https://www.figma.com/design/FKUh739hCdxz3DfoDzxRx3/AID-Oppf%C3%B8lginsplan?node-id=1223-9621) | [#888](https://github.com/navikt/syfo-oppfolgingsplan-frontend/issues/888) |
@@ -29,7 +29,7 @@ Tabellene er gruppert etter hvem endringen er for. Kolonnene: **Hvor** (appen/fl
 
 ## På tvers
 
-| Endring | Hvor | Hva | Figma | Spor |
+| Endring | Hvor | Hva | Figma | Oppgave |
 |---------|------|-----|-------|------|
 | <span id="e12"></span>**A/B-styring (Flaggskipet)** | Flaggskipet | Egen tjeneste tildeler tiltaks- eller kontrollgruppe per underenhet (pilot Troms og Finnmark) · [verktøyside](/verktoy/flaggskipet) | — | [#5](https://github.com/navikt/flaggskipet/issues/5) · epic |
 | <span id="e13"></span>**Måling** | Analyse | Måler om pakken virker — blant annet om flere lager en plan i tide | — | [Måling](./maaling) |
