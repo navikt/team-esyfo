@@ -6,8 +6,6 @@ Tabellene er gruppert etter hvem endringen er for. Kolonnene: **Hvor** (appen/fl
 
 > **Hvorfor (dulten bak):** hver endring realiserer ett eller flere [dulte-tiltak](./dulte-tiltak). Den siden forklarer intensjonen og adferdsforankringen, og peker tilbake til hver endring under «Realiseres av».
 
-> **Status følger tavla, ikke wikien.** Følg «Spor»-lenken for hvor en endring står. Referer gjerne til endringene ved navn.
-
 ## For arbeidsgiver (nærmeste leder)
 
 | Endring | Hvor | Hva | Figma | Spor |
