@@ -39,7 +39,7 @@ flowchart LR
     D --> E
 ```
 
-Hvem som havner i hvilken gruppe styres av en egen tjeneste, Flaggskipet. Se [Funksjonelle endringer](./endringer#_15-a-b-styring-flaggskipet).
+Hvem som havner i hvilken gruppe styres av en egen tjeneste, Flaggskipet. Se [Funksjonelle endringer](./endringer#e12) og [verktøysiden for Flaggskipet](/verktoy/flaggskipet).
 
 ## Mål
 

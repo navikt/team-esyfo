@@ -133,6 +133,7 @@ Hver endring har:
 - **Hva:** En egen tjeneste (Flaggskipet) avgjør hvilke arbeidsgivere som er i tiltaksgruppen (får pakken) og hvilke som er i kontrollgruppen (dagens opplevelse). Tildelingen skjer per underenhet, og piloten kjøres i Troms og Finnmark.
 - **Hvorfor:** Lar oss måle effekten av pakken på en etterprøvbar måte.
 - **Realiserer:** Selve A/B-testen (infrastruktur).
+- **Les mer:** [Flaggskipet som verktøy](/verktoy/flaggskipet)
 - **Spor:** [flaggskipet#5](https://github.com/navikt/flaggskipet/issues/5) (funksjonell epic)
 
 ### 13. Måling {#e13}
