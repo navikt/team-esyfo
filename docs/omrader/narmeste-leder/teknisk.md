@@ -12,19 +12,20 @@ Nærmesteleder-løsningen håndterer relasjoner mellom sykmeldt og nærmestelede
 
 ```mermaid
 sequenceDiagram
-    participant altinn as syfonlaltinn<br/>(team-sykmelding)
     participant t_nl as «Kafka»<br/>syfo-narmesteleder
     participant nl as narmesteleder<br/>(team-sykmelding)
     participant t_leesah as «Kafka»<br/>syfo-narmesteleder-leesah
     participant t_sm as «Kafka»<br/>syfo-sendt-sykmelding
     participant esyfo as esyfo-narmesteleder<br/>(team-esyfo)
+    participant dinesykmeldte as dine-sykmeldte-backend<br/>(team-esyfo)
     participant db as Database
 
-    altinn->>t_nl: publiserer
     nl-->>t_nl: lytter
     activate nl
+    esyfo->>t_nl: publiserer
     nl->>t_leesah: publiserer
     deactivate nl
+    dinesykmeldte->>t_nl: publiserer
     esyfo-->>t_leesah: lytter
     esyfo-->>t_sm: lytter
     esyfo->>db: lagrer NL-relasjon
