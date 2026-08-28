@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vitepress dev",
-		"build": "pnpm typecheck && pnpm inventory:check && pnpm inventory:test && vitepress build && pnpm inventory:export",
+		"build": "pnpm typecheck && pnpm inventory:check && pnpm inventory:test && pnpm error-dashboard:test && pnpm error-dashboard:check && vitepress build && pnpm inventory:export",
 		"typecheck": "vue-tsc --noEmit",
 		"inventory:check": "node scripts/runtime-inventory.ts check",
 		"inventory:test": "node --test .vitepress/runtime/*.test.ts",
@@ -13,6 +13,9 @@
 		"inventory:drift": "node scripts/runtime-inventory.ts drift",
 		"inventory:coverage": "node scripts/runtime-inventory.ts coverage",
 		"inventory:observe": "node scripts/observe-nais.ts",
+		"error-dashboard:test": "node --test .vitepress/grafana/*.test.ts",
+		"error-dashboard:check": "node scripts/error-drilldown.ts check",
+		"error-dashboard:export": "node scripts/error-drilldown.ts export",
 		"preview": "vitepress preview"
 	},
 	"devDependencies": {
