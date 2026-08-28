@@ -1,16 +1,24 @@
-import type { TrackedLink } from "../runtime/model.ts";
+import type { IssueRef, Repository, TrackedLink } from "../runtime/model.ts";
 import type {
 	AlertDeployment,
+	AlertDesiredDelivery,
 	AlertLifecycle,
 	AlertNotificationRoute,
 	AlertObservation,
+	AlertOperationalPhase,
+	AlertPolicyCatalog,
+	AlertPolicyDecision,
+	AlertPolicyEvidence,
+	AlertPolicyOwner,
 	AlertRegistry,
+	AlertReplacement,
 	AlertRule,
 	AlertSource,
 	AlertSourceAutomationFinding,
 } from "./model.ts";
 
 export const ALERT_SNAPSHOT_AT = "2026-08-28T17:45:44Z" as const;
+export const ALERT_POLICY_DECIDED_AT = "2026-08-28T19:13:53Z" as const;
 export const NAIS_ALERTS_URL =
 	"https://console.nav.cloud.nais.io/team/team-esyfo/alerts";
 export const NAIS_SETTINGS_URL =
@@ -68,6 +76,7 @@ export const alertSources: AlertSource[] = [
 			occurredAt: "2026-07-02T16:31:50Z",
 			href: "https://github.com/navikt/lps-oppfolgingsplan-mottak/commit/16a44e597fdc6bfd9dc01c2ecec41b085c2dfa28",
 			summary: "Alertfilen og Altinn-consumeren ble fjernet.",
+			cleanupIssue: "navikt/lps-oppfolgingsplan-mottak#637",
 		},
 	},
 	repositorySource(
@@ -129,6 +138,7 @@ export const alertSources: AlertSource[] = [
 			href: "https://github.com/navikt/syfobrukertilgang/commit/9c9a259c7926093335a24788ed9fd82d00406d82",
 			summary:
 				"Alert-workflowen byttet fra prod-fss til prod-gcp. Snapshotet er siste repository-tilstand før cluster-cutover, ikke bevis på en deployert SHA.",
+			cleanupIssue: "navikt/syfobrukertilgang#368",
 		},
 	},
 	repositorySource(
@@ -233,7 +243,7 @@ const retiringAccess: AlertLifecycle = {
 	state: "retiring",
 	reason:
 		"syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
-	issue: "navikt/team-esyfo#210",
+	issue: "navikt/syfobrukertilgang#369",
 };
 const followUpPlanSunset: AlertLifecycle = {
 	state: "sunset",
@@ -244,7 +254,7 @@ const orphanedLpsAlert: AlertLifecycle = {
 	state: "retiring",
 	reason:
 		"Consumeren og alert-filen ble fjernet 2. juli 2026, men PrometheusRule-instansen finnes fortsatt i NAIS og må ryddes kontrollert.",
-	issue: "navikt/team-esyfo#210",
+	issue: "navikt/lps-oppfolgingsplan-mottak#637",
 };
 const retiringKafkaOffset: AlertLifecycle = {
 	state: "retiring",
@@ -252,14 +262,302 @@ const retiringKafkaOffset: AlertLifecycle = {
 		"Den pausede regelen måler absolutt consumer-offset, ikke lag, og skal erstattes av typekorrekt topic-kontrakt.",
 	issue: "navikt/team-esyfo#212",
 };
-const policyReview = {
-	status: "unreviewed",
-	issue: "navikt/team-esyfo#210",
-} as const;
+
+type TeamPolicyOwner = Extract<AlertPolicyOwner, { kind: "team" }>;
+
+const teamOwner = (
+	repository: Repository,
+	scopeRef: TeamPolicyOwner["scopeRef"],
+): TeamPolicyOwner => ({
+	kind: "team",
+	team: "team-esyfo",
+	repository,
+	scopeRef,
+});
+
+const issueHref = (issue: IssueRef) => {
+	const [repository, number] = issue.split("#");
+	return `https://github.com/${repository}/issues/${number}`;
+};
+
+const issueEvidence = (
+	issue: IssueRef,
+	summary: string,
+): AlertPolicyEvidence => ({
+	href: issueHref(issue),
+	summary,
+	verifiedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const linkEvidence = (href: string, summary: string): AlertPolicyEvidence => ({
+	href,
+	summary,
+	verifiedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const dashboardOnly = (): AlertDesiredDelivery => ({
+	tier: "dashboard-only",
+});
+const ticket = (): AlertDesiredDelivery => ({
+	tier: "ticket",
+	channelPolicyRef: "channel:esyfo-alarm",
+});
+const blockedPager = (): AlertDesiredDelivery => ({
+	tier: "pager",
+	channelPolicyRef: "channel:team-esyfo-pager",
+	activation: "blocked",
+	blockerIssues: ["navikt/team-esyfo#211", "navikt/team-esyfo#217"],
+});
+
+const operationalResponse = <Phase extends AlertOperationalPhase>(
+	phase: Phase,
+	delivery: AlertDesiredDelivery,
+) => ({ phase, delivery });
+
+const plannedReplacement = (
+	issue: IssueRef,
+	targetRefs: AlertReplacement["targetRefs"],
+): AlertReplacement => ({ status: "planned", issue, targetRefs });
+
+const keepPolicy = (
+	owner: TeamPolicyOwner,
+	rationale: string,
+	delivery: AlertDesiredDelivery,
+): AlertPolicyDecision => ({
+	decision: "KEEP",
+	owner,
+	rationale,
+	operationalResponse: operationalResponse("retained-rule", delivery),
+	decidedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const tunePolicy = (
+	owner: TeamPolicyOwner,
+	rationale: string,
+	delivery: AlertDesiredDelivery,
+	implementationIssue: IssueRef,
+): AlertPolicyDecision => ({
+	decision: "TUNE",
+	owner,
+	rationale,
+	operationalResponse: operationalResponse("after-tuning", delivery),
+	implementationIssue,
+	decidedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const replacePolicy = (
+	owner: TeamPolicyOwner,
+	rationale: string,
+	delivery: AlertDesiredDelivery,
+	implementationIssue: IssueRef,
+	replacement: AlertReplacement,
+): AlertPolicyDecision => ({
+	decision: "REPLACE",
+	owner,
+	rationale,
+	operationalResponse: operationalResponse("replacement", delivery),
+	implementationIssue,
+	replacement,
+	decidedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const migratePolicy = (
+	owner: TeamPolicyOwner,
+	rationale: string,
+	delivery: AlertDesiredDelivery,
+	implementationIssue: IssueRef,
+	replacement: AlertReplacement,
+): AlertPolicyDecision => ({
+	decision: "MIGRATE",
+	owner,
+	rationale,
+	operationalResponse: operationalResponse("during-migration", delivery),
+	implementationIssue,
+	replacement,
+	decidedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const retireBlockedPolicy = (
+	owner: TeamPolicyOwner,
+	rationale: string,
+	delivery: AlertDesiredDelivery,
+	implementationIssue: IssueRef,
+	gateIssue: IssueRef,
+	condition: string,
+): AlertPolicyDecision => ({
+	decision: "RETIRE",
+	owner,
+	rationale,
+	operationalResponse: operationalResponse("until-retired", delivery),
+	implementationIssue,
+	retirementGate: { status: "blocked", issue: gateIssue, condition },
+	decidedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const retireReadyPolicy = (
+	owner: TeamPolicyOwner,
+	rationale: string,
+	delivery: AlertDesiredDelivery,
+	implementationIssue: IssueRef,
+	removalReason: string,
+	evidence: [AlertPolicyEvidence, ...AlertPolicyEvidence[]],
+): AlertPolicyDecision => ({
+	decision: "RETIRE",
+	owner,
+	rationale,
+	operationalResponse: operationalResponse("until-retired", delivery),
+	implementationIssue,
+	retirementGate: {
+		status: "ready",
+		basis: {
+			kind: "justified-removal",
+			reason: removalReason,
+			evidence,
+		},
+	},
+	decidedAt: ALERT_POLICY_DECIDED_AT,
+});
+
+const prometheusAlertingPractice = linkEvidence(
+	"https://prometheus.io/docs/practices/alerting/",
+	"Prometheus anbefaler symptom- og handlingsorienterte alerts, med lenker til runbook og dashboard.",
+);
+const lpsRemovalEvidence = linkEvidence(
+	"https://github.com/navikt/lps-oppfolgingsplan-mottak/commit/16a44e597fdc6bfd9dc01c2ecec41b085c2dfa28",
+	"Consumeren og alert-filen ble fjernet 2. juli 2026.",
+);
+
+export const alertPolicyCatalog: AlertPolicyCatalog = {
+	decisionIssue: "navikt/team-esyfo#210",
+	decidedAt: ALERT_POLICY_DECIDED_AT,
+	appliesTo: "canonical-production-deployments",
+	actionTiers: {
+		pager: {
+			description:
+				"Avbrytende respons kun ved pågående eller nært forestående alvorlig produksjonskonsekvens som krever konkret handling nå.",
+			requirements: [
+				"Kritisk produksjonsseverity og et signal på bruker-/domenekonsekvens, ikke bare intern årsak.",
+				"Testet runbook, diagnostisk dashboard, konsekvens og konkret handling.",
+				"Verifisert avbrytende kanal; Slack-ruting alene er ikke pager.",
+			],
+		},
+		ticket: {
+			description:
+				"Ikke-avbrytende, deduplisert oppfølging med konkret eier og handling innen neste bemannede arbeidsdag.",
+			requirements: [
+				"Signalerer et konkret problem som må rettes, men ikke krever umiddelbar avbrytelse.",
+				"Skal ha diagnostikk og en varig oppfølging dersom Slack-hendelsen ikke løses direkte.",
+			],
+		},
+		"dashboard-only": {
+			description:
+				"Trend, feilsøkingssignal eller ikke-handlingsrettet indikator uten operativ varslingsrute.",
+			requirements: [
+				"Ingen forventet umiddelbar eller neste-dag-handling er forhåndsdefinert.",
+				"Brukes til diagnose, korrelasjon og kapasitets-/kvalitetstrend.",
+			],
+		},
+	},
+	channels: [
+		{
+			id: "channel:team-esyfo-pager",
+			destination: "Team eSyfos avbrytende kanal (ikke etablert)",
+			stewardship: "team-esyfo",
+			disposition: "planned",
+			verification: "unverified",
+			allowedTiers: ["pager"],
+			rationale:
+				"Pager-kandidater kan vedtas, men ingen kan aktiveres før en avbrytende rute og mottakeransvar er verifisert i #217.",
+			evidence: [
+				issueEvidence(
+					"navikt/team-esyfo#217",
+					"Shadow-evaluering, test og aktivering av første produksjonsvarsler.",
+				),
+			],
+		},
+		{
+			id: "channel:esyfo-alarm",
+			destination: "#esyfo-alarm",
+			stewardship: "team-esyfo",
+			disposition: "active",
+			verification: "verified",
+			allowedTiers: ["ticket"],
+			rationale:
+				"Dette er Team eSyfos verifiserte NAIS Slack-rute. Den er operativ innboks, men er ikke i seg selv dokumentasjon på pager/on-call.",
+			evidence: [
+				linkEvidence(
+					NAIS_SETTINGS_URL,
+					"NAIS-teaminnstillingen viste #esyfo-alarm som Slack-destinasjon.",
+				),
+			],
+		},
+		{
+			id: "channel:esyfo-data-alert",
+			destination: "#esyfo-data-alert",
+			stewardship: "external",
+			disposition: "external-only",
+			verification: "verified",
+			allowedTiers: [],
+			rationale:
+				"Kanalen brukes av Airflow/DAG-er i isyfo-analyse og eies av data scientists; Team eSyfo importerer ikke disse reglene eller ansvaret.",
+			evidence: [
+				linkEvidence(
+					"https://github.com/navikt/isyfo-analyse/blob/e4f532ee22db45baa75841391ec4f4909b46067a/dags/slack_alert_diff_dag.py",
+					"Pinnet Airflow-kilde viser bruk av data-alert-kanalen utenfor dette registerets scope.",
+				),
+			],
+		},
+		{
+			id: "channel:esyfo-kibana-alerts",
+			destination: "#esyfo-kibana-alerts",
+			stewardship: "unresolved",
+			disposition: "no-new-alerts",
+			verification: "unverified",
+			allowedTiers: [],
+			rationale:
+				"Ingen nåværende kode- eller plattformreferanse ble funnet. Kanalen behandles som legacy; ingen nye regler rutes dit uten ny eier- og mottakerverifikasjon.",
+			evidence: [
+				issueEvidence(
+					"navikt/team-esyfo#210",
+					"Policygjennomgangen dokumenterer uavklart legacy-kanal og no-new-alerts-beslutningen.",
+				),
+			],
+		},
+	],
+	guardrails: [
+		"Én ordinær requestfeil, én pod, rå loggrate, rå consumer-offset eller lag > 0 alene kan ikke page.",
+		"Dev-instans skal aldri rute som produksjonspager.",
+		"Manglende data eller ukjent evaluatorhelse er ukjent overvåkningstilstand, aldri grønn.",
+		"esyfovarsel får bare tidsavgrensede guardrails; ny varselflyt-observability bygges i syfo-budstikka.",
+		"Airflow/data science og teamsykefravr-eierskap er utenfor registeret; våre consumers er fortsatt vårt operative ansvar.",
+	],
+	references: [
+		{
+			label: "Google SRE Workbook · Alerting on SLOs",
+			href: "https://sre.google/workbook/alerting-on-slos/",
+		},
+		{
+			label: "Prometheus · Alerting practices",
+			href: "https://prometheus.io/docs/practices/alerting/",
+		},
+		{
+			label: "NAIS · PrometheusRule reference",
+			href: "https://docs.nais.io/observability/alerting/reference/prometheusrule/index.html",
+		},
+		{
+			label: "Grafana · No data and error states",
+			href: "https://grafana.com/docs/grafana/latest/alerting/fundamentals/alert-rule-evaluation/nodata-and-error-states/",
+		},
+		{
+			label: "Apache Kafka · Monitoring",
+			href: "https://kafka.apache.org/42/operations/monitoring/",
+		},
+	],
+};
 
 type RuleSeed = Omit<
 	AlertRule,
-	"engine" | "ownerTeam" | "notification" | "policyReview" | "monitoredRefs"
+	"engine" | "ownerTeam" | "notification" | "monitoredRefs"
 > & { monitoredRefs?: AlertRule["monitoredRefs"] };
 
 const prometheusRule = (seed: RuleSeed): AlertRule => {
@@ -268,7 +566,6 @@ const prometheusRule = (seed: RuleSeed): AlertRule => {
 		engine: "prometheus-rule",
 		ownerTeam: "team-esyfo",
 		notification: naisNotification,
-		policyReview,
 		...rest,
 		monitoredRefs,
 	};
@@ -280,7 +577,6 @@ const grafanaRule = (seed: RuleSeed): AlertRule => {
 		engine: "grafana-managed",
 		ownerTeam: "team-esyfo",
 		notification: grafanaNotification,
-		policyReview,
 		...rest,
 		monitoredRefs,
 	};
@@ -321,6 +617,15 @@ export const alertRules: AlertRule[] = [
 		semantic: "consumer-lag",
 		semanticFamily: "legacy-lag-greater-than-zero",
 		lifecycle: permanent,
+		policy: replacePolicy(
+			teamOwner("navikt/aktivitetskrav-backend", "app:aktivitetskrav-backend"),
+			"Lag > 0 skiller ikke normal købygging fra fastlåst behandling; vår consumer skal måles på fremdrift, alder og terminale utfall.",
+			ticket(),
+			"navikt/aktivitetskrav-backend#248",
+			plannedReplacement("navikt/aktivitetskrav-backend#248", [
+				"app:aktivitetskrav-backend",
+			]),
+		),
 		targetRefs: ["app:aktivitetskrav-backend"],
 		externalTargets: ["teamsykefravr.aktivitetskrav-varsel"],
 		journeyRefs: ["journey:activity-requirement"],
@@ -345,6 +650,15 @@ export const alertRules: AlertRule[] = [
 		semantic: "consumer-lag",
 		semanticFamily: "legacy-lag-greater-than-zero",
 		lifecycle: permanent,
+		policy: replacePolicy(
+			teamOwner("navikt/aktivitetskrav-backend", "app:aktivitetskrav-backend"),
+			"Vurderingsconsumeren trenger typekorrekt fremdrift; én record i lag er ikke en produksjonsfeil.",
+			ticket(),
+			"navikt/aktivitetskrav-backend#248",
+			plannedReplacement("navikt/aktivitetskrav-backend#248", [
+				"app:aktivitetskrav-backend",
+			]),
+		),
 		targetRefs: ["app:aktivitetskrav-backend"],
 		externalTargets: ["teamsykefravr.aktivitetskrav-vurdering"],
 		journeyRefs: ["journey:activity-requirement"],
@@ -369,6 +683,16 @@ export const alertRules: AlertRule[] = [
 		semantic: "availability",
 		semanticFamily: "legacy-zero-available-replicas",
 		lifecycle: notificationMigration,
+		policy: migratePolicy(
+			teamOwner("navikt/esyfovarsel", "app:esyfovarsel"),
+			"All-replicas-down beholdes som en tidsavgrenset ticket-guardrail under migreringen. Eventuell pager bygges på Budstikkas ende-til-ende-signal, ikke legacy-appens podtilstand.",
+			ticket(),
+			"navikt/esyfovarsel#1094",
+			plannedReplacement("navikt/syfo-budstikka#260", [
+				"app:syfo-budstikka",
+				"topic:budstikka.v1",
+			]),
+		),
 		targetRefs: ["app:esyfovarsel", "topic:varselbus"],
 		monitoredRefs: ["app:esyfovarsel"],
 		externalTargets: [],
@@ -393,6 +717,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "log-error-ratio",
 		semanticFamily: "legacy-log-ratio",
 		lifecycle: notificationMigration,
+		policy: retireReadyPolicy(
+			teamOwner("navikt/esyfovarsel", "app:esyfovarsel"),
+			"Rå Warning/Error-andel er nyttig diagnostikk, men er ikke et stabilt eller konsekvensbasert operativt signal.",
+			dashboardOnly(),
+			"navikt/esyfovarsel#1094",
+			"Ingen operativ evne forsvinner når den generiske loggrate-regelen fjernes; logger beholdes som drilldown.",
+			[prometheusAlertingPractice],
+		),
 		targetRefs: ["app:esyfovarsel"],
 		externalTargets: [],
 		journeyRefs: ["journey:notifications"],
@@ -414,6 +746,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "job-failure",
 		semanticFamily: "scheduled-job-terminal-failure",
 		lifecycle: notificationMigration,
+		policy: retireBlockedPolicy(
+			teamOwner("navikt/esyfovarsel", "job:esyfovarsel-job"),
+			"Jobbfeil følges som ticket mens legacy-jobben finnes; regelen forsvinner sammen med prosessoren etter Budstikka-paritet.",
+			ticket(),
+			"navikt/esyfovarsel#1094",
+			"navikt/team-esyfo#218",
+			"Legacy-jobben må være avviklet og varselflyten verifisert i Budstikka før regelen fjernes.",
+		),
 		targetRefs: ["job:esyfovarsel-job"],
 		externalTargets: [],
 		journeyRefs: ["journey:notifications"],
@@ -436,6 +776,17 @@ export const alertRules: AlertRule[] = [
 		semantic: "consumer-lag",
 		semanticFamily: "legacy-lag-greater-than-zero",
 		lifecycle: orphanedLpsAlert,
+		policy: retireReadyPolicy(
+			teamOwner(
+				"navikt/lps-oppfolgingsplan-mottak",
+				"app:lps-oppfolgingsplan-mottak",
+			),
+			"Consumeren og kildefilen er allerede fjernet; den live regelen er foreldreløs restkonfigurasjon.",
+			dashboardOnly(),
+			"navikt/lps-oppfolgingsplan-mottak#637",
+			"Målt consumer-kapasitet finnes ikke lenger, så regelen har ingen gyldig runtime å beskytte.",
+			[lpsRemovalEvidence],
+		),
 		targetRefs: ["app:lps-oppfolgingsplan-mottak"],
 		externalTargets: ["alf.aapen-altinn-oppfolgingsplan-mottatt-v2"],
 		journeyRefs: ["journey:follow-up-plan"],
@@ -459,6 +810,11 @@ export const alertRules: AlertRule[] = [
 		semantic: "definition-conflict",
 		semanticFamily: "domain-terminal-outcome",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner("navikt/lumi", "app:lumi-api"),
+			"Definisjonskonflikt er et eksplisitt domeneterminalt utfall med kjent konsekvens, handling og runbook.",
+			ticket(),
+		),
 		targetRefs: ["app:lumi-api"],
 		externalTargets: [],
 		journeyRefs: ["journey:operational-insight"],
@@ -485,6 +841,11 @@ export const alertRules: AlertRule[] = [
 		semantic: "submission-failure",
 		semanticFamily: "domain-terminal-outcome",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner("navikt/lumi", "app:lumi-api"),
+			"Autentisert innsending som ikke lagres er et konkret terminalt utfall og skal følges opp som ticket.",
+			ticket(),
+		),
 		targetRefs: ["app:lumi-api"],
 		externalTargets: [],
 		journeyRefs: ["journey:operational-insight"],
@@ -509,6 +870,11 @@ export const alertRules: AlertRule[] = [
 		semantic: "submission-rejection",
 		semanticFamily: "domain-ratio-with-volume-guard",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner("navikt/lumi", "app:lumi-api"),
+			"Regelen kombinerer forholdstall med minimumsvolum og måler et definert domeneutfall fremfor én requestfeil.",
+			ticket(),
+		),
 		targetRefs: ["app:lumi-api"],
 		externalTargets: [],
 		journeyRefs: ["journey:operational-insight"],
@@ -533,6 +899,11 @@ export const alertRules: AlertRule[] = [
 		semantic: "retention-failure",
 		semanticFamily: "scheduled-process-terminal-failure",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner("navikt/lumi", "app:lumi-api"),
+			"Mislykket retention-kjøring har konkret personvern-/lagringskonsekvens og en dokumentert oppfølging.",
+			ticket(),
+		),
 		targetRefs: ["app:lumi-api"],
 		externalTargets: [],
 		journeyRefs: ["journey:operational-insight"],
@@ -558,6 +929,11 @@ export const alertRules: AlertRule[] = [
 		semantic: "retention-freshness",
 		semanticFamily: "scheduled-process-freshness",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner("navikt/lumi", "app:lumi-api"),
+			"Freshness og manglende serie håndteres eksplisitt; signalet dekker uteblitt suksess, ikke intern feilrate.",
+			ticket(),
+		),
 		targetRefs: ["app:lumi-api"],
 		externalTargets: [],
 		journeyRefs: ["journey:operational-insight"],
@@ -584,6 +960,12 @@ export const alertRules: AlertRule[] = [
 		semantic: "consumer-lag",
 		semanticFamily: "bounded-consumer-lag",
 		lifecycle: permanent,
+		policy: tunePolicy(
+			teamOwner("navikt/syfo-budstikka", "app:syfo-budstikka"),
+			"Varselgrensen er bedre enn lag > 0, men skal kalibreres mot forventet trafikk og ende-til-ende-ferskhet.",
+			ticket(),
+			"navikt/syfo-budstikka#260",
+		),
 		targetRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
 		monitoredRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
 		externalTargets: [],
@@ -615,6 +997,16 @@ export const alertRules: AlertRule[] = [
 		semantic: "consumer-lag",
 		semanticFamily: "bounded-consumer-lag",
 		lifecycle: permanent,
+		policy: replacePolicy(
+			teamOwner("navikt/syfo-budstikka", "app:syfo-budstikka"),
+			"Lag > 0 i én time er fortsatt køtilstand, ikke sikkert bevis på alvorlig konsekvens; pager-kandidaten skal bygge på eldste alder/ferskhet og terminale utfall.",
+			blockedPager(),
+			"navikt/syfo-budstikka#260",
+			plannedReplacement("navikt/syfo-budstikka#260", [
+				"app:syfo-budstikka",
+				"topic:budstikka.v1",
+			]),
+		),
 		targetRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
 		monitoredRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
 		externalTargets: [],
@@ -646,6 +1038,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "permanent-delivery-failure",
 		semanticFamily: "kafka-terminal-record-failure",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner(
+				"navikt/syfo-oppfolgingsplan-backend",
+				"app:syfo-oppfolgingsplan-backend",
+			),
+			"Vedvarende deserialiseringsrate betyr at flere records forkastes permanent og kan gi manglende sykmeldingsperioder.",
+			blockedPager(),
+		),
 		targetRefs: ["app:syfo-oppfolgingsplan-backend"],
 		externalTargets: ["teamsykmelding sykmeldingsperioder"],
 		journeyRefs: ["journey:follow-up-plan"],
@@ -671,6 +1071,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "runtime-errors",
 		semanticFamily: "kafka-transient-runtime-errors",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner(
+				"navikt/syfo-oppfolgingsplan-backend",
+				"app:syfo-oppfolgingsplan-backend",
+			),
+			"Vedvarende transiente consumerfeil er handlingsrettet, men backoff og retry gjør dette til ticket fremfor pager.",
+			ticket(),
+		),
 		targetRefs: ["app:syfo-oppfolgingsplan-backend"],
 		externalTargets: ["teamsykmelding sykmeldingsperioder"],
 		journeyRefs: ["journey:follow-up-plan"],
@@ -696,6 +1104,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "outbox-oldest-age",
 		semanticFamily: "outbox-progress",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner(
+				"navikt/syfo-oppfolgingsplan-backend",
+				"app:syfo-oppfolgingsplan-backend",
+			),
+			"Eldste leveringsklare arbeid over 15 minutter er et direkte freshness-/progress-signal, men én forsinket melding mangler foreløpig dokumentert tids-SLO og volum-/impactkrav for pager.",
+			ticket(),
+		),
 		targetRefs: [
 			"app:syfo-oppfolgingsplan-backend",
 			"app:syfo-budstikka",
@@ -728,6 +1144,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "outbox-expired-claims",
 		semanticFamily: "outbox-progress",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner(
+				"navikt/syfo-oppfolgingsplan-backend",
+				"app:syfo-oppfolgingsplan-backend",
+			),
+			"Utløpte claims er et konkret prosessproblem, men må vurderes sammen med alder før det kan være avbrytende.",
+			ticket(),
+		),
 		targetRefs: [
 			"app:syfo-oppfolgingsplan-backend",
 			"app:syfo-budstikka",
@@ -760,6 +1184,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "outbox-persistent-failures",
 		semanticFamily: "outbox-progress",
 		lifecycle: permanent,
+		policy: keepPolicy(
+			teamOwner(
+				"navikt/syfo-oppfolgingsplan-backend",
+				"app:syfo-oppfolgingsplan-backend",
+			),
+			"Vedvarende retry viser et konkret feilobjekt, men én fastlåst melding alene skal følges som ticket, ikke page.",
+			ticket(),
+		),
 		targetRefs: [
 			"app:syfo-oppfolgingsplan-backend",
 			"app:syfo-budstikka",
@@ -790,6 +1222,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "availability",
 		semanticFamily: "legacy-zero-available-replicas",
 		lifecycle: retiringAccess,
+		policy: retireBlockedPolicy(
+			teamOwner("navikt/syfobrukertilgang", "app:syfobrukertilgang"),
+			"All-replicas-down er en midlertidig ticket-guardrail mens den antatt siste konsumenten og eventuelle øvrige konsumenter verifiseres og flyttes; regelen pensjoneres når cutover er bevist.",
+			ticket(),
+			"navikt/syfobrukertilgang#369",
+			"navikt/syfomotebehov#755",
+			"Alle produksjonskonsumenter må bruke verifisert erstatning i esyfo-narmesteleder.",
+		),
 		targetRefs: ["app:syfobrukertilgang"],
 		externalTargets: [],
 		journeyRefs: ["journey:access-control"],
@@ -817,6 +1257,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "http-5xx-ratio",
 		semanticFamily: "legacy-nginx-http-5xx-ratio",
 		lifecycle: retiringAccess,
+		policy: retireBlockedPolicy(
+			teamOwner("navikt/syfobrukertilgang", "app:syfobrukertilgang"),
+			"5xx beholdes kun som ikke-avbrytende guardrail frem til tjenesten ikke lenger har konsumenter.",
+			ticket(),
+			"navikt/syfobrukertilgang#369",
+			"navikt/syfomotebehov#755",
+			"Tilgangscutover og observasjonsperiode må være verifisert før siste GCP-regel fjernes.",
+		),
 		targetRefs: ["app:syfobrukertilgang"],
 		externalTargets: [],
 		journeyRefs: ["journey:access-control"],
@@ -841,6 +1289,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "http-4xx-ratio",
 		semanticFamily: "legacy-nginx-http-4xx-ratio",
 		lifecycle: retiringAccess,
+		policy: retireBlockedPolicy(
+			teamOwner("navikt/syfobrukertilgang", "app:syfobrukertilgang"),
+			"Generisk 4xx-rate er diagnostikk og skal ikke varsle; endelig regelcleanup følger tjenestens cutover.",
+			dashboardOnly(),
+			"navikt/syfobrukertilgang#369",
+			"navikt/syfomotebehov#755",
+			"GCP-regelsettet fjernes samlet etter verifisert tilgangscutover.",
+		),
 		targetRefs: ["app:syfobrukertilgang"],
 		externalTargets: [],
 		journeyRefs: ["journey:access-control"],
@@ -867,6 +1323,12 @@ export const alertRules: AlertRule[] = [
 		semantic: "availability",
 		semanticFamily: "legacy-zero-available-replicas",
 		lifecycle: permanent,
+		policy: tunePolicy(
+			teamOwner("navikt/syfomotebehov", "app:syfomotebehov"),
+			"Null tilgjengelige replikaer kan være pager-kandidat, men workflow, konsekvens, runbook og avbrytende rute må verifiseres først.",
+			blockedPager(),
+			"navikt/syfomotebehov#753",
+		),
 		targetRefs: ["app:syfomotebehov"],
 		externalTargets: [],
 		journeyRefs: ["journey:meeting-needs", "journey:dialog-meeting"],
@@ -888,6 +1350,12 @@ export const alertRules: AlertRule[] = [
 		semantic: "http-5xx-ratio",
 		semanticFamily: "legacy-nginx-http-5xx-ratio",
 		lifecycle: permanent,
+		policy: tunePolicy(
+			teamOwner("navikt/syfomotebehov", "app:syfomotebehov"),
+			"5xx trenger minimumsvolum eller SLO-burn-rate; én requestfeil skal ikke gi operativ hendelse.",
+			ticket(),
+			"navikt/syfomotebehov#753",
+		),
 		targetRefs: ["app:syfomotebehov"],
 		externalTargets: [],
 		journeyRefs: ["journey:meeting-needs", "journey:dialog-meeting"],
@@ -909,6 +1377,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "http-4xx-ratio",
 		semanticFamily: "legacy-nginx-http-4xx-ratio",
 		lifecycle: permanent,
+		policy: retireReadyPolicy(
+			teamOwner("navikt/syfomotebehov", "app:syfomotebehov"),
+			"Generisk 4xx-rate blander forventede avvisninger og klientfeil uten definert teamhandling.",
+			dashboardOnly(),
+			"navikt/syfomotebehov#753",
+			"Ingen operativ evne forsvinner; 4xx beholdes som dashboard-diagnostikk og eventuelle domeneavvisninger må få egne signaler.",
+			[prometheusAlertingPractice],
+		),
 		targetRefs: ["app:syfomotebehov"],
 		externalTargets: [],
 		journeyRefs: ["journey:meeting-needs", "journey:dialog-meeting"],
@@ -932,6 +1408,13 @@ export const alertRules: AlertRule[] = [
 		semantic: "consumer-lag",
 		semanticFamily: "legacy-lag-greater-than-zero",
 		lifecycle: permanent,
+		policy: replacePolicy(
+			teamOwner("navikt/syfomotebehov", "app:syfomotebehov"),
+			"Eksternt topic-eierskap endrer ikke vårt consumeransvar, men lag > 0 må erstattes av alder/fremdrift og terminale utfall.",
+			ticket(),
+			"navikt/syfomotebehov#754",
+			plannedReplacement("navikt/syfomotebehov#754", ["app:syfomotebehov"]),
+		),
 		targetRefs: ["app:syfomotebehov"],
 		externalTargets: [
 			"teamsykefravr.isoppfolgingstilfelle-oppfolgingstilfelle-person",
@@ -957,6 +1440,16 @@ export const alertRules: AlertRule[] = [
 		semantic: "permanent-delivery-failure",
 		semanticFamily: "domain-terminal-outcome",
 		lifecycle: notificationMigration,
+		policy: migratePolicy(
+			teamOwner("navikt/syfo-dokumentporten", "app:syfo-dokumentporten"),
+			"Terminal feil er et godt domeneutfall, men én melding krever ticket; ansvaret skal migreres til Budstikkas ende-til-ende-flyt.",
+			ticket(),
+			"navikt/team-esyfo#218",
+			plannedReplacement("navikt/syfo-budstikka#260", [
+				"app:syfo-budstikka",
+				"topic:budstikka.v1",
+			]),
+		),
 		targetRefs: ["app:syfo-dokumentporten", "topic:varselbus"],
 		monitoredRefs: ["app:syfo-dokumentporten"],
 		externalTargets: [],
@@ -983,6 +1476,17 @@ export const alertRules: AlertRule[] = [
 		semantic: "availability",
 		semanticFamily: "legacy-zero-available-replicas",
 		lifecycle: followUpPlanSunset,
+		policy: retireBlockedPolicy(
+			teamOwner(
+				"navikt/syfooppfolgingsplanservice",
+				"app:syfooppfolgingsplanservice",
+			),
+			"Availability beholdes kun som midlertidig ticket-guardrail frem til besluttet avvikling 31. august; det gjøres ingen ny pagerinvestering.",
+			ticket(),
+			"navikt/team-esyfo#208",
+			"navikt/team-esyfo#208",
+			"Runtime og avhengigheter må være verifisert borte før regelen fjernes.",
+		),
 		targetRefs: ["app:syfooppfolgingsplanservice"],
 		externalTargets: [],
 		journeyRefs: ["journey:follow-up-plan"],
@@ -1004,6 +1508,17 @@ export const alertRules: AlertRule[] = [
 		semantic: "http-5xx-ratio",
 		semanticFamily: "legacy-nginx-http-5xx-ratio",
 		lifecycle: followUpPlanSunset,
+		policy: retireBlockedPolicy(
+			teamOwner(
+				"navikt/syfooppfolgingsplanservice",
+				"app:syfooppfolgingsplanservice",
+			),
+			"5xx er en midlertidig ticket frem til avvikling; det er ikke verdt å bygge ny SLO i en runtime som stenges.",
+			ticket(),
+			"navikt/team-esyfo#208",
+			"navikt/team-esyfo#208",
+			"Runtime må være verifisert borte etter 31. august før alerten fjernes.",
+		),
 		targetRefs: ["app:syfooppfolgingsplanservice"],
 		externalTargets: [],
 		journeyRefs: ["journey:follow-up-plan"],
@@ -1025,6 +1540,17 @@ export const alertRules: AlertRule[] = [
 		semantic: "http-4xx-ratio",
 		semanticFamily: "legacy-nginx-http-4xx-ratio",
 		lifecycle: followUpPlanSunset,
+		policy: retireBlockedPolicy(
+			teamOwner(
+				"navikt/syfooppfolgingsplanservice",
+				"app:syfooppfolgingsplanservice",
+			),
+			"Generisk 4xx er kun diagnostikk frem til tjenesten avvikles; ingen ny alertinvestering gjøres.",
+			dashboardOnly(),
+			"navikt/team-esyfo#208",
+			"navikt/team-esyfo#208",
+			"Runtime må være verifisert borte etter 31. august før siste regelcleanup.",
+		),
 		targetRefs: ["app:syfooppfolgingsplanservice"],
 		externalTargets: [],
 		journeyRefs: ["journey:follow-up-plan"],
@@ -1047,6 +1573,17 @@ export const alertRules: AlertRule[] = [
 		semantic: "migration-reconciliation",
 		semanticFamily: "legacy-notification-reconciliation",
 		lifecycle: notificationMigration,
+		policy: replacePolicy(
+			teamOwner("navikt/team-esyfo", "pipeline:notifications"),
+			"Den pausede direkte differansen er prosessorspesifikk og mangler robust reduce/threshold; migreringskontroll skal være ende-til-ende og prosessornøytral.",
+			dashboardOnly(),
+			"navikt/team-esyfo#213",
+			plannedReplacement("navikt/syfo-budstikka#260", [
+				"app:meroppfolging-backend",
+				"app:syfo-budstikka",
+				"topic:budstikka.v1",
+			]),
+		),
 		targetRefs: ["app:meroppfolging-backend", "app:esyfovarsel"],
 		externalTargets: [],
 		journeyRefs: ["journey:late-follow-up", "journey:notifications"],
@@ -1073,6 +1610,14 @@ export const alertRules: AlertRule[] = [
 		semantic: "raw-consumer-offset",
 		semanticFamily: "legacy-raw-kafka-offset",
 		lifecycle: retiringKafkaOffset,
+		policy: retireBlockedPolicy(
+			teamOwner("navikt/team-esyfo", "pipeline:notifications"),
+			"Regelen måler absolutt offset og gir falsk lag-semantikk; den skal forbli pauset og fjernes når topic-kontrakten er verifisert.",
+			dashboardOnly(),
+			"navikt/team-esyfo#213",
+			"navikt/team-esyfo#212",
+			"Typekorrekt topic-ferskhet, progress og terminale utfall må være implementert og verifisert før regelen slettes.",
+		),
 		targetRefs: [...allOwnedTopics],
 		externalTargets: [],
 		journeyRefs: [],
@@ -1294,11 +1839,11 @@ const grafanaObservations: AlertObservation[] = [
 ];
 
 export const alertRegistry: AlertRegistry = {
-	schemaVersion: 1,
+	schemaVersion: 2,
 	ownerTeam: "team-esyfo",
 	capturedAt: ALERT_SNAPSHOT_AT,
-	decisionIssue: "navikt/team-esyfo#203",
-	policyIssue: "navikt/team-esyfo#210",
+	inventoryIssue: "navikt/team-esyfo#203",
+	policy: alertPolicyCatalog,
 	sources: alertSources,
 	rules: alertRules,
 	observations: [...prometheusObservations, ...grafanaObservations],

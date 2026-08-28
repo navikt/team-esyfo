@@ -1,11 +1,136 @@
 {
-  "schemaVersion": 1,
-  "artifactStatus": "superseded",
-  "supersededBy": "alert-register.v2.json",
+  "schemaVersion": 2,
   "ownerTeam": "team-esyfo",
   "capturedAt": "2026-08-28T17:45:44Z",
-  "decisionIssue": "navikt/team-esyfo#203",
-  "policyIssue": "navikt/team-esyfo#210",
+  "inventoryIssue": "navikt/team-esyfo#203",
+  "policy": {
+    "decisionIssue": "navikt/team-esyfo#210",
+    "decidedAt": "2026-08-28T19:13:53Z",
+    "appliesTo": "canonical-production-deployments",
+    "actionTiers": {
+      "pager": {
+        "description": "Avbrytende respons kun ved pågående eller nært forestående alvorlig produksjonskonsekvens som krever konkret handling nå.",
+        "requirements": [
+          "Kritisk produksjonsseverity og et signal på bruker-/domenekonsekvens, ikke bare intern årsak.",
+          "Testet runbook, diagnostisk dashboard, konsekvens og konkret handling.",
+          "Verifisert avbrytende kanal; Slack-ruting alene er ikke pager."
+        ]
+      },
+      "ticket": {
+        "description": "Ikke-avbrytende, deduplisert oppfølging med konkret eier og handling innen neste bemannede arbeidsdag.",
+        "requirements": [
+          "Signalerer et konkret problem som må rettes, men ikke krever umiddelbar avbrytelse.",
+          "Skal ha diagnostikk og en varig oppfølging dersom Slack-hendelsen ikke løses direkte."
+        ]
+      },
+      "dashboard-only": {
+        "description": "Trend, feilsøkingssignal eller ikke-handlingsrettet indikator uten operativ varslingsrute.",
+        "requirements": [
+          "Ingen forventet umiddelbar eller neste-dag-handling er forhåndsdefinert.",
+          "Brukes til diagnose, korrelasjon og kapasitets-/kvalitetstrend."
+        ]
+      }
+    },
+    "channels": [
+      {
+        "id": "channel:team-esyfo-pager",
+        "destination": "Team eSyfos avbrytende kanal (ikke etablert)",
+        "stewardship": "team-esyfo",
+        "disposition": "planned",
+        "verification": "unverified",
+        "allowedTiers": [
+          "pager"
+        ],
+        "rationale": "Pager-kandidater kan vedtas, men ingen kan aktiveres før en avbrytende rute og mottakeransvar er verifisert i #217.",
+        "evidence": [
+          {
+            "href": "https://github.com/navikt/team-esyfo/issues/217",
+            "summary": "Shadow-evaluering, test og aktivering av første produksjonsvarsler.",
+            "verifiedAt": "2026-08-28T19:13:53Z"
+          }
+        ]
+      },
+      {
+        "id": "channel:esyfo-alarm",
+        "destination": "#esyfo-alarm",
+        "stewardship": "team-esyfo",
+        "disposition": "active",
+        "verification": "verified",
+        "allowedTiers": [
+          "ticket"
+        ],
+        "rationale": "Dette er Team eSyfos verifiserte NAIS Slack-rute. Den er operativ innboks, men er ikke i seg selv dokumentasjon på pager/on-call.",
+        "evidence": [
+          {
+            "href": "https://console.nav.cloud.nais.io/team/team-esyfo/settings",
+            "summary": "NAIS-teaminnstillingen viste #esyfo-alarm som Slack-destinasjon.",
+            "verifiedAt": "2026-08-28T19:13:53Z"
+          }
+        ]
+      },
+      {
+        "id": "channel:esyfo-data-alert",
+        "destination": "#esyfo-data-alert",
+        "stewardship": "external",
+        "disposition": "external-only",
+        "verification": "verified",
+        "allowedTiers": [],
+        "rationale": "Kanalen brukes av Airflow/DAG-er i isyfo-analyse og eies av data scientists; Team eSyfo importerer ikke disse reglene eller ansvaret.",
+        "evidence": [
+          {
+            "href": "https://github.com/navikt/isyfo-analyse/blob/e4f532ee22db45baa75841391ec4f4909b46067a/dags/slack_alert_diff_dag.py",
+            "summary": "Pinnet Airflow-kilde viser bruk av data-alert-kanalen utenfor dette registerets scope.",
+            "verifiedAt": "2026-08-28T19:13:53Z"
+          }
+        ]
+      },
+      {
+        "id": "channel:esyfo-kibana-alerts",
+        "destination": "#esyfo-kibana-alerts",
+        "stewardship": "unresolved",
+        "disposition": "no-new-alerts",
+        "verification": "unverified",
+        "allowedTiers": [],
+        "rationale": "Ingen nåværende kode- eller plattformreferanse ble funnet. Kanalen behandles som legacy; ingen nye regler rutes dit uten ny eier- og mottakerverifikasjon.",
+        "evidence": [
+          {
+            "href": "https://github.com/navikt/team-esyfo/issues/210",
+            "summary": "Policygjennomgangen dokumenterer uavklart legacy-kanal og no-new-alerts-beslutningen.",
+            "verifiedAt": "2026-08-28T19:13:53Z"
+          }
+        ]
+      }
+    ],
+    "guardrails": [
+      "Én ordinær requestfeil, én pod, rå loggrate, rå consumer-offset eller lag > 0 alene kan ikke page.",
+      "Dev-instans skal aldri rute som produksjonspager.",
+      "Manglende data eller ukjent evaluatorhelse er ukjent overvåkningstilstand, aldri grønn.",
+      "esyfovarsel får bare tidsavgrensede guardrails; ny varselflyt-observability bygges i syfo-budstikka.",
+      "Airflow/data science og teamsykefravr-eierskap er utenfor registeret; våre consumers er fortsatt vårt operative ansvar."
+    ],
+    "references": [
+      {
+        "label": "Google SRE Workbook · Alerting on SLOs",
+        "href": "https://sre.google/workbook/alerting-on-slos/"
+      },
+      {
+        "label": "Prometheus · Alerting practices",
+        "href": "https://prometheus.io/docs/practices/alerting/"
+      },
+      {
+        "label": "NAIS · PrometheusRule reference",
+        "href": "https://docs.nais.io/observability/alerting/reference/prometheusrule/index.html"
+      },
+      {
+        "label": "Grafana · No data and error states",
+        "href": "https://grafana.com/docs/grafana/latest/alerting/fundamentals/alert-rule-evaluation/nodata-and-error-states/"
+      },
+      {
+        "label": "Apache Kafka · Monitoring",
+        "href": "https://kafka.apache.org/42/operations/monitoring/"
+      }
+    ]
+  },
   "sources": [
     {
       "kind": "repository",
@@ -41,7 +166,8 @@
         "commitSha": "16a44e597fdc6bfd9dc01c2ecec41b085c2dfa28",
         "occurredAt": "2026-07-02T16:31:50Z",
         "href": "https://github.com/navikt/lps-oppfolgingsplan-mottak/commit/16a44e597fdc6bfd9dc01c2ecec41b085c2dfa28",
-        "summary": "Alertfilen og Altinn-consumeren ble fjernet."
+        "summary": "Alertfilen og Altinn-consumeren ble fjernet.",
+        "cleanupIssue": "navikt/lps-oppfolgingsplan-mottak#637"
       }
     },
     {
@@ -124,7 +250,8 @@
         "commitSha": "9c9a259c7926093335a24788ed9fd82d00406d82",
         "occurredAt": "2023-05-22T11:31:42Z",
         "href": "https://github.com/navikt/syfobrukertilgang/commit/9c9a259c7926093335a24788ed9fd82d00406d82",
-        "summary": "Alert-workflowen byttet fra prod-fss til prod-gcp. Snapshotet er siste repository-tilstand før cluster-cutover, ikke bevis på en deployert SHA."
+        "summary": "Alert-workflowen byttet fra prod-fss til prod-gcp. Snapshotet er siste repository-tilstand før cluster-cutover, ikke bevis på en deployert SHA.",
+        "cleanupIssue": "navikt/syfobrukertilgang#368"
       }
     },
     {
@@ -199,10 +326,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:aktivitetskrav-varsel-consumer-lag",
       "name": "KAFKA PROSSESERING (VARSEL) I AKTIVITETSKRAV-BACKEND STOPPET!",
       "expr": "kafka_consumergroup_group_topic_sum_lag{topic=\"teamsykefravr.aktivitetskrav-varsel\", group=\"aktivitetskrav-backend-group-v2\"} > 0",
@@ -211,6 +334,32 @@
       "semanticFamily": "legacy-lag-greater-than-zero",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "REPLACE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/aktivitetskrav-backend",
+          "scopeRef": "app:aktivitetskrav-backend"
+        },
+        "rationale": "Lag > 0 skiller ikke normal købygging fra fastlåst behandling; vår consumer skal måles på fremdrift, alder og terminale utfall.",
+        "operationalResponse": {
+          "phase": "replacement",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/aktivitetskrav-backend#248",
+        "replacement": {
+          "status": "planned",
+          "issue": "navikt/aktivitetskrav-backend#248",
+          "targetRefs": [
+            "app:aktivitetskrav-backend"
+          ]
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:aktivitetskrav-backend"
@@ -260,10 +409,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:aktivitetskrav-vurdering-consumer-lag",
       "name": "KAFKA PROSSESERING (VURDERING) I AKTIVITETSKRAV-BACKEND STOPPET!",
       "expr": "kafka_consumergroup_group_topic_sum_lag{topic=\"teamsykefravr.aktivitetskrav-vurdering\", group=\"aktivitetskrav-backend-group-v2\"} > 0",
@@ -272,6 +417,32 @@
       "semanticFamily": "legacy-lag-greater-than-zero",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "REPLACE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/aktivitetskrav-backend",
+          "scopeRef": "app:aktivitetskrav-backend"
+        },
+        "rationale": "Vurderingsconsumeren trenger typekorrekt fremdrift; én record i lag er ikke en produksjonsfeil.",
+        "operationalResponse": {
+          "phase": "replacement",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/aktivitetskrav-backend#248",
+        "replacement": {
+          "status": "planned",
+          "issue": "navikt/aktivitetskrav-backend#248",
+          "targetRefs": [
+            "app:aktivitetskrav-backend"
+          ]
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:aktivitetskrav-backend"
@@ -319,10 +490,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:esyfovarsel-down",
       "name": "ESYFOVARSEL IS DOWN!",
       "expr": "kube_deployment_status_replicas_available{deployment=\"esyfovarsel\"} == 0",
@@ -337,6 +504,33 @@
           "topic:budstikka.v1"
         ],
         "issue": "navikt/team-esyfo#218"
+      },
+      "policy": {
+        "decision": "MIGRATE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/esyfovarsel",
+          "scopeRef": "app:esyfovarsel"
+        },
+        "rationale": "All-replicas-down beholdes som en tidsavgrenset ticket-guardrail under migreringen. Eventuell pager bygges på Budstikkas ende-til-ende-signal, ikke legacy-appens podtilstand.",
+        "operationalResponse": {
+          "phase": "during-migration",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/esyfovarsel#1094",
+        "replacement": {
+          "status": "planned",
+          "issue": "navikt/syfo-budstikka#260",
+          "targetRefs": [
+            "app:syfo-budstikka",
+            "topic:budstikka.v1"
+          ]
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:esyfovarsel",
@@ -385,10 +579,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:esyfovarsel-log-ratio",
       "name": "HIGH RATIO OF WARNING/ERRORS IN LOG",
       "expr": "(100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_app=\"esyfovarsel\",log_level=~\"Warning|Error\"}[3m])) / sum by (log_app, log_namespace) (rate(logd_messages_total{log_app=\"esyfovarsel\"}[3m]))) > 10",
@@ -403,6 +593,38 @@
           "topic:budstikka.v1"
         ],
         "issue": "navikt/team-esyfo#218"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/esyfovarsel",
+          "scopeRef": "app:esyfovarsel"
+        },
+        "rationale": "Rå Warning/Error-andel er nyttig diagnostikk, men er ikke et stabilt eller konsekvensbasert operativt signal.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "dashboard-only"
+          }
+        },
+        "implementationIssue": "navikt/esyfovarsel#1094",
+        "retirementGate": {
+          "status": "ready",
+          "basis": {
+            "kind": "justified-removal",
+            "reason": "Ingen operativ evne forsvinner når den generiske loggrate-regelen fjernes; logger beholdes som drilldown.",
+            "evidence": [
+              {
+                "href": "https://prometheus.io/docs/practices/alerting/",
+                "summary": "Prometheus anbefaler symptom- og handlingsorienterte alerts, med lenker til runbook og dashboard.",
+                "verifiedAt": "2026-08-28T19:13:53Z"
+              }
+            ]
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:esyfovarsel"
@@ -450,10 +672,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:esyfovarsel-job-failed",
       "name": "ESYFOVARSEL-JOB HAS FAILED",
       "expr": "kube_job_failed{job_name=~\"esyfovarsel-job.*\", namespace=\"team-esyfo\"} > 0",
@@ -468,6 +686,30 @@
           "topic:budstikka.v1"
         ],
         "issue": "navikt/team-esyfo#218"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/esyfovarsel",
+          "scopeRef": "job:esyfovarsel-job"
+        },
+        "rationale": "Jobbfeil følges som ticket mens legacy-jobben finnes; regelen forsvinner sammen med prosessoren etter Budstikka-paritet.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/esyfovarsel#1094",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/team-esyfo#218",
+          "condition": "Legacy-jobben må være avviklet og varselflyten verifisert i Budstikka før regelen fjernes."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "job:esyfovarsel-job"
@@ -514,10 +756,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:lps-altinn-consumer-lag",
       "name": "ALTINN KAFKA OPPFOLGINGSPLAN CONSUMER LAG",
       "expr": "kafka_consumergroup_group_topic_sum_lag{topic=\"alf.aapen-altinn-oppfolgingsplan-mottatt-v2\", group=\"lps-oppfolgingsplan-mottak-1\"} > 0",
@@ -527,7 +765,39 @@
       "lifecycle": {
         "state": "retiring",
         "reason": "Consumeren og alert-filen ble fjernet 2. juli 2026, men PrometheusRule-instansen finnes fortsatt i NAIS og må ryddes kontrollert.",
-        "issue": "navikt/team-esyfo#210"
+        "issue": "navikt/lps-oppfolgingsplan-mottak#637"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/lps-oppfolgingsplan-mottak",
+          "scopeRef": "app:lps-oppfolgingsplan-mottak"
+        },
+        "rationale": "Consumeren og kildefilen er allerede fjernet; den live regelen er foreldreløs restkonfigurasjon.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "dashboard-only"
+          }
+        },
+        "implementationIssue": "navikt/lps-oppfolgingsplan-mottak#637",
+        "retirementGate": {
+          "status": "ready",
+          "basis": {
+            "kind": "justified-removal",
+            "reason": "Målt consumer-kapasitet finnes ikke lenger, så regelen har ingen gyldig runtime å beskytte.",
+            "evidence": [
+              {
+                "href": "https://github.com/navikt/lps-oppfolgingsplan-mottak/commit/16a44e597fdc6bfd9dc01c2ecec41b085c2dfa28",
+                "summary": "Consumeren og alert-filen ble fjernet 2. juli 2026.",
+                "verifiedAt": "2026-08-28T19:13:53Z"
+              }
+            ]
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:lps-oppfolgingsplan-mottak"
@@ -578,10 +848,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:lumi-definition-conflict",
       "name": "LumiSurveyDefinitionConflict",
       "expr": "sum(increase(lumi_survey_definition_conflicts_total{app=\"lumi-api\"}[5m])) > 0",
@@ -589,6 +855,24 @@
       "semanticFamily": "domain-terminal-outcome",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/lumi",
+          "scopeRef": "app:lumi-api"
+        },
+        "rationale": "Definisjonskonflikt er et eksplisitt domeneterminalt utfall med kjent konsekvens, handling og runbook.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:lumi-api"
@@ -634,10 +918,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:lumi-submission-failure",
       "name": "LumiSubmissionFailure",
       "expr": "sum(increase(lumi_submissions_total{app=\"lumi-api\",outcome=\"failed\"}[5m])) > 0",
@@ -645,6 +925,24 @@
       "semanticFamily": "domain-terminal-outcome",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/lumi",
+          "scopeRef": "app:lumi-api"
+        },
+        "rationale": "Autentisert innsending som ikke lagres er et konkret terminalt utfall og skal følges opp som ticket.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:lumi-api"
@@ -690,10 +988,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:lumi-submission-rejection-spike",
       "name": "LumiSubmissionRejectionSpike",
       "expr": "sum by (channel) (increase(lumi_submissions_total{app=\"lumi-api\",outcome=\"rejected\"}[10m])) >= 5 and sum by (channel) (increase(lumi_submissions_total{app=\"lumi-api\",outcome=\"rejected\"}[10m])) / clamp_min(sum by (channel) (increase(lumi_submissions_total{app=\"lumi-api\"}[10m])), 1) > 0.1",
@@ -701,6 +995,24 @@
       "semanticFamily": "domain-ratio-with-volume-guard",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/lumi",
+          "scopeRef": "app:lumi-api"
+        },
+        "rationale": "Regelen kombinerer forholdstall med minimumsvolum og måler et definert domeneutfall fremfor én requestfeil.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:lumi-api"
@@ -746,10 +1058,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:lumi-retention-failure",
       "name": "LumiRetentionCleanupFailure",
       "expr": "sum(increase(lumi_retention_runs_total{app=\"lumi-api\",outcome=\"failed\"}[15m])) > 0",
@@ -757,6 +1065,24 @@
       "semanticFamily": "scheduled-process-terminal-failure",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/lumi",
+          "scopeRef": "app:lumi-api"
+        },
+        "rationale": "Mislykket retention-kjøring har konkret personvern-/lagringskonsekvens og en dokumentert oppfølging.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:lumi-api"
@@ -802,10 +1128,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:lumi-retention-stale",
       "name": "LumiRetentionCleanupStale",
       "expr": "max(lumi_retention_enabled{app=\"lumi-api\"}) == 1 and on() ((time() - max(max_over_time(lumi_retention_last_success_timestamp_seconds{app=\"lumi-api\"}[36h])) > 129600) or on() absent_over_time(lumi_retention_last_success_timestamp_seconds{app=\"lumi-api\"}[15m]))",
@@ -814,6 +1136,24 @@
       "semanticFamily": "scheduled-process-freshness",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/lumi",
+          "scopeRef": "app:lumi-api"
+        },
+        "rationale": "Freshness og manglende serie håndteres eksplisitt; signalet dekker uteblitt suksess, ikke intern feilrate.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:lumi-api"
@@ -859,10 +1199,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:budstikka-consumer-lag-warning",
       "name": "BudstikkaConsumerLagWarning",
       "expr": "max by (topic) (kafka_consumer_fetch_manager_records_lag_max{app=\"syfo-budstikka\", namespace=\"team-esyfo\", topic=\"team-esyfo.budstikka.v1\"}) > 100",
@@ -871,6 +1207,25 @@
       "semanticFamily": "bounded-consumer-lag",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "TUNE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-budstikka",
+          "scopeRef": "app:syfo-budstikka"
+        },
+        "rationale": "Varselgrensen er bedre enn lag > 0, men skal kalibreres mot forventet trafikk og ende-til-ende-ferskhet.",
+        "operationalResponse": {
+          "phase": "after-tuning",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/syfo-budstikka#260",
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-budstikka",
@@ -927,10 +1282,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:budstikka-consumer-lag-critical",
       "name": "BudstikkaConsumerLagCritical",
       "expr": "max by (topic) (kafka_consumer_fetch_manager_records_lag_max{app=\"syfo-budstikka\", namespace=\"team-esyfo\", topic=\"team-esyfo.budstikka.v1\"}) > 0",
@@ -939,6 +1290,38 @@
       "semanticFamily": "bounded-consumer-lag",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "REPLACE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-budstikka",
+          "scopeRef": "app:syfo-budstikka"
+        },
+        "rationale": "Lag > 0 i én time er fortsatt køtilstand, ikke sikkert bevis på alvorlig konsekvens; pager-kandidaten skal bygge på eldste alder/ferskhet og terminale utfall.",
+        "operationalResponse": {
+          "phase": "replacement",
+          "delivery": {
+            "tier": "pager",
+            "channelPolicyRef": "channel:team-esyfo-pager",
+            "activation": "blocked",
+            "blockerIssues": [
+              "navikt/team-esyfo#211",
+              "navikt/team-esyfo#217"
+            ]
+          }
+        },
+        "implementationIssue": "navikt/syfo-budstikka#260",
+        "replacement": {
+          "status": "planned",
+          "issue": "navikt/syfo-budstikka#260",
+          "targetRefs": [
+            "app:syfo-budstikka",
+            "topic:budstikka.v1"
+          ]
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-budstikka",
@@ -995,10 +1378,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplan-sykmelding-deserialization",
       "name": "SykmeldingConsumerDeserializationErrors",
       "expr": "rate(syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total{namespace=\"team-esyfo\"}[5m]) > 0.1",
@@ -1007,6 +1386,29 @@
       "semanticFamily": "kafka-terminal-record-failure",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-oppfolgingsplan-backend",
+          "scopeRef": "app:syfo-oppfolgingsplan-backend"
+        },
+        "rationale": "Vedvarende deserialiseringsrate betyr at flere records forkastes permanent og kan gi manglende sykmeldingsperioder.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "pager",
+            "channelPolicyRef": "channel:team-esyfo-pager",
+            "activation": "blocked",
+            "blockerIssues": [
+              "navikt/team-esyfo#211",
+              "navikt/team-esyfo#217"
+            ]
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-oppfolgingsplan-backend"
@@ -1060,10 +1462,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplan-sykmelding-runtime-errors",
       "name": "SykmeldingConsumerRuntimeErrors",
       "expr": "rate(syfo_oppfolgingsplan_backend_sykmelding_runtime_error_total{namespace=\"team-esyfo\"}[5m]) > 0.05",
@@ -1072,6 +1470,24 @@
       "semanticFamily": "kafka-transient-runtime-errors",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-oppfolgingsplan-backend",
+          "scopeRef": "app:syfo-oppfolgingsplan-backend"
+        },
+        "rationale": "Vedvarende transiente consumerfeil er handlingsrettet, men backoff og retry gjør dette til ticket fremfor pager.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-oppfolgingsplan-backend"
@@ -1125,10 +1541,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplan-outbox-oldest-due",
       "name": "OppfolgingsplanOutboxOldestDueTooOld",
       "expr": "syfo_oppfolgingsplan_backend_outbox_oldest_due_age_seconds{namespace=\"team-esyfo\",message_type=~\"OPPFOLGINGSPLAN_.*\"} > 900",
@@ -1137,6 +1549,24 @@
       "semanticFamily": "outbox-progress",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-oppfolgingsplan-backend",
+          "scopeRef": "app:syfo-oppfolgingsplan-backend"
+        },
+        "rationale": "Eldste leveringsklare arbeid over 15 minutter er et direkte freshness-/progress-signal, men én forsinket melding mangler foreløpig dokumentert tids-SLO og volum-/impactkrav for pager.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-oppfolgingsplan-backend",
@@ -1193,10 +1623,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplan-outbox-expired-claims",
       "name": "OppfolgingsplanOutboxExpiredClaims",
       "expr": "syfo_oppfolgingsplan_backend_outbox_expired_claims{namespace=\"team-esyfo\",message_type=~\"OPPFOLGINGSPLAN_.*\"} > 0",
@@ -1205,6 +1631,24 @@
       "semanticFamily": "outbox-progress",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-oppfolgingsplan-backend",
+          "scopeRef": "app:syfo-oppfolgingsplan-backend"
+        },
+        "rationale": "Utløpte claims er et konkret prosessproblem, men må vurderes sammen med alder før det kan være avbrytende.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-oppfolgingsplan-backend",
@@ -1261,10 +1705,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplan-outbox-persistent-failures",
       "name": "OppfolgingsplanOutboxPersistentFailures",
       "expr": "syfo_oppfolgingsplan_backend_outbox_retrying{namespace=\"team-esyfo\",message_type=~\"OPPFOLGINGSPLAN_.*\"} > 0",
@@ -1273,6 +1713,24 @@
       "semanticFamily": "outbox-progress",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "KEEP",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-oppfolgingsplan-backend",
+          "scopeRef": "app:syfo-oppfolgingsplan-backend"
+        },
+        "rationale": "Vedvarende retry viser et konkret feilobjekt, men én fastlåst melding alene skal følges som ticket, ikke page.",
+        "operationalResponse": {
+          "phase": "retained-rule",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-oppfolgingsplan-backend",
@@ -1329,10 +1787,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:brukertilgang-down",
       "name": "SYFOBRUKERTILGANG IS DOWN!",
       "expr": "kube_deployment_status_replicas_available{deployment=\"syfobrukertilgang\"} == 0",
@@ -1342,7 +1796,31 @@
       "lifecycle": {
         "state": "retiring",
         "reason": "syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
-        "issue": "navikt/team-esyfo#210"
+        "issue": "navikt/syfobrukertilgang#369"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfobrukertilgang",
+          "scopeRef": "app:syfobrukertilgang"
+        },
+        "rationale": "All-replicas-down er en midlertidig ticket-guardrail mens den antatt siste konsumenten og eventuelle øvrige konsumenter verifiseres og flyttes; regelen pensjoneres når cutover er bevist.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/syfobrukertilgang#369",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/syfomotebehov#755",
+          "condition": "Alle produksjonskonsumenter må bruke verifisert erstatning i esyfo-narmesteleder."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfobrukertilgang"
@@ -1394,10 +1872,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:brukertilgang-http-5xx",
       "name": "HIGH RATIO OF HTTP 5XX RESPONSE",
       "expr": "(100 * (sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", status=~\"^5\\d\\d\", service=\"syfobrukertilgang\"}[5m])) / sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", service=\"syfobrukertilgang\"}[5m])))) > 2",
@@ -1407,7 +1881,31 @@
       "lifecycle": {
         "state": "retiring",
         "reason": "syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
-        "issue": "navikt/team-esyfo#210"
+        "issue": "navikt/syfobrukertilgang#369"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfobrukertilgang",
+          "scopeRef": "app:syfobrukertilgang"
+        },
+        "rationale": "5xx beholdes kun som ikke-avbrytende guardrail frem til tjenesten ikke lenger har konsumenter.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/syfobrukertilgang#369",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/syfomotebehov#755",
+          "condition": "Tilgangscutover og observasjonsperiode må være verifisert før siste GCP-regel fjernes."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfobrukertilgang"
@@ -1458,10 +1956,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:brukertilgang-http-4xx",
       "name": "HIGH RATIO OF HTTP 4XX RESPONSE",
       "expr": "(100 * (sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", status=~\"^4\\d\\d\", service=\"syfobrukertilgang\"}[5m])) / sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", service=\"syfobrukertilgang\"}[5m])))) > 10",
@@ -1471,7 +1965,30 @@
       "lifecycle": {
         "state": "retiring",
         "reason": "syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
-        "issue": "navikt/team-esyfo#210"
+        "issue": "navikt/syfobrukertilgang#369"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfobrukertilgang",
+          "scopeRef": "app:syfobrukertilgang"
+        },
+        "rationale": "Generisk 4xx-rate er diagnostikk og skal ikke varsle; endelig regelcleanup følger tjenestens cutover.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "dashboard-only"
+          }
+        },
+        "implementationIssue": "navikt/syfobrukertilgang#369",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/syfomotebehov#755",
+          "condition": "GCP-regelsettet fjernes samlet etter verifisert tilgangscutover."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfobrukertilgang"
@@ -1522,10 +2039,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:motebehov-down",
       "name": "SYFOMOTEBEHOV IS DOWN!",
       "expr": "kube_deployment_status_replicas_available{deployment=\"syfomotebehov\"} == 0",
@@ -1534,6 +2047,30 @@
       "semanticFamily": "legacy-zero-available-replicas",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "TUNE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfomotebehov",
+          "scopeRef": "app:syfomotebehov"
+        },
+        "rationale": "Null tilgjengelige replikaer kan være pager-kandidat, men workflow, konsekvens, runbook og avbrytende rute må verifiseres først.",
+        "operationalResponse": {
+          "phase": "after-tuning",
+          "delivery": {
+            "tier": "pager",
+            "channelPolicyRef": "channel:team-esyfo-pager",
+            "activation": "blocked",
+            "blockerIssues": [
+              "navikt/team-esyfo#211",
+              "navikt/team-esyfo#217"
+            ]
+          }
+        },
+        "implementationIssue": "navikt/syfomotebehov#753",
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfomotebehov"
@@ -1580,10 +2117,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:motebehov-http-5xx",
       "name": "HIGH RATIO OF HTTP 5XX RESPONSE",
       "expr": "(100 * sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", status=~\"^5\\d\\d\", service=\"syfomotebehov\"}[5m])) / sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", service=\"syfomotebehov\"}[5m]))) > 2",
@@ -1592,6 +2125,25 @@
       "semanticFamily": "legacy-nginx-http-5xx-ratio",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "TUNE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfomotebehov",
+          "scopeRef": "app:syfomotebehov"
+        },
+        "rationale": "5xx trenger minimumsvolum eller SLO-burn-rate; én requestfeil skal ikke gi operativ hendelse.",
+        "operationalResponse": {
+          "phase": "after-tuning",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/syfomotebehov#753",
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfomotebehov"
@@ -1638,10 +2190,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:motebehov-http-4xx",
       "name": "HIGH RATIO OF HTTP 4XX RESPONSE",
       "expr": "(100 * sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", status=~\"^4\\d\\d\", service=\"syfomotebehov\"}[5m])) / sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", service=\"syfomotebehov\"}[5m]))) > 10",
@@ -1650,6 +2198,38 @@
       "semanticFamily": "legacy-nginx-http-4xx-ratio",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfomotebehov",
+          "scopeRef": "app:syfomotebehov"
+        },
+        "rationale": "Generisk 4xx-rate blander forventede avvisninger og klientfeil uten definert teamhandling.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "dashboard-only"
+          }
+        },
+        "implementationIssue": "navikt/syfomotebehov#753",
+        "retirementGate": {
+          "status": "ready",
+          "basis": {
+            "kind": "justified-removal",
+            "reason": "Ingen operativ evne forsvinner; 4xx beholdes som dashboard-diagnostikk og eventuelle domeneavvisninger må få egne signaler.",
+            "evidence": [
+              {
+                "href": "https://prometheus.io/docs/practices/alerting/",
+                "summary": "Prometheus anbefaler symptom- og handlingsorienterte alerts, med lenker til runbook og dashboard.",
+                "verifiedAt": "2026-08-28T19:13:53Z"
+              }
+            ]
+          }
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfomotebehov"
@@ -1696,10 +2276,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:motebehov-oppfolgingstilfelle-lag",
       "name": "KAFKA ISOPPFOLGINGSTILFELLE-TOPIC CONSUMER LAG",
       "expr": "kafka_consumergroup_group_topic_sum_lag{topic=\"teamsykefravr.isoppfolgingstilfelle-oppfolgingstilfelle-person\", group=\"syfomotebehov-p-isoppfolgingstilfelle\"} > 0",
@@ -1708,6 +2284,32 @@
       "semanticFamily": "legacy-lag-greater-than-zero",
       "lifecycle": {
         "state": "permanent"
+      },
+      "policy": {
+        "decision": "REPLACE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfomotebehov",
+          "scopeRef": "app:syfomotebehov"
+        },
+        "rationale": "Eksternt topic-eierskap endrer ikke vårt consumeransvar, men lag > 0 må erstattes av alder/fremdrift og terminale utfall.",
+        "operationalResponse": {
+          "phase": "replacement",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/syfomotebehov#754",
+        "replacement": {
+          "status": "planned",
+          "issue": "navikt/syfomotebehov#754",
+          "targetRefs": [
+            "app:syfomotebehov"
+          ]
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfomotebehov"
@@ -1756,10 +2358,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:dokumentporten-terminal-varsel-error",
       "name": "syfo-dokumentporten-varselinstruks-terminal-error",
       "expr": "sum(increase(syfo_dokumentporten_varsel_permanent_error_total{app=\"syfo-dokumentporten\",namespace=\"team-esyfo\"}[5m])) > 0",
@@ -1774,6 +2372,33 @@
           "topic:budstikka.v1"
         ],
         "issue": "navikt/team-esyfo#218"
+      },
+      "policy": {
+        "decision": "MIGRATE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfo-dokumentporten",
+          "scopeRef": "app:syfo-dokumentporten"
+        },
+        "rationale": "Terminal feil er et godt domeneutfall, men én melding krever ticket; ansvaret skal migreres til Budstikkas ende-til-ende-flyt.",
+        "operationalResponse": {
+          "phase": "during-migration",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/team-esyfo#218",
+        "replacement": {
+          "status": "planned",
+          "issue": "navikt/syfo-budstikka#260",
+          "targetRefs": [
+            "app:syfo-budstikka",
+            "topic:budstikka.v1"
+          ]
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfo-dokumentporten",
@@ -1824,10 +2449,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplanservice-down",
       "name": "SYFOOPPFOLGINGSPLAN IS DOWN!",
       "expr": "kube_deployment_status_replicas_available{deployment=\"syfooppfolgingsplanservice\"} == 0",
@@ -1838,6 +2459,30 @@
         "state": "sunset",
         "sunsetOn": "2026-08-31",
         "issue": "navikt/team-esyfo#208"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfooppfolgingsplanservice",
+          "scopeRef": "app:syfooppfolgingsplanservice"
+        },
+        "rationale": "Availability beholdes kun som midlertidig ticket-guardrail frem til besluttet avvikling 31. august; det gjøres ingen ny pagerinvestering.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/team-esyfo#208",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/team-esyfo#208",
+          "condition": "Runtime og avhengigheter må være verifisert borte før regelen fjernes."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfooppfolgingsplanservice"
@@ -1882,10 +2527,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplanservice-http-5xx",
       "name": "HIGH RATIO OF HTTP 5XX RESPONSE",
       "expr": "(100 * sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", status=~\"^5\\d\\d\", service=\"syfooppfolgingsplanservice\"}[5m])) / sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", service=\"syfooppfolgingsplanservice\"}[5m]))) > 2",
@@ -1896,6 +2537,30 @@
         "state": "sunset",
         "sunsetOn": "2026-08-31",
         "issue": "navikt/team-esyfo#208"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfooppfolgingsplanservice",
+          "scopeRef": "app:syfooppfolgingsplanservice"
+        },
+        "rationale": "5xx er en midlertidig ticket frem til avvikling; det er ikke verdt å bygge ny SLO i en runtime som stenges.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "ticket",
+            "channelPolicyRef": "channel:esyfo-alarm"
+          }
+        },
+        "implementationIssue": "navikt/team-esyfo#208",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/team-esyfo#208",
+          "condition": "Runtime må være verifisert borte etter 31. august før alerten fjernes."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfooppfolgingsplanservice"
@@ -1940,10 +2605,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:oppfolgingsplanservice-http-4xx",
       "name": "HIGH RATIO OF HTTP 4XX RESPONSE",
       "expr": "(100 * sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", status=~\"^4\\d\\d\", service=\"syfooppfolgingsplanservice\"}[5m])) / sum by (backend) (rate(nginx_ingress_controller_requests{namespace=\"team-esyfo\", service=\"syfooppfolgingsplanservice\"}[5m]))) > 10",
@@ -1954,6 +2615,29 @@
         "state": "sunset",
         "sunsetOn": "2026-08-31",
         "issue": "navikt/team-esyfo#208"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/syfooppfolgingsplanservice",
+          "scopeRef": "app:syfooppfolgingsplanservice"
+        },
+        "rationale": "Generisk 4xx er kun diagnostikk frem til tjenesten avvikles; ingen ny alertinvestering gjøres.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "dashboard-only"
+          }
+        },
+        "implementationIssue": "navikt/team-esyfo#208",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/team-esyfo#208",
+          "condition": "Runtime må være verifisert borte etter 31. august før siste regelcleanup."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:syfooppfolgingsplanservice"
@@ -2003,10 +2687,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://grafana.nav.cloud.nais.io/alerting/notifications?alertmanager=grafana"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:grafana-varsel-avvik",
       "name": "Alert for avvik i utsendte varsler",
       "expr": "sum by (meroppfolging_backend_sen_oppfolging_varsler_to_be_sent_total) (rate(meroppfolging_backend_sen_oppfolging_varsler_to_be_sent_total{app=\"meroppfolging-backend\"}[7d])) - sum by (esyfovarsel_mer_veiledning_notice_sent_total) (rate(esyfovarsel_mer_veiledning_notice_sent_total{app=\"esyfovarsel\"}[7d]))",
@@ -2022,6 +2702,33 @@
           "topic:budstikka.v1"
         ],
         "issue": "navikt/team-esyfo#218"
+      },
+      "policy": {
+        "decision": "REPLACE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/team-esyfo",
+          "scopeRef": "pipeline:notifications"
+        },
+        "rationale": "Den pausede direkte differansen er prosessorspesifikk og mangler robust reduce/threshold; migreringskontroll skal være ende-til-ende og prosessornøytral.",
+        "operationalResponse": {
+          "phase": "replacement",
+          "delivery": {
+            "tier": "dashboard-only"
+          }
+        },
+        "implementationIssue": "navikt/team-esyfo#213",
+        "replacement": {
+          "status": "planned",
+          "issue": "navikt/syfo-budstikka#260",
+          "targetRefs": [
+            "app:meroppfolging-backend",
+            "app:syfo-budstikka",
+            "topic:budstikka.v1"
+          ]
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "app:meroppfolging-backend",
@@ -2076,10 +2783,6 @@
         "verifiedAt": "2026-08-28T17:45:44Z",
         "evidenceHref": "https://grafana.nav.cloud.nais.io/alerting/notifications?alertmanager=grafana"
       },
-      "policyReview": {
-        "status": "unreviewed",
-        "issue": "navikt/team-esyfo#210"
-      },
       "id": "rule:grafana-kafka-offset",
       "name": "Esyfo Kafka consumer lag more than 15 min",
       "expr": "kafka_consumer_group_offset{topic=~\"team-esyfo.*\"} > 100",
@@ -2091,6 +2794,29 @@
         "state": "retiring",
         "reason": "Den pausede regelen måler absolutt consumer-offset, ikke lag, og skal erstattes av typekorrekt topic-kontrakt.",
         "issue": "navikt/team-esyfo#212"
+      },
+      "policy": {
+        "decision": "RETIRE",
+        "owner": {
+          "kind": "team",
+          "team": "team-esyfo",
+          "repository": "navikt/team-esyfo",
+          "scopeRef": "pipeline:notifications"
+        },
+        "rationale": "Regelen måler absolutt offset og gir falsk lag-semantikk; den skal forbli pauset og fjernes når topic-kontrakten er verifisert.",
+        "operationalResponse": {
+          "phase": "until-retired",
+          "delivery": {
+            "tier": "dashboard-only"
+          }
+        },
+        "implementationIssue": "navikt/team-esyfo#213",
+        "retirementGate": {
+          "status": "blocked",
+          "issue": "navikt/team-esyfo#212",
+          "condition": "Typekorrekt topic-ferskhet, progress og terminale utfall må være implementert og verifisert før regelen slettes."
+        },
+        "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
         "topic:aapen-syfo-oppfolgingsplan-lps-nav-v2",

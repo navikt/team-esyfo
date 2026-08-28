@@ -1,3 +1,7 @@
+---
+aside: false
+---
+
 # Alert-register
 
 Alert-registeret er Team eSyfos sporbare oversikt over observerte alertinstanser og nåværende eller historisk kildegrunnlag. Det svarer på fire ulike spørsmål uten å blande dem sammen:
@@ -5,9 +9,31 @@ Alert-registeret er Team eSyfos sporbare oversikt over observerte alertinstanser
 1. Hvilken regel er deklarert, hvor kommer den fra, og hva forsøker den å måle?
 2. I hvilke miljøer er regelen deployert, og er den konfigurert som `enabled`, `paused` eller `disabled`?
 3. Hva viste den tidsstemplede live-observasjonen?
-4. Skal regelen beholdes, migreres eller avvikles — og mangler den runbook eller dashboard?
+4. Hvilket vedtak og hvilken operativ respons gjelder i den vedtatte fasen — og hva mangler før den faktisk er implementert?
 
 <AlertRegistry />
+
+## Vedtaket i korte trekk
+
+[Alert-policyen i #210](https://github.com/navikt/team-esyfo/issues/210) klassifiserer hver logiske regel eksplisitt som `KEEP`, `TUNE`, `REPLACE`, `RETIRE`, `MIGRATE` eller `EXTERNAL_ONLY`. Ingen regel får en implisitt standardbeslutning; de genererte tellingene står i registervisningen over.
+
+Dette er en **vedtatt operativ policy**, ikke en beskrivelse av hva dagens Slack-/Grafana-ruting allerede leverer. Responsen er eksplisitt fasebundet: for eksempel «etter tuning», «erstatningen», «under migrering» eller «frem til pensjonering». En `RETIRE`-regel med ticket betyr derfor en midlertidig guardrail, ikke at ticket er regelens endelige måltilstand. Pager-kandidatene står som blokkert. En kandidat kan først markeres klar når den har alvorlig produksjonskonsekvens, konkret umiddelbar handling, kritisk produksjonsseverity, testet runbook, relevant diagnostisk dashboard og en verifisert avbrytende kanal. `#esyfo-alarm` er verifisert som Team eSyfos NAIS-rute, men Slack-ruting alene er ikke pager/on-call.
+
+Responsklassene betyr:
+
+- **Pager:** avbrytende respons på pågående eller nært forestående alvorlig bruker-/domenekonsekvens som krever handling nå.
+- **Ticket:** deduplisert, ikke-avbrytende oppfølging med konkret eier og handling innen neste bemannede arbeidsdag.
+- **Dashboard-only:** trend eller diagnostikk uten forhåndsdefinert operativ handling og uten varslingsrute.
+
+Én ordinær requestfeil, én pod, rå loggrate, rå consumer-offset eller `lag > 0` alene kan ikke page. Dette følger prinsippene om handlingsrettede symptomsignaler og SLO-baserte varsler fra [Google SRE Workbook](https://sre.google/workbook/alerting-on-slos/) og [Prometheus alerting practices](https://prometheus.io/docs/practices/alerting/). Kafka-fremdrift skal bruke typekorrekt behandlingstid/ferskhet og terminale utfall, ikke absolutt offset; se [Apache Kafka monitoring](https://kafka.apache.org/42/operations/monitoring/).
+
+Kanalene er avklart slik:
+
+- `#esyfo-alarm` er Team eSyfos aktive operative Slack-inngang for ticket-respons. Den får ikke pager-semantikk uten separat verifisert avbrytende rute.
+- `#esyfo-data-alert` brukes av Airflow/DAG-er i `isyfo-analyse` og eies av data scientists. Reglene importeres ikke i dette registeret.
+- `#esyfo-kibana-alerts` har ingen verifisert nåværende kode-/plattformreferanse. Den er `no-new-alerts` frem til eier og mottaker eventuelt verifiseres på nytt.
+
+`RETIRE` betyr heller ikke «slett nå». Hver pensjonering har enten verifisert/begrunnet bortfall eller en eksplisitt gate. For eksempel kan `syfobrukertilgang`-reglene ikke fjernes fra GCP før [tilgangscutoveren i syfomotebehov](https://github.com/navikt/syfomotebehov/issues/755) er bevist, mens de tre foreldreløse FSS-instansene kan [ryddes separat](https://github.com/navikt/syfobrukertilgang/issues/368).
 
 ## Slik skal statusene leses
 
@@ -15,7 +41,7 @@ Registeret skiller bevisst mellom **konfigurasjon**, **evaluering** og **evaluat
 
 De to Grafana-reglene var derimot eksplisitt `paused / not-evaluated`. Kafka-regelen må ikke bare slås på: navnet omtaler consumer lag, mens uttrykket måler absolutt consumer-offset. Live preview viste 46 serier over terskelen. Den skal erstattes av en typekorrekt topic-kontrakt i [#212](https://github.com/navikt/team-esyfo/issues/212).
 
-Prometheus-reglene rutes via NAIS-teaminnstillingen til `#esyfo-alarm`. Grafana-reglene har kontaktpunktet `Slack-esyfo-alert`, men den fysiske kanalen bak webhooken er ikke synlig i regelvisningen og står derfor eksplisitt som `unresolved`. Registeret gjetter ikke. Ønsket alvorlighetsgrad, terskel, varighet, kanal og paging-policy avgjøres i [#210](https://github.com/navikt/team-esyfo/issues/210).
+Prometheus-reglene rutes i dag via NAIS-teaminnstillingen til `#esyfo-alarm`. Grafana-reglene har kontaktpunktet `Slack-esyfo-alert`, men den fysiske kanalen bak webhooken er ikke synlig i regelvisningen og står derfor eksplisitt som `unresolved`. Registeret gjetter ikke. Den vedtatte, fasebundne responsen står separat fra denne observerte rutingen, og policygap forblir synlige frem til tilhørende oppgave har live-evidens.
 
 ## Oppdatering og kontroll
 
@@ -28,7 +54,7 @@ pnpm alert-register:export
 pnpm alert-register:drift -- --observed /tmp/esyfo-alert-observations.json
 ```
 
-`alert-register:check` validerer registeret og kontrollerer at `public/alert-register.v1.json` er synkronisert. `alert-register:test` dekker tellinger, kildesporbarhet, statussemantikk og viktige gap. `alert-register:export` oppdaterer den maskinlesbare artefakten.
+`alert-register:check` validerer registeret og kontrollerer at `public/alert-register.v2.json` er synkronisert. V2 inneholder både faktisk observasjon og eksplisitt vedtatt policy. Den tidligere `public/alert-register.v1.json` beholdes som et frosset, maskinmerket `superseded` kartleggingssnapshot fra #203; den inneholder ikke vedtatt policy og er ikke gjeldende kontrakt. `alert-register:test` dekker tellinger, kildesporbarhet, statussemantikk, beslutningsmatrise, retirement-gates og pager-sikkerhet. `alert-register:export` oppdaterer den maskinlesbare v2-artefakten.
 
 `alert-register:drift` sammenligner registeret med et autentisert observation-snapshot v1. Et snapshot må inneholde regel-ID, miljø, konfigurert tilstand, evalueringstilstand, evaluatorhelse, observasjonstidspunkt og evidenslenke per instans. Manglende eller gammelt bevis blir `unknown`; det blir aldri tolket som grønt.
 
@@ -59,11 +85,11 @@ Det betyr ikke at live-reglene er deaktivert. Det betyr at en endring i kildefil
 
 Registeret følger det godkjente [runtimeinventaret](/utvikling/observability/runtimeinventar). Airflow/data science, `teamsykefravr`, `dulting-studio` og `syfojanitor-*` er eksplisitt utenfor scope. Eksterne topics kan likevel stå som avhengigheter når en eSyfo-regel måler dem.
 
-Livssyklus er en del av hver regel:
+Målets tjeneste-/capabilitylivssyklus er kontekst på hver regel. Den beskriver om runtime eller prosess er varig, migrerende eller på vei bort; selve regelens skjebne bestemmes bare av policyvedtaket:
 
-- Regler for `esyfovarsel` er tidsavgrensede guardrails under migreringen til `syfo-budstikka`. Måldato 18. desember 2026 ble godkjent i runtimebaselinen [#204](https://github.com/navikt/team-esyfo/issues/204); gjennomføringen følges i [#218](https://github.com/navikt/team-esyfo/issues/218).
+- Regler for `esyfovarsel` er tidsavgrensede guardrails under migreringen til `syfo-budstikka`. 18. desember 2026 er valgt policy-timebox i runtimebaselinen [#204](https://github.com/navikt/team-esyfo/issues/204), ikke dokumentasjon på en garantert avviklingsdato; gjennomføringen følges i [#218](https://github.com/navikt/team-esyfo/issues/218).
 - Regler for `syfobrukertilgang` beholdes mens tjenesten fases ut. Tre deployerte `prod-fss`-instanser er bekreftet restkonfigurasjon fra GCP-migreringen og skal ryddes kontrollert.
 - Regler for `syfooppfolgingsplanservice` følger tjenestens besluttede sunset 31. august 2026, se [#208](https://github.com/navikt/team-esyfo/issues/208).
 - Varige regler er kandidater for standardisering etter brukerreise, pipeline og semantisk familie — ikke bare kopiering av dagens terskler.
 
-Kanonisk kartlegging og beslutning ligger i [#203](https://github.com/navikt/team-esyfo/issues/203). Alert-policy behandles i [#210](https://github.com/navikt/team-esyfo/issues/210), dashboards og runbooks i [#211](https://github.com/navikt/team-esyfo/issues/211), og Kafka-/pipelinekontrakter i [#212](https://github.com/navikt/team-esyfo/issues/212).
+Kanonisk kartlegging ligger i [#203](https://github.com/navikt/team-esyfo/issues/203), og policyvedtaket i [#210](https://github.com/navikt/team-esyfo/issues/210). Dashboards og runbooks følges i [#211](https://github.com/navikt/team-esyfo/issues/211), Kafka-/pipelinekontrakter i [#212](https://github.com/navikt/team-esyfo/issues/212), og aktivering skal skje kontrollert gjennom [#217](https://github.com/navikt/team-esyfo/issues/217). App-spesifikke gap er koblet direkte fra hver regel i matrisen.

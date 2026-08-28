@@ -13,7 +13,7 @@ import { assertValidAlertRegistry } from "../.vitepress/alerts/validation.ts";
 
 const args = process.argv.slice(2);
 const command = args[0] ?? "check";
-const defaultArtifact = "public/alert-register.v1.json";
+const defaultArtifact = "public/alert-register.v2.json";
 
 const option = (name: string) => {
 	const index = args.indexOf(name);
