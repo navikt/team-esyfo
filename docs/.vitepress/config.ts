@@ -115,6 +115,10 @@ export default withMermaid(
 									text: "Feildrilldown",
 									link: "/utvikling/observability/feildrilldown",
 								},
+								{
+									text: "Kontrollrom",
+									link: "/utvikling/observability/kontrollrom",
+								},
 							],
 						},
 						{
