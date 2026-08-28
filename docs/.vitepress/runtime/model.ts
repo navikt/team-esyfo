@@ -10,7 +10,7 @@ export type TopicId = `topic:${string}`;
 export type BrowserSurfaceId = `browser:${string}`;
 export type JourneyId = `journey:${string}`;
 export type PipelineId = `pipeline:${string}`;
-export type IssueRef = `navikt/team-esyfo#${number}`;
+export type IssueRef = `navikt/${string}#${number}`;
 
 export type Lifecycle =
 	| { state: "active" }

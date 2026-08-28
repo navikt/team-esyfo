@@ -12,9 +12,11 @@ import type {
 	AlertRule,
 	AlertTargetId,
 } from "./model.ts";
+import { evaluateAlertPolicy } from "./policy.ts";
 
 const COMMIT_SHA = /^[0-9a-f]{40}$/i;
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T.+Z$/;
+const ISSUE_REF = /^navikt\/[A-Za-z0-9_.-]+#\d+$/;
 const PRODUCTION_ENVIRONMENTS = new Set<AlertEnvironment>([
 	"prod-gcp",
 	"prod-fss",
@@ -103,6 +105,15 @@ export const buildAlertRegistryReport = (
 	const grafanaObservations = registry.observations.filter(
 		({ ruleId }) => ruleById.get(ruleId)?.engine === "grafana-managed",
 	);
+	const policyReport = evaluateAlertPolicy(registry);
+	errors.push(...policyReport.errors);
+	warnings.push(...policyReport.warnings);
+
+	if (registry.schemaVersion !== 2) {
+		errors.push(
+			`Forventet alert-register schema v2, fant ${registry.schemaVersion}.`,
+		);
+	}
 
 	for (const duplicate of duplicateValues(
 		registry.sources.map(({ id }) => id),
@@ -138,7 +149,8 @@ export const buildAlertRegistryReport = (
 				(!COMMIT_SHA.test(source.transition.commitSha) ||
 					!source.transition.href.includes(source.transition.commitSha) ||
 					!ISO_DATE_TIME.test(source.transition.occurredAt) ||
-					!source.transition.summary.trim())
+					!source.transition.summary.trim() ||
+					!ISSUE_REF.test(source.transition.cleanupIssue))
 			) {
 				errors.push(`${source.id} mangler gyldig historisk overgangsevidens.`);
 			}
@@ -217,15 +229,23 @@ export const buildAlertRegistryReport = (
 		}
 		if (
 			rule.engine === "prometheus-rule" &&
-			rule.notification.kind !== "nais-team-slack"
+			rule.notification.kind !== "nais-team-slack" &&
+			rule.notification.kind !== "verified-pager"
 		) {
-			errors.push(`${rule.id} mangler NAIS-ruting.`);
+			errors.push(`${rule.id} mangler verifisert teamruting.`);
 		}
 		if (
 			rule.engine === "grafana-managed" &&
 			rule.notification.kind !== "grafana-contact-point"
 		) {
 			errors.push(`${rule.id} mangler Grafana-kontaktpunkt.`);
+		}
+		if (
+			rule.notification.kind === "verified-pager" &&
+			(!ISO_DATE_TIME.test(rule.notification.verifiedAt) ||
+				!rule.notification.evidenceHref.startsWith("https://"))
+		) {
+			errors.push(`${rule.id} har pager-rute uten gyldig live-evidens.`);
 		}
 		if (
 			rule.lifecycle.state === "migrating" &&
@@ -543,6 +563,16 @@ export const buildAlertRegistryReport = (
 			`${unclassifiedSeverityDeployments.length} Grafana-instanser mangler klassifisert alvorlighet.`,
 		);
 	}
+	if (policyReport.pagerCandidatesBlocked.length > 0) {
+		warnings.push(
+			`${policyReport.pagerCandidatesBlocked.length} pager-kandidater er vedtatt, men ingen av dem skal aktiveres før sperrene er lukket.`,
+		);
+	}
+	if (policyReport.implementationGaps.length > 0) {
+		warnings.push(
+			`${policyReport.implementationGaps.length} policygap skiller vedtatt operativ fase fra live implementasjon.`,
+		);
+	}
 
 	return {
 		errors,
@@ -580,6 +610,12 @@ export const buildAlertRegistryReport = (
 		unclassifiedSeverityDeployments,
 		missingRunbooks,
 		missingDashboards,
+		policy: {
+			decisionCounts: policyReport.decisionCounts,
+			tierCounts: policyReport.tierCounts,
+			pagerCandidatesBlocked: policyReport.pagerCandidatesBlocked,
+			implementationGaps: policyReport.implementationGaps,
+		},
 	};
 };
 

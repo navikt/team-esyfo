@@ -14,6 +14,26 @@ export type AlertEnvironment = "dev-gcp" | "prod-gcp" | "prod-fss";
 export type AlertEngine = "prometheus-rule" | "grafana-managed";
 export type AlertTargetId = ResourceId | TopicId;
 export type AlertSeverity = "critical" | "warning" | "info" | "unclassified";
+export type AlertPolicyDecisionKind =
+	| "KEEP"
+	| "TUNE"
+	| "REPLACE"
+	| "RETIRE"
+	| "MIGRATE"
+	| "EXTERNAL_ONLY";
+export type AlertResponseTier = "pager" | "ticket" | "dashboard-only";
+export type AlertOperationalPhase =
+	| "retained-rule"
+	| "after-tuning"
+	| "replacement"
+	| "during-migration"
+	| "until-retired"
+	| "external";
+export type AlertChannelPolicyId =
+	| "channel:team-esyfo-pager"
+	| "channel:esyfo-alarm"
+	| "channel:esyfo-data-alert"
+	| "channel:esyfo-kibana-alerts";
 export type AlertSemantic =
 	| "availability"
 	| "consumer-lag"
@@ -93,6 +113,7 @@ export type AlertSource =
 				occurredAt: IsoDateTime;
 				href: string;
 				summary: string;
+				cleanupIssue: IssueRef;
 			};
 	  }
 	| {
@@ -129,7 +150,199 @@ export type AlertNotificationRoute =
 			};
 			verifiedAt: IsoDateTime;
 			evidenceHref: string;
+	  }
+	| {
+			kind: "verified-pager";
+			channelPolicyRef: "channel:team-esyfo-pager";
+			verifiedAt: IsoDateTime;
+			evidenceHref: string;
 	  };
+
+export interface AlertPolicyEvidence {
+	href: string;
+	summary: string;
+	verifiedAt: IsoDateTime;
+}
+
+export type AlertPolicyOwner =
+	| {
+			kind: "team";
+			team: "team-esyfo";
+			repository: Repository;
+			scopeRef: AlertTargetId | PipelineId;
+	  }
+	| {
+			kind: "external";
+			name: string;
+			evidence: AlertPolicyEvidence;
+	  };
+
+export type AlertDesiredDelivery =
+	| { tier: "dashboard-only" }
+	| {
+			tier: "ticket";
+			channelPolicyRef: AlertChannelPolicyId;
+	  }
+	| (
+			| {
+					tier: "pager";
+					channelPolicyRef: AlertChannelPolicyId;
+					activation: "blocked";
+					blockerIssues: [IssueRef, ...IssueRef[]];
+			  }
+			| {
+					tier: "pager";
+					channelPolicyRef: AlertChannelPolicyId;
+					activation: "ready";
+					activationEvidence: [
+						AlertPolicyEvidence,
+						...AlertPolicyEvidence[],
+					];
+					devIsolationEvidence?: AlertPolicyEvidence;
+			  }
+	  );
+
+export interface AlertOperationalResponse<
+	Phase extends AlertOperationalPhase = AlertOperationalPhase,
+> {
+	phase: Phase;
+	delivery: AlertDesiredDelivery;
+}
+
+export type AlertReplacement =
+	| {
+			status: "planned";
+			issue: IssueRef;
+			targetRefs: [AlertTargetId, ...AlertTargetId[]];
+	  }
+	| {
+			status: "verified";
+			targetRefs: [AlertTargetId, ...AlertTargetId[]];
+			ruleRefs?: [`rule:${string}`, ...`rule:${string}`[]];
+			evidence: [AlertPolicyEvidence, ...AlertPolicyEvidence[]];
+	  };
+
+export type AlertRetirementGate =
+	| {
+			status: "blocked";
+			condition: string;
+			issue: IssueRef;
+	  }
+	| {
+			status: "ready";
+			basis:
+				| {
+						kind: "verified-replacement";
+						replacement: Extract<AlertReplacement, { status: "verified" }>;
+				  }
+				| {
+						kind: "justified-removal";
+						reason: string;
+						evidence: [AlertPolicyEvidence, ...AlertPolicyEvidence[]];
+				  };
+	  };
+
+interface AlertPolicyDecisionBase {
+	owner: AlertPolicyOwner;
+	rationale: string;
+	decidedAt: IsoDateTime;
+}
+
+export type AlertPolicyDecision =
+	| (AlertPolicyDecisionBase & {
+			decision: "KEEP";
+			operationalResponse: AlertOperationalResponse<"retained-rule">;
+	  })
+	| (AlertPolicyDecisionBase & {
+			decision: "TUNE";
+			operationalResponse: AlertOperationalResponse<"after-tuning">;
+			implementationIssue: IssueRef;
+	  })
+	| (AlertPolicyDecisionBase & {
+			decision: "REPLACE";
+			operationalResponse: AlertOperationalResponse<"replacement">;
+			implementationIssue: IssueRef;
+			replacement: AlertReplacement;
+	  })
+	| (AlertPolicyDecisionBase & {
+			decision: "MIGRATE";
+			operationalResponse: AlertOperationalResponse<"during-migration">;
+			implementationIssue: IssueRef;
+			replacement: AlertReplacement;
+	  })
+	| (AlertPolicyDecisionBase & {
+			decision: "RETIRE";
+			operationalResponse: AlertOperationalResponse<"until-retired">;
+			implementationIssue: IssueRef;
+			retirementGate: AlertRetirementGate;
+	  })
+	| (Omit<AlertPolicyDecisionBase, "owner"> & {
+			decision: "EXTERNAL_ONLY";
+			owner: Extract<AlertPolicyOwner, { kind: "external" }>;
+			operationalResponse: {
+				phase: "external";
+				delivery: { tier: "dashboard-only" };
+			};
+			handoffEvidence: AlertPolicyEvidence;
+	  });
+
+interface AlertChannelPolicyBase {
+	destination: string;
+	rationale: string;
+	evidence: AlertPolicyEvidence[];
+}
+
+export type AlertChannelPolicy = AlertChannelPolicyBase &
+	(
+		| {
+				id: "channel:team-esyfo-pager";
+				stewardship: "team-esyfo";
+				disposition: "planned";
+				verification: "unverified";
+				allowedTiers: ["pager"];
+		  }
+		| {
+				id: "channel:team-esyfo-pager";
+				stewardship: "team-esyfo";
+				disposition: "active";
+				verification: "verified";
+				allowedTiers: ["pager"];
+		  }
+		| {
+				id: "channel:esyfo-alarm";
+				stewardship: "team-esyfo";
+				disposition: "active";
+				verification: "verified";
+				allowedTiers: ["ticket"];
+		  }
+		| {
+				id: "channel:esyfo-data-alert";
+				stewardship: "external";
+				disposition: "external-only";
+				verification: "verified";
+				allowedTiers: [];
+		  }
+		| {
+				id: "channel:esyfo-kibana-alerts";
+				stewardship: "unresolved";
+				disposition: "no-new-alerts";
+				verification: "unverified";
+				allowedTiers: [];
+		  }
+	);
+
+export interface AlertPolicyCatalog {
+	decisionIssue: "navikt/team-esyfo#210";
+	decidedAt: IsoDateTime;
+	appliesTo: "canonical-production-deployments";
+	actionTiers: Record<
+		AlertResponseTier,
+		{ description: string; requirements: string[] }
+	>;
+	channels: AlertChannelPolicy[];
+	guardrails: string[];
+	references: Array<{ label: string; href: string }>;
+}
 
 export interface AlertRule {
 	id: `rule:${string}`;
@@ -156,10 +369,7 @@ export interface AlertRule {
 		consequence?: string;
 		action?: string;
 	};
-	policyReview: {
-		status: "unreviewed";
-		issue: "navikt/team-esyfo#210";
-	};
+	policy: AlertPolicyDecision;
 	riskNotes: string[];
 }
 
@@ -218,11 +428,11 @@ export interface AlertDriftReport {
 }
 
 export interface AlertRegistry {
-	schemaVersion: 1;
+	schemaVersion: 2;
 	ownerTeam: "team-esyfo";
 	capturedAt: IsoDateTime;
-	decisionIssue: "navikt/team-esyfo#203";
-	policyIssue: "navikt/team-esyfo#210";
+	inventoryIssue: "navikt/team-esyfo#203";
+	policy: AlertPolicyCatalog;
 	sources: AlertSource[];
 	rules: AlertRule[];
 	observations: AlertObservation[];
@@ -283,4 +493,24 @@ export interface AlertRegistryReport {
 	}>;
 	missingRunbooks: AlertRule["id"][];
 	missingDashboards: AlertRule["id"][];
+	policy: {
+		decisionCounts: Record<AlertPolicyDecisionKind, number>;
+		tierCounts: Record<AlertResponseTier, number>;
+		pagerCandidatesBlocked: Array<{
+			ruleId: AlertRule["id"];
+			reasons: string[];
+			issues: IssueRef[];
+		}>;
+		implementationGaps: Array<{
+			ruleId: AlertRule["id"];
+			kind:
+				| "pending-change"
+				| "retirement-blocked"
+				| "pager-not-ready"
+				| "current-route-mismatch"
+				| "dev-production-routing-unverified";
+			message: string;
+			issue?: IssueRef;
+		}>;
+	};
 }

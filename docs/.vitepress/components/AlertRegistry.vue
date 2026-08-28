@@ -2,6 +2,8 @@
 import type {
 	AlertEnvironment,
 	AlertLifecycle,
+	AlertPolicyDecisionKind,
+	AlertResponseTier,
 	AlertRule,
 	AlertSource,
 } from "../alerts/model.ts";
@@ -39,24 +41,25 @@ const environments = [
 const lifecycleSections = [
 	{
 		state: "permanent",
-		label: "Varig",
-		description: "Regler som skal inngå i den langsiktige alert-policyen.",
+		label: "Varig mål",
+		description:
+			"Målt runtime eller topic har ingen kjent sluttdato; enkeltregler kan likevel endres eller pensjoneres.",
 	},
 	{
 		state: "migrating",
-		label: "Migrerer",
-		description: "Midlertidige guardrails mens varsling flyttes til Budstikka.",
+		label: "Mål migrerer",
+		description: "Runtime-/prosessansvar flyttes til Budstikka.",
 	},
 	{
 		state: "retiring",
-		label: "Fases ut",
+		label: "Mål fases ut",
 		description:
-			"Regler med en eksplisitt oppryddingsavhengighet før de fjernes.",
+			"Målt runtime eller capability har en eksplisitt utfasingsavhengighet.",
 	},
 	{
 		state: "sunset",
-		label: "Avvikles",
-		description: "Skal fjernes når syfooppfolgingsplanservice er borte.",
+		label: "Mål avvikles",
+		description: "Målt tjeneste skal fjernes på besluttet dato.",
 	},
 ] as const;
 
@@ -66,6 +69,92 @@ const lifecycleGroups = lifecycleSections.map((section) => ({
 		({ lifecycle }) => lifecycle.state === section.state,
 	),
 }));
+
+const policyDecisionSections = [
+	{
+		id: "KEEP",
+		label: "Behold",
+		description: "Signalet og formålet er riktig; live-regelen beholdes.",
+	},
+	{
+		id: "TUNE",
+		label: "Juster",
+		description:
+			"Formålet beholdes, men terskel, metadata eller levering må forbedres.",
+	},
+	{
+		id: "REPLACE",
+		label: "Erstatt",
+		description: "Dagens signal er feil type og erstattes før det fjernes.",
+	},
+	{
+		id: "RETIRE",
+		label: "Pensjoner",
+		description:
+			"Regelen skal bort, men bare gjennom dokumentert retirement-gate.",
+	},
+	{
+		id: "MIGRATE",
+		label: "Migrer",
+		description: "Signalansvaret flyttes til ny runtime eller prosess.",
+	},
+	{
+		id: "EXTERNAL_ONLY",
+		label: "Ekstern",
+		description:
+			"Eksternt eid signal som ikke rutes eller forvaltes av Team eSyfo.",
+	},
+] as const satisfies ReadonlyArray<{
+	id: AlertPolicyDecisionKind;
+	label: string;
+	description: string;
+}>;
+
+const responseTierOrder = [
+	"pager",
+	"ticket",
+	"dashboard-only",
+] as const satisfies ReadonlyArray<AlertResponseTier>;
+const responseTierLabels: Record<AlertResponseTier, string> = {
+	pager: "Pager-kandidat",
+	ticket: "Ticket",
+	"dashboard-only": "Kun dashboard",
+};
+const responseTierCards = responseTierOrder.map((tier) => ({
+	tier,
+	label: responseTierLabels[tier],
+	count: report.policy.tierCounts[tier],
+	...alertRegistry.policy.actionTiers[tier],
+}));
+const pagerReadyCount =
+	report.policy.tierCounts.pager - report.policy.pagerCandidatesBlocked.length;
+const pagerBlockedByRule = new Map(
+	report.policy.pagerCandidatesBlocked.map((candidate) => [
+		candidate.ruleId,
+		candidate.reasons,
+	]),
+);
+const policyGapRuleCount = new Set(
+	report.policy.implementationGaps.map(({ ruleId }) => ruleId),
+).size;
+const policyFollowUpIssues = new Set(
+	report.policy.implementationGaps
+		.map(({ issue }) => issue)
+		.filter((issue): issue is NonNullable<typeof issue> => Boolean(issue)),
+).size;
+const policyGapIssuesByRule = new Map(
+	alertRegistry.rules.map((rule) => [
+		rule.id,
+		[
+			...new Set(
+				report.policy.implementationGaps
+					.filter(({ ruleId }) => ruleId === rule.id)
+					.map(({ issue }) => issue)
+					.filter((issue): issue is NonNullable<typeof issue> => Boolean(issue)),
+			),
+		].sort((left, right) => left.localeCompare(right)),
+	]),
+);
 
 const kafkaOffsetRule = alertRegistry.rules.find(
 	({ id }) => id === "rule:grafana-kafka-offset",
@@ -115,7 +204,7 @@ const engineLabel = (engine: AlertRule["engine"]) =>
 const lifecycleLabel = (lifecycle: AlertLifecycle) => {
 	switch (lifecycle.state) {
 		case "permanent":
-			return "Varig";
+			return "Varig mål";
 		case "migrating":
 			return `Migrerer innen ${lifecycle.targetDate}`;
 		case "retiring":
@@ -128,7 +217,7 @@ const lifecycleLabel = (lifecycle: AlertLifecycle) => {
 const lifecycleDetail = (lifecycle: AlertLifecycle) => {
 	switch (lifecycle.state) {
 		case "permanent":
-			return "Ingen planlagt sluttdato.";
+			return "Målt runtime har ingen kjent sluttdato.";
 		case "migrating":
 			return `Mål: ${lifecycle.targetRefs.map(shortId).join(", ")}.`;
 		case "retiring":
@@ -192,10 +281,83 @@ const deploymentStateClass = (
 	return "is-unknown";
 };
 
-const routeLabel = (rule: AlertRule) =>
-	rule.notification.kind === "nais-team-slack"
-		? rule.notification.channel
-		: `${rule.notification.contactPoint} · fysisk kanal uavklart`;
+const routeLabel = (rule: AlertRule) => {
+	switch (rule.notification.kind) {
+		case "nais-team-slack":
+			return rule.notification.channel;
+		case "grafana-contact-point":
+			return `${rule.notification.contactPoint} · fysisk kanal uavklart`;
+		case "verified-pager":
+			return "Verifisert Team eSyfo-pager";
+	}
+};
+
+const operationalChannel = (rule: AlertRule) => {
+	const delivery = rule.policy.operationalResponse.delivery;
+	if (delivery.tier === "dashboard-only") return undefined;
+	return alertRegistry.policy.channels.find(
+		({ id }) => id === delivery.channelPolicyRef,
+	);
+};
+
+const operationalPhaseLabels = {
+	"retained-rule": "Beholdt regel",
+	"after-tuning": "Etter tuning",
+	replacement: "Erstatningen",
+	"during-migration": "Under migrering",
+	"until-retired": "Frem til pensjonering",
+	external: "Eksternt ansvar",
+} as const;
+
+const operationalResponseLabel = (rule: AlertRule) => {
+	const { phase, delivery } = rule.policy.operationalResponse;
+	const tier = responseTierLabels[delivery.tier];
+	const channel = operationalChannel(rule);
+	const response = channel ? `${tier} · ${channel.destination}` : tier;
+	return `${operationalPhaseLabels[phase]}: ${response}`;
+};
+
+const policyOwnerLabel = (rule: AlertRule) =>
+	rule.policy.owner.kind === "team"
+		? rule.policy.owner.repository
+		: rule.policy.owner.name;
+
+const policyFollowUp = (rule: AlertRule) =>
+	"implementationIssue" in rule.policy
+		? rule.policy.implementationIssue
+		: undefined;
+
+const policyTransitionLabel = (rule: AlertRule) => {
+	if (
+		rule.policy.decision === "REPLACE" ||
+		rule.policy.decision === "MIGRATE"
+	) {
+		return rule.policy.replacement.status === "planned"
+			? `Planlagt erstatning · ${rule.policy.replacement.issue}`
+			: "Erstatning verifisert";
+	}
+	if (rule.policy.decision === "RETIRE") {
+		return rule.policy.retirementGate.status === "blocked"
+			? `Fjerning blokkert · ${rule.policy.retirementGate.issue}`
+			: "Fjerning har dokumentert grunnlag";
+	}
+	return undefined;
+};
+
+const channelDispositionLabel = (
+	disposition: (typeof alertRegistry.policy.channels)[number]["disposition"],
+) => {
+	switch (disposition) {
+		case "active":
+			return "Aktiv";
+		case "planned":
+			return "Planlagt";
+		case "external-only":
+			return "Ekstern-only";
+		case "no-new-alerts":
+			return "Ingen nye alerts";
+	}
+};
 
 const automationFindingLabel = (
 	kind: (typeof report.deliveryAutomationGaps)[number]["kind"],
@@ -237,7 +399,7 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 			<h2>Alert-register</h2>
 			<p>
 				Én sporbar oversikt over definisjon, deployert instans, observert tilstand,
-				livssyklus og operativ oppfølging.
+				livssyklus, policyvedtak og implementeringsgap.
 			</p>
 		</div>
 		<div class="header-stamp" aria-label="Registerstatus">
@@ -318,10 +480,132 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 		</div>
 	</section>
 
+	<section class="policy-section" aria-labelledby="policy-heading">
+		<div class="section-heading">
+			<div>
+				<p class="section-number">02 / Vedtatt operativ policy</p>
+				<h2 id="policy-heading">Hva skal vekke oss – og hva skal ikke?</h2>
+			</div>
+			<a :href="issueUrl(alertRegistry.policy.decisionIssue)">Beslutning {{ alertRegistry.policy.decisionIssue }} ↗</a>
+		</div>
+
+		<div class="policy-separation">
+			<div class="meaning-mark" aria-hidden="true">≠</div>
+			<div>
+				<strong>Vedtatt policy er ikke det samme som live implementasjon.</strong>
+				<p>
+					Registeret viser begge deler. {{ policyGapRuleCount }} regler har fortsatt minst ett
+					implementeringsgap, fordelt på {{ policyFollowUpIssues }} koblede oppgaver.
+					Ingen pager-kandidat er klar før alle sperrer er lukket og produksjonsrutingen er testet.
+				</p>
+			</div>
+			<div class="policy-readiness" aria-label="Pager readiness">
+				<strong>{{ pagerReadyCount }} / {{ report.policy.tierCounts.pager }}</strong>
+				<span>pager-klare</span>
+			</div>
+		</div>
+
+		<div class="decision-grid" aria-label="Beslutninger per regel">
+			<article
+				v-for="decision in policyDecisionSections"
+				:key="decision.id"
+				class="decision-card"
+				:class="`decision-card--${decision.id.toLowerCase()}`"
+			>
+				<div>
+					<code>{{ decision.id }}</code>
+					<strong>{{ report.policy.decisionCounts[decision.id] }}</strong>
+				</div>
+				<h3>{{ decision.label }}</h3>
+				<p>{{ decision.description }}</p>
+			</article>
+		</div>
+
+		<div class="tier-grid">
+			<article
+				v-for="tier in responseTierCards"
+				:key="tier.tier"
+				class="tier-card"
+				:class="`tier-card--${tier.tier}`"
+			>
+				<div class="tier-card__heading">
+					<span>{{ tier.label }}</span>
+					<strong>{{ tier.count }}</strong>
+				</div>
+				<p>{{ tier.description }}</p>
+				<ul>
+					<li v-for="requirement in tier.requirements" :key="requirement">{{ requirement }}</li>
+				</ul>
+				<small v-if="tier.tier === 'pager'">
+					{{ report.policy.pagerCandidatesBlocked.length }} blokkert · {{ pagerReadyCount }} klar
+				</small>
+			</article>
+		</div>
+
+		<div class="policy-details-grid">
+			<details class="policy-detail" open>
+				<summary>
+					<strong>Pager-sperrer</strong>
+					<span>{{ report.policy.pagerCandidatesBlocked.length }} blokkerte</span>
+				</summary>
+				<ul class="pager-blocker-list">
+					<li v-for="candidate in report.policy.pagerCandidatesBlocked" :key="candidate.ruleId">
+						<div>
+							<strong>{{ ruleById.get(candidate.ruleId)?.name ?? shortId(candidate.ruleId) }}</strong>
+							<code>{{ shortId(candidate.ruleId) }}</code>
+						</div>
+						<p>{{ candidate.reasons.join(" · ") }}</p>
+						<div class="pager-blocker-issues">
+							<a v-for="issue in candidate.issues" :key="issue" :href="issueUrl(issue)">
+								{{ issue }} ↗
+							</a>
+						</div>
+					</li>
+				</ul>
+			</details>
+
+			<details class="policy-detail" open>
+				<summary>
+					<strong>Kanalansvar</strong>
+					<span>{{ alertRegistry.policy.channels.length }} avklart</span>
+				</summary>
+				<div class="channel-list">
+					<article v-for="channel in alertRegistry.policy.channels" :key="channel.id">
+						<div>
+							<strong>{{ channel.destination }}</strong>
+							<span :class="`channel-state channel-state--${channel.disposition}`">
+								{{ channelDispositionLabel(channel.disposition) }}
+							</span>
+						</div>
+						<p>{{ channel.rationale }}</p>
+						<small>
+							{{ channel.verification === "verified" ? "Verifisert" : "Uverifisert" }} ·
+							{{ channel.allowedTiers.length ? channel.allowedTiers.map((tier) => responseTierLabels[tier]).join(", ") : "ingen Team eSyfo-ruting" }}
+						</small>
+					</article>
+				</div>
+			</details>
+		</div>
+
+		<details class="policy-guardrails">
+			<summary>Guardrails og faglig grunnlag</summary>
+			<div>
+				<ul>
+					<li v-for="guardrail in alertRegistry.policy.guardrails" :key="guardrail">{{ guardrail }}</li>
+				</ul>
+				<p>
+					<a v-for="reference in alertRegistry.policy.references" :key="reference.href" :href="reference.href">
+						{{ reference.label }} ↗
+					</a>
+				</p>
+			</div>
+		</details>
+	</section>
+
 	<section class="risk-section" aria-labelledby="kafka-risk-heading">
 		<div class="risk-signal" aria-hidden="true">!</div>
 		<div>
-			<p class="section-number">02 / Må ikke reaktiveres blindt</p>
+			<p class="section-number">03 / Må ikke reaktiveres blindt</p>
 			<h2 id="kafka-risk-heading">Kafka-regelen måler offset, ikke lag</h2>
 			<p>
 				Den pausede Grafana-regelen heter «Esyfo Kafka consumer lag more than 15 min», men
@@ -339,7 +623,7 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	<section class="orphan-section" aria-labelledby="orphan-heading">
 		<div class="orphan-label">SOURCE DRIFT</div>
 		<div>
-			<p class="section-number">03 / Kildekodedrift og opprydding</p>
+			<p class="section-number">04 / Kildekodedrift og opprydding</p>
 			<h2 id="orphan-heading">{{ report.historicalSourceDeployments.length }} live instanser har historisk kildegrunnlag</h2>
 			<p>
 				{{ historicalSources.length }} tidligere kilde-/clustergrunnlag gjelder ikke lenger, men
@@ -368,6 +652,9 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 					<div class="risk-actions">
 						<a :href="finding.source.href">Siste gyldige fil ↗</a>
 						<a :href="finding.source.transition.href">{{ transitionLinkLabel(finding.source) }} ↗</a>
+						<a :href="issueUrl(finding.source.transition.cleanupIssue)">
+							Cleanup {{ finding.source.transition.cleanupIssue }} ↗
+						</a>
 					</div>
 				</article>
 			</div>
@@ -378,8 +665,8 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	<section aria-labelledby="lifecycle-heading">
 		<div class="section-heading">
 			<div>
-				<p class="section-number">04 / Livssyklus</p>
-				<h2 id="lifecycle-heading">Ikke invester likt i alt som finnes</h2>
+				<p class="section-number">05 / Målets livssyklus</p>
+				<h2 id="lifecycle-heading">Tjenestelivssyklus styrer investeringen – policy styrer regelen</h2>
 			</div>
 		</div>
 		<div class="lifecycle-grid">
@@ -413,7 +700,7 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	<section aria-labelledby="patterns-heading">
 		<div class="section-heading">
 			<div>
-				<p class="section-number">05 / Porteføljemønstre</p>
+				<p class="section-number">06 / Porteføljemønstre</p>
 				<h2 id="patterns-heading">Like navn skjuler ulike runtimer</h2>
 			</div>
 		</div>
@@ -465,10 +752,10 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	<section aria-labelledby="gaps-heading">
 		<div class="section-heading">
 			<div>
-				<p class="section-number">06 / Dekningsgap</p>
+				<p class="section-number">07 / Dekningsgap</p>
 				<h2 id="gaps-heading">Registrert betyr ikke komplett</h2>
 			</div>
-			<a :href="issueUrl(alertRegistry.policyIssue)">Policyarbeid {{ alertRegistry.policyIssue }} ↗</a>
+			<a :href="issueUrl(alertRegistry.policy.decisionIssue)">Policyvedtak {{ alertRegistry.policy.decisionIssue }} ↗</a>
 		</div>
 		<div class="gap-grid">
 			<details class="gap-card" open>
@@ -536,7 +823,7 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	<section aria-labelledby="sources-heading">
 		<div class="section-heading">
 			<div>
-				<p class="section-number">07 / Evidens</p>
+				<p class="section-number">08 / Evidens</p>
 				<h2 id="sources-heading">Pinnet kildegrunnlag</h2>
 			</div>
 			<span>{{ currentRepositorySources.length }} default branch · {{ historicalSources.length }} historiske · {{ alertRegistry.sources.length - repositorySources.length }} Grafana</span>
@@ -571,21 +858,26 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	<section aria-labelledby="rules-heading">
 		<div class="section-heading">
 			<div>
-				<p class="section-number">08 / Regeloversikt</p>
+				<p class="section-number">09 / Regeloversikt</p>
 				<h2 id="rules-heading">Alle deklarerte regler</h2>
 			</div>
 			<span>{{ report.counts.rules }} registrerte regler · {{ report.counts.instances }} instanser</span>
 		</div>
-		<div class="table-scroll">
+		<p id="rules-table-hint" class="table-scroll-hint">
+			Policy og dagens ruting står først. Tabellen kan rulles både vannrett og loddrett;
+			regelnavnet og kolonneoverskriftene blir stående.
+		</p>
+		<div class="table-scroll" tabindex="0" aria-describedby="rules-table-hint">
 			<table aria-labelledby="rules-heading">
 				<thead>
 					<tr>
 						<th scope="col">Regel / motor</th>
+						<th scope="col">Vedtak / operativ respons</th>
+						<th scope="col">Dagens ruting / oppfølging</th>
+						<th scope="col">Deploy / observert tilstand</th>
+						<th scope="col">Målets livssyklus</th>
 						<th scope="col">Semantikk</th>
 						<th scope="col">Berørt / direkte målt</th>
-						<th scope="col">Livssyklus</th>
-						<th scope="col">Deploy / observert tilstand</th>
-						<th scope="col">Ruting / oppfølging</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -602,29 +894,27 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 								</a>
 							</details>
 						</th>
-						<td>
-							<code>{{ rule.semantic }}</code>
-							<small>{{ rule.semanticFamily }}</small>
-						</td>
-						<td>
-							<div class="target-list">
-								<code v-for="target in rule.targetRefs" :key="target">{{ targetRole(rule, target) }}: {{ shortId(target) }}</code>
-								<span v-for="target in rule.externalTargets" :key="target">ekstern: {{ target }}</span>
-							</div>
-						</td>
-						<td>
-							<span class="lifecycle-pill" :class="`lifecycle-pill--${rule.lifecycle.state}`">
-								{{ lifecycleLabel(rule.lifecycle) }}
+						<td class="policy-cell">
+							<span class="policy-pill" :class="`policy-pill--${rule.policy.decision.toLowerCase()}`">
+								{{ rule.policy.decision }}
 							</span>
-						</td>
-						<td>
-							<div v-for="deployment in rule.deployments" :key="deployment.environment" class="deployment-line">
-								<code>{{ deployment.environment }}</code>
-								<span :class="deploymentStateClass(rule, deployment.environment)">
-									{{ deploymentState(rule, deployment.environment) }}
-								</span>
-								<small :class="`severity-${deployment.severity}`">{{ deployment.severity }}</small>
-							</div>
+							<strong>{{ operationalResponseLabel(rule) }}</strong>
+							<small>Eier: {{ policyOwnerLabel(rule) }}</small>
+							<small v-if="pagerBlockedByRule.has(rule.id)" class="policy-blocked">
+								Ikke pager-klar
+							</small>
+							<a
+								v-for="issue in policyGapIssuesByRule.get(rule.id) ?? []"
+								:key="issue"
+								:href="issueUrl(issue)"
+							>
+								{{ issue }} ↗
+							</a>
+							<details>
+								<summary>Begrunnelse</summary>
+								<p>{{ rule.policy.rationale }}</p>
+								<small v-if="policyTransitionLabel(rule)">{{ policyTransitionLabel(rule) }}</small>
+							</details>
 						</td>
 						<td>
 							<strong>{{ routeLabel(rule) }}</strong>
@@ -657,6 +947,31 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 							</a>
 							<span v-else>Dashboard: {{ linkLabel(rule.dashboard) }}</span>
 						</td>
+						<td>
+							<div v-for="deployment in rule.deployments" :key="deployment.environment" class="deployment-line">
+								<code>{{ deployment.environment }}</code>
+								<span :class="deploymentStateClass(rule, deployment.environment)">
+									{{ deploymentState(rule, deployment.environment) }}
+								</span>
+								<small :class="`severity-${deployment.severity}`">{{ deployment.severity }}</small>
+							</div>
+						</td>
+						<td>
+							<span class="lifecycle-pill" :class="`lifecycle-pill--${rule.lifecycle.state}`">
+								{{ lifecycleLabel(rule.lifecycle) }}
+							</span>
+							<small>{{ lifecycleDetail(rule.lifecycle) }}</small>
+						</td>
+						<td>
+							<code>{{ rule.semantic }}</code>
+							<small>{{ rule.semanticFamily }}</small>
+						</td>
+						<td>
+							<div class="target-list">
+								<code v-for="target in rule.targetRefs" :key="target">{{ targetRole(rule, target) }}: {{ shortId(target) }}</code>
+								<span v-for="target in rule.externalTargets" :key="target">ekstern: {{ target }}</span>
+							</div>
+						</td>
 					</tr>
 				</tbody>
 			</table>
@@ -685,7 +1000,13 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	--alert-amber: var(--vp-c-warning-1);
 	--alert-red: var(--vp-c-danger-1);
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: 42px;
+	min-width: 0;
+}
+
+.alert-register > * {
+	min-width: 0;
 }
 
 .register-header {
@@ -934,6 +1255,339 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 .environment-row > strong:last-child {
 	text-align: right;
 	font-variant-numeric: tabular-nums;
+}
+
+.policy-section {
+	display: grid;
+	gap: 16px;
+}
+
+.policy-separation {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	gap: 18px;
+	align-items: center;
+	padding: 18px;
+	border: 1px solid color-mix(in srgb, var(--alert-amber) 62%, var(--alert-line));
+	background:
+		linear-gradient(90deg, color-mix(in srgb, var(--alert-amber) 8%, transparent), transparent 70%),
+		var(--vp-c-bg);
+}
+
+.policy-separation p {
+	margin: 4px 0 0;
+	font-size: 0.82rem;
+	color: var(--alert-muted);
+}
+
+.policy-readiness {
+	display: grid;
+	justify-items: end;
+	min-width: 105px;
+}
+
+.policy-readiness strong {
+	font-size: 1.9rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--alert-red);
+}
+
+.policy-readiness span {
+	font-size: 0.7rem;
+	font-weight: 750;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.decision-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.decision-card {
+	padding: 13px;
+	border: 1px solid var(--alert-line);
+	border-top: 4px solid var(--alert-accent);
+	background: var(--alert-panel);
+}
+
+.decision-card--retire,
+.decision-card--migrate,
+.decision-card--replace {
+	border-top-color: var(--alert-amber);
+}
+
+.decision-card--external_only {
+	border-top-color: var(--alert-muted);
+}
+
+.decision-card > div {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+}
+
+.decision-card > div strong {
+	font-size: 1.75rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.decision-card h3,
+.decision-card p {
+	margin: 0;
+}
+
+.decision-card h3 {
+	font-size: 0.82rem;
+}
+
+.decision-card p {
+	margin-top: 4px;
+	font-size: 0.72rem;
+	line-height: 1.45;
+	color: var(--alert-muted);
+}
+
+.tier-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.tier-card {
+	padding: 16px;
+	border: 1px solid var(--alert-line);
+	background: var(--vp-c-bg);
+}
+
+.tier-card--pager {
+	border-left: 4px solid var(--alert-red);
+}
+
+.tier-card--ticket {
+	border-left: 4px solid var(--alert-amber);
+}
+
+.tier-card--dashboard-only {
+	border-left: 4px solid var(--alert-accent);
+}
+
+.tier-card__heading {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+}
+
+.tier-card__heading span {
+	font-weight: 750;
+}
+
+.tier-card__heading strong {
+	font-size: 2rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.tier-card p,
+.tier-card ul,
+.tier-card small {
+	font-size: 0.74rem;
+}
+
+.tier-card p {
+	min-height: 66px;
+	margin: 7px 0;
+	color: var(--alert-muted);
+}
+
+.tier-card ul {
+	padding-left: 18px;
+	margin: 10px 0;
+}
+
+.tier-card small {
+	font-weight: 700;
+	color: var(--alert-red);
+}
+
+.policy-details-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.policy-detail,
+.policy-guardrails {
+	border: 1px solid var(--alert-line);
+	background: var(--alert-panel);
+}
+
+.policy-detail > summary,
+.policy-guardrails > summary {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 13px 15px;
+	cursor: pointer;
+}
+
+.policy-detail > summary span {
+	font-size: 0.72rem;
+	color: var(--alert-muted);
+}
+
+.pager-blocker-list {
+	padding: 0 15px 10px;
+	margin: 0;
+	list-style: none;
+}
+
+.pager-blocker-list li {
+	display: grid;
+	grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr) minmax(150px, auto);
+	gap: 10px;
+	align-items: start;
+	padding: 9px 0;
+	border-top: 1px solid var(--alert-line);
+}
+
+.pager-blocker-list li > div,
+.pager-blocker-list li > p {
+	min-width: 0;
+	margin: 0;
+	font-size: 0.76rem;
+}
+
+.pager-blocker-list li > div strong,
+.pager-blocker-list li > div code {
+	display: block;
+	overflow-wrap: anywhere;
+}
+
+.pager-blocker-list li > p {
+	color: var(--alert-muted);
+}
+
+.pager-blocker-issues {
+	display: grid;
+	gap: 3px;
+}
+
+.pager-blocker-issues a {
+	font-size: 0.74rem;
+	overflow-wrap: anywhere;
+}
+
+.channel-list {
+	display: grid;
+	gap: 0;
+	padding: 0 15px 10px;
+}
+
+.channel-list article {
+	padding: 9px 0;
+	border-top: 1px solid var(--alert-line);
+}
+
+.channel-list article > div {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	align-items: start;
+}
+
+.channel-list p,
+.channel-list small {
+	display: block;
+	margin: 4px 0 0;
+	font-size: 0.76rem;
+}
+
+.channel-list p {
+	color: var(--alert-muted);
+}
+
+.channel-state {
+	flex: 0 0 auto;
+	padding: 2px 6px;
+	font-size: 0.7rem;
+	font-weight: 750;
+	background: var(--vp-c-brand-soft);
+	color: var(--alert-accent);
+}
+
+.channel-state--planned,
+.channel-state--no-new-alerts {
+	background: var(--vp-c-warning-soft);
+	color: var(--alert-amber);
+}
+
+.channel-state--external-only {
+	background: var(--alert-panel);
+	color: var(--alert-muted);
+}
+
+.policy-guardrails > div {
+	display: grid;
+	grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+	gap: 18px;
+	padding: 0 15px 15px;
+	border-top: 1px solid var(--alert-line);
+}
+
+.policy-guardrails ul {
+	padding-left: 18px;
+	font-size: 0.75rem;
+}
+
+.policy-guardrails p {
+	display: grid;
+	gap: 5px;
+	font-size: 0.72rem;
+}
+
+.policy-pill {
+	display: inline-flex;
+	padding: 3px 7px;
+	margin-bottom: 6px;
+	border-radius: 999px;
+	background: var(--vp-c-brand-soft);
+	font-size: 0.66rem;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	color: var(--alert-accent);
+}
+
+.policy-pill--replace,
+.policy-pill--retire,
+.policy-pill--migrate,
+.policy-pill--tune {
+	background: var(--vp-c-warning-soft);
+	color: var(--alert-amber);
+}
+
+.policy-cell {
+	min-width: 190px;
+}
+
+.policy-cell > strong,
+.policy-cell > small,
+.policy-cell > a {
+	display: block;
+	margin-bottom: 4px;
+}
+
+.policy-cell .policy-blocked {
+	font-weight: 750;
+	color: var(--alert-red);
+}
+
+.policy-cell details p,
+.policy-cell details small {
+	display: block;
+	margin: 6px 0 0;
+	font-size: 0.68rem;
+	color: var(--alert-muted);
 }
 
 .risk-section {
@@ -1347,15 +2001,29 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 	color: var(--alert-muted);
 }
 
+.table-scroll-hint {
+	margin: -8px 0 10px;
+	font-size: 0.8rem;
+	color: var(--alert-muted);
+}
+
 .table-scroll {
-	overflow-x: auto;
+	max-height: min(72vh, 760px);
+	overflow: auto;
+	border: 1px solid var(--alert-line);
+	overscroll-behavior: contain;
+}
+
+.table-scroll:focus-visible {
+	outline: 3px solid var(--vp-c-brand-soft);
+	outline-offset: 2px;
 }
 
 table {
 	display: table;
-	width: 100%;
+	width: max(100%, 1320px);
 	margin: 0;
-	font-size: 0.72rem;
+	font-size: 0.78rem;
 }
 
 th,
@@ -1367,6 +2035,28 @@ td {
 th:first-child,
 td:first-child {
 	min-width: 235px;
+}
+
+thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: var(--vp-c-bg);
+}
+
+thead th:first-child,
+tbody th:first-child {
+	position: sticky;
+	left: 0;
+	background: var(--vp-c-bg);
+}
+
+thead th:first-child {
+	z-index: 3;
+}
+
+tbody th:first-child {
+	z-index: 1;
 }
 
 .rule-cell > strong,
@@ -1401,7 +2091,7 @@ td details pre {
 	padding: 8px;
 	margin: 7px 0;
 	overflow: auto;
-	font-size: 0.66rem;
+	font-size: 0.72rem;
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 }
@@ -1493,8 +2183,14 @@ td details a {
 
 @media (max-width: 900px) {
 	.state-grid,
-	.lifecycle-grid {
+	.lifecycle-grid,
+	.decision-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.tier-grid,
+	.policy-details-grid {
+		grid-template-columns: 1fr;
 	}
 }
 
@@ -1518,6 +2214,9 @@ td details a {
 
 	.state-grid,
 	.lifecycle-grid,
+	.decision-grid,
+	.tier-grid,
+	.policy-details-grid,
 	.pattern-grid,
 	.gap-grid,
 	.gap-card--links {
@@ -1530,6 +2229,34 @@ td details a {
 
 	.state-card::before {
 		margin-bottom: 16px;
+	}
+
+	.policy-separation {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.policy-readiness {
+		grid-column: 2;
+		justify-items: start;
+	}
+
+	.policy-guardrails > div {
+		grid-template-columns: 1fr;
+	}
+
+	.pager-blocker-list li {
+		grid-template-columns: 1fr;
+	}
+
+	.table-scroll {
+		max-height: 56vh;
+	}
+
+	table th:first-child,
+	table td:first-child {
+		width: 190px;
+		min-width: 190px;
+		max-width: 190px;
 	}
 
 	.risk-section {

@@ -127,6 +127,19 @@ describe("alert-register", () => {
 			historicalKinds.get("source:brukertilgang-fss-historical"),
 			"deployment-superseded",
 		);
+		assert.deepEqual(
+			new Map(
+				repositorySources
+					.filter(
+						(source) => source.evidenceKind === "historical-source-snapshot",
+					)
+					.map((source) => [source.id, source.transition.cleanupIssue]),
+			),
+			new Map([
+				["source:lps-mottak-prod", "navikt/lps-oppfolgingsplan-mottak#637"],
+				["source:brukertilgang-fss-historical", "navikt/syfobrukertilgang#368"],
+			]),
+		);
 		for (const source of repositorySources) {
 			if (source.kind !== "repository") {
 				assert.fail(`${source.id} skulle vært en repo-kilde.`);
@@ -162,6 +175,381 @@ describe("alert-register", () => {
 			sunsetOn: "2026-08-31",
 			issue: "navikt/team-esyfo#208",
 		});
+	});
+
+	test("vedtar én policy og én produksjonsrespons for alle 31 regler", () => {
+		const report = assertValidAlertRegistry(alertRegistry);
+
+		assert.equal(alertRegistry.schemaVersion, 2);
+		assert.equal(alertRegistry.policy.decisionIssue, "navikt/team-esyfo#210");
+		assert.deepEqual(report.policy.decisionCounts, {
+			KEEP: 10,
+			TUNE: 3,
+			REPLACE: 5,
+			RETIRE: 11,
+			MIGRATE: 2,
+			EXTERNAL_ONLY: 0,
+		});
+		assert.deepEqual(report.policy.tierCounts, {
+			pager: 3,
+			ticket: 21,
+			"dashboard-only": 7,
+		});
+		assert.equal(
+			Object.values(report.policy.decisionCounts).reduce(
+				(sum, count) => sum + count,
+				0,
+			),
+			alertRegistry.rules.length,
+		);
+		assert.ok(
+			alertRegistry.rules.every(
+				({ policy }) => policy.rationale.trim() && policy.owner.kind === "team",
+			),
+		);
+	});
+
+	test("skiller fasebundet policy fra faktisk varslingsrute", () => {
+		const byId = new Map(alertRegistry.rules.map((rule) => [rule.id, rule]));
+		const pagerCandidate = byId.get("rule:motebehov-down");
+		const dashboardOnly = byId.get("rule:motebehov-http-4xx");
+
+		assert.equal(pagerCandidate?.notification.kind, "nais-team-slack");
+		assert.equal(
+			pagerCandidate?.policy.operationalResponse.delivery.tier,
+			"pager",
+		);
+		assert.equal(pagerCandidate?.policy.operationalResponse.phase, "after-tuning");
+		assert.equal(dashboardOnly?.notification.kind, "nais-team-slack");
+		assert.equal(
+			dashboardOnly?.policy.operationalResponse.delivery.tier,
+			"dashboard-only",
+		);
+		assert.equal(
+			dashboardOnly?.policy.operationalResponse.phase,
+			"until-retired",
+		);
+		assert.ok(
+			alertRegistry.policy.guardrails.some((guardrail) =>
+				guardrail.includes("lag > 0 alene kan ikke page"),
+			),
+		);
+	});
+
+	test("avklarer kanalene uten å gjøre Slack til pager eller eie Airflow", () => {
+		const channels = new Map(
+			alertRegistry.policy.channels.map((channel) => [channel.id, channel]),
+		);
+
+		assert.deepEqual(channels.get("channel:esyfo-alarm")?.allowedTiers, [
+			"ticket",
+		]);
+		assert.equal(
+			channels.get("channel:team-esyfo-pager")?.disposition,
+			"planned",
+		);
+		assert.equal(
+			channels.get("channel:esyfo-data-alert")?.disposition,
+			"external-only",
+		);
+		assert.equal(
+			channels.get("channel:esyfo-kibana-alerts")?.disposition,
+			"no-new-alerts",
+		);
+	});
+
+	test("låser kanal-ID til riktig eierskap, disposition og responsklasse", () => {
+		const registry = copyRegistry();
+		const dataChannel = registry.policy.channels.find(
+			({ id }) => id === "channel:esyfo-data-alert",
+		);
+		assert.ok(dataChannel);
+		Object.assign(dataChannel, {
+			stewardship: "team-esyfo",
+			disposition: "active",
+			allowedTiers: ["ticket"],
+		});
+
+		assert.ok(
+			buildAlertRegistryReport(registry).errors.some((error) =>
+				error.includes("bryter den låste kanal-/eierskapskontrakten"),
+			),
+		);
+
+		const activatedPager = copyRegistry();
+		const pagerChannel = activatedPager.policy.channels.find(
+			({ id }) => id === "channel:team-esyfo-pager",
+		);
+		assert.ok(pagerChannel);
+		Object.assign(pagerChannel, {
+			disposition: "active",
+			verification: "verified",
+		});
+		assert.ok(
+			!buildAlertRegistryReport(activatedPager).errors.some((error) =>
+				error.includes("bryter den låste kanal-/eierskapskontrakten"),
+			),
+		);
+	});
+
+	test("avviser feil policyfase og repository-eier", () => {
+		const wrongPhase = copyRegistry();
+		wrongPhase.rules[0].policy.operationalResponse.phase =
+			"retained-rule" as never;
+		assert.ok(
+			buildAlertRegistryReport(wrongPhase).errors.some((error) =>
+				error.includes("REPLACE har feil operativ fase"),
+			),
+		);
+
+		const wrongOwner = copyRegistry();
+		if (wrongOwner.rules[0].policy.owner.kind !== "team") {
+			assert.fail("Forventet teameier.");
+		}
+		wrongOwner.rules[0].policy.owner.repository = "navikt/definitely-not-owner";
+		assert.ok(
+			buildAlertRegistryReport(wrongOwner).errors.some((error) =>
+				error.includes("eies av navikt/aktivitetskrav-backend"),
+			),
+		);
+	});
+
+	test("presenterer ingen pager-kandidat som klar før sikkerhetskravene er oppfylt", () => {
+		const report = assertValidAlertRegistry(alertRegistry);
+
+		assert.equal(report.policy.pagerCandidatesBlocked.length, 3);
+		assert.ok(
+			report.policy.pagerCandidatesBlocked.every(({ reasons }) =>
+				reasons.includes("avbrytende kanal er ikke etablert og verifisert"),
+			),
+		);
+		assert.ok(
+			report.policy.pagerCandidatesBlocked.every(
+				({ issues }) =>
+					issues.includes("navikt/team-esyfo#211") &&
+					issues.includes("navikt/team-esyfo#217"),
+			),
+		);
+		assert.ok(
+			alertRegistry.rules
+				.filter(
+					({ policy }) => policy.operationalResponse.delivery.tier === "pager",
+				)
+				.every(
+					({ policy }) =>
+						policy.operationalResponse.delivery.tier === "pager" &&
+						policy.operationalResponse.delivery.activation === "blocked",
+				),
+		);
+	});
+
+	test("krever verifisert per-regel pagerrute og dev-isolasjon før ready", () => {
+		const prepareCandidate = () => {
+			const registry = copyRegistry();
+			const pagerChannel = registry.policy.channels.find(
+				({ id }) => id === "channel:team-esyfo-pager",
+			);
+			assert.ok(pagerChannel);
+			Object.assign(pagerChannel, {
+				disposition: "active",
+				verification: "verified",
+			});
+			const rule = registry.rules.find(
+				({ id }) => id === "rule:oppfolgingsplan-sykmelding-deserialization",
+			);
+			assert.ok(rule);
+			rule.runbook = {
+				status: "linked",
+				href: "https://github.com/navikt/team-esyfo/issues/211",
+				label: "Testet runbook",
+			};
+			rule.dashboard = {
+				status: "linked",
+				href: "https://github.com/navikt/team-esyfo/issues/211",
+				label: "Diagnostisk dashboard",
+			};
+			const evidence = {
+				href: "https://github.com/navikt/team-esyfo/issues/217",
+				summary: "Kontrollert test av pager-rute.",
+				verifiedAt: registry.policy.decidedAt,
+			} as const;
+			rule.policy.operationalResponse.delivery = {
+				tier: "pager",
+				channelPolicyRef: "channel:team-esyfo-pager",
+				activation: "ready",
+				activationEvidence: [evidence],
+			};
+			return { registry, rule, evidence };
+		};
+
+		const missingLiveProof = prepareCandidate();
+		const missingLiveProofReport = buildAlertRegistryReport(
+			missingLiveProof.registry,
+		);
+		assert.ok(
+			missingLiveProofReport.errors.some((error) =>
+				error.includes("er merket pager-klar med uløste sperrer"),
+			),
+		);
+		const blocked = missingLiveProofReport.policy.pagerCandidatesBlocked.find(
+			({ ruleId }) => ruleId === missingLiveProof.rule.id,
+		);
+		assert.ok(
+			blocked?.reasons.includes(
+				"per-regel produksjonsrute er ikke verifisert som pager",
+			),
+		);
+		assert.ok(
+			blocked?.reasons.includes(
+				"dev-isolasjon fra produksjonspager er ikke verifisert",
+			),
+		);
+
+		const fullyVerified = prepareCandidate();
+		if (
+			fullyVerified.rule.policy.operationalResponse.delivery.tier !== "pager" ||
+			fullyVerified.rule.policy.operationalResponse.delivery.activation !== "ready"
+		) {
+			assert.fail("Forventet ready pager-kandidat.");
+		}
+		fullyVerified.rule.policy.operationalResponse.delivery.devIsolationEvidence =
+			fullyVerified.evidence;
+		fullyVerified.rule.notification = {
+			kind: "verified-pager",
+			channelPolicyRef: "channel:team-esyfo-pager",
+			verifiedAt: fullyVerified.registry.policy.decidedAt,
+			evidenceHref: fullyVerified.evidence.href,
+		};
+		const verifiedReport = buildAlertRegistryReport(fullyVerified.registry);
+		assert.deepEqual(verifiedReport.errors, []);
+		assert.ok(
+			!verifiedReport.policy.pagerCandidatesBlocked.some(
+				({ ruleId }) => ruleId === fullyVerified.rule.id,
+			),
+		);
+		assert.ok(
+			!verifiedReport.policy.implementationGaps.some(
+				({ ruleId, kind }) =>
+					ruleId === fullyVerified.rule.id &&
+					(kind === "current-route-mismatch" ||
+						kind === "dev-production-routing-unverified"),
+			),
+		);
+	});
+
+	test("avviser manglende beslutning, oppfølgingsissue og erstatning", () => {
+		const missingPolicy = copyRegistry();
+		delete (missingPolicy.rules[0] as Partial<AlertRegistry["rules"][number]>)
+			.policy;
+		assert.ok(
+			buildAlertRegistryReport(missingPolicy).errors.some((error) =>
+				error.includes("mangler én eksplisitt policybeslutning"),
+			),
+		);
+
+		const missingIssue = copyRegistry();
+		delete (
+			missingIssue.rules[0].policy as unknown as {
+				implementationIssue?: string;
+			}
+		).implementationIssue;
+		assert.ok(
+			buildAlertRegistryReport(missingIssue).errors.some((error) =>
+				error.includes("mangler gyldig oppfølgingsissue"),
+			),
+		);
+
+		const missingReplacement = copyRegistry();
+		delete (
+			missingReplacement.rules[0].policy as unknown as {
+				replacement?: unknown;
+			}
+		).replacement;
+		assert.ok(
+			buildAlertRegistryReport(missingReplacement).errors.some((error) =>
+				error.includes("REPLACE mangler erstatning"),
+			),
+		);
+	});
+
+	test("avviser retirement uten verifisert erstatning eller dokumentert bortfall", () => {
+		const registry = copyRegistry();
+		const rule = registry.rules.find(
+			({ id }) => id === "rule:brukertilgang-down",
+		);
+		assert.ok(rule);
+		if (rule.policy.decision !== "RETIRE") assert.fail("Forventet RETIRE.");
+		rule.policy.retirementGate = {
+			status: "ready",
+			basis: {
+				kind: "justified-removal",
+				reason: "",
+				evidence: [],
+			},
+		} as never;
+
+		assert.ok(
+			buildAlertRegistryReport(registry).errors.some((error) =>
+				error.includes("mangler begrunnet og dokumentert retirement"),
+			),
+		);
+	});
+
+	test("avviser dashboard-kanal, ugyldig ekstern overlevering og utrygg pager", () => {
+		const dashboardWithChannel = copyRegistry();
+		dashboardWithChannel.rules[3].policy.operationalResponse.delivery = {
+			tier: "dashboard-only",
+			channelPolicyRef: "channel:esyfo-alarm",
+		} as never;
+		assert.ok(
+			buildAlertRegistryReport(dashboardWithChannel).errors.some((error) =>
+				error.includes("dashboard-only, men har operativ kanal"),
+			),
+		);
+
+		const invalidExternal = copyRegistry();
+		invalidExternal.rules[6].policy = {
+			...invalidExternal.rules[6].policy,
+			decision: "EXTERNAL_ONLY",
+			operationalResponse: {
+				phase: "external",
+				delivery: { tier: "dashboard-only" },
+			},
+			handoffEvidence: {
+				href: "",
+				summary: "",
+				verifiedAt: alertRegistry.policy.decidedAt,
+			},
+		} as never;
+		assert.ok(
+			buildAlertRegistryReport(invalidExternal).errors.some((error) =>
+				error.includes("ugyldig EXTERNAL_ONLY-overlevering"),
+			),
+		);
+
+		const unsafePager = copyRegistry();
+		const unsafeRule = unsafePager.rules[0];
+		unsafeRule.policy = {
+			decision: "KEEP",
+			owner: unsafeRule.policy.owner,
+			rationale: "Skal feilaktig page på lag.",
+			operationalResponse: {
+				phase: "retained-rule",
+				delivery: {
+					tier: "pager",
+					channelPolicyRef: "channel:team-esyfo-pager",
+					activation: "blocked",
+					blockerIssues: ["navikt/team-esyfo#211"],
+				},
+			},
+			decidedAt: alertRegistry.policy.decidedAt,
+		};
+		unsafeRule.semanticFamily = "renamed-family-must-not-bypass-safety";
+		assert.ok(
+			buildAlertRegistryReport(unsafePager).errors.some((error) =>
+				error.includes("kan ikke page på rå loggrate, lag/offset"),
+			),
+		);
 	});
 
 	test("bevarer miljøspesifikk alvorlighet for outbox-reglene", () => {
