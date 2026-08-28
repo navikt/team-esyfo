@@ -6,7 +6,10 @@ function buildAreaSidebar() {
 	return areas.map((area) => ({
 		text: `${area.emoji} ${area.name}`,
 		collapsed: true,
-		items: [{ text: "Oversikt", link: area.path }, ...(area.subpages ?? [])],
+		items: [
+			{ text: "Oversikt", link: area.path },
+			...("subpages" in area ? area.subpages : []),
+		],
 	}));
 }
 
@@ -100,6 +103,16 @@ export default withMermaid(
 					collapsed: false,
 					items: [
 						{ text: "Oversikt", link: "/utvikling/" },
+						{
+							text: "Observability",
+							collapsed: false,
+							items: [
+								{
+									text: "Runtimeinventar",
+									link: "/utvikling/observability/runtimeinventar",
+								},
+							],
+						},
 						{
 							text: "Frontend",
 							collapsed: false,

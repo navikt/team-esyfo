@@ -5,10 +5,18 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vitepress dev",
-		"build": "vitepress build",
+		"build": "pnpm typecheck && pnpm inventory:check && pnpm inventory:test && vitepress build && pnpm inventory:export",
+		"typecheck": "vue-tsc --noEmit",
+		"inventory:check": "node scripts/runtime-inventory.ts check",
+		"inventory:test": "node --test .vitepress/runtime/*.test.ts",
+		"inventory:export": "node scripts/runtime-inventory.ts export",
+		"inventory:drift": "node scripts/runtime-inventory.ts drift",
+		"inventory:coverage": "node scripts/runtime-inventory.ts coverage",
+		"inventory:observe": "node scripts/observe-nais.ts",
 		"preview": "vitepress preview"
 	},
 	"devDependencies": {
+		"@types/node": "^24.10.0",
 		"@biomejs/biome": "^2.4.14",
 		"@braintree/sanitize-url": "^7.1.2",
 		"cytoscape": "^3.33.3",
@@ -16,8 +24,11 @@
 		"dayjs": "^1.11.20",
 		"debug": "^4.4.3",
 		"mermaid": "^11.14.0",
+		"typescript": "^5.9.3",
 		"vite": "^8.0.10",
 		"vitepress": "^1.6.4",
-		"vitepress-plugin-mermaid": "^2.0.17"
+		"vitepress-plugin-mermaid": "^2.0.17",
+		"vue": "^3.5.33",
+		"vue-tsc": "^3.0.8"
 	}
 }

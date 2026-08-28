@@ -7,15 +7,15 @@ export interface Area {
 	phase: Phase;
 	description: string;
 	path: string;
-	subpages?: { text: string; link: string }[];
-	dependencies?: {
+	subpages?: readonly { text: string; link: string }[];
+	dependencies?: readonly {
 		system: string;
 		direction: "inn" | "ut" | "begge";
 		description: string;
 	}[];
 }
 
-export const areas: Area[] = [
+export const areas = [
 	{
 		id: "aktivitetskrav",
 		name: "Aktivitetskrav",
@@ -139,7 +139,7 @@ export const areas: Area[] = [
 		subpages: [
 			{ text: "Dataanalyse", link: "/omrader/oppfolgingsplan/dataanalyse" },
 			{ text: "Teknisk", link: "/omrader/oppfolgingsplan/teknisk" },
-			{ text: "Dataretting", link: "/omrader/oppfolgingsplan/dataretting" }
+			{ text: "Dataretting", link: "/omrader/oppfolgingsplan/dataretting" },
 		],
 		dependencies: [
 			{
@@ -216,7 +216,9 @@ export const areas: Area[] = [
 			},
 		],
 	},
-];
+] as const satisfies readonly Area[];
+
+export type AreaId = (typeof areas)[number]["id"];
 
 export const phaseLabels: Record<Phase, string> = {
 	early: "Tidlig fase",
