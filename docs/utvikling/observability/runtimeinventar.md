@@ -36,4 +36,6 @@ Bygget eksporterer også `runtime-inventory.v1.json`. Senere dashboardgenerering
 
 Baselinen ble godkjent 28. august 2026 i arbeidet med [sak #204](https://github.com/navikt/team-esyfo/issues/204). Statusen `approved` gjelder scope, kritikalitet og måldato 18. desember 2026 for esyfovarsel-migreringen. Faktisk APM-, runbook-, browser- og topicdekning må fortsatt bevises med fersk evidens og kan ikke arve godkjenningsstatusen.
 
+I arbeidet med [#205](https://github.com/navikt/team-esyfo/issues/205) ble 23 av de 26 nåværende runtimene funnet i NAIS APM-katalogen for `team-esyfo/prod`, og disse har nå tidsstemplet `linked`-evidens. `aktivitetskrav-frontend`, `dialogmote-microfrontend` og `lumi-dashboard` står fortsatt som `unverified`. En fungerende tjenesterute beviser ikke i seg selv komplett trace- eller metrikksdekning.
+
 Etter godkjenningen ble `syfobrukertilgang` markert `retiring` etter teamavklaring. Den beholder kritisk dekning mens den kjører. `syfomotebehov` er den bekreftede aktive konsumenten på default branch; `syfooppfolgingsplanservice` forsvinner ved sin allerede besluttede sunset. En direkte eller tilsvarende tilgangssjekk i `esyfo-narmesteleder` er foreløpig bare erstatningskandidat, og endpoint, semantisk ekvivalens og avviklingsdato må besluttes før livssyklusen kan få bindende måldato.

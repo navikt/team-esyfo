@@ -111,6 +111,10 @@ export default withMermaid(
 									text: "Runtimeinventar",
 									link: "/utvikling/observability/runtimeinventar",
 								},
+								{
+									text: "Feildrilldown",
+									link: "/utvikling/observability/feildrilldown",
+								},
 							],
 						},
 						{

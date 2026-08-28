@@ -23,6 +23,33 @@ const APM_VERIFICATION_ISSUE = "navikt/team-esyfo#211" as const;
 const BROWSER_CONTRACT_ISSUE = "navikt/team-esyfo#206" as const;
 const TOPIC_CONTRACT_ISSUE = "navikt/team-esyfo#212" as const;
 
+const APM_VERIFIED_AT = "2026-08-28T14:16:14Z" as const;
+const VERIFIED_APM_SERVICES = new Set([
+	"aktivitetskrav-backend",
+	"aktivitetskrav-microfrontend",
+	"bro-frontend",
+	"dialogmote-frontend",
+	"dinesykmeldte",
+	"dinesykmeldte-backend",
+	"esyfo-narmesteleder",
+	"esyfovarsel",
+	"flaggskipet",
+	"lps-oppfolgingsplan-mottak",
+	"lumi-api",
+	"meroppfolging-backend",
+	"meroppfolging-frontend",
+	"meroppfolging-microfrontend",
+	"narmesteleder-frontend",
+	"syfo-budstikka",
+	"syfo-dokumentporten",
+	"syfo-oppfolgingsplan-backend",
+	"syfo-oppfolgingsplan-frontend",
+	"syfobrukertilgang",
+	"syfomotebehov",
+	"syfooppdfgen",
+	"sykepengedager-informasjon",
+]);
+
 const active = { state: "active" } as const;
 
 const notificationsMigration: Lifecycle = {
@@ -38,6 +65,24 @@ const missingRunbook = (): TrackedLink => ({
 	status: "missing",
 	issue: GAP_ISSUE,
 });
+
+const runtimeApm = (runtimeName: string): RuntimeApm =>
+	VERIFIED_APM_SERVICES.has(runtimeName)
+		? {
+				status: "linked",
+				serviceNamespace: "team-esyfo",
+				serviceName: runtimeName,
+				href: `https://grafana.nav.cloud.nais.io/a/nais-apm-app/services/team-esyfo/${runtimeName}?environment=prod`,
+				verifiedAt: APM_VERIFIED_AT,
+				evidence:
+					"Tilstedeværelse og tjenesterute er verifisert i den filtrerte NAIS APM-katalogen for team-esyfo/prod i navikt/team-esyfo#205.",
+			}
+		: {
+				status: "unverified",
+				serviceNamespace: "team-esyfo",
+				serviceName: runtimeName,
+				issue: APM_VERIFICATION_ISSUE,
+			};
 
 const context = (
 	areaRefs: OperationalContext["areaRefs"],
@@ -83,14 +128,7 @@ const application = (seed: ApplicationSeed): Application => {
 		lifecycle: seed.lifecycle,
 		context: seed.context,
 		coverageProfile: seed.coverageProfile,
-		runtimeApm:
-			seed.runtimeApm ??
-			({
-				status: "unverified",
-				serviceNamespace: "team-esyfo",
-				serviceName: runtimeName,
-				issue: APM_VERIFICATION_ISSUE,
-			} satisfies RuntimeApm),
+		runtimeApm: seed.runtimeApm ?? runtimeApm(runtimeName),
 		runbook: seed.runbook ?? missingRunbook(),
 	};
 };
