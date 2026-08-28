@@ -112,6 +112,10 @@ export default withMermaid(
 									link: "/utvikling/observability/runtimeinventar",
 								},
 								{
+									text: "Alert-register",
+									link: "/utvikling/observability/alert-register",
+								},
+								{
 									text: "Feildrilldown",
 									link: "/utvikling/observability/feildrilldown",
 								},

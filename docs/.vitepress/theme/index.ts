@@ -1,6 +1,7 @@
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import { defineComponent, h } from "vue";
+import AlertRegistry from "../components/AlertRegistry.vue";
 import RuntimeInventory from "../components/RuntimeInventory.vue";
 import Timeline from "../components/Timeline.vue";
 import MermaidOverlay from "./MermaidOverlay.vue";
@@ -22,5 +23,6 @@ export default {
 	enhanceApp({ app }) {
 		app.component("Timeline", Timeline);
 		app.component("RuntimeInventory", RuntimeInventory);
+		app.component("AlertRegistry", AlertRegistry);
 	},
 } satisfies Theme;
