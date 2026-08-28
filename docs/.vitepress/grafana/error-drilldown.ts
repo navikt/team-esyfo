@@ -3,14 +3,21 @@ import {
 	runtimeInventory,
 } from "../runtime/inventory.ts";
 import type { Application } from "../runtime/model.ts";
+import {
+	dataLink,
+	GRAFANA_VERSION,
+	type GrafanaDashboardResource,
+	grafanaVariable,
+	LOKI_DATASOURCE_UID,
+	layoutItem,
+	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
+	TEMPO_DATASOURCE_UID,
+} from "./dashboard-kit.ts";
+
+export { LOKI_DATASOURCE_UID, TEMPO_DATASOURCE_UID } from "./dashboard-kit.ts";
 
 export const ERROR_DASHBOARD_UID = "team-esyfo-error-drilldown";
-export const ERROR_DASHBOARD_FOLDER_UID = "K-1b-N_4k";
-export const LOKI_DATASOURCE_UID = "PEA2100DC89AE9FE2";
-export const TEMPO_DATASOURCE_UID = "P8A28344D07741F8D";
-
-const GRAFANA_VERSION = "13.1.2";
-const grafanaVariable = (name: string) => `\${${name}}`;
+export const ERROR_DASHBOARD_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
 const APP_VARIABLE = grafanaVariable("app:regex");
 const FROM = grafanaVariable("__from");
 const TO = grafanaVariable("__to");
@@ -114,12 +121,6 @@ export const browserLogsDataLink = (service: string) =>
 
 export const traceDataLink = (traceId: string) =>
 	`/a/grafana-exploretraces-app/explore?from=${ROW_TIME}&to=${ROW_TIME}&var-ds=${TEMPO_DATASOURCE_UID}&traceId=${traceId}`;
-
-const dataLink = (title: string, url: string) => ({
-	targetBlank: true,
-	title,
-	url,
-});
 
 const runtimeRowLinks = () => [
 	dataLink("Åpne tjenesten i NAIS APM", apmDataLink(ROW_VALUE)),
@@ -448,33 +449,6 @@ const tracedErrorsPanel = () => ({
 		},
 	},
 });
-
-const layoutItem = (
-	name: string,
-	x: number,
-	y: number,
-	width: number,
-	height: number,
-) => ({
-	kind: "GridLayoutItem",
-	spec: {
-		element: { kind: "ElementReference", name },
-		height,
-		width,
-		x,
-		y,
-	},
-});
-
-export interface GrafanaDashboardResource {
-	apiVersion: string;
-	kind: "Dashboard";
-	metadata: {
-		annotations: { "grafana.app/folder": string };
-		name: string;
-	};
-	spec: Record<string, unknown>;
-}
 
 export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 	apiVersion: "dashboard.grafana.app/v2",

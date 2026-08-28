@@ -1,0 +1,2363 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "annotations": {
+      "grafana.app/folder": "K-1b-N_4k"
+    },
+    "name": "team-esyfo-control-room-v1"
+  },
+  "spec": {
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "builtIn": true,
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "query": {
+            "datasource": {
+              "name": "-- Grafana --"
+            },
+            "group": "grafana",
+            "kind": "DataQuery",
+            "spec": {},
+            "version": "v0"
+          }
+        }
+      }
+    ],
+    "cursorSync": "Off",
+    "description": "Hendelsesinngang for brukerinnvirkning og teknisk helse i Team eSyfo. Første inventardrevne tracer dekker Sen oppfølging.",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Scope, tilstandsmodell og eksplisitte dekningsgap.",
+          "id": 1,
+          "links": [],
+          "title": "Slik leses kontrollrommet",
+          "vizConfig": {
+            "group": "text",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "content": "### Sen oppfølging · første tracer i Kontrollrom v1\n\n**Brukerinnvirkning** og **teknisk helse** vurderes uavhengig. SERVER-spans med OTel-feilstatus, request-rate og latency sier hva som er påvist i synkrone kall; runtimefeil, restarts, replikaer og telemetrydekning kan samtidig vise teknisk degradering. Ingen samlet grønn status skjuler et rødt teknisk signal.\n\nScope fra runtimeinventaret: `meroppfolging-backend`, `meroppfolging-frontend`, `meroppfolging-microfrontend`, `sykepengedager-informasjon`. Manglende runbooks: `meroppfolging-backend`, `meroppfolging-frontend`, `meroppfolging-microfrontend`, `sykepengedager-informasjon` ([#211](https://github.com/navikt/team-esyfo/issues/211)). Browserpåvirkning kommer etter kontrakten i [#206](https://github.com/navikt/team-esyfo/issues/206); SLO-burn kan kobles inn etter alertkartleggingen i [#203](https://github.com/navikt/team-esyfo/issues/203) og policybeslutningen i [#210](https://github.com/navikt/team-esyfo/issues/210).",
+                "mode": "markdown"
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "sum(increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__range]))",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Requests totalt"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Antall inbound SERVER-spans i valgt tidsrom. 0 betyr observert nulltrafikk; Ukjent betyr at spørringen ikke ga telemetry.",
+          "id": 2,
+          "links": [],
+          "title": "Requests",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "blue",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "(sum(increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\"}[$__range])) or on() (sum(increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__range])) * 0)) and on() (sum(increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__range])) > 0)",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "HTTP-feil totalt"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Antall SERVER-spans med OTel STATUS_CODE_ERROR i valgt tidsrom. Null fylles bare når requestserien finnes.",
+          "id": 3,
+          "links": [],
+          "title": "HTTP-feil",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "(100 * ((sum(rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval])) or on() (sum(rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) * 0)) / sum(rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])))) and on() (sum(rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) > 0)",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "HTTP-feilrate"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Andel SERVER-spans med OTel STATUS_CODE_ERROR. Ingen trafikk gir Ukjent. Verdien er observasjon, ikke en vedtatt SLO-grense.",
+          "id": 4,
+          "links": [],
+          "title": "HTTP-feilrate",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 2,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 1
+                      },
+                      {
+                        "color": "red",
+                        "value": 5
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "(histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])))) and on() (sum(rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) > 0)",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "P95"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "P95 for inbound SERVER-spans. Histogrammer slås statistisk sammen for valgte tjenester. Ingen trafikk gir Ukjent; verdien er ikke en vedtatt SLO-grense.",
+          "id": 5,
+          "links": [],
+          "title": "P95 latency",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 5
+                      }
+                    ]
+                  },
+                  "unit": "s"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "group": "loki",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "(sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range])) or on() (sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` [$__range])) * 0)) and on() (sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` [$__range])) > 0)",
+                        "queryType": "instant"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Runtimefeil totalt"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Feillogger med positivt detected_level=error|critical|fatal i valgt tidsrom. Null forankres i observert loggaktivitet, men er nøytral fordi komplett loggdekning ikke er bevist.",
+          "id": 6,
+          "links": [],
+          "title": "Runtimefeil",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "gray",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "sum(max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"${app:regex}\"}[24h])))",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Restarts totalt"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Containerrestarts siste 24 timer, uavhengig av valgt dashboardtidsrom.",
+          "id": 7,
+          "links": [],
+          "title": "Restarts · 24t",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-8": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "min(100 * (max by (deployment) (kube_deployment_status_replicas_ready{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"${app:regex}\"}) or on(deployment) (max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"${app:regex}\"}) * 0)) / max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"${app:regex}\"}))",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Laveste replika-dekning"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Laveste andel klare/ønskede replikaer blant valgte deployments. Manglende kube-telemetry gir Ukjent.",
+          "id": 8,
+          "links": [],
+          "title": "Laveste replika-dekning",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 1,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 99.999
+                      },
+                      {
+                        "color": "green",
+                        "value": 100
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-9": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "100 * ((count(max by (service_name) (timestamp(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\"}))) or on() vector(0)) / 4)",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Telemetrydekning"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Inventarforankret andel av tracerens fire tjenester med en aktuell SERVER-spanserie. Signalet gjelder hele traceren selv når tjenestefilteret endres.",
+          "id": 9,
+          "links": [],
+          "title": "Span-dekning · tracer",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 99.999
+                      },
+                      {
+                        "color": "green",
+                        "value": 100
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-18": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "100 * ((count(max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"^(meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|sykepengedager-informasjon)$\"})) or on() vector(0)) / 4)",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Kube-dekning"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Inventarforankret andel av tracerens fire forventede deployments med kube deployment-telemetry. Signalet gjelder hele traceren.",
+          "id": 18,
+          "links": [],
+          "title": "Kube-dekning · tracer",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 99.999
+                      },
+                      {
+                        "color": "green",
+                        "value": 100
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": true,
+                        "expr": "sum by (service_name) (rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
+                        "instant": false,
+                        "interval": "",
+                        "legendFormat": "{{service_name}}",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Rate per tjeneste"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Inbound SERVER-spans per sekund. Klikk en serie for APM, avgrensede logger eller Feildrilldown.",
+          "id": 10,
+          "links": [],
+          "title": "Request-rate per tjeneste",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne tjenesten i NAIS APM",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne avgrenset loggsøk",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne Feildrilldown",
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__field.labels.service_name}"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  "unit": "reqps"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-11": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": true,
+                        "expr": "(100 * ((sum by (service_name) (rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval])) or on(service_name) (sum by (service_name) (rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) * 0)) / sum by (service_name) (rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])))) and on(service_name) (sum by (service_name) (rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) > 0)",
+                        "instant": false,
+                        "interval": "",
+                        "legendFormat": "{{service_name}}",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Feilrate per tjeneste"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "0 % vises bare når tjenesten har request-telemetry. No data kan være nulltrafikk eller manglende telemetry og må leses sammen med rate og ferskhet.",
+          "id": 11,
+          "links": [],
+          "title": "HTTP-feilrate per tjeneste",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne tjenesten i NAIS APM",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne avgrenset loggsøk",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne Feildrilldown",
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__field.labels.service_name}"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 1
+                      },
+                      {
+                        "color": "red",
+                        "value": 5
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-12": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": true,
+                        "expr": "(histogram_quantile(0.95, sum by (service_name, le) (rate(traces_spanmetrics_latency_bucket{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])))) and on(service_name) (sum by (service_name) (rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) > 0)",
+                        "instant": false,
+                        "interval": "",
+                        "legendFormat": "{{service_name}}",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "P95 per tjeneste"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "P95 response time for inbound SERVER-spans per tjeneste.",
+          "id": 12,
+          "links": [],
+          "title": "P95 per tjeneste",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne tjenesten i NAIS APM",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne avgrenset loggsøk",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Åpne Feildrilldown",
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__field.labels.service_name}"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 5
+                      }
+                    ]
+                  },
+                  "unit": "s"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-13": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "group": "loki",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "(sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range])) or on(service_name) (sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` [$__range])) * 0)) and on(service_name) (sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` [$__range])) > 0)",
+                        "queryType": "instant"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Runtimefeil"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "group": "merge",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "group": "organize",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "includeByName": {},
+                      "indexByName": {
+                        "service_name": 0,
+                        "Value": 1,
+                        "Value #Runtimefeil": 1
+                      },
+                      "renameByName": {
+                        "service_name": "Tjeneste",
+                        "Value": "Feil",
+                        "Value #Runtimefeil": "Feil"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "description": "Tekniske feil i valgt tidsrom. Tom tabell betyr ingen kvalifiserende feiltreff, ikke nødvendigvis komplett telemetry.",
+          "id": 13,
+          "links": [],
+          "title": "Runtimefeil per tjeneste",
+          "vizConfig": {
+            "group": "table",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  },
+                  "noValue": "Ukjent",
+                  "decimals": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "gray",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "service_name"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne tjenesten i NAIS APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne avgrenset loggsøk",
+                            "url": "/a/grafana-lokiexplore-app/explore/service/${__value.raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__value.raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne Feildrilldown",
+                            "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__value.raw}"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value #Runtimefeil"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "cellHeight": "sm",
+                "enablePagination": false,
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Feil"
+                  }
+                ]
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-14": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"${app:regex}\"}[24h])))",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Restarts"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "group": "merge",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "group": "organize",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "includeByName": {},
+                      "indexByName": {
+                        "container": 0,
+                        "Value": 1,
+                        "Value #Restarts": 1
+                      },
+                      "renameByName": {
+                        "container": "Tjeneste",
+                        "Value": "Restarts",
+                        "Value #Restarts": "Restarts"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "description": "Containerrestarts siste 24 timer. Radlenkene åpner samme runtime i APM, logger og Feildrilldown.",
+          "id": 14,
+          "links": [],
+          "title": "Restarts per tjeneste · 24t",
+          "vizConfig": {
+            "group": "table",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  },
+                  "noValue": "Ukjent",
+                  "decimals": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "container"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne tjenesten i NAIS APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne avgrenset loggsøk",
+                            "url": "/a/grafana-lokiexplore-app/explore/service/${__value.raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__value.raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne Feildrilldown",
+                            "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__value.raw}"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value #Restarts"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "cellHeight": "sm",
+                "enablePagination": false,
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Restarts"
+                  }
+                ]
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-15": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "100 * (max by (deployment) (kube_deployment_status_replicas_ready{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"${app:regex}\"}) or on(deployment) (max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"${app:regex}\"}) * 0)) / max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"${app:regex}\"})",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Replika-dekning"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "group": "merge",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "group": "organize",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "includeByName": {},
+                      "indexByName": {
+                        "deployment": 0,
+                        "Value": 1,
+                        "Value #Replika-dekning": 1
+                      },
+                      "renameByName": {
+                        "deployment": "Tjeneste",
+                        "Value": "Klare replikaer",
+                        "Value #Replika-dekning": "Klare replikaer"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "description": "Klare/ønskede replikaer akkurat nå. 100 % er grønt; lavere verdi krever inspeksjon.",
+          "id": 15,
+          "links": [],
+          "title": "Replika-dekning per tjeneste",
+          "vizConfig": {
+            "group": "table",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  },
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 99.999
+                      },
+                      {
+                        "color": "green",
+                        "value": 100
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "deployment"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne tjenesten i NAIS APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne avgrenset loggsøk",
+                            "url": "/a/grafana-lokiexplore-app/explore/service/${__value.raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__value.raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne Feildrilldown",
+                            "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__value.raw}"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value #Replika-dekning"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "cellHeight": "sm",
+                "enablePagination": false,
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Klare replikaer"
+                  }
+                ]
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-16": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "time() - max by (service_name) (max_over_time(timestamp(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${app:regex}\", span_kind=\"SPAN_KIND_SERVER\"})[30m:]))",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Telemetryferskhet"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "group": "merge",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "group": "organize",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "includeByName": {},
+                      "indexByName": {
+                        "service_name": 0,
+                        "Value": 1,
+                        "Value #Telemetryferskhet": 1
+                      },
+                      "renameByName": {
+                        "service_name": "Tjeneste",
+                        "Value": "Alder",
+                        "Value #Telemetryferskhet": "Alder"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "description": "Sekunder siden siste SERVER-spanmetric-sample, med 30 minutters lookback. En manglende rad betyr at tjenesten ikke har et sample i vinduet.",
+          "id": 16,
+          "links": [],
+          "title": "Telemetryferskhet per tjeneste",
+          "vizConfig": {
+            "group": "table",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  },
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 300
+                      },
+                      {
+                        "color": "red",
+                        "value": 900
+                      }
+                    ]
+                  },
+                  "unit": "s"
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "service_name"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne tjenesten i NAIS APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne avgrenset loggsøk",
+                            "url": "/a/grafana-lokiexplore-app/explore/service/${__value.raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__value.raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                          },
+                          {
+                            "targetBlank": true,
+                            "title": "Åpne Feildrilldown",
+                            "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__value.raw}"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value #Telemetryferskhet"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "cellHeight": "sm",
+                "enablePagination": false,
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Alder"
+                  }
+                ]
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-17": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Eksplisitt ukjent tilstand for den delen av hybridtjenesten som ikke kan bevises med HTTP-signaler.",
+          "id": 17,
+          "links": [],
+          "title": "Datakjedestatus",
+          "vizConfig": {
+            "group": "text",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "content": "### Sykepengedager-datakjeden · ikke evaluert\n\n`Infotrygd/AAP/Spleis → sykepengedager-informasjon → PostgreSQL → team-esyfo.sykepengedager-informasjon-topic → meroppfolging-backend`\n\nDenne tracer-slicen dekker HTTP- og runtimehelse. Den sier **ikke** at Kafka-flyten er frisk: consumer lag, siste vellykkede materialisering, publish success/failure, failed-send-kø og end-to-end-ferskhet mangler en godkjent kontrakt. Derfor står datakjeden som ukjent fram til [#212](https://github.com/navikt/team-esyfo/issues/212), ikke som grønn. Airflow er en ekstern sekundærkonsument og er utenfor teamets scope.",
+                "mode": "markdown"
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": [
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-1"
+              },
+              "height": 7,
+              "width": 24,
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              },
+              "height": 5,
+              "width": 6,
+              "x": 0,
+              "y": 7
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-3"
+              },
+              "height": 5,
+              "width": 6,
+              "x": 6,
+              "y": 7
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              },
+              "height": 5,
+              "width": 6,
+              "x": 12,
+              "y": 7
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              },
+              "height": 5,
+              "width": 6,
+              "x": 18,
+              "y": 7
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+              },
+              "height": 5,
+              "width": 5,
+              "x": 0,
+              "y": 12
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+              },
+              "height": 5,
+              "width": 5,
+              "x": 5,
+              "y": 12
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-8"
+              },
+              "height": 5,
+              "width": 5,
+              "x": 10,
+              "y": 12
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-9"
+              },
+              "height": 5,
+              "width": 5,
+              "x": 15,
+              "y": 12
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-18"
+              },
+              "height": 5,
+              "width": 4,
+              "x": 20,
+              "y": 12
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-10"
+              },
+              "height": 10,
+              "width": 8,
+              "x": 0,
+              "y": 17
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-11"
+              },
+              "height": 10,
+              "width": 8,
+              "x": 8,
+              "y": 17
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-12"
+              },
+              "height": 10,
+              "width": 8,
+              "x": 16,
+              "y": 17
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-13"
+              },
+              "height": 10,
+              "width": 12,
+              "x": 0,
+              "y": 27
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-14"
+              },
+              "height": 10,
+              "width": 12,
+              "x": 12,
+              "y": 27
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-15"
+              },
+              "height": 10,
+              "width": 12,
+              "x": 0,
+              "y": 37
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-16"
+              },
+              "height": 10,
+              "width": 12,
+              "x": 12,
+              "y": 37
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-17"
+              },
+              "height": 8,
+              "width": 24,
+              "x": 0,
+              "y": 47
+            }
+          }
+        ]
+      }
+    },
+    "links": [],
+    "liveNow": false,
+    "preload": false,
+    "tags": [
+      "team-esyfo",
+      "control-room",
+      "observability",
+      "managed-as-code"
+    ],
+    "timeSettings": {
+      "autoRefresh": "30s",
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h"
+      ],
+      "fiscalYearStartMonth": 0,
+      "from": "now-6h",
+      "hideTimepicker": false,
+      "to": "now",
+      "timezone": "browser"
+    },
+    "title": "Team eSyfo – Kontrollrom",
+    "variables": [
+      {
+        "kind": "CustomVariable",
+        "spec": {
+          "allValue": "^(meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|sykepengedager-informasjon)$",
+          "allowCustomValue": false,
+          "current": {
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
+          },
+          "description": "Inventardrevet scope for første tracer: Sen oppfølging.",
+          "hide": "dontHide",
+          "includeAll": true,
+          "label": "Tjeneste",
+          "multi": true,
+          "name": "app",
+          "options": [],
+          "query": "meroppfolging-backend : meroppfolging-backend,meroppfolging-frontend : meroppfolging-frontend,meroppfolging-microfrontend : meroppfolging-microfrontend,sykepengedager-informasjon : sykepengedager-informasjon",
+          "skipUrlSync": false,
+          "valuesFormat": "csv"
+        }
+      }
+    ]
+  }
+}
