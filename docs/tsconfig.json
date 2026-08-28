@@ -3,12 +3,18 @@
 		"target": "ESNext",
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"skipLibCheck": true,
 		"strict": true,
-		"jsx": "preserve"
+		"jsx": "preserve",
+		"types": ["node"],
+		"lib": ["ESNext", "DOM", "DOM.Iterable"]
 	},
 	"include": [
 		".vitepress/**/*.ts",
 		".vitepress/**/*.vue",
-		".vitepress/env.d.ts"
+		".vitepress/env.d.ts",
+		"scripts/**/*.ts"
 	]
 }

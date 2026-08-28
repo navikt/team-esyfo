@@ -2,6 +2,8 @@
 
 Oversikt over alle repoer som Team eSyfo eier og vedlikeholder, gruppert etter type.
 
+> Ser du etter det aktive produksjonsscopet? Bruk [runtimeinventaret og observability-dekningen](/utvikling/observability/runtimeinventar). Repoeierskap og kjørende runtime er bevisst to forskjellige fasiter.
+
 <style>
 .repo-grid {
   display: grid;
