@@ -1,3 +1,4 @@
+import { isCurrentLifecycle } from "./lifecycle.ts";
 import type {
 	AppId,
 	Application,
@@ -1529,12 +1530,7 @@ export const runtimeInventory: RuntimeInventory = {
 
 export const activeApplicationIds = new Set<AppId>(
 	runtimeInventory.applications
-		.filter(
-			(app) =>
-				app.lifecycle.state === "active" ||
-				app.lifecycle.state === "migrating" ||
-				app.lifecycle.state === "retiring",
-		)
+		.filter((app) => isCurrentLifecycle(app.lifecycle))
 		.map((app) => app.id),
 );
 

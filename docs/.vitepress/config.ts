@@ -123,6 +123,36 @@ export default withMermaid(
 									text: "Kontrollrom",
 									link: "/utvikling/observability/kontrollrom",
 								},
+								{
+									text: "Runbooks",
+									collapsed: true,
+									items: [
+										{
+											text: "Oversikt",
+											link: "/utvikling/observability/runbooks/",
+										},
+										{
+											text: "HTTP og runtime",
+											link: "/utvikling/observability/runbooks/http-runtime",
+										},
+										{
+											text: "Browser",
+											link: "/utvikling/observability/runbooks/browser",
+										},
+										{
+											text: "Pipelines og jobber",
+											link: "/utvikling/observability/runbooks/pipelines-og-jobber",
+										},
+										{
+											text: "syfomotebehov tilgjengelighet",
+											link: "/utvikling/observability/runbooks/syfomotebehov-tilgjengelighet",
+										},
+										{
+											text: "Oppfølgingsplan deserialisering",
+											link: "/utvikling/observability/runbooks/oppfolgingsplan-deserialisering",
+										},
+									],
+								},
 							],
 						},
 						{

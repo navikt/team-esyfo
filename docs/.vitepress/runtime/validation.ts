@@ -1,4 +1,5 @@
 import { areas } from "../areas.ts";
+import { isCurrentLifecycle } from "./lifecycle.ts";
 import type {
 	Application,
 	BrowserSurface,
@@ -42,11 +43,6 @@ const addDuplicateErrors = (
 		seen.add(value);
 	}
 };
-
-const isCurrent = (lifecycle: { state: string }) =>
-	lifecycle.state === "active" ||
-	lifecycle.state === "migrating" ||
-	lifecycle.state === "retiring";
 
 const validIsoDate = (value: string) =>
 	/^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -148,7 +144,7 @@ const validateLifecycle = (
 				errors.push(`${resource.id} har ukjent erstatningskandidat ${ref}.`);
 			if (ref === resource.id)
 				errors.push(`${resource.id} kan ikke erstatte seg selv.`);
-			if (targetLifecycle && !isCurrent(targetLifecycle)) {
+			if (targetLifecycle && !isCurrentLifecycle(targetLifecycle)) {
 				errors.push(
 					`${resource.id} har erstatningskandidat ${ref}, som er ${targetLifecycle.state}.`,
 				);
@@ -158,7 +154,7 @@ const validateLifecycle = (
 			const consumerLifecycle = knownResources.get(ref);
 			if (!consumerLifecycle)
 				errors.push(`${resource.id} har ukjent aktiv konsument ${ref}.`);
-			if (consumerLifecycle && !isCurrent(consumerLifecycle)) {
+			if (consumerLifecycle && !isCurrentLifecycle(consumerLifecycle)) {
 				errors.push(
 					`${resource.id} har konsument ${ref}, som er ${consumerLifecycle.state}.`,
 				);
@@ -228,14 +224,16 @@ export const validateInventory = (
 		errors.push(`Ugyldig asOf-dato ${options.asOf}.`);
 	}
 	const currentApplications = inventory.applications.filter((app) =>
-		isCurrent(app.lifecycle),
+		isCurrentLifecycle(app.lifecycle),
 	);
-	const currentJobs = inventory.jobs.filter((job) => isCurrent(job.lifecycle));
+	const currentJobs = inventory.jobs.filter((job) =>
+		isCurrentLifecycle(job.lifecycle),
+	);
 	const currentTopics = inventory.topics.filter((topic) =>
-		isCurrent(topic.lifecycle),
+		isCurrentLifecycle(topic.lifecycle),
 	);
 	const currentBrowserSurfaces = inventory.browserSurfaces.filter((surface) =>
-		isCurrent(surface.lifecycle),
+		isCurrentLifecycle(surface.lifecycle),
 	);
 	const counts = {
 		applications: currentApplications.length,

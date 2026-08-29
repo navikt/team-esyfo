@@ -1,8 +1,10 @@
+import { isCurrentLifecycle, isExpectedLifecycleAt } from "./lifecycle.ts";
 import type {
 	AppId,
 	CoverageEvidenceSnapshot,
 	CoverageProfile,
 	EvidenceState,
+	IsoDate,
 	IsoDateTime,
 	ObservedRuntimeResource,
 	ObservedRuntimeSnapshot,
@@ -154,26 +156,22 @@ export const reconcileRuntime = (
 			observedAt,
 			ageMinutes: observationAge(observedAt),
 		}));
-	const asOfDate = now.slice(0, 10);
-	const currentApps = inventory.applications.filter(
-		(app) =>
-			app.lifecycle.state === "active" ||
-			app.lifecycle.state === "migrating" ||
-			app.lifecycle.state === "retiring",
+	const asOfDate = now.slice(0, 10) as IsoDate;
+	const currentApps = inventory.applications.filter((app) =>
+		isCurrentLifecycle(app.lifecycle),
 	);
-	const currentJobs = inventory.jobs.filter(
-		(job) =>
-			job.lifecycle.state === "active" ||
-			job.lifecycle.state === "migrating" ||
-			job.lifecycle.state === "retiring",
+	const currentJobs = inventory.jobs.filter((job) =>
+		isCurrentLifecycle(job.lifecycle),
 	);
 	const expectedSunsetApps = inventory.applications.filter(
 		(app) =>
-			app.lifecycle.state === "sunset" && app.lifecycle.sunsetOn >= asOfDate,
+			!isCurrentLifecycle(app.lifecycle) &&
+			isExpectedLifecycleAt(app.lifecycle, asOfDate),
 	);
 	const expectedSunsetJobs = inventory.jobs.filter(
 		(job) =>
-			job.lifecycle.state === "sunset" && job.lifecycle.sunsetOn >= asOfDate,
+			!isCurrentLifecycle(job.lifecycle) &&
+			isExpectedLifecycleAt(job.lifecycle, asOfDate),
 	);
 	const knownResources = [...inventory.applications, ...inventory.jobs];
 	const expectedApps = [...currentApps, ...expectedSunsetApps];
