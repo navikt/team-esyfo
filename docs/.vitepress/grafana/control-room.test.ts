@@ -449,6 +449,8 @@ describe("kontrollrom-dashboard", () => {
 
 	test("holder browserhendelser separat fra sessions, brukere og prodstatus", () => {
 		assert.match(browserExceptionsByServiceQuery, /kind="exception"/);
+		assert.ok(browserExceptionsByServiceQuery.includes("[$__auto]"));
+		assert.ok(!browserExceptionsByServiceQuery.includes("$__rate_interval"));
 		assert.ok(!browserExceptionsByServiceQuery.includes("service_namespace"));
 		assert.ok(!browserExceptionsByServiceQuery.includes("k8s_cluster_name"));
 		assert.ok(!browserExceptionsByServiceQuery.includes("session"));
@@ -683,6 +685,7 @@ describe("kontrollrom-dashboard", () => {
 			}
 			assert.equal(group, "loki");
 			assert.equal(datasource.name, LOKI_DATASOURCE_UID);
+			assert.ok(!(spec.expr ?? "").includes("$__rate_interval"));
 			if ((spec.expr ?? "").includes('kind="exception"')) {
 				browserQueries += 1;
 				assert.ok(!(spec.expr ?? "").includes("k8s_cluster_name"));
