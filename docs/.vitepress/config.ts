@@ -112,6 +112,10 @@ export default withMermaid(
 									link: "/utvikling/observability/runtimeinventar",
 								},
 								{
+									text: "Avviklingsport",
+									link: "/utvikling/observability/avvikling-syfooppfolgingsplanservice",
+								},
+								{
 									text: "Alert-register",
 									link: "/utvikling/observability/alert-register",
 								},

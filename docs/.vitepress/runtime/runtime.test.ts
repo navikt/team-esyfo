@@ -60,6 +60,33 @@ describe("runtimeinventar", () => {
 		});
 	});
 
+	test("bevarer de tre avviklingsressursene samlet frem til #208-cutover", () => {
+		const resourceIds = new Set<string>([
+			"app:syfooppfolgingsplanservice",
+			"app:syfooppfolgingsplanservice-redis",
+			"app:syfooppfolgingsplanservice-redisexporter",
+		]);
+		const resources = runtimeInventory.applications.filter(({ id }) =>
+			resourceIds.has(id),
+		);
+
+		assert.equal(resources.length, resourceIds.size);
+		for (const resource of resources) {
+			assert.equal(resource.lifecycle.state, "sunset");
+			if (resource.lifecycle.state !== "sunset") continue;
+			assert.equal(resource.lifecycle.sunsetOn, "2026-08-31");
+			assert.equal(resource.lifecycle.decision, "navikt/team-esyfo#208");
+		}
+
+		const varselbus = runtimeInventory.topics.find(
+			({ id }) => id === "topic:varselbus",
+		);
+		assert.ok(varselbus);
+		assert.ok(
+			varselbus.producers.internal.includes("app:syfooppfolgingsplanservice"),
+		);
+	});
+
 	test("avviser duplisert runtimeidentitet", () => {
 		const inventory = cloneInventory();
 		inventory.applications[1].runtime = inventory.applications[0].runtime;
