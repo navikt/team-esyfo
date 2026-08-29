@@ -4,7 +4,7 @@ Browserdelen i Kontrollrommet skiller kildekodekonfigurasjon fra operative måli
 
 ## 1. Bekreft identitet og dekning
 
-1. Finn browserflaten i Kontrollrommets dekningsmatrise.
+1. Åpne runtimeinventaret fra Kontrollrommets browserstatus og finn browserflaten der.
 2. Bekreft `browserIdentity.serviceName` mot faktisk Faro-konfig i kildekoden og deployert revision.
 3. Skill statusene:
    - SDK-konfigurert betyr bare at kildekoden forsøker å sende telemetry.

@@ -11,7 +11,7 @@ Runbookene er inngangen fra Kontrollrom når et signal krever vurdering. De besk
 ## Pagerkandidater
 
 - [syfomotebehov tilgjengelighet](./syfomotebehov-tilgjengelighet)
-- [Oppfølgingsplan: permanent deserialiseringsfeil](./oppfolgingsplan-deserialisering)
+- [Oppfølgingsplan: deserialiseringsfeil](./oppfolgingsplan-deserialisering)
 - [Budstikka-helsesjekk](https://github.com/navikt/syfo-budstikka/blob/main/docs/helsesjekk.md)
 
 ## Felles stoppregler

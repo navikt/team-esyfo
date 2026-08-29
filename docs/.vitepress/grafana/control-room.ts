@@ -2,16 +2,15 @@ import {
 	BROWSER_RUNBOOK_URL,
 	BUDSTIKKA_RUNBOOK_URL,
 	browserCoverageMarkdown,
+	CONTROL_ROOM_GUIDE_URL,
 	controlRoomApplicationOptions,
 	controlRoomApplications,
 	controlRoomBrowserSurfaces,
 	controlRoomScopeOptions,
 	controlRoomServerApplications,
-	coverageMarkdown,
 	DESERIALIZATION_RUNBOOK_URL,
 	jobCoverageMarkdown,
 	lifecycleLabel,
-	lifecycleMarkdown,
 	MOTEBEHOV_RUNBOOK_URL,
 	PIPELINE_RUNBOOK_URL,
 	pagerReadinessMarkdown,
@@ -149,6 +148,7 @@ const selectedRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_na
 export const runtimeErrorCountQuery = `sum(count_over_time(${selectedRuntimeSelector} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range]))`;
 
 export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector} ${runtimeNoiseFilter} ${runtimeErrorFilter} [5m]))`;
+export const fleetServicesWithRuntimeErrorsQuery = `count((${runtimeErrorsByServiceQuery}) > 0)`;
 
 const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[24h])))`;
 export const restartsByServiceQuery = `sum by (service_name) (label_replace(${fleetRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
@@ -674,8 +674,11 @@ const fleetTablePanel = () => {
 						enablePagination: true,
 						showHeader: true,
 						sortBy: [
-							{ desc: true, displayName: "SERVER-span" },
 							{ desc: true, displayName: "Runtimefeil 5m" },
+							{ desc: false, displayName: "Klare replikaer" },
+							{ desc: true, displayName: "OTel-feil" },
+							{ desc: true, displayName: "Restarts 24t" },
+							{ desc: true, displayName: "SERVER-span" },
 						],
 					},
 				},
@@ -762,18 +765,19 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		],
 		cursorSync: "Off",
 		description:
-			"Inventardrevet hendelsesinngang for hele Team eSyfos operative flåte. Skiller brukerimpact, teknisk helse og telemetry og viser unsupported signaler som eksplisitte gap.",
+			"Inventardrevet hendelsesinngang for Team eSyfos operative flåte. Skiller teknisk helse fra telemetrydekning og viser manglende brukerimpact-, SLO- og deploykontrakter som eksplisitte gap.",
 		editable: true,
 		elements: {
 			"panel-1": textPanel(
 				1,
-				"00 · Slik leses kontrollrommet",
-				"Operativ leserekkefølge, scope og statusord.",
+				"Start med avvikene",
+				"Kontrollrommet viser teknisk helse og telemetrydekning separat. Fullt scope og begreper ligger i dokumentasjonen.",
 				scopeMarkdown(),
+				[dataLink("Kontrollrom-dokumentasjon", CONTROL_ROOM_GUIDE_URL)],
 			),
 			"panel-2": statPanel({
 				id: 2,
-				title: "OTel-feilstatus · tjenester",
+				title: "OTel-feil · tjenester",
 				description:
 					"Antall tjenester med minst én inbound SERVER-span markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-status, ikke automatisk HTTP 5xx eller bevist brukerimpact. 0 er nøytralt og må leses sammen med dekning.",
 				query: prometheusQuery(
@@ -786,9 +790,23 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				decimals: 0,
 				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
 			}),
+			"panel-32": statPanel({
+				id: 32,
+				title: "Runtimefeil 5m · tjenester",
+				description:
+					"Antall tjenester med minst én påvist error-, critical- eller fatal-klassifisert logglinje siste fem minutter. No data er ukjent; panelet konstruerer ikke null uten positiv loggevidens.",
+				query: lokiQuery(
+					"Tjenester med runtimefeil",
+					fleetServicesWithRuntimeErrorsQuery,
+				),
+				unit: "short",
+				thresholds: deviationThresholds,
+				decimals: 0,
+				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
+			}),
 			"panel-3": statPanel({
 				id: 3,
-				title: "SERVER-telemetry mangler · tjenester",
+				title: "Tjenester uten SERVER-spanserie",
 				description:
 					"Antall inventarforankrede, SERVER-eligible GCP-tjenester uten spanserie siste 30 minutter. Workerprofiler er ikke i nevneren. Dette er et dekningsgap, ikke automatisk appfeil.",
 				query: prometheusQuery(
@@ -803,7 +821,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-4": statPanel({
 				id: 4,
-				title: "Restarts · tjenester · 24t",
+				title: "Restarts 24t · tjenester",
 				description:
 					"Antall tjenester med minst én deduplisert containerrestart siste 24 timer. Fast vindu, uavhengig av valgt dashboardtidsrom.",
 				query: prometheusQuery(
@@ -818,7 +836,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-5": statPanel({
 				id: 5,
-				title: "Laveste ready/desired",
+				title: "Laveste ready/desired %",
 				description:
 					"Laveste klare/ønskede replikaandel i valgt scope. desired=0 filtreres bort i stedet for å gi NaN eller grønt.",
 				query: prometheusQuery(
@@ -833,7 +851,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-6": statPanel({
 				id: 6,
-				title: "SERVER-spanserie · HTTP-dekning",
+				title: "HTTP-dekning",
 				description:
 					"Andel forventede, SERVER-eligible runtime-identiteter i valgt scope med aktuell spanserie. Workerprofiler har annen signal-/span-kontrakt. Dette beviser seriescrape, ikke brukertrafikk eller komplett tracing.",
 				query: prometheusQuery(
@@ -847,7 +865,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-7": statPanel({
 				id: 7,
-				title: "Kube deployment · dekning",
+				title: "Kube-dekning",
 				description:
 					"Andel forventede runtime-identiteter i valgt scope med desired-replica-serie. Manglende mapping er et telemetry-/identitetsgap.",
 				query: prometheusQuery(
@@ -861,19 +879,24 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-8": textPanel(
 				8,
-				"SLO-burn · IKKE DEFINERT",
-				"Alert-policy er ikke en SLO-kontrakt.",
-				"### Ikke grønt, ikke null\n\nIngen godkjent SLI/objective/window/burn-rate finnes ennå. Derfor viser kontrollrommet ikke et oppdiktet SLO-tall. Avklaringer følges i [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729) og [meroppfolging-backend#422](https://github.com/navikt/meroppfolging-backend/issues/422).",
-			),
-			"panel-9": textPanel(
-				9,
-				"Siste deploy · UKJENT",
-				"Pod-alder og deployment-created er ikke deployidentitet.",
-				"### Mangler verifisert adapter\n\nKontrollrommet viser ikke nyeste pod eller `kube_deployment_created` som «siste deploy». Kilde-SHA, deployert SHA og tidspunkt må komme fra en verifisert NAIS/deploy-kontrakt. Bruk NAIS APM og Console under hendelsen; adapteren fullføres i [#211](https://github.com/navikt/team-esyfo/issues/211).",
+				"Kjente gap · SLO og deploy",
+				"SLO er ikke definert. Siste deploy er ukjent fordi pod-alder og deployment-created ikke er deployidentitet.",
+				"**SLO:** `IKKE DEFINERT` · **Siste deploy:** `UKJENT`. Dette er dekningsgap, ikke grønt.",
+				[
+					dataLink("Kontrollrom-dokumentasjon", CONTROL_ROOM_GUIDE_URL),
+					dataLink(
+						"Dine sykmeldte SLO #729",
+						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
+					),
+					dataLink(
+						"Meroppfølging SLO #422",
+						"https://github.com/navikt/meroppfolging-backend/issues/422",
+					),
+				],
 			),
 			"panel-30": timeSeriesPanel({
 				id: 30,
-				title: "Fast scope · Dine sykmeldte · forsøk og 2xx",
+				title: "10 · Dine sykmeldte · forsøk og 2xx",
 				description:
 					"Fast produksjonsscope for inbound SERVER-spans på GET /api/minesykmeldte og GET /api/virksomheter. attempt viser all observert trafikk; good er 2xx uten OTel-feilstatus. Bare rute-/labelkontrakten og 200/STATUS_CODE_UNSET er live-verifisert. Uten attempt er trafikken ukjent eller null. Dette er diagnostikk, ikke en vedtatt SLI eller SLO.",
 				query: prometheusQuery(
@@ -901,7 +924,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-31": timeSeriesPanel({
 				id: 31,
-				title: "Fast scope · Dine sykmeldte · avvikende HTTP-utfall",
+				title: "Dine sykmeldte · avvikende HTTP-utfall",
 				description:
 					"Fast produksjonsscope for de samme to GET-rutene. http_4xx er 4xx uten OTel-feilstatus, men er ikke kalt forventet: Texas-pluginen kan også maskere tekniske introspeksjonsfeil som 401. technical_failure er 5xx eller OTel-feilstatus; unclassified dekker blant annet 3xx, 1xx og manglende HTTP-status uten OTel-feil. Manglende serier syntetiseres ikke til null. Skillet mellom forventede og tekniske 4xx krever et bounded appsignal i #729.",
 				query: prometheusQuery(
@@ -928,16 +951,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				],
 			}),
 			"panel-10": fleetTablePanel(),
-			"panel-11": textPanel(
-				11,
-				"02 · Valgt tjeneste · RED og runtime",
-				"Detaljgrafer viser kun én eksplisitt valgt runtime.",
-				"### Én tjeneste, ingen skjult flåteaggregering\n\nVelg **Tjeneste** øverst. Request-rate, OTel-feilratio og P95 gjelder inbound SERVER-spans for bare denne runtime-identiteten. For workerprofiler er disse SERVER-panelene ikke den operative kontrakten og kan stå `Ukjent`; bruk pipeline-/jobbpanelet og runbooken. Ingen trafikk gir `Ukjent`; P95 er diagnostikk, ikke SLO.",
-				[dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
-			),
 			"panel-12": timeSeriesPanel({
 				id: 12,
-				title: "Request-rate · valgt tjeneste",
+				title: "02 · Valgt tjeneste · request-rate",
 				description: "Inbound SERVER-spans per sekund for én valgt tjeneste.",
 				query: prometheusQuery(
 					"Request-rate",
@@ -950,7 +966,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-13": timeSeriesPanel({
 				id: 13,
-				title: "OTel-feilratio · valgt tjeneste",
+				title: "Valgt tjeneste · OTel-feilratio",
 				description:
 					"Andel inbound SERVER-spans med STATUS_CODE_ERROR. Null finnes bare med observert requestserie; ingen trafikk gir Ukjent. Ikke en vedtatt SLO-grense.",
 				query: prometheusQuery(
@@ -964,7 +980,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-14": timeSeriesPanel({
 				id: 14,
-				title: "P95 · valgt tjeneste",
+				title: "Valgt tjeneste · P95",
 				description:
 					"P95 for inbound SERVER-spans på én valgt tjeneste. Ingen flåtemiks og ingen SLO-farge.",
 				query: prometheusQuery(
@@ -978,7 +994,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-15": statPanel({
 				id: 15,
-				title: "Runtimefeil · valgt tidsrom",
+				title: "Valgt tjeneste · runtimefeil",
 				description:
 					"Positivt klassifiserte error|critical|fatal-logger for valgt runtime. No data er ukjent, ikke null; panelet gjør ingen ekstra full-loggskann for å konstruere en kunstig null.",
 				query: lokiQuery("Runtimefeil", runtimeErrorCountQuery),
@@ -989,7 +1005,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-16": statPanel({
 				id: 16,
-				title: "Restarts · valgt tjeneste · 24t",
+				title: "Valgt tjeneste · restarts · 24t",
 				description:
 					"Dedupliserte containerrestarts siste 24 timer for valgt runtime.",
 				query: prometheusQuery("Restarts", restartCountQuery, "instant"),
@@ -1000,7 +1016,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-17": statPanel({
 				id: 17,
-				title: "Ready/desired · valgt tjeneste",
+				title: "Valgt tjeneste · ready/desired",
 				description:
 					"Klar/ønsket replikaandel for valgt deployment. desired=0 og manglende serie gir Ukjent.",
 				query: prometheusQuery("Ready", selectedReadyRatioQuery, "instant"),
@@ -1011,21 +1027,20 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-18": textPanel(
 				18,
-				"20 · Browser · dekning før tall",
-				"Kildekodekonfigurasjon, identitetsgap og ærlig målesemantikk.",
+				"20 · Browser",
+				"Kun Faro kind=exception er live-verifisert. Miljølabel, numerisk sampling, page loads, sessions og CWV er ukjent; en session skal aldri omtales som en unik bruker.",
 				browserCoverageMarkdown(),
-				[dataLink("Browser-runbook", BROWSER_RUNBOOK_URL)],
-			),
-			"panel-19": textPanel(
-				19,
-				"Browsermiljø · UKJENT",
-				"Faro exception-schemaet mangler verifisert miljødimensjon.",
-				"### Diagnostikk, ikke prod-status\n\nException-serien kan ikke dokumentert skilles mellom dev og prod. Den brukes bare til feildrilldown per browseridentitet. Miljø, sampling, page loads, sessions og CWV bevises i [#206](https://github.com/navikt/team-esyfo/issues/206).",
-				[dataLink("Browser-runbook", BROWSER_RUNBOOK_URL)],
+				[
+					dataLink("Browser-runbook", BROWSER_RUNBOOK_URL),
+					dataLink(
+						"Browserkontrakt #206",
+						"https://github.com/navikt/team-esyfo/issues/206",
+					),
+				],
 			),
 			"panel-20": timeSeriesPanel({
 				id: 20,
-				title: "Browser-unntak · samplede hendelser · miljø ukjent",
+				title: "Browser-unntak · diagnostikk",
 				description:
 					"Exception-hendelser per service i queryvinduet. Miljø kan ikke verifisert skilles; ikke les dette som prod-status. Ikke page loads, sessions eller unike brukere.",
 				query: lokiQuery(
@@ -1043,21 +1058,27 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-21": textPanel(
 				21,
-				"30 · Pipelines · prosessnøytral status",
-				"Topic-/pipelinekontrakter og varslingsmigrering.",
+				"30 · Pipelines",
+				"Kontraktstatus, ikke produksjonshelse. syfo-budstikka er målprosessor, esyfovarsel er migrerende legacy-prosessor, og Airflow er utenfor scope. Expected run, ferskhet, progresjon, eldste ventende og terminalt utfall avklares i #212 før pipelinehelse kan evalueres.",
 				pipelineCoverageMarkdown(),
-				[dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL)],
+				[
+					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
+					dataLink(
+						"Pipelinekontrakter #212",
+						"https://github.com/navikt/team-esyfo/issues/212",
+					),
+				],
 			),
 			"panel-22": textPanel(
 				22,
-				"32 · Jobber · forventet run er ikke det samme som podhelse",
-				"Typekorrekt schedule og eksplisitte manglende utfallssignaler.",
+				"32 · Planlagt jobb",
+				"kube_job_failed viser bare observert terminalt Kubernetes-utfall. Siste start, siste suksess, varighet og expected-run-evaluering mangler en verifisert adapter.",
 				jobCoverageMarkdown(),
 				[dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL)],
 			),
 			"panel-23": statPanel({
 				id: 23,
-				title: "esyfovarsel-job · failure flag",
+				title: "Kube-feil · planlagt jobb",
 				description:
 					"Maks observert kube_job_failed i valgt tidsrom. No data betyr ingen bevist job resource i vinduet, ikke suksess.",
 				query: prometheusQuery("Job failure", jobFailureQuery, "instant"),
@@ -1074,8 +1095,8 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-24": textPanel(
 				24,
-				"40 · Pager readiness",
-				"De tre kandidatene fra #210 og deres reelle blockers.",
+				"40 · Pagerkandidater",
+				"Dashboardpaneler og runbooks aktiverer ikke pager. Aktivering krever 14–28 dagers shadow-evidens, second-person-verifikasjon og eksplisitt beslutning i #217.",
 				pagerReadinessMarkdown(),
 			),
 			"panel-25": timeSeriesPanel({
@@ -1104,14 +1125,14 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-26": timeSeriesPanel({
 				id: 26,
-				title: "Oppfølgingsplan · permanent deserialiseringsrate",
+				title: "Oppfølgingsplan · deserialiseringsfeil",
 				description:
-					"Total rate av records som forkastes permanent, summert over prod-replikaer. Eksisterende alertkandidat evaluerer hver serie mot 0,1/s i fem minutter; pagersemantikken er blokkert til aggregat, recovery og runbook er bevist.",
+					"Rate fra eksisterende legacy-teller. Signalet skiller foreløpig ikke terminalt avviste records fra retryforsøk; bruk det kun som diagnostikk fram til #449 er deployet og queryen er byttet.",
 				query: prometheusQuery(
 					"Deserialiseringsrate",
 					deserializationRateQuery,
 					"range",
-					"permanente feil",
+					"observerte deserialiseringsfeil",
 				),
 				unit: "ops",
 				thresholds: [
@@ -1153,54 +1174,38 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					"https://github.com/navikt/syfomotebehov/issues/753",
 				),
 			}),
-			"panel-28": textPanel(
-				28,
-				"50 · Migrering og utfasing",
-				"Separate guardrails for døende eller flyttende runtime.",
-				lifecycleMarkdown(),
-			),
-			"panel-29": textPanel(
-				29,
-				"60 · Dekning og kjente gap",
-				"Forventet mot bevist telemetry, kontrakter og runbooks.",
-				coverageMarkdown(),
-			),
 		},
 		layout: {
 			kind: "GridLayout",
 			spec: {
 				items: [
-					layoutItem("panel-1", 0, 0, 24, 7),
-					layoutItem("panel-2", 0, 7, 4, 5),
-					layoutItem("panel-3", 4, 7, 4, 5),
-					layoutItem("panel-4", 8, 7, 4, 5),
-					layoutItem("panel-5", 12, 7, 4, 5),
-					layoutItem("panel-6", 16, 7, 4, 5),
-					layoutItem("panel-7", 20, 7, 4, 5),
-					layoutItem("panel-8", 0, 12, 12, 5),
-					layoutItem("panel-9", 12, 12, 12, 5),
-					layoutItem("panel-30", 0, 17, 8, 8),
-					layoutItem("panel-31", 8, 17, 16, 8),
-					layoutItem("panel-10", 0, 25, 24, 16),
-					layoutItem("panel-11", 0, 41, 24, 5),
-					layoutItem("panel-12", 0, 46, 8, 9),
-					layoutItem("panel-13", 8, 46, 8, 9),
-					layoutItem("panel-14", 16, 46, 8, 9),
-					layoutItem("panel-15", 0, 55, 8, 6),
-					layoutItem("panel-16", 8, 55, 8, 6),
-					layoutItem("panel-17", 16, 55, 8, 6),
-					layoutItem("panel-18", 0, 61, 24, 17),
-					layoutItem("panel-19", 0, 78, 6, 8),
-					layoutItem("panel-20", 6, 78, 18, 8),
-					layoutItem("panel-21", 0, 86, 24, 15),
-					layoutItem("panel-22", 0, 101, 16, 9),
-					layoutItem("panel-23", 16, 101, 8, 9),
-					layoutItem("panel-24", 0, 110, 24, 10),
-					layoutItem("panel-25", 0, 120, 8, 10),
-					layoutItem("panel-26", 8, 120, 8, 10),
-					layoutItem("panel-27", 16, 120, 8, 10),
-					layoutItem("panel-28", 0, 130, 24, 12),
-					layoutItem("panel-29", 0, 142, 24, 15),
+					layoutItem("panel-1", 0, 0, 24, 3),
+					layoutItem("panel-2", 0, 3, 8, 4),
+					layoutItem("panel-32", 8, 3, 8, 4),
+					layoutItem("panel-4", 16, 3, 8, 4),
+					layoutItem("panel-5", 0, 7, 12, 4),
+					layoutItem("panel-3", 12, 7, 12, 4),
+					layoutItem("panel-10", 0, 11, 24, 16),
+					layoutItem("panel-6", 0, 27, 12, 4),
+					layoutItem("panel-7", 12, 27, 12, 4),
+					layoutItem("panel-8", 0, 31, 24, 3),
+					layoutItem("panel-12", 0, 34, 8, 9),
+					layoutItem("panel-13", 8, 34, 8, 9),
+					layoutItem("panel-14", 16, 34, 8, 9),
+					layoutItem("panel-15", 0, 43, 8, 6),
+					layoutItem("panel-16", 8, 43, 8, 6),
+					layoutItem("panel-17", 16, 43, 8, 6),
+					layoutItem("panel-30", 0, 49, 8, 8),
+					layoutItem("panel-31", 8, 49, 16, 8),
+					layoutItem("panel-18", 0, 57, 6, 6),
+					layoutItem("panel-20", 6, 57, 18, 6),
+					layoutItem("panel-21", 0, 63, 24, 4),
+					layoutItem("panel-22", 0, 67, 16, 5),
+					layoutItem("panel-23", 16, 67, 8, 5),
+					layoutItem("panel-24", 0, 72, 24, 3),
+					layoutItem("panel-25", 0, 75, 8, 10),
+					layoutItem("panel-26", 8, 75, 8, 10),
+					layoutItem("panel-27", 16, 75, 8, 10),
 				],
 			},
 		},

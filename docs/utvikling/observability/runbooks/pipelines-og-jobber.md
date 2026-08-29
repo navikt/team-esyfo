@@ -4,7 +4,7 @@ En Kafka-pipeline eller planlagt jobb er ikke frisk fordi podene kjører. Operat
 
 ## Pipeline
 
-1. Velg pipeline i Kontrollrommets matrise og identifiser aktive interne produsenter og konsumenter.
+1. Les den samlede kontraktstatusen i Kontrollrommet, og åpne runtimeinventaret derfra for å identifisere aktive interne produsenter og konsumenter.
 2. Bekreft kontraktstatus:
    - `IKKE EVALUERT`: signalbinding eller service-level er ikke godkjent.
    - `UKJENT`: kontrakten finnes, men evidens mangler eller er for gammel.
