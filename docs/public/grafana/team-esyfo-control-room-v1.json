@@ -687,6 +687,346 @@
           }
         }
       },
+      "panel-30": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": true,
+                        "expr": "label_replace((sum by (operation) (label_replace((rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"dinesykmeldte-backend\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\"}[$__rate_interval])), \"operation\", \"$1\", \"span_name\", \"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\"))), \"outcome\", \"attempt\", \"\", \".*\") or label_replace((sum by (operation) (label_replace((rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"dinesykmeldte-backend\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\", http_response_status_code=~\"2..\", status_code!=\"STATUS_CODE_ERROR\"}[$__rate_interval])), \"operation\", \"$1\", \"span_name\", \"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\"))), \"outcome\", \"good\", \"\", \".*\")",
+                        "instant": false,
+                        "interval": "",
+                        "legendFormat": "{{operation}} · {{outcome}}",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Forsøk og 2xx"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Fast produksjonsscope for inbound SERVER-spans på GET /api/minesykmeldte og GET /api/virksomheter. attempt viser all observert trafikk; good er 2xx uten OTel-feilstatus. Bare rute-/labelkontrakten og 200/STATUS_CODE_UNSET er live-verifisert. Uten attempt er trafikken ukjent eller null. Dette er diagnostikk, ikke en vedtatt SLI eller SLO.",
+          "id": 30,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "NAIS APM",
+              "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Avgrensede logger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feildrilldown",
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+            },
+            {
+              "targetBlank": true,
+              "title": "HTTP/runtime-runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+            },
+            {
+              "targetBlank": true,
+              "title": "Implementeringsoppgave #729",
+              "url": "https://github.com/navikt/dinesykmeldte-backend/issues/729"
+            }
+          ],
+          "title": "Fast scope · Dine sykmeldte · forsøk og 2xx",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "NAIS APM",
+                      "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Avgrensede logger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feildrilldown",
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "HTTP/runtime-runbook",
+                      "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Implementeringsoppgave #729",
+                      "url": "https://github.com/navikt/dinesykmeldte-backend/issues/729"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "blue",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  "unit": "reqps"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-31": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": true,
+                        "expr": "label_replace((sum by (operation) (label_replace((rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"dinesykmeldte-backend\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\", http_response_status_code=~\"4..\", status_code!=\"STATUS_CODE_ERROR\"}[$__rate_interval])), \"operation\", \"$1\", \"span_name\", \"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\"))), \"outcome\", \"http_4xx\", \"\", \".*\") or label_replace((sum by (operation) (label_replace((rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"dinesykmeldte-backend\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\", status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval]) or rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"dinesykmeldte-backend\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\", http_response_status_code=~\"5..\"}[$__rate_interval])), \"operation\", \"$1\", \"span_name\", \"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\"))), \"outcome\", \"technical_failure\", \"\", \".*\") or label_replace((sum by (operation) (label_replace((rate(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"dinesykmeldte-backend\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\", status_code!=\"STATUS_CODE_ERROR\", http_response_status_code!~\"[245]..\"}[$__rate_interval])), \"operation\", \"$1\", \"span_name\", \"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$\"))), \"outcome\", \"unclassified\", \"\", \".*\")",
+                        "instant": false,
+                        "interval": "",
+                        "legendFormat": "{{operation}} · {{outcome}}",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Avvikende HTTP-utfall"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Fast produksjonsscope for de samme to GET-rutene. http_4xx er 4xx uten OTel-feilstatus, men er ikke kalt forventet: Texas-pluginen kan også maskere tekniske introspeksjonsfeil som 401. technical_failure er 5xx eller OTel-feilstatus; unclassified dekker blant annet 3xx, 1xx og manglende HTTP-status uten OTel-feil. Manglende serier syntetiseres ikke til null. Skillet mellom forventede og tekniske 4xx krever et bounded appsignal i #729.",
+          "id": 31,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "NAIS APM",
+              "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Avgrensede logger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feildrilldown",
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+            },
+            {
+              "targetBlank": true,
+              "title": "HTTP/runtime-runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+            },
+            {
+              "targetBlank": true,
+              "title": "Implementeringsoppgave #729",
+              "url": "https://github.com/navikt/dinesykmeldte-backend/issues/729"
+            }
+          ],
+          "title": "Fast scope · Dine sykmeldte · avvikende HTTP-utfall",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "NAIS APM",
+                      "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Avgrensede logger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feildrilldown",
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "HTTP/runtime-runbook",
+                      "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Implementeringsoppgave #729",
+                      "url": "https://github.com/navikt/dinesykmeldte-backend/issues/729"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "blue",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  "unit": "reqps"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
       "panel-10": {
         "kind": "Panel",
         "spec": {
@@ -3093,12 +3433,38 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
+                "name": "panel-30"
+              },
+              "height": 8,
+              "width": 8,
+              "x": 0,
+              "y": 17
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-31"
+              },
+              "height": 8,
+              "width": 16,
+              "x": 8,
+              "y": 17
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
                 "name": "panel-10"
               },
               "height": 16,
               "width": 24,
               "x": 0,
-              "y": 17
+              "y": 25
             }
           },
           {
@@ -3111,7 +3477,7 @@
               "height": 5,
               "width": 24,
               "x": 0,
-              "y": 33
+              "y": 41
             }
           },
           {
@@ -3124,7 +3490,7 @@
               "height": 9,
               "width": 8,
               "x": 0,
-              "y": 38
+              "y": 46
             }
           },
           {
@@ -3137,7 +3503,7 @@
               "height": 9,
               "width": 8,
               "x": 8,
-              "y": 38
+              "y": 46
             }
           },
           {
@@ -3150,7 +3516,7 @@
               "height": 9,
               "width": 8,
               "x": 16,
-              "y": 38
+              "y": 46
             }
           },
           {
@@ -3163,7 +3529,7 @@
               "height": 6,
               "width": 8,
               "x": 0,
-              "y": 47
+              "y": 55
             }
           },
           {
@@ -3176,7 +3542,7 @@
               "height": 6,
               "width": 8,
               "x": 8,
-              "y": 47
+              "y": 55
             }
           },
           {
@@ -3189,7 +3555,7 @@
               "height": 6,
               "width": 8,
               "x": 16,
-              "y": 47
+              "y": 55
             }
           },
           {
@@ -3202,7 +3568,7 @@
               "height": 17,
               "width": 24,
               "x": 0,
-              "y": 53
+              "y": 61
             }
           },
           {
@@ -3215,7 +3581,7 @@
               "height": 8,
               "width": 6,
               "x": 0,
-              "y": 70
+              "y": 78
             }
           },
           {
@@ -3228,7 +3594,7 @@
               "height": 8,
               "width": 18,
               "x": 6,
-              "y": 70
+              "y": 78
             }
           },
           {
@@ -3241,7 +3607,7 @@
               "height": 15,
               "width": 24,
               "x": 0,
-              "y": 78
+              "y": 86
             }
           },
           {
@@ -3254,7 +3620,7 @@
               "height": 9,
               "width": 16,
               "x": 0,
-              "y": 93
+              "y": 101
             }
           },
           {
@@ -3267,7 +3633,7 @@
               "height": 9,
               "width": 8,
               "x": 16,
-              "y": 93
+              "y": 101
             }
           },
           {
@@ -3280,7 +3646,7 @@
               "height": 10,
               "width": 24,
               "x": 0,
-              "y": 102
+              "y": 110
             }
           },
           {
@@ -3293,7 +3659,7 @@
               "height": 10,
               "width": 8,
               "x": 0,
-              "y": 112
+              "y": 120
             }
           },
           {
@@ -3306,7 +3672,7 @@
               "height": 10,
               "width": 8,
               "x": 8,
-              "y": 112
+              "y": 120
             }
           },
           {
@@ -3319,7 +3685,7 @@
               "height": 10,
               "width": 8,
               "x": 16,
-              "y": 112
+              "y": 120
             }
           },
           {
@@ -3332,7 +3698,7 @@
               "height": 12,
               "width": 24,
               "x": 0,
-              "y": 122
+              "y": 130
             }
           },
           {
@@ -3345,7 +3711,7 @@
               "height": 15,
               "width": 24,
               "x": 0,
-              "y": 134
+              "y": 142
             }
           }
         ]

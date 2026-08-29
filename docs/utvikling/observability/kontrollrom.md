@@ -15,7 +15,7 @@ Leveransen er coverage-first: det vi kan måle korrekt vises live; det vi ikke k
 3. **Avgrens én tjeneste:** Velg runtime i `Tjeneste`. Request-rate, OTel-feilratio og P95 gjelder da bare denne identiteten, ikke en uleselig miks av hele flåten.
 4. **Følg runbook og drilldown:** Hver runtime og pagerkandidat lenker til APM, avgrensede logger, Feildrilldown og relevant runbook.
 
-`Omfang` filtrerer bare oversiktskortene og flåtematrisen. `Tjeneste` styrer bare detaljpanelene. Browser-, pipeline-, jobb- og pagerseksjonene har sitt eksplisitte, faste scope og endres ikke av disse valgene.
+`Omfang` filtrerer bare oversiktskortene og flåtematrisen. `Tjeneste` styrer bare detaljpanelene. Dine sykmeldte-, browser-, pipeline-, jobb- og pagerseksjonene har sitt eksplisitte, faste scope og endres ikke av disse valgene.
 
 ## Tilstandsord
 
@@ -39,6 +39,7 @@ Kontrollrommet lager ikke én samlet grønn status. Den tidligere `sykepengedage
 - RED bruker `traces_spanmetrics_calls_total` og `traces_spanmetrics_latency_bucket`, avgrenset til `service_namespace=team-esyfo`, `k8s_cluster_name=prod` og `span_kind=SPAN_KIND_SERVER` for de 24 profilene med HTTP/SERVER-kontrakt.
 - `esyfovarsel` og `syfo-budstikka` er workers. De står som `ANNEN KONTRAKT` i SERVER-kolonnen og inngår ikke i SERVER-dekningsnevneren; deres operative kontroll ligger i pipeline-/jobbsignalene.
 - OTel `STATUS_CODE_ERROR` omtales som spanstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact.
+- De to Dine sykmeldte-panelene avgrenser `GET /api/minesykmeldte` og `GET /api/virksomheter`. Rute-/labelkontrakten og 200/`STATUS_CODE_UNSET` er live-verifisert mot NAIS APM-spanmetrikker. 2xx uten OTel-feilstatus er `good`; 4xx uten OTel-feilstatus vises nøytralt som `http_4xx`, mens 5xx eller OTel-feilstatus er `technical_failure`. Texas kan maskere tekniske introspeksjonsfeil som 401, så 4xx kalles ikke forventet før et bounded appsignal skiller årsakene i [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729).
 - Kube-signaler dedupliseres og `desired=0` filtreres bort.
 - Flåtematrisen teller bare positivt klassifiserte `detected_level=error|critical|fatal` siste fem minutter. Den gjør ikke en ekstra full-loggskann for å konstruere null; `No data` er ukjent. Valgt tjeneste kan undersøkes over dashboardets valgte tidsrom.
 
