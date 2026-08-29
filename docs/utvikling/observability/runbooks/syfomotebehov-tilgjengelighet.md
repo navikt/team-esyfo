@@ -4,10 +4,13 @@ Dette er diagnostikk for pagerkandidaten i [syfomotebehov#753](https://github.co
 
 ## Bekreft signalet
 
-1. Åpne Kontrollrommets panel `syfomotebehov · ready/desired`.
+1. Åpne Kontrollrommets panel `syfomotebehov · available/desired`, som speiler alertmetrikken. Bruk også den valgte tjenestens `Ready/desired`-panel som støttediagnostikk.
 2. Bekreft namespace `team-esyfo`, cluster `prod`, deployment `syfomotebehov` og at desired er større enn null.
-3. Skill:
-   - ready/desired 0 % med desired > 0: runtime er utilgjengelig.
+3. Ved tvil, sammenlign `kube_deployment_status_replicas_available` med `kube_deployment_spec_replicas` i Metrics Explore.
+4. Skill:
+   - available/desired 0 % med desired > 0: alertbetingelsen er sann og runtime er utilgjengelig etter det vedvarende vinduet.
+   - ready og available kan avvike kort under rollout eller på grunn av `minReadySeconds`; bruk available når du bekrefter selve alerten.
+   - manglende available-serie: `UKJENT`, ikke 0 % og ikke «nede».
    - desired = 0 eller manglende desired-serie: `UKJENT`, ikke «nede».
    - datasourcefeil: queryen kunne ikke evalueres.
 
@@ -28,7 +31,7 @@ Dette er diagnostikk for pagerkandidaten i [syfomotebehov#753](https://github.co
 
 ## Bevis recovery
 
-- ready/desired er stabilt 100 % i to komplette, påfølgende femminuttersvinduer, altså minst ti minutter. Dette er en diagnostisk v1-konvensjon; endelig alertvindu fastsettes og shadow-evalueres i #753/#217.
+- available/desired er stabilt 100 % i to komplette, påfølgende femminuttersvinduer, altså minst ti minutter. Kontrollrommets ready/desired-panel skal samtidig være 100 %. Dette er en diagnostisk v1-konvensjon; endelig alertvindu fastsettes og shadow-evalueres i #753/#217.
 - Request-rate er tilbake til forventet mønster eller legitim nulltrafikk er dokumentert.
 - Nye OTel-/runtimefeil øker ikke.
 - En kontrollert, ikke-personidentifiserende test av relevant møtebehovsflyt lykkes.
@@ -36,4 +39,4 @@ Dette er diagnostikk for pagerkandidaten i [syfomotebehov#753](https://github.co
 
 ## Runbook-test før pager
 
-Test i dev ved å skalere en ufarlig testdeployment eller bruke en kontrollert readiness-fixture. Verifiser 100 %, degradert, 0 %, desired=0, manglende serie og datasourcefeil som seks ulike tilstander. Produksjon skal ikke forstyrres for å teste runbooken.
+Test i dev ved å skalere en ufarlig testdeployment eller bruke en kontrollert readiness-fixture. Verifiser 100 %, degradert, 0 %, desired=0, manglende serie, ready/available-avvik og datasourcefeil som separate tilstander. Produksjon skal ikke forstyrres for å teste runbooken.

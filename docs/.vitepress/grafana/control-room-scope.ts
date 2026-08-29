@@ -291,7 +291,7 @@ export const pagerReadinessMarkdown =
 |---|---|---|---|
 | Budstikka ende-til-ende-ferskhet | Nåværende consumer-lag vises kun som diagnostikk; endelig alder/ferskhet og terminale utfall mangler | [Budstikka-helsesjekk](${BUDSTIKKA_RUNBOOK_URL}) | **BLOCKED** · [#260](https://github.com/navikt/syfo-budstikka/issues/260), [#217](https://github.com/navikt/team-esyfo/issues/217) |
 | Oppfølgingsplan permanent deserialisering | Verifisert rate-metrikk vises; recovery/reconciliation må bevises | [Runbook](${DESERIALIZATION_RUNBOOK_URL}) | **BLOCKED** · [#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449), [#217](https://github.com/navikt/team-esyfo/issues/217) |
-| syfomotebehov tilgjengelighet | Ready/desired vises sammen med RED-detaljene; endelig konsekvens og tuning gjenstår | [Runbook](${MOTEBEHOV_RUNBOOK_URL}) | **BLOCKED** · [#753](https://github.com/navikt/syfomotebehov/issues/753), [#217](https://github.com/navikt/team-esyfo/issues/217) |
+| syfomotebehov tilgjengelighet | Available/desired speiler shadow-kandidaten og vises sammen med ready/desired og RED-detaljene; endelig konsekvens og tuning gjenstår | [Runbook](${MOTEBEHOV_RUNBOOK_URL}) | **BLOCKED** · [#753](https://github.com/navikt/syfomotebehov/issues/753), [#217](https://github.com/navikt/team-esyfo/issues/217) |
 
 Dashboardpaneler og runbooks aktiverer ikke pager. Aktivering krever shadow-evidens, 14–28 dagers observasjon, second-person-verifikasjon og eksplisitt beslutning i #217.`;
 

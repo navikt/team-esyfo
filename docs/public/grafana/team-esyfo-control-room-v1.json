@@ -2342,7 +2342,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "### Pager readiness · alle tre er blokkert\n\n| Kandidat fra #210 | Diagnostikk i kontrollrommet | Runbook | Aktivering |\n|---|---|---|---|\n| Budstikka ende-til-ende-ferskhet | Nåværende consumer-lag vises kun som diagnostikk; endelig alder/ferskhet og terminale utfall mangler | [Budstikka-helsesjekk](https://github.com/navikt/syfo-budstikka/blob/main/docs/helsesjekk.md) | **BLOCKED** · [#260](https://github.com/navikt/syfo-budstikka/issues/260), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n| Oppfølgingsplan permanent deserialisering | Verifisert rate-metrikk vises; recovery/reconciliation må bevises | [Runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/oppfolgingsplan-deserialisering) | **BLOCKED** · [#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n| syfomotebehov tilgjengelighet | Ready/desired vises sammen med RED-detaljene; endelig konsekvens og tuning gjenstår | [Runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/syfomotebehov-tilgjengelighet) | **BLOCKED** · [#753](https://github.com/navikt/syfomotebehov/issues/753), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n\nDashboardpaneler og runbooks aktiverer ikke pager. Aktivering krever shadow-evidens, 14–28 dagers observasjon, second-person-verifikasjon og eksplisitt beslutning i #217.",
+                "content": "### Pager readiness · alle tre er blokkert\n\n| Kandidat fra #210 | Diagnostikk i kontrollrommet | Runbook | Aktivering |\n|---|---|---|---|\n| Budstikka ende-til-ende-ferskhet | Nåværende consumer-lag vises kun som diagnostikk; endelig alder/ferskhet og terminale utfall mangler | [Budstikka-helsesjekk](https://github.com/navikt/syfo-budstikka/blob/main/docs/helsesjekk.md) | **BLOCKED** · [#260](https://github.com/navikt/syfo-budstikka/issues/260), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n| Oppfølgingsplan permanent deserialisering | Verifisert rate-metrikk vises; recovery/reconciliation må bevises | [Runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/oppfolgingsplan-deserialisering) | **BLOCKED** · [#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n| syfomotebehov tilgjengelighet | Available/desired speiler shadow-kandidaten og vises sammen med ready/desired og RED-detaljene; endelig konsekvens og tuning gjenstår | [Runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/syfomotebehov-tilgjengelighet) | **BLOCKED** · [#753](https://github.com/navikt/syfomotebehov/issues/753), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n\nDashboardpaneler og runbooks aktiverer ikke pager. Aktivering krever shadow-evidens, 14–28 dagers observasjon, second-person-verifikasjon og eksplisitt beslutning i #217.",
                 "mode": "markdown"
               }
             },
@@ -2734,7 +2734,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": true,
-                        "expr": "(100 * (max by (deployment) (kube_deployment_status_replicas_ready{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"syfomotebehov\"}) or on(deployment) (max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"syfomotebehov\"}) * 0)) / max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"syfomotebehov\"})) and on(deployment) (max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"syfomotebehov\"}) > 0)",
+                        "expr": "(100 * max by (deployment) (kube_deployment_status_replicas_available{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"syfomotebehov\"}) / max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"syfomotebehov\"})) and on(deployment) (max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"syfomotebehov\"}) > 0)",
                         "instant": false,
                         "interval": "",
                         "legendFormat": "{{deployment}}",
@@ -2742,7 +2742,7 @@
                       },
                       "version": "v0"
                     },
-                    "refId": "Motebehov ready"
+                    "refId": "Motebehov available"
                   }
                 }
               ],
@@ -2750,7 +2750,7 @@
               "transformations": []
             }
           },
-          "description": "Tilgjengelighetsdiagnostikk med namespace, cluster, desired-guard og eksplisitt no-data. Les sammen med valgt tjenestes RED-paneler; endelig pager tuning skjer i #753.",
+          "description": "Alertnær tilgjengelighetsdiagnostikk med available-replikaer, namespace, cluster, desired-guard og eksplisitt no-data. Les sammen med valgt tjenestes ready/desired- og RED-paneler; endelig pager tuning skjer i #753.",
           "id": 27,
           "links": [
             {
@@ -2784,7 +2784,7 @@
               "url": "https://github.com/navikt/syfomotebehov/issues/753"
             }
           ],
-          "title": "syfomotebehov · ready/desired",
+          "title": "syfomotebehov · available/desired",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
