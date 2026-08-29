@@ -1,4 +1,9 @@
-import type { IssueRef, Repository, TrackedLink } from "../runtime/model.ts";
+import type {
+	IsoDateTime,
+	IssueRef,
+	Repository,
+	TrackedLink,
+} from "../runtime/model.ts";
 import type {
 	AlertDeployment,
 	AlertDesiredDelivery,
@@ -21,6 +26,7 @@ export const ALERT_SNAPSHOT_AT = "2026-08-28T17:45:44Z" as const;
 export const ALERT_POLICY_DECIDED_AT = "2026-08-28T19:13:53Z" as const;
 export const GRAFANA_CONSOLIDATION_REVIEWED_AT =
 	"2026-08-29T09:45:02Z" as const;
+export const BUDSTIKKA_ALERTS_REFRESHED_AT = "2026-08-29T11:53:41Z" as const;
 export const NAIS_ALERTS_URL =
 	"https://console.nav.cloud.nais.io/team/team-esyfo/alerts";
 export const NAIS_SETTINGS_URL =
@@ -38,6 +44,7 @@ const repositorySource = (
 	path: string,
 	commitSha: string,
 	deliveryAutomationFinding?: AlertSourceAutomationFinding,
+	capturedAt: IsoDateTime = ALERT_SNAPSHOT_AT,
 ): AlertSource => ({
 	kind: "repository",
 	evidenceKind: "default-branch-snapshot",
@@ -46,7 +53,7 @@ const repositorySource = (
 	path,
 	commitSha,
 	href: `https://github.com/${repository}/blob/${commitSha}/${path}`,
-	capturedAt: ALERT_SNAPSHOT_AT,
+	capturedAt,
 	deliveryAutomationFinding,
 });
 
@@ -91,13 +98,17 @@ export const alertSources: AlertSource[] = [
 		"source:budstikka-dev",
 		"navikt/syfo-budstikka",
 		"nais/alerts-dev.yaml",
-		"6536a0090daedb3ade1818ff1e79adc4f0ff7951",
+		"422a150ca189a8be0c615c35ba9c350d60aab802",
+		undefined,
+		BUDSTIKKA_ALERTS_REFRESHED_AT,
 	),
 	repositorySource(
 		"source:budstikka-prod",
 		"navikt/syfo-budstikka",
 		"nais/alerts-prod.yaml",
-		"6536a0090daedb3ade1818ff1e79adc4f0ff7951",
+		"422a150ca189a8be0c615c35ba9c350d60aab802",
+		undefined,
+		BUDSTIKKA_ALERTS_REFRESHED_AT,
 	),
 	repositorySource(
 		"source:oppfolgingsplan-dev",
@@ -985,52 +996,13 @@ export const alertRules: AlertRule[] = [
 		dashboard: errorDashboard("syfo-budstikka"),
 		annotations: {
 			summary: "Budstikka har hatt mer enn 100 meldinger lag i 15 minutter.",
-			consequence: "Varsler kan være forsinket.",
-			action: "Følg runbooken for consumer-lag, dead letters og inbox-feil.",
+			consequence:
+				"Kafka-inntaket har en vedvarende backlogg. Lag alene viser ikke om downstream-leveranser har stoppet eller om brukere er påvirket.",
+			action:
+				"Følg runbooken: bekreft lagtrenden, og sjekk dead letters, inbox-feil og logger.",
 		},
 		riskNotes: [
 			"må avstemmes mot forventet trafikk og ende-til-ende-ferskhet i #212",
-		],
-	}),
-	prometheusRule({
-		id: "rule:budstikka-consumer-lag-critical",
-		name: "BudstikkaConsumerLagCritical",
-		expr: 'max by (topic) (kafka_consumer_fetch_manager_records_lag_max{app="syfo-budstikka", namespace="team-esyfo", topic="team-esyfo.budstikka.v1"}) > 0',
-		holdFor: "1h",
-		semantic: "consumer-lag",
-		semanticFamily: "bounded-consumer-lag",
-		lifecycle: permanent,
-		policy: replacePolicy(
-			teamOwner("navikt/syfo-budstikka", "app:syfo-budstikka"),
-			"Lag > 0 i én time er fortsatt køtilstand, ikke sikkert bevis på alvorlig konsekvens; pager-kandidaten skal bygge på eldste alder/ferskhet og terminale utfall.",
-			blockedPager(),
-			"navikt/syfo-budstikka#260",
-			plannedReplacement("navikt/syfo-budstikka#260", [
-				"app:syfo-budstikka",
-				"topic:budstikka.v1",
-			]),
-		),
-		targetRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
-		monitoredRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
-		externalTargets: [],
-		journeyRefs: ["journey:notifications"],
-		pipelineRefs: ["pipeline:notifications"],
-		deployments: [
-			dev("source:budstikka-dev", "critical"),
-			prod("source:budstikka-prod", "critical"),
-		],
-		runbook: linked(
-			"https://github.com/navikt/syfo-budstikka/blob/main/docs/helsesjekk.md",
-			"Budstikka helsesjekk",
-		),
-		dashboard: errorDashboard("syfo-budstikka"),
-		annotations: {
-			summary: "Budstikka har ikke tømt topicen på én time.",
-			consequence: "Varsler leveres ikke eller er vesentlig forsinket.",
-			action: "Følg runbooken; restart alene løser ikke poison records.",
-		},
-		riskNotes: [
-			"må avstemmes mot ende-til-ende-ferskhet og legitim nulltrafikk i #212",
 		],
 	}),
 	prometheusRule({
@@ -1636,7 +1608,7 @@ export const alertRules: AlertRule[] = [
 				{
 					href: "https://github.com/navikt/syfo-budstikka/blob/6536a0090daedb3ade1818ff1e79adc4f0ff7951/nais/alerts-prod.yaml",
 					summary:
-						"Kun budstikka.v1 har direkte overlapp i form av to app-avgrensede PrometheusRules; de ni øvrige topic-gapene beholdes separat.",
+						"Ved pensjoneringsbeslutningen hadde bare budstikka.v1 direkte overlapp i form av to app-avgrensede PrometheusRules; de ni øvrige topic-gapene ble beholdt separat.",
 					verifiedAt: GRAFANA_CONSOLIDATION_REVIEWED_AT,
 				},
 				{
@@ -1668,7 +1640,7 @@ export const alertRules: AlertRule[] = [
 			"navnet sier lag, men uttrykket måler absolutt consumer-offset",
 			"live preview viste 46 fyrende serier mens selve regelen var pauset",
 			"queryen blander consumer-grupper med forskjellige eiere, trafikkmønstre og konsekvenser",
-			"kun budstikka.v1 har direkte overlapp via to app-avgrensede PrometheusRules; ni separate topic-gap beholdes i #212",
+			"kun budstikka.v1 har direkte overlapp via én app-avgrenset warning-regel; ni separate topic-gap beholdes i #212",
 			"må forbli pauset frem til sletting og skal aldri erstattes av én global topic-regel",
 			"#212 definerer det uavhengige arbeidet med typekorrekte signaler per topic og eier",
 		],
@@ -1689,8 +1661,6 @@ const observedPrometheusInstances = [
 	["rule:lumi-retention-stale", "prod-gcp"],
 	["rule:budstikka-consumer-lag-warning", "dev-gcp"],
 	["rule:budstikka-consumer-lag-warning", "prod-gcp"],
-	["rule:budstikka-consumer-lag-critical", "dev-gcp"],
-	["rule:budstikka-consumer-lag-critical", "prod-gcp"],
 	["rule:oppfolgingsplan-sykmelding-deserialization", "dev-gcp"],
 	["rule:oppfolgingsplan-sykmelding-deserialization", "prod-gcp"],
 	["rule:oppfolgingsplan-sykmelding-runtime-errors", "dev-gcp"],
@@ -1734,7 +1704,6 @@ const observedExpressionFingerprints: Partial<
 	"rule:lumi-retention-failure": "fnv1a64:28c98f9dd1f8b6cf",
 	"rule:lumi-retention-stale": "fnv1a64:d5c2708bee37265e",
 	"rule:budstikka-consumer-lag-warning": "fnv1a64:154e966036a92b0c",
-	"rule:budstikka-consumer-lag-critical": "fnv1a64:b96fc67b0f7928bf",
 	"rule:oppfolgingsplan-sykmelding-deserialization": "fnv1a64:a13a854f38a69dc1",
 	"rule:oppfolgingsplan-sykmelding-runtime-errors": "fnv1a64:6293d5f1991f0e28",
 	"rule:oppfolgingsplan-outbox-oldest-due": "fnv1a64:23305150acb4aec4",
@@ -1770,7 +1739,6 @@ const observedTimings: Partial<
 	"rule:lumi-retention-failure": {},
 	"rule:lumi-retention-stale": { holdFor: "15m" },
 	"rule:budstikka-consumer-lag-warning": { holdFor: "15m" },
-	"rule:budstikka-consumer-lag-critical": { holdFor: "1h" },
 	"rule:oppfolgingsplan-sykmelding-deserialization": { holdFor: "5m" },
 	"rule:oppfolgingsplan-sykmelding-runtime-errors": { holdFor: "10m" },
 	"rule:oppfolgingsplan-outbox-oldest-due": { holdFor: "10m" },
@@ -1874,6 +1842,7 @@ const grafanaObservations: AlertObservation[] = [
 export const alertRegistry: AlertRegistry = {
 	schemaVersion: 2,
 	ownerTeam: "team-esyfo",
+	refreshedAt: BUDSTIKKA_ALERTS_REFRESHED_AT,
 	capturedAt: ALERT_SNAPSHOT_AT,
 	inventoryIssue: "navikt/team-esyfo#203",
 	policy: alertPolicyCatalog,

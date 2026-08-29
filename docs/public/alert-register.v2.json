@@ -1,6 +1,7 @@
 {
   "schemaVersion": 2,
   "ownerTeam": "team-esyfo",
+  "refreshedAt": "2026-08-29T11:53:41Z",
   "capturedAt": "2026-08-28T17:45:44Z",
   "inventoryIssue": "navikt/team-esyfo#203",
   "policy": {
@@ -186,9 +187,9 @@
       "id": "source:budstikka-dev",
       "repository": "navikt/syfo-budstikka",
       "path": "nais/alerts-dev.yaml",
-      "commitSha": "6536a0090daedb3ade1818ff1e79adc4f0ff7951",
-      "href": "https://github.com/navikt/syfo-budstikka/blob/6536a0090daedb3ade1818ff1e79adc4f0ff7951/nais/alerts-dev.yaml",
-      "capturedAt": "2026-08-28T17:45:44Z"
+      "commitSha": "422a150ca189a8be0c615c35ba9c350d60aab802",
+      "href": "https://github.com/navikt/syfo-budstikka/blob/422a150ca189a8be0c615c35ba9c350d60aab802/nais/alerts-dev.yaml",
+      "capturedAt": "2026-08-29T11:53:41Z"
     },
     {
       "kind": "repository",
@@ -196,9 +197,9 @@
       "id": "source:budstikka-prod",
       "repository": "navikt/syfo-budstikka",
       "path": "nais/alerts-prod.yaml",
-      "commitSha": "6536a0090daedb3ade1818ff1e79adc4f0ff7951",
-      "href": "https://github.com/navikt/syfo-budstikka/blob/6536a0090daedb3ade1818ff1e79adc4f0ff7951/nais/alerts-prod.yaml",
-      "capturedAt": "2026-08-28T17:45:44Z"
+      "commitSha": "422a150ca189a8be0c615c35ba9c350d60aab802",
+      "href": "https://github.com/navikt/syfo-budstikka/blob/422a150ca189a8be0c615c35ba9c350d60aab802/nais/alerts-prod.yaml",
+      "capturedAt": "2026-08-29T11:53:41Z"
     },
     {
       "kind": "repository",
@@ -1259,107 +1260,11 @@
       },
       "annotations": {
         "summary": "Budstikka har hatt mer enn 100 meldinger lag i 15 minutter.",
-        "consequence": "Varsler kan være forsinket.",
-        "action": "Følg runbooken for consumer-lag, dead letters og inbox-feil."
+        "consequence": "Kafka-inntaket har en vedvarende backlogg. Lag alene viser ikke om downstream-leveranser har stoppet eller om brukere er påvirket.",
+        "action": "Følg runbooken: bekreft lagtrenden, og sjekk dead letters, inbox-feil og logger."
       },
       "riskNotes": [
         "må avstemmes mot forventet trafikk og ende-til-ende-ferskhet i #212"
-      ],
-      "monitoredRefs": [
-        "app:syfo-budstikka",
-        "topic:budstikka.v1"
-      ]
-    },
-    {
-      "engine": "prometheus-rule",
-      "ownerTeam": "team-esyfo",
-      "notification": {
-        "kind": "nais-team-slack",
-        "channel": "#esyfo-alarm",
-        "verifiedAt": "2026-08-28T17:45:44Z",
-        "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/settings"
-      },
-      "id": "rule:budstikka-consumer-lag-critical",
-      "name": "BudstikkaConsumerLagCritical",
-      "expr": "max by (topic) (kafka_consumer_fetch_manager_records_lag_max{app=\"syfo-budstikka\", namespace=\"team-esyfo\", topic=\"team-esyfo.budstikka.v1\"}) > 0",
-      "holdFor": "1h",
-      "semantic": "consumer-lag",
-      "semanticFamily": "bounded-consumer-lag",
-      "lifecycle": {
-        "state": "permanent"
-      },
-      "policy": {
-        "decision": "REPLACE",
-        "owner": {
-          "kind": "team",
-          "team": "team-esyfo",
-          "repository": "navikt/syfo-budstikka",
-          "scopeRef": "app:syfo-budstikka"
-        },
-        "rationale": "Lag > 0 i én time er fortsatt køtilstand, ikke sikkert bevis på alvorlig konsekvens; pager-kandidaten skal bygge på eldste alder/ferskhet og terminale utfall.",
-        "operationalResponse": {
-          "phase": "replacement",
-          "delivery": {
-            "tier": "pager",
-            "channelPolicyRef": "channel:team-esyfo-pager",
-            "activation": "blocked",
-            "blockerIssues": [
-              "navikt/team-esyfo#211",
-              "navikt/team-esyfo#217"
-            ]
-          }
-        },
-        "implementationIssue": "navikt/syfo-budstikka#260",
-        "replacement": {
-          "status": "planned",
-          "issue": "navikt/syfo-budstikka#260",
-          "targetRefs": [
-            "app:syfo-budstikka",
-            "topic:budstikka.v1"
-          ]
-        },
-        "decidedAt": "2026-08-28T19:13:53Z"
-      },
-      "targetRefs": [
-        "app:syfo-budstikka",
-        "topic:budstikka.v1"
-      ],
-      "externalTargets": [],
-      "journeyRefs": [
-        "journey:notifications"
-      ],
-      "pipelineRefs": [
-        "pipeline:notifications"
-      ],
-      "deployments": [
-        {
-          "environment": "dev-gcp",
-          "sourceRef": "source:budstikka-dev",
-          "severity": "critical"
-        },
-        {
-          "environment": "prod-gcp",
-          "sourceRef": "source:budstikka-prod",
-          "severity": "critical"
-        }
-      ],
-      "runbook": {
-        "status": "linked",
-        "href": "https://github.com/navikt/syfo-budstikka/blob/main/docs/helsesjekk.md",
-        "label": "Budstikka helsesjekk"
-      },
-      "dashboard": {
-        "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-budstikka",
-        "label": "Feildrilldown"
-      },
-      "annotations": {
-        "summary": "Budstikka har ikke tømt topicen på én time.",
-        "consequence": "Varsler leveres ikke eller er vesentlig forsinket.",
-        "action": "Følg runbooken; restart alene løser ikke poison records."
-      },
-      "riskNotes": [
-        "må avstemmes mot ende-til-ende-ferskhet og legitim nulltrafikk i #212"
       ],
       "monitoredRefs": [
         "app:syfo-budstikka",
@@ -2828,7 +2733,7 @@
               },
               {
                 "href": "https://github.com/navikt/syfo-budstikka/blob/6536a0090daedb3ade1818ff1e79adc4f0ff7951/nais/alerts-prod.yaml",
-                "summary": "Kun budstikka.v1 har direkte overlapp i form av to app-avgrensede PrometheusRules; de ni øvrige topic-gapene beholdes separat.",
+                "summary": "Ved pensjoneringsbeslutningen hadde bare budstikka.v1 direkte overlapp i form av to app-avgrensede PrometheusRules; de ni øvrige topic-gapene ble beholdt separat.",
                 "verifiedAt": "2026-08-29T09:45:02Z"
               },
               {
@@ -2884,7 +2789,7 @@
         "navnet sier lag, men uttrykket måler absolutt consumer-offset",
         "live preview viste 46 fyrende serier mens selve regelen var pauset",
         "queryen blander consumer-grupper med forskjellige eiere, trafikkmønstre og konsekvenser",
-        "kun budstikka.v1 har direkte overlapp via to app-avgrensede PrometheusRules; ni separate topic-gap beholdes i #212",
+        "kun budstikka.v1 har direkte overlapp via én app-avgrenset warning-regel; ni separate topic-gap beholdes i #212",
         "må forbli pauset frem til sletting og skal aldri erstattes av én global topic-regel",
         "#212 definerer det uavhengige arbeidet med typekorrekte signaler per topic og eier"
       ],
@@ -3100,38 +3005,6 @@
       "observedDefinition": {
         "expressionFingerprint": "fnv1a64:154e966036a92b0c",
         "holdFor": "15m",
-        "comparison": "semantic-match",
-        "normalizationNote": "Live NAIS-query og for-varighet er avstemt mot kilden etter normalisering av automatisk k8s_cluster_name og matcherrekkefølge."
-      },
-      "observedAt": "2026-08-28T17:45:44Z",
-      "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/alerts",
-      "note": "NAIS Console viste Inactive. Det betyr ingen fyrende alertinstans, ikke deaktivert regel; evaluatorhelse ble ikke eksponert."
-    },
-    {
-      "ruleId": "rule:budstikka-consumer-lag-critical",
-      "environment": "dev-gcp",
-      "configuredState": "enabled",
-      "evaluationState": "not-firing",
-      "evaluationHealth": "unknown",
-      "observedDefinition": {
-        "expressionFingerprint": "fnv1a64:b96fc67b0f7928bf",
-        "holdFor": "1h",
-        "comparison": "semantic-match",
-        "normalizationNote": "Live NAIS-query og for-varighet er avstemt mot kilden etter normalisering av automatisk k8s_cluster_name og matcherrekkefølge."
-      },
-      "observedAt": "2026-08-28T17:45:44Z",
-      "evidenceHref": "https://console.nav.cloud.nais.io/team/team-esyfo/alerts",
-      "note": "NAIS Console viste Inactive. Det betyr ingen fyrende alertinstans, ikke deaktivert regel; evaluatorhelse ble ikke eksponert."
-    },
-    {
-      "ruleId": "rule:budstikka-consumer-lag-critical",
-      "environment": "prod-gcp",
-      "configuredState": "enabled",
-      "evaluationState": "not-firing",
-      "evaluationHealth": "unknown",
-      "observedDefinition": {
-        "expressionFingerprint": "fnv1a64:b96fc67b0f7928bf",
-        "holdFor": "1h",
         "comparison": "semantic-match",
         "normalizationNote": "Live NAIS-query og for-varighet er avstemt mot kilden etter normalisering av automatisk k8s_cluster_name og matcherrekkefølge."
       },

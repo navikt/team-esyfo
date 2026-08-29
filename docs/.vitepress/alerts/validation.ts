@@ -135,9 +135,35 @@ export const buildAlertRegistryReport = (
 	) {
 		errors.push(`Ugyldig capturedAt: ${registry.capturedAt}.`);
 	}
+	if (
+		!ISO_DATE_TIME.test(registry.refreshedAt) ||
+		!Number.isFinite(new Date(registry.refreshedAt).getTime())
+	) {
+		errors.push(`Ugyldig refreshedAt: ${registry.refreshedAt}.`);
+	} else if (
+		Number.isFinite(new Date(registry.capturedAt).getTime()) &&
+		new Date(registry.refreshedAt).getTime() <
+			new Date(registry.capturedAt).getTime()
+	) {
+		errors.push("refreshedAt kan ikke være før observasjonssnapshotet.");
+	}
 
 	for (const source of registry.sources) {
 		if (source.kind === "repository") {
+			const sourceCapturedAt = new Date(source.capturedAt).getTime();
+			if (
+				!ISO_DATE_TIME.test(source.capturedAt) ||
+				!Number.isFinite(sourceCapturedAt)
+			) {
+				errors.push(`${source.id} har ugyldig capturedAt.`);
+			}
+			if (
+				source.evidenceKind === "default-branch-snapshot" &&
+				Number.isFinite(sourceCapturedAt) &&
+				sourceCapturedAt > new Date(registry.refreshedAt).getTime()
+			) {
+				errors.push(`${source.id} er hentet etter registerets refreshedAt.`);
+			}
 			if (!COMMIT_SHA.test(source.commitSha)) {
 				errors.push(`${source.id} mangler pinnet commit-SHA.`);
 			}
@@ -310,14 +336,14 @@ export const buildAlertRegistryReport = (
 		}
 	}
 
-	if (prometheusRules.length !== 29) {
+	if (prometheusRules.length !== 28) {
 		errors.push(
-			`Forventet 29 Prometheus-definisjoner, fant ${prometheusRules.length}.`,
+			`Forventet 28 Prometheus-definisjoner, fant ${prometheusRules.length}.`,
 		);
 	}
-	if (prometheusObservations.length !== 39) {
+	if (prometheusObservations.length !== 37) {
 		errors.push(
-			`Forventet 39 PrometheusRule-instanser, fant ${prometheusObservations.length}.`,
+			`Forventet 37 PrometheusRule-instanser, fant ${prometheusObservations.length}.`,
 		);
 	}
 	if (grafanaRules.length !== 2 || grafanaObservations.length !== 2) {
@@ -335,8 +361,8 @@ export const buildAlertRegistryReport = (
 		prometheusByEnvironment[environment] += 1;
 	}
 	for (const [environment, expected] of [
-		["dev-gcp", 7],
-		["prod-gcp", 26],
+		["dev-gcp", 6],
+		["prod-gcp", 25],
 		["prod-fss", 6],
 	] as const) {
 		if (prometheusByEnvironment[environment] !== expected) {

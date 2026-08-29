@@ -431,6 +431,7 @@ export interface AlertDriftReport {
 export interface AlertRegistry {
 	schemaVersion: 2;
 	ownerTeam: "team-esyfo";
+	refreshedAt: IsoDateTime;
 	capturedAt: IsoDateTime;
 	inventoryIssue: "navikt/team-esyfo#203";
 	policy: AlertPolicyCatalog;

@@ -241,7 +241,7 @@ const sourceMeta = (source: AlertSource) =>
 	source.kind === "repository"
 		? source.evidenceKind === "historical-source-snapshot"
 			? `historisk kilde ${source.commitSha.slice(0, 12)} · ${source.transition.kind === "file-removed" ? "slettet" : "erstattet"} ${source.transition.occurredAt.slice(0, 10)}`
-			: `${source.deliveryAutomationFinding ? "workflow-gap" : "default branch ved kartlegging"} · ${source.commitSha.slice(0, 12)}`
+			: `${source.deliveryAutomationFinding ? "workflow-gap" : "default branch"} · hentet ${source.capturedAt.slice(0, 10)} · ${source.commitSha.slice(0, 12)}`
 		: `UID ${source.uid} · oppdatert ${source.lastUpdatedAt.slice(0, 10)}`;
 
 const sourceKindLabel = (source: AlertSource) => {
@@ -397,11 +397,12 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 <div class="alert-register">
 	<header class="register-header">
 		<div>
-			<p class="eyebrow">Team eSyfo · verifisert snapshot · {{ alertRegistry.capturedAt }}</p>
+			<p class="eyebrow">Team eSyfo · register oppdatert · {{ alertRegistry.refreshedAt }}</p>
 			<h2>Alert-register</h2>
 			<p>
 				Én sporbar oversikt over definisjon, deployert instans, observert tilstand,
-				livssyklus, policyvedtak og implementeringsgap.
+				livssyklus, policyvedtak og implementeringsgap. Live-observasjonene er fra
+				{{ alertRegistry.capturedAt }}.
 			</p>
 		</div>
 		<div class="header-stamp" aria-label="Registerstatus">
@@ -833,9 +834,10 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 		<div class="source-caveat">
 			<strong>Repo-SHA er ikke deploy-bevis.</strong>
 			For vanlige repo-snapshots pinner SHA-en alertdefinisjonen som lå på default branch ved
-			kartleggingstid. Slettede eller erstattede deploygrunnlag er eksplisitt merket som
+			registrert innhentingstid. Slettede eller erstattede deploygrunnlag er eksplisitt merket som
 			historiske kilder.
-			Live query og <code>for</code> ble manuelt avstemt for alle 39 NAIS-instanser og lagret
+			Live query og <code>for</code> ble manuelt avstemt for de
+			{{ report.counts.prometheusInstances }} gjeldende NAIS-instansene og lagret
 			som fingerprint/timing-attestasjon. NAIS injiserer cluster-label og kan omorganisere
 			matchere; dette er derfor en semantisk kontroll, ikke en automatisk PromQL-canonicalizer
 			eller bevis på eksakt deployed commit. Det finnes ingen påstand om at alle
