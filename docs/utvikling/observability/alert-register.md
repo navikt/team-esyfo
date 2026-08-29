@@ -39,7 +39,9 @@ Kanalene er avklart slik:
 
 Registeret skiller bevisst mellom **konfigurasjon**, **evaluering** og **evaluatorhelse**. NAIS viste 39 PrometheusRule-instanser som `Inactive` ved snapshotet. De er fortsatt konfigurert som `enabled`; `Inactive` betyr bare at ingen alertinstans fyrte akkurat da. Det er derfor ikke det samme som `disabled`, og heller ikke et bevis på at evaluator eller query er frisk.
 
-De to Grafana-reglene var derimot eksplisitt `paused / not-evaluated`. Kafka-regelen må ikke bare slås på: navnet omtaler consumer lag, mens uttrykket måler absolutt consumer-offset. Live preview viste 46 serier over terskelen. Den skal erstattes av en typekorrekt topic-kontrakt i [#212](https://github.com/navikt/team-esyfo/issues/212).
+De to Grafana-reglene var derimot eksplisitt `paused / not-evaluated`. Kafka-regelen må ikke bare slås på: navnet omtaler consumer lag, mens uttrykket måler absolutt consumer-offset. Live preview viste 46 serier over terskelen. Siden regelen både er pauset og semantisk ugyldig, er den klar for begrunnet sletting uten en ny global kopi. Bare `budstikka.v1` har direkte overlapp via to app-avgrensede PrometheusRules; de ni øvrige topic-gapene beholdes i [#212](https://github.com/navikt/team-esyfo/issues/212), som definerer riktig eier og signal per topic.
+
+Den andre Grafana-regelen sammenligner kandidater i `meroppfolging-backend` med en senere legacy-teller i `esyfovarsel`. Tellerne har ulike prosesseringsgrenser og kan ikke brukes som et regnskap. Den forblir pauset frem til en prosessornøytral erstatning er shadow-verifisert for akkurat `SM_MER_VEILEDNING`; en vilkårlig første Budstikka-flyt oppfyller ikke dette kravet.
 
 Prometheus-reglene rutes i dag via NAIS-teaminnstillingen til `#esyfo-alarm`. Grafana-reglene har kontaktpunktet `Slack-esyfo-alert`, men den fysiske kanalen bak webhooken er ikke synlig i regelvisningen og står derfor eksplisitt som `unresolved`. Registeret gjetter ikke. Den vedtatte, fasebundne responsen står separat fra denne observerte rutingen, og policygap forblir synlige frem til tilhørende oppgave har live-evidens.
 

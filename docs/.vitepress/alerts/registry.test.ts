@@ -68,6 +68,32 @@ describe("alert-register", () => {
 		assert.equal(kafkaRule.semantic, "raw-consumer-offset");
 		assert.match(kafkaRule.expr, /kafka_consumer_group_offset/);
 		assert.ok(kafkaRule.riskNotes.some((note) => note.includes("46")));
+		assert.equal(kafkaRule.policy.decision, "RETIRE");
+		if (kafkaRule.policy.decision === "RETIRE") {
+			assert.equal(kafkaRule.policy.retirementGate.status, "ready");
+			if (kafkaRule.policy.retirementGate.status === "ready") {
+				assert.equal(
+					kafkaRule.policy.retirementGate.reviewedAt,
+					"2026-08-29T09:45:02Z",
+				);
+				assert.equal(
+					kafkaRule.policy.retirementGate.basis.kind,
+					"justified-removal",
+				);
+				assert.ok(
+					kafkaRule.policy.retirementGate.basis.evidence.some(
+						({ href, summary }) =>
+							href.endsWith("/team-esyfo/issues/212") &&
+							summary.includes("definerer"),
+					),
+				);
+			}
+		}
+		assert.ok(
+			kafkaRule.riskNotes.some(
+				(note) => note.includes("budstikka.v1") && note.includes("ni"),
+			),
+		);
 		assert.equal(kafkaRule.notification.kind, "grafana-contact-point");
 		if (kafkaRule.notification.kind === "grafana-contact-point") {
 			assert.equal(kafkaRule.notification.channel.status, "unresolved");
@@ -77,6 +103,14 @@ describe("alert-register", () => {
 		);
 		const varselObservation = alertRegistry.observations.find(
 			({ ruleId }) => ruleId === "rule:grafana-varsel-avvik",
+		);
+		const varselRule = grafanaRules.find(
+			({ id }) => id === "rule:grafana-varsel-avvik",
+		);
+		assert.ok(varselRule);
+		assert.equal(varselRule.dashboard.status, "missing");
+		assert.ok(
+			varselRule.riskNotes.some((note) => note.includes("SM_MER_VEILEDNING")),
 		);
 		assert.equal(
 			kafkaObservation?.observedDefinition.comparison,
@@ -491,6 +525,24 @@ describe("alert-register", () => {
 		assert.ok(
 			buildAlertRegistryReport(registry).errors.some((error) =>
 				error.includes("mangler begrunnet og dokumentert retirement"),
+			),
+		);
+
+		const invalidReview = copyRegistry();
+		const reviewedRule = invalidReview.rules.find(
+			({ id }) => id === "rule:grafana-kafka-offset",
+		);
+		assert.ok(reviewedRule);
+		if (reviewedRule.policy.decision !== "RETIRE") {
+			assert.fail("Forventet RETIRE.");
+		}
+		if (reviewedRule.policy.retirementGate.status !== "ready") {
+			assert.fail("Forventet ready retirement.");
+		}
+		reviewedRule.policy.retirementGate.reviewedAt = "ugyldig" as never;
+		assert.ok(
+			buildAlertRegistryReport(invalidReview).errors.some((error) =>
+				error.includes("ugyldig reviewtid for retirement"),
 			),
 		);
 	});

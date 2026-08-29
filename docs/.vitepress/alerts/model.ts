@@ -230,6 +230,7 @@ export type AlertRetirementGate =
 	  }
 	| {
 			status: "ready";
+			reviewedAt?: IsoDateTime;
 			basis:
 				| {
 						kind: "verified-replacement";

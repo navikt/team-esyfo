@@ -2711,7 +2711,7 @@
           "repository": "navikt/team-esyfo",
           "scopeRef": "pipeline:notifications"
         },
-        "rationale": "Den pausede direkte differansen er prosessorspesifikk og mangler robust reduce/threshold; migreringskontroll skal være ende-til-ende og prosessornøytral.",
+        "rationale": "Den pausede differansen sammenligner kandidater med et senere legacy-tellepunkt etter deler av fanouten og er verken regnskapsmessig eller prosessornøytral. Erstatningen må dekke akkurat SM_MER_VEILEDNING ende til ende.",
         "operationalResponse": {
           "phase": "replacement",
           "delivery": {
@@ -2754,15 +2754,18 @@
         "issue": "navikt/team-esyfo#211"
       },
       "dashboard": {
-        "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/de2wwv58swrnkd?viewPanel=2",
-        "label": "Koblet Grafana-panel"
+        "status": "missing",
+        "issue": "navikt/team-esyfo#211"
       },
       "annotations": {},
       "riskNotes": [
         "Grafana bruker query C direkte som Alert condition uten separat reduce-/threshold-expression",
-        "pauset siden før dagens Budstikka-migrering",
-        "må erstattes av prosessornøytral migreringskontroll, ikke bare aktiveres"
+        "produsenttelleren registrerer kandidater før utsending, mens legacy-telleren registrerer en senere og annen prosesseringsgrense",
+        "live-verifisert 2026-08-29: konfigurert tilstand er NoData når queryen ikke gir data eller alle verdier er null, og Error ved evalueringsfeil eller timeout",
+        "live-verifisert 2026-08-29: det koblede dashboardet med UID de2wwv58swrnkd finnes ikke lenger",
+        "Budstikkas nåværende metrikker kan ikke avgrenses til den aktuelle SM_MER_VEILEDNING-slicen",
+        "#260 erstatter bare regelen dersom den konkrete slicen er SM_MER_VEILEDNING og inkluderer produsentens eligible/published samt terminalt utfall",
+        "må forbli pauset og skal ikke kopieres til en PrometheusRule eller bygges videre i esyfovarsel"
       ],
       "monitoredRefs": [
         "app:meroppfolging-backend",
@@ -2792,8 +2795,8 @@
       "semanticFamily": "legacy-raw-kafka-offset",
       "lifecycle": {
         "state": "retiring",
-        "reason": "Den pausede regelen måler absolutt consumer-offset, ikke lag, og skal erstattes av typekorrekt topic-kontrakt.",
-        "issue": "navikt/team-esyfo#212"
+        "reason": "Den pausede regelen måler absolutt consumer-offset, ikke lag, og kan fjernes uten å redusere aktiv dekning. Reelle topic-kontrakter avklares separat i #212.",
+        "issue": "navikt/team-esyfo#213"
       },
       "policy": {
         "decision": "RETIRE",
@@ -2803,7 +2806,7 @@
           "repository": "navikt/team-esyfo",
           "scopeRef": "pipeline:notifications"
         },
-        "rationale": "Regelen måler absolutt offset og gir falsk lag-semantikk; den skal forbli pauset og fjernes når topic-kontrakten er verifisert.",
+        "rationale": "Regelen er pauset og måler absolutt offset, ikke lag. Den gir derfor verken aktiv eller korrekt dekning og skal fjernes uten én ny global erstatningsregel.",
         "operationalResponse": {
           "phase": "until-retired",
           "delivery": {
@@ -2812,9 +2815,34 @@
         },
         "implementationIssue": "navikt/team-esyfo#213",
         "retirementGate": {
-          "status": "blocked",
-          "issue": "navikt/team-esyfo#212",
-          "condition": "Typekorrekt topic-ferskhet, progress og terminale utfall må være implementert og verifisert før regelen slettes."
+          "status": "ready",
+          "reviewedAt": "2026-08-29T09:45:02Z",
+          "basis": {
+            "kind": "justified-removal",
+            "reason": "Fjerning reduserer ingen aktiv varsling. #212 definerer separat eier og riktig signal per topic; eventuell implementasjon følger den enkelte kontrakten.",
+            "evidence": [
+              {
+                "href": "https://github.com/navikt/team-esyfo/blob/b68b9f818a5afd3c36a14c66f0f1c0321353ecd7/docs/public/alert-register.v2.json",
+                "summary": "Det commitlåste registersnapshotet bevarer queryen, paused/not-evaluated og live-preview med 46 serier over terskelen.",
+                "verifiedAt": "2026-08-28T17:45:44Z"
+              },
+              {
+                "href": "https://grafana.nav.cloud.nais.io/alerting/grafana/cfq0972pkuy2ob/view",
+                "summary": "Live-rekontroll bekreftet at Grafana-regelen fortsatt er pauset før pensjoneringsbeslutningen.",
+                "verifiedAt": "2026-08-29T09:45:02Z"
+              },
+              {
+                "href": "https://github.com/navikt/syfo-budstikka/blob/6536a0090daedb3ade1818ff1e79adc4f0ff7951/nais/alerts-prod.yaml",
+                "summary": "Kun budstikka.v1 har direkte overlapp i form av to app-avgrensede PrometheusRules; de ni øvrige topic-gapene beholdes separat.",
+                "verifiedAt": "2026-08-29T09:45:02Z"
+              },
+              {
+                "href": "https://github.com/navikt/team-esyfo/issues/212",
+                "summary": "#212 definerer produsent, konsument, operativ eier og riktig signal separat for hvert av de ti team-topicsene.",
+                "verifiedAt": "2026-08-29T09:45:02Z"
+              }
+            ]
+          }
         },
         "decidedAt": "2026-08-28T19:13:53Z"
       },
@@ -2860,7 +2888,10 @@
       "riskNotes": [
         "navnet sier lag, men uttrykket måler absolutt consumer-offset",
         "live preview viste 46 fyrende serier mens selve regelen var pauset",
-        "må forbli pauset til typekorrekt topic-kontrakt i #212 erstatter den"
+        "queryen blander consumer-grupper med forskjellige eiere, trafikkmønstre og konsekvenser",
+        "kun budstikka.v1 har direkte overlapp via to app-avgrensede PrometheusRules; ni separate topic-gap beholdes i #212",
+        "må forbli pauset frem til sletting og skal aldri erstattes av én global topic-regel",
+        "#212 definerer det uavhengige arbeidet med typekorrekte signaler per topic og eier"
       ],
       "monitoredRefs": [
         "topic:aapen-syfo-oppfolgingsplan-lps-nav-v2",
