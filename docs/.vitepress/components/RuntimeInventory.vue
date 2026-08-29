@@ -10,6 +10,7 @@ import type {
 	Lifecycle,
 	RevisionAssessment,
 	RuntimeIdentity,
+	Topic,
 	TrackedLink,
 } from "../runtime/model.ts";
 import { validateInventory } from "../runtime/validation.ts";
@@ -53,7 +54,9 @@ const lifecycleLabel = (lifecycle: Lifecycle) => {
 		case "active":
 			return "Aktiv";
 		case "migrating":
-			return `Migrerer innen ${lifecycle.targetDate}`;
+			return lifecycle.targetDate
+				? `Migrerer innen ${lifecycle.targetDate}`
+				: "Migrerer · dato ikke besluttet";
 		case "retiring":
 			return lifecycle.targetDate
 				? `Fases ut innen ${lifecycle.targetDate}`
@@ -101,6 +104,23 @@ const revisionLabel = (revision: RevisionAssessment) =>
 	revision.status === "verified"
 		? revision.commitSha.slice(0, 12)
 		: `ikke verifisert${revision.refHint ? ` (${revision.refHint})` : ""}`;
+
+const topicDeadlineLabel = (topic: Topic) =>
+	topic.serviceLevel.processingDeadlineMinutes === undefined
+		? "frist ikke definert"
+		: `${topic.serviceLevel.processingDeadlineMinutes} min`;
+
+const topicZeroTrafficLabel = (topic: Topic) =>
+	topic.serviceLevel.zeroTrafficAllowed === "unresolved"
+		? "nulltrafikk ikke avklart"
+		: topic.serviceLevel.zeroTrafficAllowed
+			? "nulltrafikk tillatt"
+			: "nulltrafikk krever progress";
+
+const topicLagLabel = (topic: Topic) =>
+	topic.serviceLevel.consumerLag === "unresolved"
+		? "lagbehov ikke avklart"
+		: `lag ${topic.serviceLevel.consumerLag}`;
 </script>
 
 <template>
@@ -310,9 +330,8 @@ const revisionLabel = (revision: RevisionAssessment) =>
 						{{ topic.serviceLevel.status }} ·
 						<a :href="issueUrl(topic.serviceLevel.approvalIssue)">{{ topic.serviceLevel.approvalIssue }}</a>
 						<br>
-						{{ topic.trafficModel }} · {{ topic.serviceLevel.processingDeadlineMinutes }} min ·
-						zero {{ topic.serviceLevel.zeroTrafficAllowed ? "tillatt" : "krever progress" }} · lag
-						{{ topic.serviceLevel.consumerLag }}
+						{{ topic.trafficModel }} · {{ topicDeadlineLabel(topic) }} ·
+						{{ topicZeroTrafficLabel(topic) }} · {{ topicLagLabel(topic) }}
 					</td>
 					<td>
 						<a v-if="topic.runbook.status === 'linked'" :href="topic.runbook.href">{{ linkLabel(topic.runbook) }}</a>

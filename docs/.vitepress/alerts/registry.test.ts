@@ -188,10 +188,10 @@ describe("alert-register", () => {
 			alertRegistry.rules.map(({ id, lifecycle }) => [id, lifecycle]),
 		);
 
-		assert.equal(
-			lifecycleById.get("rule:esyfovarsel-down")?.state,
-			"migrating",
-		);
+		const varselLifecycle = lifecycleById.get("rule:esyfovarsel-down");
+		assert.equal(varselLifecycle?.state, "migrating");
+		if (varselLifecycle?.state !== "migrating") assert.fail("Forventet migrering.");
+		assert.equal(varselLifecycle.targetDate, undefined);
 		assert.equal(
 			lifecycleById.get("rule:dokumentporten-terminal-varsel-error")?.state,
 			"migrating",

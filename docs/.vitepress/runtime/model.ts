@@ -17,7 +17,7 @@ export type Lifecycle =
 	| {
 			state: "migrating";
 			targetRefs: ResourceId[];
-			targetDate: IsoDate;
+			targetDate?: IsoDate;
 			decision: string;
 			minimumCoverage: "legacy-http" | "legacy-worker";
 	  }
@@ -195,9 +195,9 @@ export interface Topic {
 		status: "proposed" | "approved";
 		approvalIssue: IssueRef;
 		progressMode: "producer-only" | "consumer-only" | "end-to-end";
-		processingDeadlineMinutes: number;
-		zeroTrafficAllowed: boolean;
-		consumerLag: "required" | "external-consumers";
+		processingDeadlineMinutes?: number;
+		zeroTrafficAllowed: boolean | "unresolved";
+		consumerLag: "required" | "external-consumers" | "unresolved";
 	};
 	producers: {
 		internal: ResourceId[];
@@ -317,7 +317,7 @@ export interface Exclusion {
 }
 
 export interface RuntimeInventory {
-	schemaVersion: 1;
+	schemaVersion: 2;
 	baseline: {
 		status: "proposed" | "approved";
 		capturedOn: IsoDate;

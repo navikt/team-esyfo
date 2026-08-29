@@ -56,9 +56,8 @@ const active = { state: "active" } as const;
 const notificationsMigration: Lifecycle = {
 	state: "migrating",
 	targetRefs: ["app:syfo-budstikka"],
-	targetDate: "2026-12-18",
 	decision:
-		"Varsling flyttes gradvis fra esyfovarsel til syfo-budstikka; måldato må godkjennes i navikt/team-esyfo#204.",
+		"Varsling flyttes gradvis fra esyfovarsel til syfo-budstikka. Eksakt cutoverdato er ikke besluttet; gjennomføringen følges i navikt/team-esyfo#218.",
 	minimumCoverage: "legacy-worker",
 };
 
@@ -740,7 +739,7 @@ const topic = (
 		| "runbook"
 	> & {
 		shortName: string;
-		processingDeadlineMinutes: number;
+		processingDeadlineMinutes?: number;
 		runbook?: TrackedLink;
 	},
 ): Topic => ({
@@ -766,10 +765,11 @@ const topic = (
 				: seed.producers.internal.length > 0
 					? "producer-only"
 					: "consumer-only",
-		processingDeadlineMinutes: seed.processingDeadlineMinutes,
-		zeroTrafficAllowed: seed.trafficModel !== "continuous",
-		consumerLag:
-			seed.consumers.internal.length > 0 ? "required" : "external-consumers",
+		...(seed.processingDeadlineMinutes !== undefined
+			? { processingDeadlineMinutes: seed.processingDeadlineMinutes }
+			: {}),
+		zeroTrafficAllowed: "unresolved",
+		consumerLag: "unresolved",
 	},
 	producers: seed.producers,
 	consumers: seed.consumers,
@@ -801,7 +801,6 @@ export const topics: Topic[] = [
 		},
 		coverageProfile: "kafka-pipeline",
 		trafficModel: "intermittent",
-		processingDeadlineMinutes: 60,
 		producers: { internal: ["app:lps-oppfolgingsplan-mottak"], external: [] },
 		consumers: {
 			internal: [],
@@ -838,7 +837,6 @@ export const topics: Topic[] = [
 		},
 		coverageProfile: "kafka-pipeline",
 		trafficModel: "intermittent",
-		processingDeadlineMinutes: 10,
 		producers: { internal: ["app:syfo-oppfolgingsplan-backend"], external: [] },
 		consumers: { internal: ["app:syfo-budstikka"], external: [] },
 		runbook: {
@@ -864,7 +862,6 @@ export const topics: Topic[] = [
 		},
 		coverageProfile: "kafka-pipeline",
 		trafficModel: "intermittent",
-		processingDeadlineMinutes: 15,
 		producers: {
 			internal: ["app:esyfovarsel", "app:syfo-budstikka"],
 			external: [
@@ -895,7 +892,6 @@ export const topics: Topic[] = [
 		},
 		coverageProfile: "kafka-pipeline",
 		trafficModel: "intermittent",
-		processingDeadlineMinutes: 15,
 		producers: { internal: ["app:meroppfolging-backend"], external: [] },
 		consumers: {
 			internal: [],
@@ -926,7 +922,6 @@ export const topics: Topic[] = [
 		},
 		coverageProfile: "kafka-pipeline",
 		trafficModel: "intermittent",
-		processingDeadlineMinutes: 30,
 		producers: { internal: ["app:meroppfolging-backend"], external: [] },
 		consumers: {
 			internal: [],
@@ -969,7 +964,6 @@ export const topics: Topic[] = [
 		},
 		coverageProfile: "kafka-pipeline",
 		trafficModel: "scheduled",
-		processingDeadlineMinutes: 30,
 		producers: { internal: ["app:meroppfolging-backend"], external: [] },
 		consumers: {
 			internal: [],
@@ -1005,8 +999,7 @@ export const topics: Topic[] = [
 			pipelineRefs: ["pipeline:nearest-leader"],
 		},
 		coverageProfile: "kafka-pipeline",
-		trafficModel: "continuous",
-		processingDeadlineMinutes: 15,
+		trafficModel: "intermittent",
 		producers: { internal: ["app:esyfo-narmesteleder"], external: [] },
 		consumers: { internal: ["app:dinesykmeldte-backend"], external: [] },
 	}),
@@ -1026,8 +1019,7 @@ export const topics: Topic[] = [
 			pipelineRefs: ["pipeline:sick-pay-days"],
 		},
 		coverageProfile: "kafka-pipeline",
-		trafficModel: "continuous",
-		processingDeadlineMinutes: 60,
+		trafficModel: "intermittent",
 		producers: { internal: ["app:sykepengedager-informasjon"], external: [] },
 		consumers: {
 			internal: ["app:meroppfolging-backend"],
@@ -1057,8 +1049,7 @@ export const topics: Topic[] = [
 			pipelineRefs: ["pipeline:sick-pay-days"],
 		},
 		coverageProfile: "kafka-pipeline",
-		trafficModel: "continuous",
-		processingDeadlineMinutes: 60,
+		trafficModel: "intermittent",
 		producers: {
 			internal: [],
 			external: [
@@ -1094,13 +1085,11 @@ export const topics: Topic[] = [
 		},
 		coverageProfile: "kafka-pipeline",
 		trafficModel: "intermittent",
-		processingDeadlineMinutes: 10,
 		producers: {
 			internal: [
 				"app:aktivitetskrav-backend",
 				"app:meroppfolging-backend",
 				"app:syfo-dokumentporten",
-				"app:syfo-oppfolgingsplan-backend",
 				"app:syfomotebehov",
 				"app:syfooppfolgingsplanservice",
 			],
@@ -1436,7 +1425,7 @@ export const browserSurfaces: BrowserSurface[] = [
 ];
 
 export const runtimeInventory: RuntimeInventory = {
-	schemaVersion: 1,
+	schemaVersion: 2,
 	baseline: {
 		status: "approved",
 		capturedOn: "2026-08-28",

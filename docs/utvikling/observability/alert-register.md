@@ -89,7 +89,7 @@ Registeret følger det godkjente [runtimeinventaret](/utvikling/observability/ru
 
 Målets tjeneste-/capabilitylivssyklus er kontekst på hver regel. Den beskriver om runtime eller prosess er varig, migrerende eller på vei bort; selve regelens skjebne bestemmes bare av policyvedtaket:
 
-- Regler for `esyfovarsel` er tidsavgrensede guardrails under migreringen til `syfo-budstikka`. 18. desember 2026 er valgt policy-timebox i runtimebaselinen [#204](https://github.com/navikt/team-esyfo/issues/204), ikke dokumentasjon på en garantert avviklingsdato; gjennomføringen følges i [#218](https://github.com/navikt/team-esyfo/issues/218).
+- Regler for `esyfovarsel` er midlertidige guardrails under migreringen til `syfo-budstikka`. Eksakt cutoverdato er ikke besluttet; gjennomføringen og trygg fjerning av legacy-reglene følges i [#218](https://github.com/navikt/team-esyfo/issues/218).
 - Regler for `syfobrukertilgang` beholdes mens tjenesten fases ut. Tre deployerte `prod-fss`-instanser er bekreftet restkonfigurasjon fra GCP-migreringen og skal ryddes kontrollert.
 - Regler for `syfooppfolgingsplanservice` følger tjenestens besluttede sunset 31. august 2026, se [#208](https://github.com/navikt/team-esyfo/issues/208).
 - Varige regler er kandidater for standardisering etter brukerreise, pipeline og semantisk familie — ikke bare kopiering av dagens terskler.

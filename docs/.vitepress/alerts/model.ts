@@ -58,7 +58,7 @@ export type AlertLifecycle =
 	| { state: "permanent" }
 	| {
 			state: "migrating";
-			targetDate: IsoDate;
+			targetDate?: IsoDate;
 			targetRefs: AlertTargetId[];
 			issue: IssueRef;
 	  }

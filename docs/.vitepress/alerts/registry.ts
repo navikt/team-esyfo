@@ -237,7 +237,6 @@ const grafanaNotification: AlertNotificationRoute = {
 const permanent: AlertLifecycle = { state: "permanent" };
 const notificationMigration: AlertLifecycle = {
 	state: "migrating",
-	targetDate: "2026-12-18",
 	targetRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
 	issue: "navikt/team-esyfo#218",
 };
