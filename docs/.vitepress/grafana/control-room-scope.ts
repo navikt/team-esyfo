@@ -231,39 +231,71 @@ const pipelineTopics = (pipelineId: PipelineId) =>
 		context.pipelineRefs.includes(pipelineId),
 	);
 
-const topicProcessors = (topics: Topic[]) => {
-	const producers = [
-		...new Set(topics.flatMap(({ producers }) => producers.internal)),
-	].map(runtimeName);
-	const consumers = [
-		...new Set(topics.flatMap(({ consumers }) => consumers.internal)),
-	].map(runtimeName);
-	return `${producers.join(", ") || "ekstern"} → ${consumers.join(", ") || "ingen intern consumer"}`;
+export const topicRouteLabel = (topics: Topic[]) =>
+	topics
+		.map((topic) => {
+			const producers = topic.producers.internal.map(runtimeName);
+			const consumers = topic.consumers.internal.map(runtimeName);
+			return `\`${topic.displayName}\`: ${producers.join(", ") || "ekstern"} → ${consumers.join(", ") || "ingen intern consumer"}`;
+		})
+		.join("<br>");
+
+export const pipelineDeadlineLabel = (topics: Topic[]) => {
+	const deadlines = [
+		...new Set(
+			topics.flatMap(({ serviceLevel }) =>
+				serviceLevel.processingDeadlineMinutes === undefined
+					? []
+					: [serviceLevel.processingDeadlineMinutes],
+			),
+		),
+	].sort((a, b) => a - b);
+	const undefinedCount = topics.filter(
+		({ serviceLevel }) => serviceLevel.processingDeadlineMinutes === undefined,
+	).length;
+	if (deadlines.length === 0) return "IKKE DEFINERT";
+	const definedLabel = `${deadlines.join("/")} min`;
+	return undefinedCount === 0
+		? definedLabel
+		: `${definedLabel} · DELVIS (${undefinedCount}/${topics.length} uten frist)`;
+};
+
+export const pipelineContractLabel = (topics: Topic[]) => {
+	if (topics.length === 0) return "IKKE DEFINERT";
+	const approvedCount = topics.filter(
+		({ serviceLevel }) => serviceLevel.status === "approved",
+	).length;
+	if (approvedCount === topics.length) return "GODKJENT";
+	const issues = [
+		...new Set(
+			topics
+				.filter(({ serviceLevel }) => serviceLevel.status === "proposed")
+				.map(({ serviceLevel }) => serviceLevel.approvalIssue),
+		),
+	]
+		.map(issueLink)
+		.join(", ");
+	return approvedCount === 0
+		? `IKKE EVALUERT · ${issues}`
+		: `DELVIS ${approvedCount}/${topics.length} · ${issues}`;
 };
 
 export const pipelineCoverageMarkdown = () => {
 	const rows = runtimeInventory.pipelines
 		.map((pipeline) => {
 			const topics = pipelineTopics(pipeline.id);
-			const deadlines = [
-				...new Set(
-					topics.map(
-						({ serviceLevel }) => serviceLevel.processingDeadlineMinutes,
-					),
-				),
-			].sort((a, b) => a - b);
-			const issue = topics[0]?.serviceLevel.approvalIssue;
-			return `| ${pipeline.name} | ${topics.length} | ${markdownCell(topicProcessors(topics))} | ${deadlines.join("/") || "–"} min | ${issue ? `IKKE EVALUERT · ${issueLink(issue)}` : "IKKE DEFINERT"} |`;
+			const deadline = pipelineDeadlineLabel(topics);
+			return `| ${pipeline.name} | ${topics.length} | ${markdownCell(topicRouteLabel(topics))} | ${deadline} | ${pipelineContractLabel(topics)} |`;
 		})
 		.join("\n");
 
 	return `### Pipelines · kontrakt før farge
 
-| Pipeline | Topics | Interne prosessorer | Foreslått frist | Operativ status |
+| Pipeline | Topics | Interne prosessorer | Behandlingsfrist | Operativ status |
 |---|---:|---|---:|---|
 ${rows}
 
-Varsling modelleres prosessnøytralt: **syfo-budstikka er målprosessor**, mens **esyfovarsel er migrerende legacy-prosessor** fram mot 18. desember. Ingen rad er grønn før #212 har godkjent expected run, ferskhet, progresjon, eldste ventende og terminalt utfall. Airflow er en ekstern sekundærkonsument og er eksplisitt ute av scope.
+Varsling modelleres prosessnøytralt: **syfo-budstikka er målprosessor**, mens **esyfovarsel er migrerende legacy-prosessor**. Cutoverdato er ikke besluttet. Ingen rad er grønn før #212 har godkjent expected run, ferskhet, progresjon, eldste ventende og terminalt utfall. Airflow er en ekstern sekundærkonsument og er eksplisitt ute av scope.
 
 [Pipeline-/jobbrunbook](${PIPELINE_RUNBOOK_URL})`;
 };
@@ -305,7 +337,7 @@ export const lifecycleMarkdown = () => {
 		.map((application) => {
 			const detail =
 				application.lifecycle.state === "migrating"
-					? `Mål ${application.lifecycle.targetDate}; ${application.lifecycle.decision}`
+					? `${application.lifecycle.targetDate ? `Mål ${application.lifecycle.targetDate}; ` : "Dato ikke besluttet; "}${application.lifecycle.decision}`
 					: application.lifecycle.state === "retiring"
 						? `${application.lifecycle.targetDate ? `Mål ${application.lifecycle.targetDate}; ` : ""}${application.lifecycle.reason}`
 						: application.lifecycle.state === "sunset"

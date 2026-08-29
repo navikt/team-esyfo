@@ -62,7 +62,10 @@ import {
 	DESERIALIZATION_RUNBOOK_URL,
 	MOTEBEHOV_RUNBOOK_URL,
 	PIPELINE_RUNBOOK_URL,
+	pipelineContractLabel,
+	pipelineDeadlineLabel,
 	RUNTIME_RUNBOOK_URL,
+	topicRouteLabel,
 } from "./control-room-scope.ts";
 import { LOKI_DATASOURCE_UID, MIMIR_DATASOURCE_UID } from "./dashboard-kit.ts";
 
@@ -413,7 +416,45 @@ describe("kontrollrom-dashboard", () => {
 			assert.ok(serialized.includes(text));
 		}
 		assert.ok(serialized.includes("Airflow er en ekstern sekundærkonsument"));
+		assert.ok(serialized.includes("Behandlingsfrist"));
+		assert.ok(!serialized.includes("Foreslått frist"));
 		assert.ok(!jobFailureQuery.includes("airflow"));
+	});
+
+	test("skjuler ikke delvis udefinert pipelinefrist", () => {
+		const topics = structuredClone(runtimeInventory.topics.slice(0, 2));
+		assert.equal(pipelineDeadlineLabel(topics), "IKKE DEFINERT");
+		const first = topics[0];
+		assert.ok(first);
+		first.serviceLevel.processingDeadlineMinutes = 30;
+		assert.equal(
+			pipelineDeadlineLabel(topics),
+			"30 min · DELVIS (1/2 uten frist)",
+		);
+	});
+
+	test("bevarer parallelle topicruter og delvis kontraktstatus", () => {
+		const topics = structuredClone(
+			runtimeInventory.topics.filter(({ context }) =>
+				context.pipelineRefs.includes("pipeline:notifications"),
+			),
+		);
+		const routes = topicRouteLabel(topics);
+		assert.match(
+			routes,
+			/`budstikka\.v1`: syfo-oppfolgingsplan-backend → syfo-budstikka/,
+		);
+		assert.match(routes, /`varselbus`: .* → esyfovarsel/);
+		assert.ok(routes.includes("<br>"));
+		assert.match(pipelineContractLabel(topics), /^IKKE EVALUERT/);
+		const first = topics[0];
+		const second = topics[1];
+		assert.ok(first);
+		assert.ok(second);
+		first.serviceLevel.status = "approved";
+		assert.match(pipelineContractLabel(topics), /^DELVIS 1\/2/);
+		second.serviceLevel.status = "approved";
+		assert.equal(pipelineContractLabel(topics), "GODKJENT");
 	});
 
 	test("gir alle tre pagerkandidater relevant panel, runbook og blocker", () => {

@@ -498,7 +498,6 @@
       "semanticFamily": "legacy-zero-available-replicas",
       "lifecycle": {
         "state": "migrating",
-        "targetDate": "2026-12-18",
         "targetRefs": [
           "app:syfo-budstikka",
           "topic:budstikka.v1"
@@ -587,7 +586,6 @@
       "semanticFamily": "legacy-log-ratio",
       "lifecycle": {
         "state": "migrating",
-        "targetDate": "2026-12-18",
         "targetRefs": [
           "app:syfo-budstikka",
           "topic:budstikka.v1"
@@ -680,7 +678,6 @@
       "semanticFamily": "scheduled-job-terminal-failure",
       "lifecycle": {
         "state": "migrating",
-        "targetDate": "2026-12-18",
         "targetRefs": [
           "app:syfo-budstikka",
           "topic:budstikka.v1"
@@ -2366,7 +2363,6 @@
       "semanticFamily": "domain-terminal-outcome",
       "lifecycle": {
         "state": "migrating",
-        "targetDate": "2026-12-18",
         "targetRefs": [
           "app:syfo-budstikka",
           "topic:budstikka.v1"
@@ -2696,7 +2692,6 @@
       "semanticFamily": "legacy-notification-reconciliation",
       "lifecycle": {
         "state": "migrating",
-        "targetDate": "2026-12-18",
         "targetRefs": [
           "app:syfo-budstikka",
           "topic:budstikka.v1"

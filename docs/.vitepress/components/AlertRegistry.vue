@@ -206,7 +206,9 @@ const lifecycleLabel = (lifecycle: AlertLifecycle) => {
 		case "permanent":
 			return "Varig mål";
 		case "migrating":
-			return `Migrerer innen ${lifecycle.targetDate}`;
+			return lifecycle.targetDate
+				? `Migrerer innen ${lifecycle.targetDate}`
+				: "Migrerer · dato ikke besluttet";
 		case "retiring":
 			return "Fases ut";
 		case "sunset":

@@ -49,6 +49,7 @@ const baselineSnapshot = (): ObservedRuntimeSnapshot => ({
 
 describe("runtimeinventar", () => {
 	test("låser den godkjente baseline med typespesifikke antall", () => {
+		assert.equal(runtimeInventory.schemaVersion, 2);
 		const result = validateInventory(runtimeInventory, { asOf: "2026-08-28" });
 		assert.deepEqual(result.errors, []);
 		assert.deepEqual(result.counts, {
@@ -144,13 +145,33 @@ describe("runtimeinventar", () => {
 	});
 
 	test("håndhever migreringsfrist og aktiv målressurs", () => {
-		const warning = validateInventory(runtimeInventory, { asOf: "2026-12-19" });
+		const withoutDate = validateInventory(runtimeInventory, {
+			asOf: "2026-12-19",
+		});
+		assert.equal(
+			withoutDate.warnings.filter((message) =>
+				message.includes("migreringsmålet"),
+			).length,
+			0,
+		);
+		const inventoryWithDate = cloneInventory();
+		for (const resource of [
+			...inventoryWithDate.applications,
+			...inventoryWithDate.jobs,
+		]) {
+			if (resource.lifecycle.state === "migrating") {
+				resource.lifecycle.targetDate = "2026-12-18";
+			}
+		}
+		const warning = validateInventory(inventoryWithDate, {
+			asOf: "2026-12-19",
+		});
 		assert.equal(
 			warning.warnings.filter((message) => message.includes("migreringsmålet"))
 				.length,
 			2,
 		);
-		const strict = validateInventory(runtimeInventory, {
+		const strict = validateInventory(inventoryWithDate, {
 			asOf: "2026-12-19",
 			failOnOverdueMigration: true,
 		});
@@ -179,17 +200,91 @@ describe("runtimeinventar", () => {
 
 	test("håndhever progress-semantikk for continuous topics", () => {
 		const inventory = cloneInventory();
-		const continuous = inventory.topics.find(
-			({ trafficModel }) => trafficModel === "continuous",
-		);
+		const continuous = inventory.topics[0];
 		assert.ok(continuous);
-		continuous.serviceLevel.zeroTrafficAllowed = true;
+		continuous.trafficModel = "continuous";
+		continuous.serviceLevel = {
+			...continuous.serviceLevel,
+			status: "approved",
+			processingDeadlineMinutes: 30,
+			zeroTrafficAllowed: true,
+			consumerLag: "external-consumers",
+		};
 		const result = validateInventory(inventory, { asOf: "2026-08-28" });
 		assert.ok(
 			result.errors.some((message) =>
 				message.includes("tillater nulltrafikk uten ferskt progressbevis"),
 			),
 		);
+	});
+
+	test("holder kildeubeviste topic-frister udefinert", () => {
+		for (const topic of runtimeInventory.topics) {
+			assert.equal(topic.serviceLevel.status, "proposed");
+			assert.equal(topic.serviceLevel.processingDeadlineMinutes, undefined);
+			assert.equal(topic.serviceLevel.zeroTrafficAllowed, "unresolved");
+			assert.equal(topic.serviceLevel.consumerLag, "unresolved");
+		}
+		assert.deepEqual(
+			runtimeInventory.topics
+				.filter(({ trafficModel }) => trafficModel === "scheduled")
+				.map(({ id }) => id),
+			["topic:sen-oppfolging-varsel"],
+		);
+		assert.equal(
+			runtimeInventory.topics.some(
+				({ trafficModel }) => trafficModel === "continuous",
+			),
+			false,
+		);
+	});
+
+	test("avviser godkjent topic-kontrakt uten behandlingsfrist", () => {
+		const inventory = cloneInventory();
+		const topic = inventory.topics[0];
+		assert.ok(topic);
+		topic.serviceLevel.status = "approved";
+		topic.serviceLevel.zeroTrafficAllowed = true;
+		topic.serviceLevel.consumerLag = "external-consumers";
+		const result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((message) =>
+				message.includes("mangler godkjent behandlingsfrist"),
+			),
+		);
+	});
+
+	test("avviser godkjent topic-kontrakt uten nulltrafikkpolicy", () => {
+		const inventory = cloneInventory();
+		const topic = inventory.topics[0];
+		assert.ok(topic);
+		topic.serviceLevel = {
+			...topic.serviceLevel,
+			status: "approved",
+			processingDeadlineMinutes: 30,
+			consumerLag: "external-consumers",
+		};
+		const result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((message) =>
+				message.includes("uten avklart nulltrafikkpolicy"),
+			),
+		);
+	});
+
+	test("avviser ikke-endelige og ikke-heltallige behandlingsfrister", () => {
+		for (const deadline of [Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+			const inventory = cloneInventory();
+			const topic = inventory.topics[0];
+			assert.ok(topic);
+			topic.serviceLevel.processingDeadlineMinutes = deadline;
+			const result = validateInventory(inventory, { asOf: "2026-08-28" });
+			assert.ok(
+				result.errors.some((message) =>
+					message.includes("ugyldig behandlingsfrist"),
+				),
+			);
+		}
 	});
 
 	test("beholder planlagt utfasing i aktiv kontroll uten oppdiktet dato", () => {
@@ -424,10 +519,19 @@ describe("dekningsevidens", () => {
 	});
 
 	test("continuous topic krever ferskt lastSeenAt for pipeline-progress", () => {
-		const topic = runtimeInventory.topics.find(
+		const inventory = cloneInventory();
+		const topic = inventory.topics.find(
 			({ id }) => id === "topic:syfo-narmesteleder-leesah",
 		);
 		assert.ok(topic);
+		topic.trafficModel = "continuous";
+			topic.serviceLevel = {
+			...topic.serviceLevel,
+			status: "approved",
+			processingDeadlineMinutes: 15,
+			zeroTrafficAllowed: false,
+			consumerLag: "required",
+		};
 		const evidence = profile.requiredSignals.map(
 			(signal) =>
 				({
@@ -446,7 +550,7 @@ describe("dekningsevidens", () => {
 			source: "test",
 		});
 		const report = evaluateCoverageSnapshot(
-			runtimeInventory,
+			inventory,
 			{
 				schemaVersion: 1,
 				observedAt,
@@ -463,12 +567,59 @@ describe("dekningsevidens", () => {
 		assert.ok(topicReport.missingSignals.includes("pipeline-progress"));
 	});
 
+	test("foreslått topic-kontrakt kan aldri gi komplett dekning", () => {
+		const topic = runtimeInventory.topics.find(
+			({ id }) => id === "topic:budstikka.v1",
+		);
+		assert.ok(topic);
+		const evidence = profile.requiredSignals.map(
+			(signal) =>
+				({
+					resourceId: topic.id,
+					signal,
+					state: "fresh",
+					observedAt,
+					source: "test",
+				}) satisfies SignalEvidence,
+		);
+		const report = evaluateCoverageSnapshot(
+			runtimeInventory,
+			{
+				schemaVersion: 1,
+				observedAt,
+				source: "test",
+				evidence,
+			},
+			{ now: "2026-08-28T10:05:00Z" },
+		);
+		const topicReport = report.resources.find(
+			({ resourceId }) => resourceId === topic.id,
+		);
+		assert.ok(topicReport);
+		assert.equal(topicReport.state, "partial");
+		assert.deepEqual(topicReport.contractGaps, ["pipeline-contract"]);
+		assert.ok(!topicReport.requiredSignals.includes("consumer-lag"));
+	});
+
 	test("lager en typespesifikk maskinell dekningsrapport", () => {
+		const inventory = cloneInventory();
+		for (const topic of inventory.topics) {
+			topic.serviceLevel = {
+				...topic.serviceLevel,
+				status: "approved",
+				processingDeadlineMinutes: 30,
+				zeroTrafficAllowed: true,
+				consumerLag:
+					topic.consumers.internal.length > 0
+						? "required"
+						: "external-consumers",
+			};
+		}
 		const resources = [
-			...runtimeInventory.applications,
-			...runtimeInventory.jobs,
-			...runtimeInventory.topics,
-			...runtimeInventory.browserSurfaces,
+			...inventory.applications,
+			...inventory.jobs,
+			...inventory.topics,
+			...inventory.browserSurfaces,
 		].filter(
 			(resource) =>
 				resource.lifecycle.state === "active" ||
@@ -477,7 +628,7 @@ describe("dekningsevidens", () => {
 				resource.lifecycle.state === "sunset",
 		);
 		const evidence: SignalEvidence[] = resources.flatMap((resource) => {
-			const resourceProfile = runtimeInventory.coverageProfiles.find(
+			const resourceProfile = inventory.coverageProfiles.find(
 				({ id }) => id === resource.coverageProfile,
 			);
 			assert.ok(resourceProfile);
@@ -510,7 +661,7 @@ describe("dekningsevidens", () => {
 			}));
 		});
 		const report = evaluateCoverageSnapshot(
-			runtimeInventory,
+			inventory,
 			{
 				schemaVersion: 1,
 				observedAt,

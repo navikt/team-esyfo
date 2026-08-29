@@ -265,6 +265,7 @@ export const reconcileRuntime = (
 		.filter(
 			(resource) =>
 				resource.lifecycle.state === "migrating" &&
+				resource.lifecycle.targetDate !== undefined &&
 				resource.lifecycle.targetDate < asOfDate,
 		)
 		.map(({ id }) => id);
@@ -470,7 +471,19 @@ export interface ResourceCoverageReport extends CoverageEvaluation {
 	resourceId: SignalEvidence["resourceId"];
 	resourceKind: "application" | "job" | "topic" | "browser-surface";
 	profileId: CoverageProfile["id"];
+	contractGaps: Array<"pipeline-contract">;
 }
+
+const withTopicContract = (
+	evaluation: CoverageEvaluation,
+	status: RuntimeInventory["topics"][number]["serviceLevel"]["status"],
+): CoverageEvaluation => {
+	if (status === "approved" || evaluation.state !== "complete") return evaluation;
+	return {
+		...evaluation,
+		state: "partial",
+	};
+};
 
 export interface CoverageReport {
 	status: "complete" | "gaps" | "unknown";
@@ -517,6 +530,7 @@ export const evaluateCoverageSnapshot = (
 		.filter(
 			(resource) =>
 				(resource.lifecycle.state === "migrating" &&
+					resource.lifecycle.targetDate !== undefined &&
 					resource.lifecycle.targetDate < asOfDate) ||
 				(resource.lifecycle.state === "retiring" &&
 					resource.lifecycle.targetDate !== undefined &&
@@ -540,9 +554,15 @@ export const evaluateCoverageSnapshot = (
 		const baseProfile = profileById.get(resource.coverageProfile);
 		if (!baseProfile)
 			throw new Error(`Ukjent dekningsprofil ${resource.coverageProfile}.`);
+		const approvedTopicDeadline =
+			resource.kind === "topic" &&
+			resource.serviceLevel.status === "approved"
+				? resource.serviceLevel.processingDeadlineMinutes
+				: undefined;
 		const requiredSignals = [...baseProfile.requiredSignals];
 		if (
 			resource.kind === "topic" &&
+			resource.serviceLevel.status === "approved" &&
 			resource.serviceLevel.consumerLag === "required" &&
 			!requiredSignals.includes("consumer-lag")
 		) {
@@ -552,8 +572,8 @@ export const evaluateCoverageSnapshot = (
 			...baseProfile,
 			requiredSignals,
 			freshnessMinutes:
-				resource.kind === "topic"
-					? resource.serviceLevel.processingDeadlineMinutes
+				approvedTopicDeadline !== undefined
+					? approvedTopicDeadline
 					: resource.kind === "job"
 						? resource.schedule.lateAfterMinutes
 						: baseProfile.freshnessMinutes,
@@ -563,14 +583,15 @@ export const evaluateCoverageSnapshot = (
 				return item;
 			if (
 				resource.kind === "topic" &&
+				approvedTopicDeadline !== undefined &&
 				item.signal === "pipeline-progress" &&
-				!resource.serviceLevel.zeroTrafficAllowed
+				resource.serviceLevel.zeroTrafficAllowed === false
 			) {
 				if (!item.lastSeenAt) return { ...item, state: "missing" as const };
 				const progressAge = minutesBetween(item.lastSeenAt, now);
 				if (!Number.isFinite(progressAge) || progressAge < -5)
 					return { ...item, state: "error" as const };
-				if (progressAge > resource.serviceLevel.processingDeadlineMinutes)
+				if (progressAge > approvedTopicDeadline)
 					return { ...item, state: "stale" as const };
 			}
 			if (
@@ -592,11 +613,24 @@ export const evaluateCoverageSnapshot = (
 			}
 			return item;
 		});
+		const evaluation = evaluateCoverage(
+			resource.id,
+			effectiveProfile,
+			resourceEvidence,
+			now,
+		);
 		return {
 			resourceId: resource.id,
 			resourceKind: resource.kind,
 			profileId: baseProfile.id,
-			...evaluateCoverage(resource.id, effectiveProfile, resourceEvidence, now),
+			contractGaps:
+				resource.kind === "topic" &&
+				resource.serviceLevel.status === "proposed"
+					? ["pipeline-contract"]
+					: [],
+			...(resource.kind === "topic"
+				? withTopicContract(evaluation, resource.serviceLevel.status)
+				: evaluation),
 		};
 	});
 	const summary: CoverageReport["summary"] = {

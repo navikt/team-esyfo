@@ -102,7 +102,7 @@ const validateLifecycle = (
 ) => {
 	const lifecycle = resource.lifecycle;
 	if (lifecycle.state === "migrating") {
-		if (!validIsoDate(lifecycle.targetDate)) {
+		if (lifecycle.targetDate && !validIsoDate(lifecycle.targetDate)) {
 			errors.push(
 				`${resource.id} har ugyldig targetDate ${lifecycle.targetDate}.`,
 			);
@@ -125,7 +125,11 @@ const validateLifecycle = (
 				);
 			}
 		}
-		if (options.asOf && lifecycle.targetDate < options.asOf) {
+		if (
+			options.asOf &&
+			lifecycle.targetDate &&
+			lifecycle.targetDate < options.asOf
+		) {
 			const message = `${resource.id} passerte migreringsmålet ${lifecycle.targetDate}, men står fortsatt som migrating.`;
 			if (options.failOnOverdueMigration) errors.push(message);
 			else warnings.push(message);
@@ -443,12 +447,45 @@ export const validateInventory = (
 			if (!knownResources.has(ref))
 				errors.push(`${topic.id} peker til ukjent intern ressurs ${ref}.`);
 		}
-		if (topic.serviceLevel.processingDeadlineMinutes <= 0) {
+		const processingDeadline = topic.serviceLevel.processingDeadlineMinutes;
+		if (
+			processingDeadline !== undefined &&
+			(!Number.isFinite(processingDeadline) ||
+				!Number.isInteger(processingDeadline) ||
+				processingDeadline <= 0)
+		) {
 			errors.push(`${topic.id} har ugyldig behandlingsfrist.`);
 		}
 		if (
+			topic.serviceLevel.status === "approved" &&
+			processingDeadline === undefined
+		) {
+			errors.push(`${topic.id} mangler godkjent behandlingsfrist.`);
+		}
+		if (topic.serviceLevel.status === "proposed") {
+			if (topic.serviceLevel.zeroTrafficAllowed !== "unresolved") {
+				errors.push(
+					`${topic.id} har foreslått kontrakt, men nulltrafikkpolicy er presentert som avklart.`,
+				);
+			}
+			if (topic.serviceLevel.consumerLag !== "unresolved") {
+				errors.push(
+					`${topic.id} har foreslått kontrakt, men lagpolicy er presentert som avklart.`,
+				);
+			}
+		}
+		if (
+			topic.serviceLevel.status === "approved" &&
+			topic.serviceLevel.zeroTrafficAllowed === "unresolved"
+		) {
+			errors.push(
+				`${topic.id} har godkjent kontrakt uten avklart nulltrafikkpolicy.`,
+			);
+		}
+		if (
+			topic.serviceLevel.status === "approved" &&
 			topic.trafficModel === "continuous" &&
-			topic.serviceLevel.zeroTrafficAllowed
+			topic.serviceLevel.zeroTrafficAllowed !== false
 		) {
 			errors.push(
 				`${topic.id} er continuous, men tillater nulltrafikk uten ferskt progressbevis.`,
@@ -467,7 +504,10 @@ export const validateInventory = (
 		}
 		const expectedLag =
 			topic.consumers.internal.length > 0 ? "required" : "external-consumers";
-		if (topic.serviceLevel.consumerLag !== expectedLag) {
+		if (
+			topic.serviceLevel.status === "approved" &&
+			topic.serviceLevel.consumerLag !== expectedLag
+		) {
 			errors.push(
 				`${topic.id} har ${topic.serviceLevel.consumerLag}, forventet ${expectedLag}.`,
 			);
