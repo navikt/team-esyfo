@@ -4,8 +4,8 @@ import { describe, test } from "node:test";
 import { runtimeInventory } from "../runtime/inventory.ts";
 import { isCurrentLifecycle } from "../runtime/lifecycle.ts";
 import {
-	apmDataLink,
 	AVAILABLE_REPLICAS_METRIC,
+	apmDataLink,
 	BUDSTIKKA_LAG_METRIC,
 	browserExceptionsByServiceQuery,
 	budstikkaLagQuery,
@@ -25,6 +25,7 @@ import {
 	expectedServerScopeVectorQuery,
 	fleetServicesWithOtelErrorsQuery,
 	fleetServicesWithRestartsQuery,
+	fleetServicesWithRuntimeErrorsQuery,
 	httpErrorCountQuery,
 	httpErrorRatioQuery,
 	JOB_FAILED_METRIC,
@@ -62,13 +63,11 @@ import {
 	controlRoomScopeOptions,
 	controlRoomServerApplications,
 	controlRoomSunsetApplications,
+	controlRoomTopics,
 	DESERIALIZATION_RUNBOOK_URL,
 	MOTEBEHOV_RUNBOOK_URL,
 	PIPELINE_RUNBOOK_URL,
-	pipelineContractLabel,
-	pipelineDeadlineLabel,
 	RUNTIME_RUNBOOK_URL,
-	topicRouteLabel,
 } from "./control-room-scope.ts";
 import { LOKI_DATASOURCE_UID, MIMIR_DATASOURCE_UID } from "./dashboard-kit.ts";
 
@@ -365,11 +364,11 @@ describe("kontrollrom-dashboard", () => {
 		assert.ok(deviationPanel);
 		assert.equal(
 			trafficPanel.spec.title,
-			"Fast scope · Dine sykmeldte · forsøk og 2xx",
+			"10 · Dine sykmeldte · forsøk og 2xx",
 		);
 		assert.equal(
 			deviationPanel.spec.title,
-			"Fast scope · Dine sykmeldte · avvikende HTTP-utfall",
+			"Dine sykmeldte · avvikende HTTP-utfall",
 		);
 		assert.ok(trafficPanel.spec.description.includes("ikke en vedtatt SLI"));
 		assert.ok(deviationPanel.spec.description.includes("ikke kalt forventet"));
@@ -440,12 +439,8 @@ describe("kontrollrom-dashboard", () => {
 			assert.ok(query.includes(DESIRED_REPLICAS_METRIC));
 			assert.match(query, /> 0\)/);
 		}
-		assert.ok(
-			motebehovAvailableRatioQuery.includes(AVAILABLE_REPLICAS_METRIC),
-		);
-		assert.ok(
-			motebehovAvailableRatioQuery.includes(DESIRED_REPLICAS_METRIC),
-		);
+		assert.ok(motebehovAvailableRatioQuery.includes(AVAILABLE_REPLICAS_METRIC));
+		assert.ok(motebehovAvailableRatioQuery.includes(DESIRED_REPLICAS_METRIC));
 		assert.ok(!motebehovAvailableRatioQuery.includes(READY_REPLICAS_METRIC));
 		assert.ok(!motebehovAvailableRatioQuery.includes("or on(deployment)"));
 		assert.ok(!motebehovAvailableRatioQuery.includes("* 0"));
@@ -458,12 +453,12 @@ describe("kontrollrom-dashboard", () => {
 		assert.ok(!browserExceptionsByServiceQuery.includes("k8s_cluster_name"));
 		assert.ok(!browserExceptionsByServiceQuery.includes("session"));
 		const serialized = serializeControlRoomDashboard();
+		assert.ok(serialized.includes("øvrig browserhelse er `UKJENT`"));
 		assert.ok(
-			serialized.includes("Samplede page loads, sessions og CWV p75 er også"),
+			serialized.includes("session skal aldri omtales som en unik bruker"),
 		);
-		assert.ok(serialized.includes("sessions eller unike brukere"));
-		assert.ok(serialized.includes("Browsermiljø · UKJENT"));
 		assert.ok(serialized.includes("ikke les dette som prod-status"));
+		assert.ok(!serialized.includes("Browsermiljø · UKJENT"));
 		assert.ok(serialized.includes("issues/206"));
 		assert.ok(serialized.includes(BROWSER_RUNBOOK_URL));
 	});
@@ -475,56 +470,42 @@ describe("kontrollrom-dashboard", () => {
 		assert.ok(!jobFailureQuery.includes("vector(0)"));
 		const serialized = serializeControlRoomDashboard();
 		for (const text of [
-			"Pipelines · prosessnøytral status",
+			"30 · Pipelines",
 			"syfo-budstikka er målprosessor",
 			"esyfovarsel er migrerende legacy-prosessor",
-			"expected run",
+			"Expected run",
 			"eldste ventende",
 			"terminalt utfall",
 			"IKKE EVALUERT",
+			"Kube-feil · planlagt jobb",
 		]) {
 			assert.ok(serialized.includes(text));
 		}
-		assert.ok(serialized.includes("Airflow er en ekstern sekundærkonsument"));
-		assert.ok(serialized.includes("Behandlingsfrist"));
-		assert.ok(!serialized.includes("Foreslått frist"));
-		assert.ok(!jobFailureQuery.includes("airflow"));
-	});
-
-	test("skjuler ikke delvis udefinert pipelinefrist", () => {
-		const topics = structuredClone(runtimeInventory.topics.slice(0, 2));
-		assert.equal(pipelineDeadlineLabel(topics), "IKKE DEFINERT");
-		const first = topics[0];
-		assert.ok(first);
-		first.serviceLevel.processingDeadlineMinutes = 30;
-		assert.equal(
-			pipelineDeadlineLabel(topics),
-			"30 min · DELVIS (1/2 uten frist)",
-		);
-	});
-
-	test("bevarer parallelle topicruter og delvis kontraktstatus", () => {
-		const topics = structuredClone(
-			runtimeInventory.topics.filter(({ context }) =>
-				context.pipelineRefs.includes("pipeline:notifications"),
+		assert.ok(serialized.includes("Airflow er utenfor scope"));
+		assert.ok(serialized.includes("Planlagt jobb"));
+		const pipelinePanel = (
+			buildControlRoomDashboard().spec.elements as Record<
+				string,
+				{
+					spec: {
+						vizConfig: { spec: { options: { content: string } } };
+					};
+				}
+			>
+		)["panel-21"];
+		assert.ok(pipelinePanel);
+		const pipelineContent = pipelinePanel.spec.vizConfig.spec.options.content;
+		assert.ok(pipelineContent.includes("Pipelinehelse: `IKKE EVALUERT`"));
+		assert.ok(
+			pipelineContent.includes(
+				`${runtimeInventory.pipelines.length} grupper / ${controlRoomTopics.length} topics er kartlagt`,
 			),
 		);
-		const routes = topicRouteLabel(topics);
-		assert.match(
-			routes,
-			/`budstikka\.v1`: syfo-oppfolgingsplan-backend → syfo-budstikka/,
-		);
-		assert.match(routes, /`varselbus`: .* → esyfovarsel/);
-		assert.ok(routes.includes("<br>"));
-		assert.match(pipelineContractLabel(topics), /^IKKE EVALUERT/);
-		const first = topics[0];
-		const second = topics[1];
-		assert.ok(first);
-		assert.ok(second);
-		first.serviceLevel.status = "approved";
-		assert.match(pipelineContractLabel(topics), /^DELVIS 1\/2/);
-		second.serviceLevel.status = "approved";
-		assert.equal(pipelineContractLabel(topics), "GODKJENT");
+		assert.ok(!pipelineContent.includes("godkjente topic-kontrakter"));
+		assert.ok(!pipelineContent.includes("| Pipeline"));
+		assert.ok(!serialized.includes("Foreslått frist"));
+		assert.ok(!serialized.includes("Interne prosessorer"));
+		assert.ok(!jobFailureQuery.includes("airflow"));
 	});
 
 	test("gir alle tre pagerkandidater relevant panel, runbook og blocker", () => {
@@ -541,7 +522,7 @@ describe("kontrollrom-dashboard", () => {
 		const serialized = serializeControlRoomDashboard();
 		for (const expected of [
 			"Budstikka · consumer-lag · diagnostikk",
-			"Oppfølgingsplan · permanent deserialiseringsrate",
+			"Oppfølgingsplan · deserialiseringsfeil",
 			"syfomotebehov · available/desired",
 			BUDSTIKKA_LAG_METRIC,
 			DESERIALIZATION_ERROR_METRIC,
@@ -555,15 +536,17 @@ describe("kontrollrom-dashboard", () => {
 		]) {
 			assert.ok(serialized.includes(expected));
 		}
+		assert.ok(!serialized.includes('"legendFormat": "permanente feil"'));
 	});
 
 	test("viser SLO og deploy som eksplisitte gap uten proxy-metrikker", () => {
 		const serialized = serializeControlRoomDashboard();
-		assert.ok(serialized.includes("SLO-burn · IKKE DEFINERT"));
-		assert.ok(serialized.includes("Siste deploy · UKJENT"));
-		assert.ok(serialized.includes("Alert-policy er ikke en SLO-kontrakt"));
+		assert.ok(serialized.includes("Kjente gap · SLO og deploy"));
+		assert.ok(serialized.includes("IKKE DEFINERT"));
+		assert.ok(serialized.includes("Siste deploy"));
+		assert.ok(serialized.includes("dekningsgap, ikke grønt"));
 		assert.ok(
-			serialized.includes("deployment-created er ikke deployidentitet"),
+			serialized.includes("deployment-created ikke er deployidentitet"),
 		);
 		const expressions = collectByKey(
 			buildControlRoomDashboard(),
@@ -656,7 +639,7 @@ describe("kontrollrom-dashboard", () => {
 				fieldConfig: {
 					overrides: Array<{ matcher: { id: string; options: string } }>;
 				};
-				options: { sortBy: Array<{ displayName: string }> };
+				options: { sortBy: Array<{ desc: boolean; displayName: string }> };
 			};
 		};
 		for (const { matcher } of vizConfig.spec.fieldConfig.overrides) {
@@ -666,13 +649,20 @@ describe("kontrollrom-dashboard", () => {
 		for (const { displayName } of vizConfig.spec.options.sortBy) {
 			assert.ok(Object.values(organize.renameByName).includes(displayName));
 		}
+		assert.deepEqual(vizConfig.spec.options.sortBy, [
+			{ desc: true, displayName: "Runtimefeil 5m" },
+			{ desc: false, displayName: "Klare replikaer" },
+			{ desc: true, displayName: "OTel-feil" },
+			{ desc: true, displayName: "Restarts 24t" },
+			{ desc: true, displayName: "SERVER-span" },
+		]);
 	});
 
 	test("binder alle queries eksplisitt til riktig datasource og produksjonsscope", () => {
 		const queries = collectObjects(buildControlRoomDashboard()).filter(
 			(query) => query.kind === "DataQuery",
 		);
-		assert.equal(queries.length, 26);
+		assert.equal(queries.length, 27);
 		let browserQueries = 0;
 		let builtInQueries = 0;
 		for (const query of queries) {
@@ -796,7 +786,11 @@ describe("kontrollrom-dashboard", () => {
 
 	test("holder Loki-kost nede i standardvisningen", () => {
 		assert.match(runtimeErrorsByServiceQuery, /\[5m\]/);
+		assert.match(fleetServicesWithRuntimeErrorsQuery, /\[5m\]/);
+		assert.match(fleetServicesWithRuntimeErrorsQuery, /^count\(/);
+		assert.ok(!fleetServicesWithRuntimeErrorsQuery.includes("vector(0)"));
 		assert.ok(!runtimeErrorsByServiceQuery.includes("$__range"));
+		assert.ok(!fleetServicesWithRuntimeErrorsQuery.includes("$__range"));
 		assert.ok(!runtimeErrorsByServiceQuery.includes("runtimeActivity"));
 		const serialized = serializeControlRoomDashboard();
 		assert.ok(serialized.includes('"autoRefresh": "2m"'));
@@ -805,7 +799,87 @@ describe("kontrollrom-dashboard", () => {
 			collectByKey(buildControlRoomDashboard(), "group").filter(
 				(value) => value === "loki",
 			).length,
-			3,
+			4,
+		);
+	});
+
+	test("prioriterer avvik og flåtematrisen på første skjerm", () => {
+		const dashboard = buildControlRoomDashboard();
+		const elements = dashboard.spec.elements as Record<
+			string,
+			{
+				spec: {
+					title: string;
+					vizConfig: {
+						group: string;
+						spec: { options?: { content?: string } };
+					};
+				};
+			}
+		>;
+		const layout = dashboard.spec.layout as {
+			spec: {
+				items: Array<{
+					spec: {
+						element: { name: string };
+						height: number;
+						y: number;
+					};
+				}>;
+			};
+		};
+		const layoutByName = new Map(
+			layout.spec.items.map(({ spec }) => [spec.element.name, spec]),
+		);
+		const fleet = layoutByName.get("panel-10");
+		assert.ok(fleet);
+		assert.equal(fleet.y, 11);
+		assert.equal(
+			Math.max(...layout.spec.items.map(({ spec }) => spec.y + spec.height)),
+			85,
+		);
+
+		const panelsBeforeFleet = layout.spec.items.filter(
+			({ spec }) => spec.y < fleet.y,
+		);
+		assert.deepEqual(
+			panelsBeforeFleet.map(({ spec }) => spec.element.name),
+			["panel-1", "panel-2", "panel-32", "panel-4", "panel-5", "panel-3"],
+		);
+		assert.deepEqual(
+			panelsBeforeFleet
+				.filter(({ spec }) => spec.element.name !== "panel-1")
+				.map(({ spec }) => elements[spec.element.name]?.spec.title),
+			[
+				"OTel-feil · tjenester",
+				"Runtimefeil 5m · tjenester",
+				"Restarts 24t · tjenester",
+				"Laveste ready/desired %",
+				"Tjenester uten SERVER-spanserie",
+			],
+		);
+		assert.equal(layoutByName.get("panel-1")?.height, 3);
+		assert.ok(
+			panelsBeforeFleet
+				.filter(({ spec }) => spec.element.name !== "panel-1")
+				.every(
+					({ spec }) =>
+						elements[spec.element.name]?.spec.vizConfig.group === "stat",
+				),
+		);
+
+		const textContents = Object.values(elements)
+			.filter(({ spec }) => spec.vizConfig.group === "text")
+			.map(({ spec }) => spec.vizConfig.spec.options?.content ?? "");
+		assert.equal(textContents.length, 6);
+		assert.ok(
+			textContents.reduce((sum, content) => sum + content.length, 0) < 1600,
+		);
+		assert.ok(textContents.every((content) => content.length < 500));
+		assert.ok(
+			serializeControlRoomDashboard().includes(
+				"Ingen samlet brukerimpact-status ennå",
+			),
 		);
 	});
 
@@ -816,7 +890,7 @@ describe("kontrollrom-dashboard", () => {
 			{ spec: { id: number } }
 		>;
 		const ids = Object.values(elements).map(({ spec }) => spec.id);
-		assert.equal(ids.length, 31);
+		assert.equal(ids.length, 27);
 		assert.equal(new Set(ids).size, ids.length);
 		const layout = dashboard.spec.layout as {
 			spec: { items: Array<{ spec: { element: { name: string } } }> };

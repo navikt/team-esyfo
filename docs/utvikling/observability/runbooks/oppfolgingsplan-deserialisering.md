@@ -1,16 +1,16 @@
-# Runbook: permanent deserialiseringsfeil i Oppfølgingsplan
+# Runbook: deserialiseringsfeil i Oppfølgingsplan
 
-`syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total` teller records som ikke kan deserialiseres og derfor kan forkastes permanent. Vedvarende rate kan gi manglende sykmeldingsperioder i oppfølgingsplanen. Implementering og kontrollert verifikasjon følges i [syfo-oppfolgingsplan-backend#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449).
+`syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total` teller observerte deserialiseringsfeil. Legacy-signalet skiller ikke terminalt forkastede records fra retryforsøk, og beviser derfor ikke permanent tap alene. En vedvarende rate kan likevel indikere risiko for manglende sykmeldingsperioder i oppfølgingsplanen. Presis terminalmetrikk og kontrollert verifikasjon følges i [syfo-oppfolgingsplan-backend#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449).
 
 Dette er en blokkert pagerkandidat. Ingen pager aktiveres før recovery/reconciliation, evidens og ruting er godkjent i [#217](https://github.com/navikt/team-esyfo/issues/217).
 
 ## Bekreft signalet
 
-1. Åpne Kontrollrommets panel `Oppfølgingsplan · permanent deserialiseringsrate`.
+1. Åpne Kontrollrommets panel `Oppfølgingsplan · deserialiseringsfeil`.
 2. Bekreft at serien har namespace `team-esyfo`, `k8s_cluster_name="prod"` og at økningen varer lenger enn et enkelt scrape-/deployvindu. Kontrollrommet skal aldri blande dev og prod.
-3. Panelet summerer rate over alle prod-replikaer for å vise total forkastingshastighet. Sammenlign med den eksisterende kandidatregelen, som fortsatt evaluerer enkeltserier, før terskel eller pagersemantikk endres.
-4. Skill permanent deserialisering fra transient runtimefeil og generell consumer lag.
-5. `No data` betyr manglende eller ukjent metrikkserie, ikke null permanente feil.
+3. Panelet summerer den observerte feilraten over alle prod-replikaer. Sammenlign med den eksisterende kandidatregelen, som fortsatt evaluerer enkeltserier, før terskel eller pagersemantikk endres.
+4. Skill deserialiseringsforsøk fra transient runtimefeil og generell consumer lag. Avklar recordens terminale utfall før hendelsen omtales som permanent.
+5. `No data` betyr manglende eller ukjent metrikkserie, ikke null deserialiseringsfeil.
 
 ## Avgrens konsekvens uten persondata
 
@@ -30,7 +30,7 @@ Dette er en blokkert pagerkandidat. Ingen pager aktiveres før recovery/reconcil
 ## Bevis recovery
 
 - Deserialiseringsraten er 0 i to komplette, påfølgende femminuttersvinduer med faktisk consumertrafikk, altså minst ti minutter. Dette følger panelets `rate(...[5m])`; endelig alertvindu fastsettes i #449/#217.
-- Nye permanente feil øker ikke etter deploy/recovery.
+- Nye observerte deserialiseringsfeil øker ikke etter deploy/recovery, og terminalt utfall er verifisert separat.
 - Eventuell backlog eller reconciliation fullfører med forventet antall, og terminale avvik er eksplisitt redegjort for.
 - En sanitert ende-til-ende-kontroll bekrefter at sykmeldingsperioder materialiseres uten å dele persondata.
 - #449 inneholder tidspunkt, schema-/revisionbevis, tiltak og kontrollresultat.

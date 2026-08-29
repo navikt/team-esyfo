@@ -30,7 +30,7 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "Inventardrevet hendelsesinngang for hele Team eSyfos operative flåte. Skiller brukerimpact, teknisk helse og telemetry og viser unsupported signaler som eksplisitte gap.",
+    "description": "Inventardrevet hendelsesinngang for Team eSyfos operative flåte. Skiller teknisk helse fra telemetrydekning og viser manglende brukerimpact-, SLO- og deploykontrakter som eksplisitte gap.",
     "editable": true,
     "elements": {
       "panel-1": {
@@ -44,10 +44,16 @@
               "transformations": []
             }
           },
-          "description": "Operativ leserekkefølge, scope og statusord.",
+          "description": "Kontrollrommet viser teknisk helse og telemetrydekning separat. Fullt scope og begreper ligger i dokumentasjonen.",
           "id": 1,
-          "links": [],
-          "title": "00 · Slik leses kontrollrommet",
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Kontrollrom-dokumentasjon",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/kontrollrom"
+            }
+          ],
+          "title": "Start med avvikene",
           "vizConfig": {
             "group": "text",
             "kind": "VizConfig",
@@ -57,7 +63,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "### Kontrollrom v1 · coverage-first\n\n**Les i denne rekkefølgen:** påvist brukerimpact → teknisk avvik → telemetry → deploykontekst → runbook. Brukerimpact, teknisk helse og datakvalitet er separate sannheter; kontrollrommet beregner aldri én samlet grønn status.\n\nFlåten er generert fra runtimeinventaret per **2026-08-28**: 26 forventede GCP-apper, hvor 24 har SERVER-span/RED-kontrakt, samt 1 jobb, 10 team-topics og 11 browserflater. Workerprofiler står som `ANNEN KONTRAKT` i SERVER-kolonnen og får aldri falsk `MANGLER`. De 3 FSS-komponentene i `syfooppfolgingsplanservice` er bevisst **ikke** med i den generiske RED/kube/Loki-flåten: den hardkodede GCP-kontrakten ville gitt falsk `MANGLER`. Fram til 31. august følges tjenestegruppen kun indirekte via eksisterende, tidsavgrensede guardrails i Alert-registeret; deretter verifiseres shutdown i [#208](https://github.com/navikt/team-esyfo/issues/208). Airflow, dulting-studio og teamsykefravr er utenfor scope.\n\n**Statusord:** `PÅVIST` krever observerbar evidens. `INGEN PÅVIST IMPACT` betyr ikke bevist frisk. `UKJENT` og `IKKE DEFINERT` er handlingsrettede dekningsgap, aldri grønt.",
+                "content": "Velg tjeneste for APM, logger og runbook. Ingen samlet brukerimpact-status ennå; `UKJENT` og `MANGLER` er aldri grønt. [Begreper og scope](https://navikt.github.io/team-esyfo/utvikling/observability/kontrollrom).",
                 "mode": "markdown"
               }
             },
@@ -110,7 +116,97 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "OTel-feilstatus · tjenester",
+          "title": "OTel-feil · tjenester",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "gray",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-32": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "group": "loki",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "count((sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [5m]))) > 0)",
+                        "queryType": "instant"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Tjenester med runtimefeil"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Antall tjenester med minst én påvist error-, critical- eller fatal-klassifisert logglinje siste fem minutter. No data er ukjent; panelet konstruerer ikke null uten positiv loggevidens.",
+          "id": 32,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "HTTP/runtime-runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+            }
+          ],
+          "title": "Runtimefeil 5m · tjenester",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -203,7 +299,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "SERVER-telemetry mangler · tjenester",
+          "title": "Tjenester uten SERVER-spanserie",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -296,7 +392,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Restarts · tjenester · 24t",
+          "title": "Restarts 24t · tjenester",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -389,7 +485,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Laveste ready/desired",
+          "title": "Laveste ready/desired %",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -480,7 +576,7 @@
           "description": "Andel forventede, SERVER-eligible runtime-identiteter i valgt scope med aktuell spanserie. Workerprofiler har annen signal-/span-kontrakt. Dette beviser seriescrape, ikke brukertrafikk eller komplett tracing.",
           "id": 6,
           "links": [],
-          "title": "SERVER-spanserie · HTTP-dekning",
+          "title": "HTTP-dekning",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -571,7 +667,7 @@
           "description": "Andel forventede runtime-identiteter i valgt scope med desired-replica-serie. Manglende mapping er et telemetry-/identitetsgap.",
           "id": 7,
           "links": [],
-          "title": "Kube deployment · dekning",
+          "title": "Kube-dekning",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -634,42 +730,26 @@
               "transformations": []
             }
           },
-          "description": "Alert-policy er ikke en SLO-kontrakt.",
+          "description": "SLO er ikke definert. Siste deploy er ukjent fordi pod-alder og deployment-created ikke er deployidentitet.",
           "id": 8,
-          "links": [],
-          "title": "SLO-burn · IKKE DEFINERT",
-          "vizConfig": {
-            "group": "text",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {},
-                "overrides": []
-              },
-              "options": {
-                "content": "### Ikke grønt, ikke null\n\nIngen godkjent SLI/objective/window/burn-rate finnes ennå. Derfor viser kontrollrommet ikke et oppdiktet SLO-tall. Avklaringer følges i [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729) og [meroppfolging-backend#422](https://github.com/navikt/meroppfolging-backend/issues/422).",
-                "mode": "markdown"
-              }
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Kontrollrom-dokumentasjon",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/kontrollrom"
             },
-            "version": "13.1.2"
-          }
-        }
-      },
-      "panel-9": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [],
-              "queryOptions": {},
-              "transformations": []
+            {
+              "targetBlank": true,
+              "title": "Dine sykmeldte SLO #729",
+              "url": "https://github.com/navikt/dinesykmeldte-backend/issues/729"
+            },
+            {
+              "targetBlank": true,
+              "title": "Meroppfølging SLO #422",
+              "url": "https://github.com/navikt/meroppfolging-backend/issues/422"
             }
-          },
-          "description": "Pod-alder og deployment-created er ikke deployidentitet.",
-          "id": 9,
-          "links": [],
-          "title": "Siste deploy · UKJENT",
+          ],
+          "title": "Kjente gap · SLO og deploy",
           "vizConfig": {
             "group": "text",
             "kind": "VizConfig",
@@ -679,7 +759,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "### Mangler verifisert adapter\n\nKontrollrommet viser ikke nyeste pod eller `kube_deployment_created` som «siste deploy». Kilde-SHA, deployert SHA og tidspunkt må komme fra en verifisert NAIS/deploy-kontrakt. Bruk NAIS APM og Console under hendelsen; adapteren fullføres i [#211](https://github.com/navikt/team-esyfo/issues/211).",
+                "content": "**SLO:** `IKKE DEFINERT` · **Siste deploy:** `UKJENT`. Dette er dekningsgap, ikke grønt.",
                 "mode": "markdown"
               }
             },
@@ -752,7 +832,7 @@
               "url": "https://github.com/navikt/dinesykmeldte-backend/issues/729"
             }
           ],
-          "title": "Fast scope · Dine sykmeldte · forsøk og 2xx",
+          "title": "10 · Dine sykmeldte · forsøk og 2xx",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -922,7 +1002,7 @@
               "url": "https://github.com/navikt/dinesykmeldte-backend/issues/729"
             }
           ],
-          "title": "Fast scope · Dine sykmeldte · avvikende HTTP-utfall",
+          "title": "Dine sykmeldte · avvikende HTTP-utfall",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -1475,51 +1555,25 @@
                 "sortBy": [
                   {
                     "desc": true,
-                    "displayName": "SERVER-span"
+                    "displayName": "Runtimefeil 5m"
+                  },
+                  {
+                    "desc": false,
+                    "displayName": "Klare replikaer"
                   },
                   {
                     "desc": true,
-                    "displayName": "Runtimefeil 5m"
+                    "displayName": "OTel-feil"
+                  },
+                  {
+                    "desc": true,
+                    "displayName": "Restarts 24t"
+                  },
+                  {
+                    "desc": true,
+                    "displayName": "SERVER-span"
                   }
                 ]
-              }
-            },
-            "version": "13.1.2"
-          }
-        }
-      },
-      "panel-11": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Detaljgrafer viser kun én eksplisitt valgt runtime.",
-          "id": 11,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "HTTP/runtime-runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "02 · Valgt tjeneste · RED og runtime",
-          "vizConfig": {
-            "group": "text",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {},
-                "overrides": []
-              },
-              "options": {
-                "content": "### Én tjeneste, ingen skjult flåteaggregering\n\nVelg **Tjeneste** øverst. Request-rate, OTel-feilratio og P95 gjelder inbound SERVER-spans for bare denne runtime-identiteten. For workerprofiler er disse SERVER-panelene ikke den operative kontrakten og kan stå `Ukjent`; bruk pipeline-/jobbpanelet og runbooken. Ingen trafikk gir `Ukjent`; P95 er diagnostikk, ikke SLO.",
-                "mode": "markdown"
               }
             },
             "version": "13.1.2"
@@ -1565,7 +1619,7 @@
           "description": "Inbound SERVER-spans per sekund for én valgt tjeneste.",
           "id": 12,
           "links": [],
-          "title": "Request-rate · valgt tjeneste",
+          "title": "02 · Valgt tjeneste · request-rate",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -1704,7 +1758,7 @@
           "description": "Andel inbound SERVER-spans med STATUS_CODE_ERROR. Null finnes bare med observert requestserie; ingen trafikk gir Ukjent. Ikke en vedtatt SLO-grense.",
           "id": 13,
           "links": [],
-          "title": "OTel-feilratio · valgt tjeneste",
+          "title": "Valgt tjeneste · OTel-feilratio",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -1847,7 +1901,7 @@
           "description": "P95 for inbound SERVER-spans på én valgt tjeneste. Ingen flåtemiks og ingen SLO-farge.",
           "id": 14,
           "links": [],
-          "title": "P95 · valgt tjeneste",
+          "title": "Valgt tjeneste · P95",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2004,7 +2058,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Runtimefeil · valgt tidsrom",
+          "title": "Valgt tjeneste · runtimefeil",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2112,7 +2166,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Restarts · valgt tjeneste · 24t",
+          "title": "Valgt tjeneste · restarts · 24t",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2220,7 +2274,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Ready/desired · valgt tjeneste",
+          "title": "Valgt tjeneste · ready/desired",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2283,54 +2337,21 @@
               "transformations": []
             }
           },
-          "description": "Kildekodekonfigurasjon, identitetsgap og ærlig målesemantikk.",
+          "description": "Kun Faro kind=exception er live-verifisert. Miljølabel, numerisk sampling, page loads, sessions og CWV er ukjent; en session skal aldri omtales som en unik bruker.",
           "id": 18,
           "links": [
             {
               "targetBlank": true,
               "title": "Browser-runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/browser"
-            }
-          ],
-          "title": "20 · Browser · dekning før tall",
-          "vizConfig": {
-            "group": "text",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {},
-                "overrides": []
-              },
-              "options": {
-                "content": "### Browser · 5/11 har SDK-konfigurasjon\n\nKun Faro `kind=exception` er live-verifisert for feildrilldown. **Miljølabel er ikke verifisert**, så exception-serien er diagnostikk på tvers av ukjent miljøscope og skal ikke leses som produksjonsstatus. Samplede page loads, sessions og CWV p75 er også **UKJENT** fram til [#206](https://github.com/navikt/team-esyfo/issues/206) har bevist identitet, miljø, numerisk samplingrate og queryschema. En session skal aldri omtales som en unik bruker, og ulike sample rates skal aldri summeres.\n\n| Flate | Browser-identitet | Kildekode | Side-ID | Privacy | Høy-impact issue |\n|---|---|---|---|---|---|\n| aktivitetskrav-frontend | `aktivitetskrav-frontend` | raw-faro; tracing konfigurert | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| bro-frontend | `bro-frontend` | Mangler SDK | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| dialogmote-frontend | `dialogmote-frontend` | raw-faro; tracing konfigurert | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| dinesykmeldte | `dinesykmeldte` | raw-faro; tracing mangler | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| meroppfolging-frontend | `meroppfolging-frontend` | raw-faro; tracing konfigurert | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| narmesteleder-frontend | `narmesteleder-frontend` | Mangler SDK | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| syfo-oppfolgingsplan-frontend | `syfo-oppfolgingsplan-frontend` | raw-faro; tracing konfigurert | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| aktivitetskrav-microfrontend | `aktivitetskrav-microfrontend` | Mangler SDK | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| dialogmote-microfrontend | `dialogmote-microfrontend` | Mangler SDK | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| meroppfolging-microfrontend | `meroppfolging-microfrontend` | Mangler SDK | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n| lumi-dashboard | `lumi-dashboard` | Mangler SDK | Mangler | Gap | [navikt/team-esyfo#206](https://github.com/navikt/team-esyfo/issues/206) |\n\n[Browser-runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/browser) · [NAIS Frontend web vitals](https://grafana.nav.cloud.nais.io/d/frontend-web-vitals/frontend-web-vitals) · [Feildrilldown](https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown)",
-                "mode": "markdown"
-              }
             },
-            "version": "13.1.2"
-          }
-        }
-      },
-      "panel-19": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Faro exception-schemaet mangler verifisert miljødimensjon.",
-          "id": 19,
-          "links": [
             {
               "targetBlank": true,
-              "title": "Browser-runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/browser"
+              "title": "Browserkontrakt #206",
+              "url": "https://github.com/navikt/team-esyfo/issues/206"
             }
           ],
-          "title": "Browsermiljø · UKJENT",
+          "title": "20 · Browser",
           "vizConfig": {
             "group": "text",
             "kind": "VizConfig",
@@ -2340,7 +2361,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "### Diagnostikk, ikke prod-status\n\nException-serien kan ikke dokumentert skilles mellom dev og prod. Den brukes bare til feildrilldown per browseridentitet. Miljø, sampling, page loads, sessions og CWV bevises i [#206](https://github.com/navikt/team-esyfo/issues/206).",
+                "content": "**SDK konfigurert: 5/11.** Kun Faro-unntak er diagnostisk verifisert; øvrig browserhelse er `UKJENT`. [Runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/browser) · [inventar](https://navikt.github.io/team-esyfo/utvikling/observability/runtimeinventar) · [CWV](https://grafana.nav.cloud.nais.io/d/frontend-web-vitals/frontend-web-vitals).",
                 "mode": "markdown"
               }
             },
@@ -2390,7 +2411,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/browser"
             }
           ],
-          "title": "Browser-unntak · samplede hendelser · miljø ukjent",
+          "title": "Browser-unntak · diagnostikk",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2495,16 +2516,21 @@
               "transformations": []
             }
           },
-          "description": "Topic-/pipelinekontrakter og varslingsmigrering.",
+          "description": "Kontraktstatus, ikke produksjonshelse. syfo-budstikka er målprosessor, esyfovarsel er migrerende legacy-prosessor, og Airflow er utenfor scope. Expected run, ferskhet, progresjon, eldste ventende og terminalt utfall avklares i #212 før pipelinehelse kan evalueres.",
           "id": 21,
           "links": [
             {
               "targetBlank": true,
               "title": "Pipeline-/jobbrunbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
+            },
+            {
+              "targetBlank": true,
+              "title": "Pipelinekontrakter #212",
+              "url": "https://github.com/navikt/team-esyfo/issues/212"
             }
           ],
-          "title": "30 · Pipelines · prosessnøytral status",
+          "title": "30 · Pipelines",
           "vizConfig": {
             "group": "text",
             "kind": "VizConfig",
@@ -2514,7 +2540,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "### Pipelines · kontrakt før farge\n\n| Pipeline | Topics | Interne prosessorer | Behandlingsfrist | Operativ status |\n|---|---:|---|---:|---|\n| Varsling | 2 | `budstikka.v1`: syfo-oppfolgingsplan-backend → syfo-budstikka<br>`varselbus`: aktivitetskrav-backend, meroppfolging-backend, syfo-dokumentporten, syfomotebehov, syfooppfolgingsplanservice → esyfovarsel | IKKE DEFINERT | IKKE EVALUERT · [navikt/team-esyfo#212](https://github.com/navikt/team-esyfo/issues/212) |\n| Kartleggingsspørsmål | 1 | `kartleggingssporsmal-svar`: meroppfolging-backend → ingen intern consumer | IKKE DEFINERT | IKKE EVALUERT · [navikt/team-esyfo#212](https://github.com/navikt/team-esyfo/issues/212) |\n| Nærmesteleder | 1 | `syfo-narmesteleder-leesah`: esyfo-narmesteleder → dinesykmeldte-backend | IKKE DEFINERT | IKKE EVALUERT · [navikt/team-esyfo#212](https://github.com/navikt/team-esyfo/issues/212) |\n| Oppfølgingsplan fra LPS | 1 | `aapen-syfo-oppfolgingsplan-lps-nav-v2`: lps-oppfolgingsplan-mottak → ingen intern consumer | IKKE DEFINERT | IKKE EVALUERT · [navikt/team-esyfo#212](https://github.com/navikt/team-esyfo/issues/212) |\n| Sykepengedager | 2 | `sykepengedager-informasjon-topic`: sykepengedager-informasjon → meroppfolging-backend<br>`sykepengedager.infotrygd.v1`: ekstern → sykepengedager-informasjon | IKKE DEFINERT | IKKE EVALUERT · [navikt/team-esyfo#212](https://github.com/navikt/team-esyfo/issues/212) |\n| Sen oppfølging | 2 | `sen-oppfolging-svar`: meroppfolging-backend → ingen intern consumer<br>`sen-oppfolging-varsel`: meroppfolging-backend → ingen intern consumer | IKKE DEFINERT | IKKE EVALUERT · [navikt/team-esyfo#212](https://github.com/navikt/team-esyfo/issues/212) |\n| Arbeidsgiverhendelser | 1 | `dinesykmeldte-hendelser-v2`: esyfovarsel, syfo-budstikka → dinesykmeldte-backend | IKKE DEFINERT | IKKE EVALUERT · [navikt/team-esyfo#212](https://github.com/navikt/team-esyfo/issues/212) |\n\nVarsling modelleres prosessnøytralt: **syfo-budstikka er målprosessor**, mens **esyfovarsel er migrerende legacy-prosessor**. Cutoverdato er ikke besluttet. Ingen rad er grønn før #212 har godkjent expected run, ferskhet, progresjon, eldste ventende og terminalt utfall. Airflow er en ekstern sekundærkonsument og er eksplisitt ute av scope.\n\n[Pipeline-/jobbrunbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber)",
+                "content": "**Pipelinehelse: `IKKE EVALUERT`.** 7 grupper / 10 topics er kartlagt. [Avklar kontrakten i #212](https://github.com/navikt/team-esyfo/issues/212) · [se topicruter](https://navikt.github.io/team-esyfo/utvikling/observability/runtimeinventar).",
                 "mode": "markdown"
               }
             },
@@ -2533,7 +2559,7 @@
               "transformations": []
             }
           },
-          "description": "Typekorrekt schedule og eksplisitte manglende utfallssignaler.",
+          "description": "kube_job_failed viser bare observert terminalt Kubernetes-utfall. Siste start, siste suksess, varighet og expected-run-evaluering mangler en verifisert adapter.",
           "id": 22,
           "links": [
             {
@@ -2542,7 +2568,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
             }
           ],
-          "title": "32 · Jobber · forventet run er ikke det samme som podhelse",
+          "title": "32 · Planlagt jobb",
           "vizConfig": {
             "group": "text",
             "kind": "VizConfig",
@@ -2552,7 +2578,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "### Planlagte jobber\n\n| Jobb | Forventet kjøring | Sen etter | Guardrail | Status |\n|---|---|---:|---|---|\n| esyfovarsel-job | `*/30 7-16 * * 1-5` · Europe/Oslo | 60 min | [navikt/esyfovarsel#1094](https://github.com/navikt/esyfovarsel/issues/1094) | IKKE EVALUERT |\n\n`kube_job_failed` under viser kun et observert terminalt Kubernetes-utfall i valgt tidsrom. **No data er UKJENT**, ikke en vellykket kjøring. Siste start, siste suksess, varighet og forventet-run-evaluering mangler fortsatt en verifisert adapter.",
+                "content": "**esyfovarsel-job: `IKKE EVALUERT`.** `*/30 7-16 * * 1-5` · Europe/Oslo · sen etter 60 min · [navikt/esyfovarsel#1094](https://github.com/navikt/esyfovarsel/issues/1094). `No data` er `UKJENT`, ikke en vellykket kjøring.",
                 "mode": "markdown"
               }
             },
@@ -2610,7 +2636,7 @@
               "url": "https://github.com/navikt/esyfovarsel/issues/1094"
             }
           ],
-          "title": "esyfovarsel-job · failure flag",
+          "title": "Kube-feil · planlagt jobb",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2669,10 +2695,10 @@
               "transformations": []
             }
           },
-          "description": "De tre kandidatene fra #210 og deres reelle blockers.",
+          "description": "Dashboardpaneler og runbooks aktiverer ikke pager. Aktivering krever 14–28 dagers shadow-evidens, second-person-verifikasjon og eksplisitt beslutning i #217.",
           "id": 24,
           "links": [],
-          "title": "40 · Pager readiness",
+          "title": "40 · Pagerkandidater",
           "vizConfig": {
             "group": "text",
             "kind": "VizConfig",
@@ -2682,7 +2708,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "### Pager readiness · alle tre er blokkert\n\n| Kandidat fra #210 | Diagnostikk i kontrollrommet | Runbook | Aktivering |\n|---|---|---|---|\n| Budstikka ende-til-ende-ferskhet | Nåværende consumer-lag vises kun som diagnostikk; endelig alder/ferskhet og terminale utfall mangler | [Budstikka-helsesjekk](https://github.com/navikt/syfo-budstikka/blob/main/docs/helsesjekk.md) | **BLOCKED** · [#260](https://github.com/navikt/syfo-budstikka/issues/260), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n| Oppfølgingsplan permanent deserialisering | Verifisert rate-metrikk vises; recovery/reconciliation må bevises | [Runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/oppfolgingsplan-deserialisering) | **BLOCKED** · [#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n| syfomotebehov tilgjengelighet | Available/desired speiler shadow-kandidaten og vises sammen med ready/desired og RED-detaljene; endelig konsekvens og tuning gjenstår | [Runbook](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/syfomotebehov-tilgjengelighet) | **BLOCKED** · [#753](https://github.com/navikt/syfomotebehov/issues/753), [#217](https://github.com/navikt/team-esyfo/issues/217) |\n\nDashboardpaneler og runbooks aktiverer ikke pager. Aktivering krever shadow-evidens, 14–28 dagers observasjon, second-person-verifikasjon og eksplisitt beslutning i #217.",
+                "content": "**BLOCKED:** Grafene under er diagnostikk. Pager aktiveres først etter shadow-evidens, second-person-verifikasjon og eksplisitt beslutning i [#217](https://github.com/navikt/team-esyfo/issues/217).",
                 "mode": "markdown"
               }
             },
@@ -2893,7 +2919,7 @@
                         "expr": "sum(rate(syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\"}[5m]))",
                         "instant": false,
                         "interval": "",
-                        "legendFormat": "permanente feil",
+                        "legendFormat": "observerte deserialiseringsfeil",
                         "range": true
                       },
                       "version": "v0"
@@ -2906,7 +2932,7 @@
               "transformations": []
             }
           },
-          "description": "Total rate av records som forkastes permanent, summert over prod-replikaer. Eksisterende alertkandidat evaluerer hver serie mot 0,1/s i fem minutter; pagersemantikken er blokkert til aggregat, recovery og runbook er bevist.",
+          "description": "Rate fra eksisterende legacy-teller. Signalet skiller foreløpig ikke terminalt avviste records fra retryforsøk; bruk det kun som diagnostikk fram til #449 er deployet og queryen er byttet.",
           "id": 26,
           "links": [
             {
@@ -2940,7 +2966,7 @@
               "url": "https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449"
             }
           ],
-          "title": "Oppfølgingsplan · permanent deserialiseringsrate",
+          "title": "Oppfølgingsplan · deserialiseringsfeil",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -3241,70 +3267,6 @@
             "version": "13.1.2"
           }
         }
-      },
-      "panel-28": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Separate guardrails for døende eller flyttende runtime.",
-          "id": 28,
-          "links": [],
-          "title": "50 · Migrering og utfasing",
-          "vizConfig": {
-            "group": "text",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {},
-                "overrides": []
-              },
-              "options": {
-                "content": "### Migrering og utfasing\n\n| Runtime | Livssyklus | Operativ beslutning |\n|---|---|---|\n| `esyfovarsel` | Migrerer | Dato ikke besluttet; Varsling flyttes gradvis fra esyfovarsel til syfo-budstikka. Eksakt cutoverdato er ikke besluttet; gjennomføringen følges i navikt/team-esyfo#218. |\n| `syfobrukertilgang` | Utfasing | Tjenesten skal fases ut. Default-branch-kartlegging viser syfomotebehov som aktiv konsument; syfooppfolgingsplanservice forsvinner 31. august 2026. |\n| `syfooppfolgingsplanservice` | Sunset 2026-08-31 | Sunset 2026-08-31; tjenestegruppen følges indirekte av eksisterende FSS-alerts, ikke med individuell dekning eller generisk flåterad; shutdown verifiseres i navikt/team-esyfo#208 |\n| `syfooppfolgingsplanservice-redis` | Sunset 2026-08-31 | Sunset 2026-08-31; tjenestegruppen følges indirekte av eksisterende FSS-alerts, ikke med individuell dekning eller generisk flåterad; shutdown verifiseres i navikt/team-esyfo#208 |\n| `syfooppfolgingsplanservice-redisexporter` | Sunset 2026-08-31 | Sunset 2026-08-31; tjenestegruppen følges indirekte av eksisterende FSS-alerts, ikke med individuell dekning eller generisk flåterad; shutdown verifiseres i navikt/team-esyfo#208 |\n\nDe tre FSS-radene er historisk/livssyklus-kontekst og skal ikke bli røde «MANGLER» etter sunset. Etter 31. august betyr de kun at shutdown må verifiseres i [#208](https://github.com/navikt/team-esyfo/issues/208) før inventory og gamle regler ryddes. `dulting-studio`, janitor/`teamsykefravr` og Airflow får ingen nye signaler her. `syfobrukertilgang` skal erstattes av verifisert tilgangssjekk i `esyfo-narmesteleder`; antakelsen om siste konsument må bevises før shutdown.",
-                "mode": "markdown"
-              }
-            },
-            "version": "13.1.2"
-          }
-        }
-      },
-      "panel-29": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Forventet mot bevist telemetry, kontrakter og runbooks.",
-          "id": 29,
-          "links": [],
-          "title": "60 · Dekning og kjente gap",
-          "vizConfig": {
-            "group": "text",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {},
-                "overrides": []
-              },
-              "options": {
-                "content": "### Dekningskontrakt · det vi vet at vi ikke vet\n\n| Signalområde | Forventet scope | Status nå | Neste bevis |\n|---|---:|---|---|\n| App-runtime | 26 | Kube/Loki dekker GCP-flåten; SERVER/RED gjelder 24 eligible profiler, mens workers har annen kontrakt | [#211](https://github.com/navikt/team-esyfo/issues/211) |\n| Browser | 11 | 5 SDK-konfigurert; page load/session/CWV ukjent | [#206](https://github.com/navikt/team-esyfo/issues/206) |\n| Team-topics | 10 | 0 godkjente service-level-kontrakter | [#212](https://github.com/navikt/team-esyfo/issues/212) |\n| Jobber | 1 | Kun failure-flag; expected run og siste suksess ukjent | [esyfovarsel#1094](https://github.com/navikt/esyfovarsel/issues/1094) |\n| SLO-burn | – | IKKE DEFINERT | [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729), [meroppfolging-backend#422](https://github.com/navikt/meroppfolging-backend/issues/422) |\n| Deploytid/-SHA | 26 | UKJENT; pod-alder og deployment-created brukes ikke som deploybevis | [#211](https://github.com/navikt/team-esyfo/issues/211) |\n| Ressursspesifikke runbooks | 48 | 2 allerede lenket; signal-familier dekkes midlertidig av sentrale runbooks | [runbook-indeks](https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/) |\n\nSERVER-tilstanden i flåtetabellen er syntetisk inventarforankret: **FERSK** = aktuell SERVER-spanserie, **STALE** = serie sett siste 30 min men ikke aktuell, **MANGLER** = ingen serie i 30 min for en SERVER-eligible profil, **ANNEN KONTRAKT** = workerprofil som ikke skal vurderes med SERVER-spans. En datasourcefeil gjør hele queryen feil og skal aldri mappes til MANGLER eller grønt.",
-                "mode": "markdown"
-              }
-            },
-            "version": "13.1.2"
-          }
-        }
       }
     },
     "layout": {
@@ -3318,7 +3280,7 @@
                 "kind": "ElementReference",
                 "name": "panel-1"
               },
-              "height": 7,
+              "height": 3,
               "width": 24,
               "x": 0,
               "y": 0
@@ -3331,8 +3293,47 @@
                 "kind": "ElementReference",
                 "name": "panel-2"
               },
-              "height": 5,
-              "width": 4,
+              "height": 4,
+              "width": 8,
+              "x": 0,
+              "y": 3
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-32"
+              },
+              "height": 4,
+              "width": 8,
+              "x": 8,
+              "y": 3
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              },
+              "height": 4,
+              "width": 8,
+              "x": 16,
+              "y": 3
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              },
+              "height": 4,
+              "width": 12,
               "x": 0,
               "y": 7
             }
@@ -3344,114 +3345,10 @@
                 "kind": "ElementReference",
                 "name": "panel-3"
               },
-              "height": 5,
-              "width": 4,
-              "x": 4,
-              "y": 7
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-4"
-              },
-              "height": 5,
-              "width": 4,
-              "x": 8,
-              "y": 7
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-5"
-              },
-              "height": 5,
-              "width": 4,
-              "x": 12,
-              "y": 7
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-6"
-              },
-              "height": 5,
-              "width": 4,
-              "x": 16,
-              "y": 7
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-7"
-              },
-              "height": 5,
-              "width": 4,
-              "x": 20,
-              "y": 7
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-8"
-              },
-              "height": 5,
-              "width": 12,
-              "x": 0,
-              "y": 12
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-9"
-              },
-              "height": 5,
+              "height": 4,
               "width": 12,
               "x": 12,
-              "y": 12
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-30"
-              },
-              "height": 8,
-              "width": 8,
-              "x": 0,
-              "y": 17
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-31"
-              },
-              "height": 8,
-              "width": 16,
-              "x": 8,
-              "y": 17
+              "y": 7
             }
           },
           {
@@ -3464,7 +3361,7 @@
               "height": 16,
               "width": 24,
               "x": 0,
-              "y": 25
+              "y": 11
             }
           },
           {
@@ -3472,12 +3369,38 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-11"
+                "name": "panel-6"
               },
-              "height": 5,
+              "height": 4,
+              "width": 12,
+              "x": 0,
+              "y": 27
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+              },
+              "height": 4,
+              "width": 12,
+              "x": 12,
+              "y": 27
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-8"
+              },
+              "height": 3,
               "width": 24,
               "x": 0,
-              "y": 41
+              "y": 31
             }
           },
           {
@@ -3490,7 +3413,7 @@
               "height": 9,
               "width": 8,
               "x": 0,
-              "y": 46
+              "y": 34
             }
           },
           {
@@ -3503,7 +3426,7 @@
               "height": 9,
               "width": 8,
               "x": 8,
-              "y": 46
+              "y": 34
             }
           },
           {
@@ -3516,7 +3439,7 @@
               "height": 9,
               "width": 8,
               "x": 16,
-              "y": 46
+              "y": 34
             }
           },
           {
@@ -3529,7 +3452,7 @@
               "height": 6,
               "width": 8,
               "x": 0,
-              "y": 55
+              "y": 43
             }
           },
           {
@@ -3542,7 +3465,7 @@
               "height": 6,
               "width": 8,
               "x": 8,
-              "y": 55
+              "y": 43
             }
           },
           {
@@ -3555,7 +3478,33 @@
               "height": 6,
               "width": 8,
               "x": 16,
-              "y": 55
+              "y": 43
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-30"
+              },
+              "height": 8,
+              "width": 8,
+              "x": 0,
+              "y": 49
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-31"
+              },
+              "height": 8,
+              "width": 16,
+              "x": 8,
+              "y": 49
             }
           },
           {
@@ -3565,23 +3514,10 @@
                 "kind": "ElementReference",
                 "name": "panel-18"
               },
-              "height": 17,
-              "width": 24,
-              "x": 0,
-              "y": 61
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-19"
-              },
-              "height": 8,
+              "height": 6,
               "width": 6,
               "x": 0,
-              "y": 78
+              "y": 57
             }
           },
           {
@@ -3591,10 +3527,10 @@
                 "kind": "ElementReference",
                 "name": "panel-20"
               },
-              "height": 8,
+              "height": 6,
               "width": 18,
               "x": 6,
-              "y": 78
+              "y": 57
             }
           },
           {
@@ -3604,10 +3540,10 @@
                 "kind": "ElementReference",
                 "name": "panel-21"
               },
-              "height": 15,
+              "height": 4,
               "width": 24,
               "x": 0,
-              "y": 86
+              "y": 63
             }
           },
           {
@@ -3617,10 +3553,10 @@
                 "kind": "ElementReference",
                 "name": "panel-22"
               },
-              "height": 9,
+              "height": 5,
               "width": 16,
               "x": 0,
-              "y": 101
+              "y": 67
             }
           },
           {
@@ -3630,10 +3566,10 @@
                 "kind": "ElementReference",
                 "name": "panel-23"
               },
-              "height": 9,
+              "height": 5,
               "width": 8,
               "x": 16,
-              "y": 101
+              "y": 67
             }
           },
           {
@@ -3643,10 +3579,10 @@
                 "kind": "ElementReference",
                 "name": "panel-24"
               },
-              "height": 10,
+              "height": 3,
               "width": 24,
               "x": 0,
-              "y": 110
+              "y": 72
             }
           },
           {
@@ -3659,7 +3595,7 @@
               "height": 10,
               "width": 8,
               "x": 0,
-              "y": 120
+              "y": 75
             }
           },
           {
@@ -3672,7 +3608,7 @@
               "height": 10,
               "width": 8,
               "x": 8,
-              "y": 120
+              "y": 75
             }
           },
           {
@@ -3685,33 +3621,7 @@
               "height": 10,
               "width": 8,
               "x": 16,
-              "y": 120
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-28"
-              },
-              "height": 12,
-              "width": 24,
-              "x": 0,
-              "y": 130
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-29"
-              },
-              "height": 15,
-              "width": 24,
-              "x": 0,
-              "y": 142
+              "y": 75
             }
           }
         ]

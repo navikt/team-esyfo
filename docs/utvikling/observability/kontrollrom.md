@@ -53,13 +53,13 @@ Telemetrykolonnen er inventarforankret:
 
 ### Browser
 
-Alle 11 browserflater vises med kildekodekonfigurasjon, browseridentitet, side-ID, privacygap og høy-impact issue. Bare Faro `kind=exception` er live-verifisert i denne leveransen. Miljødimensjonen er ikke verifisert, så exception-grafen er diagnostikk med ukjent miljøscope og må ikke omtales som produksjonsstatus. Page loads, sessions og CWV p75 står eksplisitt ukjent til [#206](https://github.com/navikt/team-esyfo/issues/206) har bevist identitet, miljø, numerisk samplingrate og queryschema.
+Kontrollrommet viser en kompakt browserstatus og en diagnostisk exception-graf. Det detaljerte [runtimeinventaret](./runtimeinventar) viser de 11 browserflatene, kildekodekonfigurasjon, browseridentitet, side-ID, privacygap og høy-impact issue. Bare Faro `kind=exception` er live-verifisert i denne leveransen. Miljødimensjonen er ikke verifisert, så exception-grafen har ukjent miljøscope og må ikke omtales som produksjonsstatus. Page loads, sessions og CWV p75 står eksplisitt ukjent til [#206](https://github.com/navikt/team-esyfo/issues/206) har bevist identitet, miljø, numerisk samplingrate og queryschema.
 
 En sampled exception, page load eller session skal aldri omtales som en unik bruker. Verdier med ulik samplingrate skal ikke summeres.
 
 ### Pipelines og jobber
 
-De sju pipelinegruppene og ti team-topics vises prosessnøytralt med interne produsenter/konsumenter og foreslått processing deadline. Ingen pipeline er grønn før [#212](https://github.com/navikt/team-esyfo/issues/212) har godkjent expected run, ferskhet, progresjon, eldste ventende og terminalt utfall.
+Kontrollrommet viser pipelinehelse som `IKKE EVALUERT`, ikke som et feilresultat. Sju pipelinegrupper og ti team-topics er kartlagt; detaljerte produsent-/konsumentruter ligger i [runtimeinventaret](./runtimeinventar). Operativ helse kan først evalueres når [#212](https://github.com/navikt/team-esyfo/issues/212) har avklart expected run, ferskhet, progresjon, eldste ventende og terminalt utfall.
 
 Varslingsreisen viser `syfo-budstikka` som målprosessor og `esyfovarsel` som migrerende legacy-prosessor. Airflow er ekstern sekundærkonsument og er utenfor scope. `esyfovarsel-job` får kun et tidsavgrenset Kubernetes failure-guardrail; `No data` betyr ikke suksess.
 
@@ -68,7 +68,7 @@ Varslingsreisen viser `syfo-budstikka` som målprosessor og `esyfovarsel` som mi
 De tre kandidatene fra [#210](https://github.com/navikt/team-esyfo/issues/210) har egne diagnostikkpaneler og runbooklenker:
 
 - Budstikka-lag er kun diagnostikk mens ende-til-ende-ferskhet/eldste alder og terminale utfall bygges i [syfo-budstikka#260](https://github.com/navikt/syfo-budstikka/issues/260).
-- Permanent oppfølgingsplan-deserialisering har verifisert ratepanel; recovery og reconciliation bevises i [syfo-oppfolgingsplan-backend#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449).
+- Oppfølgingsplan har et verifisert legacy-signal for observerte deserialiseringsfeil. Signalet skiller ennå ikke terminal forkasting fra retryforsøk; dette og recovery/reconciliation avklares i [syfo-oppfolgingsplan-backend#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449).
 - `syfomotebehov` har guarded ready/desired sammen med single-service RED; tuning og konsekvens avklares i [syfomotebehov#753](https://github.com/navikt/syfomotebehov/issues/753).
 
 Alle tre står `BLOCKED`. Dashboard og runbook aktiverer ikke pager; aktivering krever observasjonsperiode, shadow-evidens, second-person-verifikasjon og eksplisitt beslutning i [#217](https://github.com/navikt/team-esyfo/issues/217).
@@ -88,7 +88,7 @@ Alle tre står `BLOCKED`. Dashboard og runbook aktiverer ikke pager; aktivering 
 - [Browser](./runbooks/browser)
 - [Pipelines og jobber](./runbooks/pipelines-og-jobber)
 - [syfomotebehov tilgjengelighet](./runbooks/syfomotebehov-tilgjengelighet)
-- [Oppfølgingsplan permanent deserialisering](./runbooks/oppfolgingsplan-deserialisering)
+- [Oppfølgingsplan deserialiseringsfeil](./runbooks/oppfolgingsplan-deserialisering)
 
 ## For vedlikeholdere
 
