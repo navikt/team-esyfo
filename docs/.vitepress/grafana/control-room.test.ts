@@ -16,6 +16,9 @@ import {
 	DESIRED_REPLICAS_METRIC,
 	deploymentCoverageQuery,
 	deserializationRateQuery,
+	dinesykmeldteDeviationRateQuery,
+	dinesykmeldteOutcomeRateQuery,
+	dinesykmeldteTrafficRateQuery,
 	errorDashboardDataLink,
 	errorRatioByServiceQuery,
 	expectedScopeVectorQuery,
@@ -306,6 +309,73 @@ describe("kontrollrom-dashboard", () => {
 		assert.ok(serialized.includes("OTel-feilstatus"));
 		assert.ok(serialized.includes("ikke automatisk HTTP 5xx"));
 		assert.ok(!serialized.includes('"title": "HTTP-feil"'));
+	});
+
+	test("viser en disjunkt, konservativ HTTP-utfallstaksonomi for Dine sykmeldte uten å vedta SLO", () => {
+		assert.match(
+			dinesykmeldteOutcomeRateQuery,
+			/service_name="dinesykmeldte-backend"/,
+		);
+		assert.match(dinesykmeldteOutcomeRateQuery, /k8s_cluster_name="prod"/);
+		assert.match(dinesykmeldteOutcomeRateQuery, /span_kind="SPAN_KIND_SERVER"/);
+		assert.ok(dinesykmeldteOutcomeRateQuery.includes("minesykmeldte"));
+		assert.ok(dinesykmeldteOutcomeRateQuery.includes("virksomheter"));
+		for (const outcome of [
+			"attempt",
+			"good",
+			"http_4xx",
+			"technical_failure",
+			"unclassified",
+		]) {
+			assert.ok(dinesykmeldteOutcomeRateQuery.includes(`"${outcome}"`));
+		}
+		assert.match(
+			dinesykmeldteTrafficRateQuery,
+			/http_response_status_code=~"2\.\.", status_code!="STATUS_CODE_ERROR"/,
+		);
+		assert.ok(!dinesykmeldteTrafficRateQuery.includes("2..|3.."));
+		assert.match(
+			dinesykmeldteDeviationRateQuery,
+			/http_response_status_code=~"4\.\.", status_code!="STATUS_CODE_ERROR"/,
+		);
+		assert.match(
+			dinesykmeldteDeviationRateQuery,
+			/status_code="STATUS_CODE_ERROR"/,
+		);
+		assert.ok(
+			!dinesykmeldteDeviationRateQuery.includes(
+				'http_response_status_code!~"4.."',
+			),
+		);
+		assert.match(
+			dinesykmeldteDeviationRateQuery,
+			/status_code!="STATUS_CODE_ERROR", http_response_status_code!~"\[245\]\.\."/,
+		);
+		assert.ok(!dinesykmeldteOutcomeRateQuery.includes("vector(0)"));
+		assert.ok(!dinesykmeldteOutcomeRateQuery.includes("* 0"));
+
+		const dashboard = buildControlRoomDashboard();
+		const elements = dashboard.spec.elements as Record<
+			string,
+			{ spec: { title: string; description: string } }
+		>;
+		const trafficPanel = elements["panel-30"];
+		const deviationPanel = elements["panel-31"];
+		assert.ok(trafficPanel);
+		assert.ok(deviationPanel);
+		assert.equal(
+			trafficPanel.spec.title,
+			"Fast scope · Dine sykmeldte · forsøk og 2xx",
+		);
+		assert.equal(
+			deviationPanel.spec.title,
+			"Fast scope · Dine sykmeldte · avvikende HTTP-utfall",
+		);
+		assert.ok(trafficPanel.spec.description.includes("ikke en vedtatt SLI"));
+		assert.ok(deviationPanel.spec.description.includes("ikke kalt forventet"));
+		const serialized = serializeControlRoomDashboard();
+		assert.ok(serialized.includes("dinesykmeldte-backend/issues/729"));
+		assert.ok(serialized.includes("{{operation}} · {{outcome}}"));
 	});
 
 	test("forankrer HTTP-null i observasjon og lar logg-no-data være ukjent", () => {
@@ -602,7 +672,7 @@ describe("kontrollrom-dashboard", () => {
 		const queries = collectObjects(buildControlRoomDashboard()).filter(
 			(query) => query.kind === "DataQuery",
 		);
-		assert.equal(queries.length, 24);
+		assert.equal(queries.length, 26);
 		let browserQueries = 0;
 		let builtInQueries = 0;
 		for (const query of queries) {
@@ -746,7 +816,7 @@ describe("kontrollrom-dashboard", () => {
 			{ spec: { id: number } }
 		>;
 		const ids = Object.values(elements).map(({ spec }) => spec.id);
-		assert.equal(ids.length, 29);
+		assert.equal(ids.length, 31);
 		assert.equal(new Set(ids).size, ids.length);
 		const layout = dashboard.spec.layout as {
 			spec: { items: Array<{ spec: { element: { name: string } } }> };

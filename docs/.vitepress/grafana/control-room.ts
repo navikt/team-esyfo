@@ -206,6 +206,51 @@ export const budstikkaLagQuery = `max by (topic) (${BUDSTIKKA_LAG_METRIC}{app="s
 export const deserializationRateQuery = `sum(rate(${DESERIALIZATION_ERROR_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod"}[5m]))`;
 export const motebehovAvailableRatioQuery = `(100 * max by (deployment) (${AVAILABLE_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) / max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"})) and on(deployment) (max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) > 0)`;
 
+const dinesykmeldteRoutePattern =
+	"^GET /[(]authenticate tokenx[)]/api/(minesykmeldte|virksomheter)$";
+const dinesykmeldteSpanSelector = `${spanSelector('service_name="dinesykmeldte-backend"')}, span_name=~"${dinesykmeldteRoutePattern}"`;
+const dinesykmeldteRateByOperation = (series: string) =>
+	`sum by (operation) (label_replace((${series}), "operation", "$1", "span_name", "${dinesykmeldteRoutePattern}"))`;
+const dinesykmeldteRate = (extraSelector = "") =>
+	dinesykmeldteRateByOperation(
+		`rate(${SPAN_CALLS_METRIC}{${dinesykmeldteSpanSelector}${extraSelector}}[$__rate_interval])`,
+	);
+const withOutcome = (rate: string, outcome: string) =>
+	`label_replace((${rate}), "outcome", "${outcome}", "", ".*")`;
+
+export const dinesykmeldteTrafficRateQuery = [
+	withOutcome(dinesykmeldteRate(), "attempt"),
+	withOutcome(
+		dinesykmeldteRate(
+			', http_response_status_code=~"2..", status_code!="STATUS_CODE_ERROR"',
+		),
+		"good",
+	),
+].join(" or ");
+
+export const dinesykmeldteDeviationRateQuery = [
+	withOutcome(
+		dinesykmeldteRate(
+			', http_response_status_code=~"4..", status_code!="STATUS_CODE_ERROR"',
+		),
+		"http_4xx",
+	),
+	withOutcome(
+		dinesykmeldteRateByOperation(
+			`rate(${SPAN_CALLS_METRIC}{${dinesykmeldteSpanSelector}, status_code="STATUS_CODE_ERROR"}[$__rate_interval]) or rate(${SPAN_CALLS_METRIC}{${dinesykmeldteSpanSelector}, http_response_status_code=~"5.."}[$__rate_interval])`,
+		),
+		"technical_failure",
+	),
+	withOutcome(
+		dinesykmeldteRate(
+			', status_code!="STATUS_CODE_ERROR", http_response_status_code!~"[245].."',
+		),
+		"unclassified",
+	),
+].join(" or ");
+
+export const dinesykmeldteOutcomeRateQuery = `${dinesykmeldteTrafficRateQuery} or ${dinesykmeldteDeviationRateQuery}`;
+
 export const apmDataLink = (service: string) =>
 	`/a/nais-apm-app/services/team-esyfo/${service}?environment=prod&from=${FROM_ISO}&to=${TO_ISO}`;
 
@@ -826,6 +871,62 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				"Pod-alder og deployment-created er ikke deployidentitet.",
 				"### Mangler verifisert adapter\n\nKontrollrommet viser ikke nyeste pod eller `kube_deployment_created` som «siste deploy». Kilde-SHA, deployert SHA og tidspunkt må komme fra en verifisert NAIS/deploy-kontrakt. Bruk NAIS APM og Console under hendelsen; adapteren fullføres i [#211](https://github.com/navikt/team-esyfo/issues/211).",
 			),
+			"panel-30": timeSeriesPanel({
+				id: 30,
+				title: "Fast scope · Dine sykmeldte · forsøk og 2xx",
+				description:
+					"Fast produksjonsscope for inbound SERVER-spans på GET /api/minesykmeldte og GET /api/virksomheter. attempt viser all observert trafikk; good er 2xx uten OTel-feilstatus. Bare rute-/labelkontrakten og 200/STATUS_CODE_UNSET er live-verifisert. Uten attempt er trafikken ukjent eller null. Dette er diagnostikk, ikke en vedtatt SLI eller SLO.",
+				query: prometheusQuery(
+					"Forsøk og 2xx",
+					dinesykmeldteTrafficRateQuery,
+					"range",
+					"{{operation}} · {{outcome}}",
+				),
+				unit: "reqps",
+				thresholds: neutralThresholds,
+				links: [
+					...serviceDataLinks("dinesykmeldte-backend"),
+					dataLink(
+						"Implementeringsoppgave #729",
+						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
+					),
+				],
+				fieldLinks: [
+					...serviceDataLinks("dinesykmeldte-backend"),
+					dataLink(
+						"Implementeringsoppgave #729",
+						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
+					),
+				],
+			}),
+			"panel-31": timeSeriesPanel({
+				id: 31,
+				title: "Fast scope · Dine sykmeldte · avvikende HTTP-utfall",
+				description:
+					"Fast produksjonsscope for de samme to GET-rutene. http_4xx er 4xx uten OTel-feilstatus, men er ikke kalt forventet: Texas-pluginen kan også maskere tekniske introspeksjonsfeil som 401. technical_failure er 5xx eller OTel-feilstatus; unclassified dekker blant annet 3xx, 1xx og manglende HTTP-status uten OTel-feil. Manglende serier syntetiseres ikke til null. Skillet mellom forventede og tekniske 4xx krever et bounded appsignal i #729.",
+				query: prometheusQuery(
+					"Avvikende HTTP-utfall",
+					dinesykmeldteDeviationRateQuery,
+					"range",
+					"{{operation}} · {{outcome}}",
+				),
+				unit: "reqps",
+				thresholds: neutralThresholds,
+				links: [
+					...serviceDataLinks("dinesykmeldte-backend"),
+					dataLink(
+						"Implementeringsoppgave #729",
+						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
+					),
+				],
+				fieldLinks: [
+					...serviceDataLinks("dinesykmeldte-backend"),
+					dataLink(
+						"Implementeringsoppgave #729",
+						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
+					),
+				],
+			}),
 			"panel-10": fleetTablePanel(),
 			"panel-11": textPanel(
 				11,
@@ -1078,26 +1179,28 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					layoutItem("panel-7", 20, 7, 4, 5),
 					layoutItem("panel-8", 0, 12, 12, 5),
 					layoutItem("panel-9", 12, 12, 12, 5),
-					layoutItem("panel-10", 0, 17, 24, 16),
-					layoutItem("panel-11", 0, 33, 24, 5),
-					layoutItem("panel-12", 0, 38, 8, 9),
-					layoutItem("panel-13", 8, 38, 8, 9),
-					layoutItem("panel-14", 16, 38, 8, 9),
-					layoutItem("panel-15", 0, 47, 8, 6),
-					layoutItem("panel-16", 8, 47, 8, 6),
-					layoutItem("panel-17", 16, 47, 8, 6),
-					layoutItem("panel-18", 0, 53, 24, 17),
-					layoutItem("panel-19", 0, 70, 6, 8),
-					layoutItem("panel-20", 6, 70, 18, 8),
-					layoutItem("panel-21", 0, 78, 24, 15),
-					layoutItem("panel-22", 0, 93, 16, 9),
-					layoutItem("panel-23", 16, 93, 8, 9),
-					layoutItem("panel-24", 0, 102, 24, 10),
-					layoutItem("panel-25", 0, 112, 8, 10),
-					layoutItem("panel-26", 8, 112, 8, 10),
-					layoutItem("panel-27", 16, 112, 8, 10),
-					layoutItem("panel-28", 0, 122, 24, 12),
-					layoutItem("panel-29", 0, 134, 24, 15),
+					layoutItem("panel-30", 0, 17, 8, 8),
+					layoutItem("panel-31", 8, 17, 16, 8),
+					layoutItem("panel-10", 0, 25, 24, 16),
+					layoutItem("panel-11", 0, 41, 24, 5),
+					layoutItem("panel-12", 0, 46, 8, 9),
+					layoutItem("panel-13", 8, 46, 8, 9),
+					layoutItem("panel-14", 16, 46, 8, 9),
+					layoutItem("panel-15", 0, 55, 8, 6),
+					layoutItem("panel-16", 8, 55, 8, 6),
+					layoutItem("panel-17", 16, 55, 8, 6),
+					layoutItem("panel-18", 0, 61, 24, 17),
+					layoutItem("panel-19", 0, 78, 6, 8),
+					layoutItem("panel-20", 6, 78, 18, 8),
+					layoutItem("panel-21", 0, 86, 24, 15),
+					layoutItem("panel-22", 0, 101, 16, 9),
+					layoutItem("panel-23", 16, 101, 8, 9),
+					layoutItem("panel-24", 0, 110, 24, 10),
+					layoutItem("panel-25", 0, 120, 8, 10),
+					layoutItem("panel-26", 8, 120, 8, 10),
+					layoutItem("panel-27", 16, 120, 8, 10),
+					layoutItem("panel-28", 0, 130, 24, 12),
+					layoutItem("panel-29", 0, 142, 24, 15),
 				],
 			},
 		},
