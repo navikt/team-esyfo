@@ -46,6 +46,8 @@ export const SPAN_CALLS_METRIC = "traces_spanmetrics_calls_total";
 export const SPAN_LATENCY_METRIC = "traces_spanmetrics_latency_bucket";
 export const RESTARTS_METRIC = "kube_pod_container_status_restarts_total";
 export const READY_REPLICAS_METRIC = "kube_deployment_status_replicas_ready";
+export const AVAILABLE_REPLICAS_METRIC =
+	"kube_deployment_status_replicas_available";
 export const DESIRED_REPLICAS_METRIC = "kube_deployment_spec_replicas";
 export const JOB_FAILED_METRIC = "kube_job_failed";
 export const BUDSTIKKA_LAG_METRIC =
@@ -202,7 +204,7 @@ export const browserExceptionsByServiceQuery = `sum by (service_name) (count_ove
 export const jobFailureQuery = `max(max_over_time(${JOB_FAILED_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", job_name=~"esyfovarsel-job.*"}[$__range]))`;
 export const budstikkaLagQuery = `max by (topic) (${BUDSTIKKA_LAG_METRIC}{app="syfo-budstikka", namespace="team-esyfo", k8s_cluster_name="prod", topic="team-esyfo.budstikka.v1"})`;
 export const deserializationRateQuery = `sum(rate(${DESERIALIZATION_ERROR_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod"}[5m]))`;
-export const motebehovReadyRatioQuery = `(100 * (max by (deployment) (${READY_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) or on(deployment) (max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) * 0)) / max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"})) and on(deployment) (max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) > 0)`;
+export const motebehovAvailableRatioQuery = `(100 * max by (deployment) (${AVAILABLE_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) / max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"})) and on(deployment) (max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) > 0)`;
 
 export const apmDataLink = (service: string) =>
 	`/a/nais-apm-app/services/team-esyfo/${service}?environment=prod&from=${FROM_ISO}&to=${TO_ISO}`;
@@ -1028,12 +1030,12 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-27": timeSeriesPanel({
 				id: 27,
-				title: "syfomotebehov · ready/desired",
+				title: "syfomotebehov · available/desired",
 				description:
-					"Tilgjengelighetsdiagnostikk med namespace, cluster, desired-guard og eksplisitt no-data. Les sammen med valgt tjenestes RED-paneler; endelig pager tuning skjer i #753.",
+					"Alertnær tilgjengelighetsdiagnostikk med available-replikaer, namespace, cluster, desired-guard og eksplisitt no-data. Les sammen med valgt tjenestes ready/desired- og RED-paneler; endelig pager tuning skjer i #753.",
 				query: prometheusQuery(
-					"Motebehov ready",
-					motebehovReadyRatioQuery,
+					"Motebehov available",
+					motebehovAvailableRatioQuery,
 					"range",
 					"{{deployment}}",
 				),

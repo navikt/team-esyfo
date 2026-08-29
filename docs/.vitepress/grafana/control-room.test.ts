@@ -5,6 +5,7 @@ import { runtimeInventory } from "../runtime/inventory.ts";
 import { isCurrentLifecycle } from "../runtime/lifecycle.ts";
 import {
 	apmDataLink,
+	AVAILABLE_REPLICAS_METRIC,
 	BUDSTIKKA_LAG_METRIC,
 	browserExceptionsByServiceQuery,
 	budstikkaLagQuery,
@@ -27,7 +28,7 @@ import {
 	jobFailureQuery,
 	lowestReadyRatioQuery,
 	missingTelemetryQuery,
-	motebehovReadyRatioQuery,
+	motebehovAvailableRatioQuery,
 	otelErrorsByServiceQuery,
 	p95ByServiceQuery,
 	p95LatencyQuery,
@@ -361,12 +362,21 @@ describe("kontrollrom-dashboard", () => {
 			lowestReadyRatioQuery,
 			readyRatioByServiceQuery,
 			selectedReadyRatioQuery,
-			motebehovReadyRatioQuery,
 		]) {
 			assert.ok(query.includes(READY_REPLICAS_METRIC));
 			assert.ok(query.includes(DESIRED_REPLICAS_METRIC));
 			assert.match(query, /> 0\)/);
 		}
+		assert.ok(
+			motebehovAvailableRatioQuery.includes(AVAILABLE_REPLICAS_METRIC),
+		);
+		assert.ok(
+			motebehovAvailableRatioQuery.includes(DESIRED_REPLICAS_METRIC),
+		);
+		assert.ok(!motebehovAvailableRatioQuery.includes(READY_REPLICAS_METRIC));
+		assert.ok(!motebehovAvailableRatioQuery.includes("or on(deployment)"));
+		assert.ok(!motebehovAvailableRatioQuery.includes("* 0"));
+		assert.match(motebehovAvailableRatioQuery, /> 0\)/);
 	});
 
 	test("holder browserhendelser separat fra sessions, brukere og prodstatus", () => {
@@ -409,11 +419,11 @@ describe("kontrollrom-dashboard", () => {
 	test("gir alle tre pagerkandidater relevant panel, runbook og blocker", () => {
 		assert.ok(budstikkaLagQuery.includes(BUDSTIKKA_LAG_METRIC));
 		assert.ok(deserializationRateQuery.includes(DESERIALIZATION_ERROR_METRIC));
-		assert.ok(motebehovReadyRatioQuery.includes("syfomotebehov"));
+		assert.ok(motebehovAvailableRatioQuery.includes("syfomotebehov"));
 		for (const query of [
 			budstikkaLagQuery,
 			deserializationRateQuery,
-			motebehovReadyRatioQuery,
+			motebehovAvailableRatioQuery,
 		]) {
 			assert.match(query, /k8s_cluster_name="prod"/);
 		}
@@ -421,7 +431,7 @@ describe("kontrollrom-dashboard", () => {
 		for (const expected of [
 			"Budstikka · consumer-lag · diagnostikk",
 			"Oppfølgingsplan · permanent deserialiseringsrate",
-			"syfomotebehov · ready/desired",
+			"syfomotebehov · available/desired",
 			BUDSTIKKA_LAG_METRIC,
 			DESERIALIZATION_ERROR_METRIC,
 			DESERIALIZATION_RUNBOOK_URL,
