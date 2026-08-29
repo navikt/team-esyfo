@@ -20,7 +20,7 @@ Oversiktspanelene viser bare tjenestenavn, sikker feiltype/loggergruppe, en trac
 
 Trace-tabellen bruker selektiv JSON-ekstraksjon og overskriver original feillinje med loggergruppen før Loki returnerer resultatet. Et rått loggsøk åpnes bare etter en eksplisitt handling og er alltid avgrenset til valgt rad, tjeneste og tidsrom.
 
-Browserfeil grupperes på Faro-feltet `type`; feltet `value` hentes ikke inn i panelet. Browsertelemetri og personvern er fremdeles et dokumentert dekningsgap i [#206](https://github.com/navikt/team-esyfo/issues/206). En tom browserflate betyr derfor ikke automatisk at brukerne ikke opplever feil.
+Browserfeil grupperes på Faro-feltet `type`; feltet `value` hentes ikke inn i panelet. [Browserkontrakten](./browserkontrakt) kommer fra [#206](https://github.com/navikt/team-esyfo/issues/206), mens live-evidens eies av utrullingen per flate. En tom browserflate betyr derfor ikke automatisk at brukerne ikke opplever feil.
 
 ## Slik tolkes 0, tomt og ukjent
 

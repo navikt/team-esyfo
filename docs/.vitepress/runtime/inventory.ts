@@ -249,7 +249,6 @@ export const coverageProfiles: CoverageProfile[] = [
 			"release-identity",
 			"privacy-canary",
 			"sourcemaps",
-			"traces",
 		],
 		freshnessMinutes: 60,
 	},
@@ -265,7 +264,6 @@ export const coverageProfiles: CoverageProfile[] = [
 			"release-identity",
 			"privacy-canary",
 			"sourcemaps",
-			"traces",
 		],
 		freshnessMinutes: 60,
 	},
@@ -281,7 +279,6 @@ export const coverageProfiles: CoverageProfile[] = [
 			"release-identity",
 			"privacy-canary",
 			"sourcemaps",
-			"traces",
 		],
 		freshnessMinutes: 60,
 	},
@@ -1207,6 +1204,7 @@ const browserAssessmentDetails = (
 			issue: BROWSER_CONTRACT_ISSUE,
 		},
 		sampling: telemetryPresent ? "sdk-default" : "missing",
+		errorBoundary: "unverified",
 		endToEndTracing: telemetryPresent ? "unverified" : "not-applicable",
 		sourcemaps: {
 			build: sourcemaps,
@@ -1218,6 +1216,7 @@ const browserAssessmentDetails = (
 			userContext: telemetryPresent ? "unverified" : "not-applicable",
 			consoleCapture: telemetryPresent ? "disabled" : "not-applicable",
 			sessionReplay: telemetryPresent ? "unverified" : "not-applicable",
+			screenshotOnError: telemetryPresent ? "unverified" : "not-applicable",
 			canaryVerification: "missing",
 		},
 	}) as const;
@@ -1425,7 +1424,7 @@ export const browserSurfaces: BrowserSurface[] = [
 ];
 
 export const runtimeInventory: RuntimeInventory = {
-	schemaVersion: 2,
+	schemaVersion: 3,
 	baseline: {
 		status: "approved",
 		capturedOn: "2026-08-28",

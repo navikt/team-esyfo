@@ -49,7 +49,7 @@ const baselineSnapshot = (): ObservedRuntimeSnapshot => ({
 
 describe("runtimeinventar", () => {
 	test("låser den godkjente baseline med typespesifikke antall", () => {
-		assert.equal(runtimeInventory.schemaVersion, 2);
+		assert.equal(runtimeInventory.schemaVersion, 3);
 		const result = validateInventory(runtimeInventory, { asOf: "2026-08-28" });
 		assert.deepEqual(result.errors, []);
 		assert.deepEqual(result.counts, {
@@ -59,6 +59,184 @@ describe("runtimeinventar", () => {
 			browserSurfaces: 11,
 			sunsetApplications: 3,
 		});
+		assert.deepEqual(
+			runtimeInventory.browserSurfaces
+				.map(({ id }) => id.replace("browser:", ""))
+				.toSorted(),
+			[
+				"aktivitetskrav-frontend",
+				"aktivitetskrav-microfrontend",
+				"bro-frontend",
+				"dialogmote-frontend",
+				"dialogmote-microfrontend",
+				"dinesykmeldte",
+				"lumi-dashboard",
+				"meroppfolging-frontend",
+				"meroppfolging-microfrontend",
+				"narmesteleder-frontend",
+				"syfo-oppfolgingsplan-frontend",
+			],
+		);
+		const browserProfiles = runtimeInventory.coverageProfiles.filter(({ id }) =>
+			id.startsWith("browser-"),
+		);
+		assert.equal(browserProfiles.length, 3);
+		for (const profile of browserProfiles) {
+			assert.ok(!profile.requiredSignals.includes("traces"));
+		}
+	});
+
+	test("håndhever den personvernsikre @nais/apm-kontrakten", () => {
+		const inventory = cloneInventory();
+		const surface = inventory.browserSurfaces.find(
+			({ id }) => id === "browser:dinesykmeldte",
+		);
+		assert.ok(surface);
+		const implementation = surface.currentImplementation;
+		assert.equal(implementation.state, "configured");
+		if (implementation.state !== "configured") return;
+
+		surface.privacyContract.status = "implemented";
+		let result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) =>
+				error.includes("implementert browserkontrakt uten @nais/apm"),
+			),
+		);
+		surface.privacyContract.status = "gap";
+		implementation.sdk = "nais-apm";
+		implementation.versionRange = "^0.6.0";
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(result.errors.some((error) => error.includes("eksakt versjon")));
+		assert.ok(result.errors.some((error) => error.includes("samplingrate")));
+		assert.ok(result.errors.some((error) => error.includes("page-identitet")));
+		assert.ok(result.errors.some((error) => error.includes("tracingvalg")));
+		assert.ok(result.errors.some((error) => error.includes("rute- eller URL")));
+		assert.ok(result.errors.some((error) => error.includes("error boundary")));
+		assert.ok(
+			result.errors.some((error) =>
+				error.includes("session replay og screenshots"),
+			),
+		);
+
+		const commitSha = "a".repeat(40);
+		implementation.versionRange = "0.6.0";
+		implementation.sampling = "explicit";
+		implementation.samplingRate = 1;
+		implementation.errorBoundary = "configured";
+		implementation.browserTracing = "disabled";
+		implementation.endToEndTracing = "disabled";
+		implementation.releaseIdentity = "release-id";
+		implementation.sourceRevision = {
+			status: "verified",
+			commitSha,
+			evidence: "Kilde verifisert i test.",
+		};
+		implementation.privacy = {
+			...implementation.privacy,
+			routeNormalization: "configured",
+			rawUrlSanitization: "configured",
+			userContext: "disabled",
+			sessionReplay: "disabled",
+			screenshotOnError: "disabled",
+			canaryVerification: "missing",
+		};
+		surface.pageIdentity = {
+			status: "defined",
+			pageIds: ["dinesykmeldte.start"],
+			verificationIssue: "navikt/team-esyfo#206",
+		};
+
+		surface.privacyContract.status = "implemented";
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.deepEqual(result.errors, []);
+
+		for (const invalidRate of [0, -0.1, 1.01]) {
+			implementation.samplingRate = invalidRate;
+			result = validateInventory(inventory, { asOf: "2026-08-28" });
+			assert.ok(
+				result.errors.some((error) => error.includes("ugyldig eksplisitt")),
+			);
+		}
+		implementation.samplingRate = 1;
+		implementation.sampling = "sdk-default";
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) =>
+				error.includes("inkonsistent samplingstatus"),
+			),
+		);
+		implementation.sampling = "explicit";
+
+		implementation.browserTracing = "configured";
+		implementation.endToEndTracing = "disabled";
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(result.errors.some((error) => error.includes("tracingvalg")));
+		implementation.browserTracing = "disabled";
+		implementation.endToEndTracing = "disabled";
+
+		implementation.privacy.canaryVerification = "verified";
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) => error.includes("uten siste syntetiske")),
+		);
+		implementation.lastSyntheticCheck = {
+			checkedAt: "2026-08-28T12:00:00Z",
+			environment: "dev",
+			deployedCommitSha: commitSha,
+			result: "passed",
+			evidence: "Syntetisk test uten rå identifikatorer.",
+		};
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.deepEqual(result.errors, []);
+
+		implementation.lastSyntheticCheck.checkedAt = "ikke-en-dato" as never;
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) => error.includes("ugyldig syntetisk")),
+		);
+		implementation.lastSyntheticCheck.checkedAt = "2026-08-28T12:00:00Z";
+		implementation.lastSyntheticCheck.result = "ukjent" as never;
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) => error.includes("ugyldig syntetisk")),
+		);
+		implementation.lastSyntheticCheck.result = "passed";
+		implementation.lastSyntheticCheck.environment = "annet" as never;
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) => error.includes("ugyldig syntetisk")),
+		);
+		implementation.lastSyntheticCheck.environment = "prod";
+		implementation.lastSyntheticCheck.deployedCommitSha = "b".repeat(40);
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) =>
+				error.includes("produksjonscanary uten verifisert"),
+			),
+		);
+		implementation.deployedRevision = {
+			status: "verified",
+			commitSha,
+			evidence: "Produksjonsdeploy verifisert i test.",
+		};
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.ok(
+			result.errors.some((error) =>
+				error.includes("matcher ikke deployrevisjonen"),
+			),
+		);
+		implementation.lastSyntheticCheck.deployedCommitSha = commitSha;
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.deepEqual(result.errors, []);
+
+		implementation.sourceRevision = {
+			status: "verified",
+			commitSha: "b".repeat(40),
+			evidence: "Nyere kilde verifisert i test.",
+		};
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.deepEqual(result.errors, []);
 	});
 
 	test("bevarer de tre avviklingsressursene samlet frem til #208-cutover", () => {
@@ -525,7 +703,7 @@ describe("dekningsevidens", () => {
 		);
 		assert.ok(topic);
 		topic.trafficModel = "continuous";
-			topic.serviceLevel = {
+		topic.serviceLevel = {
 			...topic.serviceLevel,
 			status: "approved",
 			processingDeadlineMinutes: 15,
@@ -601,6 +779,171 @@ describe("dekningsevidens", () => {
 		assert.ok(!topicReport.requiredSignals.includes("consumer-lag"));
 	});
 
+	test("browsergap kan aldri bli skjult av ferske live-signaler", () => {
+		const surface = runtimeInventory.browserSurfaces.find(
+			({ id }) => id === "browser:dinesykmeldte",
+		);
+		assert.ok(surface);
+		const browserProfile = runtimeInventory.coverageProfiles.find(
+			({ id }) => id === surface.coverageProfile,
+		);
+		assert.ok(browserProfile);
+		const evidence = browserProfile.requiredSignals.map(
+			(signal) =>
+				({
+					resourceId: surface.id,
+					signal,
+					state: "fresh",
+					observedAt,
+					revision:
+						signal === "release-identity"
+							? {
+									sourceCommitSha: "a".repeat(40),
+									deployedCommitSha: "a".repeat(40),
+								}
+							: undefined,
+					source: "test",
+				}) satisfies SignalEvidence,
+		);
+		const report = evaluateCoverageSnapshot(
+			runtimeInventory,
+			{
+				schemaVersion: 1,
+				observedAt,
+				source: "test",
+				evidence,
+			},
+			{ now: "2026-08-28T10:05:00Z" },
+		);
+		const surfaceReport = report.resources.find(
+			({ resourceId }) => resourceId === surface.id,
+		);
+		assert.ok(surfaceReport);
+		assert.equal(surfaceReport.state, "partial");
+		assert.deepEqual(surfaceReport.contractGaps, ["browser-contract"]);
+	});
+
+	test("browserdekning krever en revisjonskoblet produksjonscanary", () => {
+		const inventory = cloneInventory();
+		const surface = inventory.browserSurfaces.find(
+			({ id }) => id === "browser:dinesykmeldte",
+		);
+		assert.ok(surface);
+		const implementation = surface.currentImplementation;
+		assert.equal(implementation.state, "configured");
+		if (implementation.state !== "configured") return;
+		const commitSha = "a".repeat(40);
+		implementation.sdk = "nais-apm";
+		implementation.versionRange = "0.6.0";
+		implementation.sampling = "explicit";
+		implementation.samplingRate = 1;
+		implementation.errorBoundary = "configured";
+		implementation.browserTracing = "disabled";
+		implementation.endToEndTracing = "disabled";
+		implementation.releaseIdentity = "release-id";
+		implementation.sourceRevision = {
+			status: "verified",
+			commitSha,
+			evidence: "Kilde verifisert i test.",
+		};
+		implementation.privacy = {
+			...implementation.privacy,
+			routeNormalization: "configured",
+			rawUrlSanitization: "configured",
+			userContext: "disabled",
+			sessionReplay: "disabled",
+			screenshotOnError: "disabled",
+			canaryVerification: "missing",
+		};
+		surface.pageIdentity = {
+			status: "defined",
+			pageIds: ["dinesykmeldte.start"],
+			verificationIssue: "navikt/team-esyfo#206",
+		};
+		surface.privacyContract.status = "implemented";
+
+		const browserProfile = inventory.coverageProfiles.find(
+			({ id }) => id === surface.coverageProfile,
+		);
+		assert.ok(browserProfile);
+		const evidence = browserProfile.requiredSignals.map(
+			(signal) =>
+				({
+					resourceId: surface.id,
+					signal,
+					state: "fresh",
+					observedAt,
+					revision:
+						signal === "release-identity" || signal === "privacy-canary"
+							? {
+									sourceCommitSha: commitSha,
+									deployedCommitSha: commitSha,
+								}
+							: undefined,
+					source: "test",
+				}) satisfies SignalEvidence,
+		);
+		const evaluateSurface = () => {
+			const report = evaluateCoverageSnapshot(
+				inventory,
+				{
+					schemaVersion: 1,
+					observedAt,
+					source: "test",
+					evidence,
+				},
+				{ now: "2026-08-28T10:05:00Z" },
+			);
+			const surfaceReport = report.resources.find(
+				({ resourceId }) => resourceId === surface.id,
+			);
+			assert.ok(surfaceReport);
+			return surfaceReport;
+		};
+
+		let surfaceReport = evaluateSurface();
+		assert.equal(surfaceReport.state, "partial");
+		assert.deepEqual(surfaceReport.contractGaps, ["browser-production-canary"]);
+
+		implementation.privacy.canaryVerification = "verified";
+		implementation.lastSyntheticCheck = {
+			checkedAt: observedAt,
+			environment: "dev",
+			deployedCommitSha: commitSha,
+			result: "passed",
+			evidence: "Dev-canary verifisert i test.",
+		};
+		surfaceReport = evaluateSurface();
+		assert.equal(surfaceReport.state, "partial");
+		assert.deepEqual(surfaceReport.contractGaps, ["browser-production-canary"]);
+
+		implementation.deployedRevision = {
+			status: "verified",
+			commitSha,
+			evidence: "Produksjonsdeploy verifisert i test.",
+		};
+		implementation.lastSyntheticCheck.environment = "prod";
+		const canaryEvidence = evidence.find(
+			({ signal }) => signal === "privacy-canary",
+		);
+		assert.ok(canaryEvidence?.revision);
+		const matchingCanaryRevision = canaryEvidence.revision;
+		canaryEvidence.revision = undefined;
+		surfaceReport = evaluateSurface();
+		assert.equal(surfaceReport.state, "unknown");
+		assert.deepEqual(surfaceReport.unknownSignals, ["privacy-canary"]);
+
+		canaryEvidence.revision = matchingCanaryRevision;
+		surfaceReport = evaluateSurface();
+		assert.equal(surfaceReport.state, "complete");
+		assert.deepEqual(surfaceReport.contractGaps, []);
+
+		canaryEvidence.revision.deployedCommitSha = "b".repeat(40);
+		surfaceReport = evaluateSurface();
+		assert.equal(surfaceReport.state, "unknown");
+		assert.deepEqual(surfaceReport.unknownSignals, ["privacy-canary"]);
+	});
+
 	test("lager en typespesifikk maskinell dekningsrapport", () => {
 		const inventory = cloneInventory();
 		for (const topic of inventory.topics) {
@@ -670,10 +1013,11 @@ describe("dekningsevidens", () => {
 			},
 			{ now: "2026-08-28T10:05:00Z" },
 		);
-		assert.equal(report.status, "complete");
+		assert.equal(report.status, "gaps");
 		assert.equal(report.summary.application.complete, 29);
 		assert.equal(report.summary.job.complete, 1);
 		assert.equal(report.summary.topic.complete, 10);
-		assert.equal(report.summary["browser-surface"].complete, 11);
+		assert.equal(report.summary["browser-surface"].complete, 0);
+		assert.equal(report.summary["browser-surface"].partial, 11);
 	});
 });

@@ -224,20 +224,32 @@ export type RevisionAssessment =
 
 export interface BrowserAssessmentDetails {
 	sourceRevision: RevisionAssessment;
+	/** Revisjonen som er verifisert deployet i produksjon. */
 	deployedRevision: RevisionAssessment;
-	sampling: "sdk-default" | "missing";
-	endToEndTracing: "unverified" | "not-applicable";
+	sampling: "explicit" | "sdk-default" | "missing";
+	/** Eksakt rate i intervallet (0, 1]. Fravær betyr ikke verifisert. */
+	samplingRate?: number;
+	errorBoundary: "configured" | "missing" | "unverified" | "not-applicable";
+	endToEndTracing: "configured" | "disabled" | "unverified" | "not-applicable";
 	sourcemaps: {
 		build: "configured" | "missing";
-		productionDeobfuscation: "unverified";
+		productionDeobfuscation: "verified" | "unverified";
 	};
 	privacy: {
-		routeNormalization: "missing";
-		rawUrlSanitization: "missing";
-		userContext: "unverified" | "not-applicable";
+		routeNormalization: "configured" | "missing";
+		rawUrlSanitization: "configured" | "missing";
+		userContext: "disabled" | "unverified" | "not-applicable";
 		consoleCapture: "disabled" | "not-applicable";
-		sessionReplay: "unverified" | "not-applicable";
-		canaryVerification: "missing";
+		sessionReplay: "disabled" | "unverified" | "not-applicable";
+		screenshotOnError: "disabled" | "unverified" | "not-applicable";
+		canaryVerification: "verified" | "failed" | "missing";
+	};
+	lastSyntheticCheck?: {
+		checkedAt: IsoDateTime;
+		environment: "dev" | "prod";
+		deployedCommitSha: string;
+		result: "passed" | "failed";
+		evidence: string;
 	};
 }
 
@@ -247,7 +259,7 @@ export type BrowserTelemetryAssessment = BrowserAssessmentDetails &
 				state: "configured";
 				sdk: "raw-faro" | "nais-apm";
 				versionRange: string;
-				browserTracing: "configured" | "missing";
+				browserTracing: "configured" | "disabled" | "missing";
 				releaseIdentity:
 					| "release-id"
 					| "environment-only"
@@ -317,7 +329,7 @@ export interface Exclusion {
 }
 
 export interface RuntimeInventory {
-	schemaVersion: 2;
+	schemaVersion: 3;
 	baseline: {
 		status: "proposed" | "approved";
 		capturedOn: IsoDate;

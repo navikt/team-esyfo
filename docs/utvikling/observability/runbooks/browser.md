@@ -1,6 +1,6 @@
 # Runbook: browser
 
-Browserdelen i Kontrollrommet skiller kildekodekonfigurasjon fra operative målinger. Per nå er bare Faro `kind=exception` live-verifisert for Team eSyfos Feildrilldown. Page loads, sessions, sideidentitet og CWV p75 forblir `UKJENT` til kontrakten i [#206](https://github.com/navikt/team-esyfo/issues/206) er bevist.
+Browserdelen i Kontrollrommet skiller kildekodekonfigurasjon fra operative målinger. Per nå er bare Faro `kind=exception` live-verifisert for Team eSyfos Feildrilldown. [Browserkontrakten](../browserkontrakt) kommer fra [#206](https://github.com/navikt/team-esyfo/issues/206); page loads, sessions, sideidentitet og CWV p75 forblir `UKJENT` til den enkelte flaten har bestått rollout-gatene.
 
 ## 1. Bekreft identitet og dekning
 
@@ -32,7 +32,7 @@ Når et CWV-/page-load-panel viser `No data` i NAIS sitt generiske dashboard:
 
 1. Bekreft app- og env-identitet.
 2. Teamets nåværende Faro exception-query har ikke verifisert miljødimensjon. Ikke les den som produksjonsstatus eller konkluder med 0 page loads eller god ytelse.
-3. Verifiser event-/measurement-schema, miljølabel og faktisk sampling i #206.
+3. Verifiser event-/measurement-schema, miljølabel og faktisk sampling i den aktuelle flatens rollout.
 4. Først etter en kontrollert test kan LCP/INP/CLS p75 vises per flate eller normalisert side. Ulike sample rates skal ikke summeres.
 
 ## Kontrollert test av runbooken

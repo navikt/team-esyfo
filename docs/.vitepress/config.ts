@@ -112,6 +112,10 @@ export default withMermaid(
 									link: "/utvikling/observability/runtimeinventar",
 								},
 								{
+									text: "Browserkontrakt",
+									link: "/utvikling/observability/browserkontrakt",
+								},
+								{
 									text: "Avviklingsport",
 									link: "/utvikling/observability/avvikling-syfooppfolgingsplanservice",
 								},

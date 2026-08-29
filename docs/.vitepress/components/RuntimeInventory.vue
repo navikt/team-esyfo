@@ -105,6 +105,27 @@ const revisionLabel = (revision: RevisionAssessment) =>
 		? revision.commitSha.slice(0, 12)
 		: `ikke verifisert${revision.refHint ? ` (${revision.refHint})` : ""}`;
 
+const samplingLabel = (surface: BrowserSurface) =>
+	surface.currentImplementation.samplingRate === undefined
+		? surface.currentImplementation.sampling === "missing"
+			? "mangler"
+			: "ikke verifisert"
+		: `${Math.round(surface.currentImplementation.samplingRate * 10_000) / 100}%`;
+
+const syntheticCheckLabel = (surface: BrowserSurface) => {
+	const check = surface.currentImplementation.lastSyntheticCheck;
+	return check
+		? `${check.result} · ${check.environment} · ${check.checkedAt.slice(0, 10)} · ${check.deployedCommitSha.slice(0, 8)}`
+		: "mangler";
+};
+
+const browserIdentityStatus = (surface: BrowserSurface) => {
+	const check = surface.currentImplementation.lastSyntheticCheck;
+	return check?.result === "passed"
+		? `verifisert i ${check.environment} ${check.checkedAt.slice(0, 10)}`
+		: "forventet identitet";
+};
+
 const topicDeadlineLabel = (topic: Topic) =>
 	topic.serviceLevel.processingDeadlineMinutes === undefined
 		? "frist ikke definert"
@@ -356,18 +377,18 @@ const topicLagLabel = (topic: Topic) =>
 			<thead>
 				<tr>
 					<th>Flate / kilde</th><th>Browseridentitet</th><th>Teknologi</th><th>Nåtilstand</th>
-					<th>Release / tracing</th><th>Personvern</th><th>Sampling / sourcemaps</th><th>Vurdering</th><th>Runbook</th>
+					<th>Release / tracing</th><th>Personvern og feil</th><th>Sampling / sourcemaps</th><th>Vurdering</th><th>Runbook</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr v-for="surface in runtimeInventory.browserSurfaces" :key="surface.id">
 					<td>
 						<a :href="browserSourceUrl(surface)">{{ surface.displayName }}</a>
-						<small><code>{{ surface.runtimeRef }}</code></small>
+						<small><code>{{ surface.runtimeRef }}</code> · {{ surface.ownerTeam }}</small>
 					</td>
 					<td>
 						<code>{{ surface.browserIdentity.serviceNamespace }}/{{ surface.browserIdentity.serviceName }}</code>
-						<small>ikke verifisert</small>
+						<small>{{ browserIdentityStatus(surface) }}</small>
 					</td>
 					<td>
 						{{ surface.framework.family }} / {{ surface.framework.router }} · {{ surface.hosting.mode }}
@@ -384,12 +405,17 @@ const topicLagLabel = (topic: Topic) =>
 						{{ surface.currentImplementation.endToEndTracing }}
 					</td>
 					<td>
-						route {{ surface.currentImplementation.privacy.routeNormalization }} · URL
-						{{ surface.currentImplementation.privacy.rawUrlSanitization }} · canary
-						{{ surface.currentImplementation.privacy.canaryVerification }}
+						page {{ surface.pageIdentity.status }} · route
+						{{ surface.currentImplementation.privacy.routeNormalization }} · URL
+						{{ surface.currentImplementation.privacy.rawUrlSanitization }} · boundary
+						{{ surface.currentImplementation.errorBoundary }} · user
+						{{ surface.currentImplementation.privacy.userContext }} · replay
+						{{ surface.currentImplementation.privacy.sessionReplay }} · shots
+						{{ surface.currentImplementation.privacy.screenshotOnError }} · canary
+						{{ syntheticCheckLabel(surface) }}
 					</td>
 					<td>
-						{{ surface.currentImplementation.sampling }} · build-map
+						rate {{ samplingLabel(surface) }} · build-map
 						{{ surface.currentImplementation.sourcemaps.build }} · prod
 						{{ surface.currentImplementation.sourcemaps.productionDeobfuscation }}
 					</td>
