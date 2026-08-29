@@ -420,6 +420,12 @@ export const evaluateAlertPolicy = (
 					message: gate.condition,
 					issue: gate.issue,
 				});
+			} else if (
+				gate.reviewedAt &&
+				(!ISO_DATE_TIME.test(gate.reviewedAt) ||
+					!Number.isFinite(new Date(gate.reviewedAt).getTime()))
+			) {
+				errors.push(`${rule.id} har ugyldig reviewtid for retirement.`);
 			} else if (gate.basis.kind === "verified-replacement") {
 				if (gate.basis.replacement.status !== "verified") {
 					errors.push(
