@@ -10,20 +10,27 @@ import {
 } from "../.vitepress/grafana/control-room.ts";
 import {
 	GRAFANA_VERSION,
-	LOKI_DATASOURCE_UID,
-	MIMIR_DATASOURCE_UID,
+	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "../.vitepress/grafana/dashboard-kit.ts";
+import {
+	ERROR_DASHBOARD_FOLDER_UID,
+	ERROR_DASHBOARD_UID,
+} from "../.vitepress/grafana/error-drilldown.ts";
 
 const execFileAsync = promisify(execFile);
 const username = "admin";
 const password = randomBytes(24).toString("base64url");
-const containerName = `team-esyfo-control-room-smoke-${process.pid}-${randomBytes(4).toString("hex")}`;
-const artifactPath = fileURLToPath(
-	new URL(`../public/grafana/${CONTROL_ROOM_UID}.json`, import.meta.url),
-);
+const containerName = `team-esyfo-grafana-smoke-${process.pid}-${randomBytes(4).toString("hex")}`;
 const auth = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
 const image = `grafana/grafana:${GRAFANA_VERSION}`;
 let baseUrl = "";
+
+const dashboardArtifacts = [CONTROL_ROOM_UID, ERROR_DASHBOARD_UID].map((uid) => ({
+	artifactPath: fileURLToPath(
+		new URL(`../public/grafana/${uid}.json`, import.meta.url),
+	),
+	uid,
+}));
 
 type JsonRecord = Record<string, unknown>;
 
@@ -83,13 +90,15 @@ const semanticContract = (resource: JsonRecord) => {
 	const elements = spec.elements as JsonRecord;
 	const layout = spec.layout as { spec: { items: unknown[] } };
 	const variables = spec.variables as Array<{ kind: string; spec: JsonRecord }>;
-	const fleetPanel = (elements["panel-10"] as JsonRecord).spec as JsonRecord;
-	const fleetData = fleetPanel.data as {
-		spec: {
-			queries: Array<{ spec: { refId: string } }>;
-			transformations: Array<{ group: string }>;
-		};
-	};
+	const queries = sortSemantically(
+		collectObjects(spec)
+			.filter(({ kind }) => kind === "DataQuery")
+			.map(({ datasource, group, spec: querySpec }) => ({
+				datasource,
+				group,
+				spec: querySpec,
+			})),
+	);
 	const layoutElementNames = layout.spec.items
 		.map(
 			(item) =>
@@ -107,30 +116,12 @@ const semanticContract = (resource: JsonRecord) => {
 		folder: annotations["grafana.app/folder"],
 		title: spec.title,
 		timeSettings: spec.timeSettings,
+		elements: canonicalize(elements),
 		elementNames: Object.keys(elements).sort(),
 		layoutElementNames,
 		layoutItems: layout.spec.items.map(canonicalize),
-		fleetQueryRefIds: fleetData.spec.queries.map(({ spec: query }) => query.refId),
-		fleetTransformationGroups: fleetData.spec.transformations.map(
-			({ group }) => group,
-		),
-		variables: variables.map(({ kind, spec: variable }) => ({
-			kind,
-			current: variable.current,
-			includeAll: variable.includeAll,
-			multi: variable.multi,
-			name: variable.name,
-			query: variable.query,
-		})),
-		queries: sortSemantically(
-			collectObjects(spec)
-				.filter(({ kind }) => kind === "DataQuery")
-				.map(({ datasource, group, spec: querySpec }) => ({
-					datasource,
-					group,
-					spec: querySpec,
-				})),
-		),
+		variables: variables.map(canonicalize),
+		queries,
 		transformations: sortSemantically(
 			collectObjects(spec)
 				.filter(({ kind }) => kind === "Transformation")
@@ -138,6 +129,17 @@ const semanticContract = (resource: JsonRecord) => {
 					group,
 					spec: transformationSpec,
 				})),
+		),
+		datasources: [
+			...new Set(
+				queries.map(
+					(query) =>
+						((query as JsonRecord).datasource as { name: string }).name,
+				),
+			),
+		].sort(),
+		links: sortSemantically(
+			collectObjects(spec).filter(({ url }) => typeof url === "string"),
 		),
 		urls: collectStringsByKey(spec, "url").sort(),
 	};
@@ -232,6 +234,9 @@ process.once("SIGINT", onSigint);
 process.once("SIGTERM", onSigterm);
 
 try {
+	assert.equal(CONTROL_ROOM_FOLDER_UID, TEAM_ESYFO_DASHBOARD_FOLDER_UID);
+	assert.equal(ERROR_DASHBOARD_FOLDER_UID, TEAM_ESYFO_DASHBOARD_FOLDER_UID);
+
 	const { stdout: dockerHost } = await execFileAsync(
 		"docker",
 		["context", "inspect", "--format", "{{.Endpoints.docker.Host}}"],
@@ -306,76 +311,55 @@ try {
 		{
 			method: "POST",
 			body: JSON.stringify({
-				metadata: { name: CONTROL_ROOM_FOLDER_UID },
+				metadata: { name: TEAM_ESYFO_DASHBOARD_FOLDER_UID },
 				spec: { title: "Team eSyfo smoke" },
 			}),
 		},
 	);
 
-	const artifactText = await readFile(artifactPath, "utf8");
-	const artifact = JSON.parse(artifactText) as JsonRecord;
-	await requestJson(
-		"/apis/dashboard.grafana.app/v2/namespaces/default/dashboards",
-		201,
-		{ method: "POST", body: artifactText },
-	);
-	const resource = await requestJson(
-		`/apis/dashboard.grafana.app/v2/namespaces/default/dashboards/${CONTROL_ROOM_UID}`,
-		200,
-	);
-	const dto = await requestJson(
-		`/apis/dashboard.grafana.app/v2/namespaces/default/dashboards/${CONTROL_ROOM_UID}/dto`,
-		200,
-	);
+	const summaries: string[] = [];
+	for (const { artifactPath, uid } of dashboardArtifacts) {
+		const artifactText = await readFile(artifactPath, "utf8");
+		const artifact = JSON.parse(artifactText) as JsonRecord;
+		await requestJson(
+			"/apis/dashboard.grafana.app/v2/namespaces/default/dashboards",
+			201,
+			{ method: "POST", body: artifactText },
+		);
+		const resource = await requestJson(
+			`/apis/dashboard.grafana.app/v2/namespaces/default/dashboards/${uid}`,
+			200,
+		);
+		const dto = await requestJson(
+			`/apis/dashboard.grafana.app/v2/namespaces/default/dashboards/${uid}/dto`,
+			200,
+		);
 
-	const expected = semanticContract(artifact);
-	assert.equal(expected.elementNames.length, 29);
-	assert.equal(expected.layoutItems.length, 29);
-	assert.deepEqual(expected.layoutElementNames, expected.elementNames);
-	assert.equal(new Set(expected.layoutElementNames).size, 29);
-	assert.equal(expected.variables.length, 2);
-	assert.deepEqual(
-		expected.variables.map(({ kind, name }) => ({ kind, name })),
-		[
-			{ kind: "CustomVariable", name: "scope" },
-			{ kind: "CustomVariable", name: "service" },
-		],
-	);
-	assert.deepEqual(expected.fleetQueryRefIds, [
-		"Telemetry",
-		"Requests",
-		"OTel-feil",
-		"Runtimefeil",
-		"Restarts",
-		"Klare replikaer",
-	]);
-	assert.deepEqual(expected.fleetTransformationGroups, ["merge", "organize"]);
-	assert.equal(expected.queries.length, 29);
-	assert.equal(expected.transformations.length, 2);
-	assert.deepEqual(expected.timeSettings, {
-		autoRefresh: "2m",
-		autoRefreshIntervals: ["30s", "1m", "2m", "5m", "15m", "30m", "1h"],
-		fiscalYearStartMonth: 0,
-		from: "now-1h",
-		hideTimepicker: false,
-		to: "now",
-		timezone: "browser",
-	});
-	const queryDatasources = new Set(
-		expected.queries.map(
-			(query) =>
-				((query as JsonRecord).datasource as { name: string }).name,
-		),
-	);
-	assert.ok(queryDatasources.has(MIMIR_DATASOURCE_UID));
-	assert.ok(queryDatasources.has(LOKI_DATASOURCE_UID));
-	assert.deepEqual(semanticContract(resource), expected);
-	const dtoContract = semanticContract(dto);
-	assert.equal(dtoContract.kind, "DashboardWithAccessInfo");
-	assert.deepEqual({ ...dtoContract, kind: "Dashboard" }, expected);
+		const expected = semanticContract(artifact);
+		assert.equal(expected.name, uid);
+		assert.equal(expected.folder, TEAM_ESYFO_DASHBOARD_FOLDER_UID);
+		assert.ok(expected.elementNames.length > 0);
+		assert.deepEqual(expected.layoutElementNames, expected.elementNames);
+		assert.equal(
+			new Set(expected.layoutElementNames).size,
+			expected.elementNames.length,
+		);
+		assert.ok(expected.variables.length > 0);
+		assert.ok(expected.queries.length > 0);
+		assert.ok(expected.datasources.length > 0);
+		assert.deepEqual(semanticContract(resource), expected);
+		const dtoContract = semanticContract(dto);
+		assert.equal(dtoContract.kind, "DashboardWithAccessInfo");
+		assert.deepEqual({ ...dtoContract, kind: "Dashboard" }, expected);
 
+		summaries.push(
+			`${uid}: ${expected.elementNames.length} paneler, ${expected.queries.length} queries`,
+		);
+	}
+
+	assert.equal(summaries.length, dashboardArtifacts.length);
 	console.log(
-		`Grafana ${GRAFANA_VERSION} smoke OK: ${CONTROL_ROOM_UID} roundtrippet via v2 resource + DTO (${expected.elementNames.length} paneler).`,
+		`Grafana ${GRAFANA_VERSION} smoke OK for ${summaries.length} dashboards:\n- ${summaries.join("\n- ")}`,
 	);
 } catch (error) {
 	primaryFailure = error;

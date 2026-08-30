@@ -102,14 +102,16 @@ Kjør fra `docs/`:
 pnpm control-room:test
 pnpm control-room:export
 pnpm control-room:check
-pnpm control-room:grafana-smoke
+pnpm grafana-dashboard:smoke
 pnpm build
 ```
 
-`control-room:grafana-smoke` krever Docker og bruker kun `127.0.0.1`. Den starter
+`grafana-dashboard:smoke` krever Docker og eksponerer Grafana kun på
+`127.0.0.1`. Den starter
 en midlertidig Grafana med samme versjon som dashboardbyggeren, importerer den
-eksakte artefakten gjennom v2-API-et og sammenligner både lagret ressurs og
-UI-ens DTO semantisk. Containeren og engangspassordet fjernes etter testen.
+eksakte Kontrollrom- og Feildrilldown-artefakten gjennom v2-API-et og
+sammenligner både lagret ressurs og UI-ens DTO semantisk. Containeren og
+engangspassordet fjernes etter testen.
 Smoken kjører ikke datasource-queryene og rendrer ikke panelene; dette må fortsatt
 verifiseres i Grafana som beskrevet under. Kommandoen kjører også som et eget steg
 i dokumentasjonsbygget i CI.
