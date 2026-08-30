@@ -1,6 +1,6 @@
 # Operative Kafka-kontrakter
 
-Dette er det kildeverifiserte utkastet til [#212](https://github.com/navikt/team-esyfo/issues/212). Det skiller mellom hva dagens kode kan bevise og hva teamet fortsatt må beslutte. Ingen numerisk behandlingstid er godkjent ennå, så kontraktene står fortsatt som `proposed` og Kontrollrommet viser `IKKE EVALUERT`.
+Dette er det kildeverifiserte utkastet til [#212](https://github.com/navikt/team-esyfo/issues/212). Det skiller mellom hva dagens kode kan bevise og hva teamet fortsatt må beslutte. Teamet har valgt en shadow-hypotese for `OPPFOLGINGSPLAN_CREATED`; den operative topic-kontrakten og de øvrige kontraktene står fortsatt som `proposed`. Kontrollrommet viser `IKKE EVALUERT` frem til nødvendige signaler er i produksjon og shadow-perioden er fullført.
 
 Airflow er bare ført som ekstern leser. Team eSyfo eier ikke driften eller sluttutfallet der. Consumer-lag brukes som diagnostikk, aldri som eneste pagergrunnlag.
 
@@ -36,11 +36,25 @@ Dette er det beste første Budstikka-snittet: oppfølgingsplanen og outbox-raden
 
 [Oppfølgingsplan-PR #451](https://github.com/navikt/syfo-oppfolgingsplan-backend/pull/451) foreslår produsentsignalene. [Budstikka-PR #264](https://github.com/navikt/syfo-budstikka/pull/264) og [#265](https://github.com/navikt/syfo-budstikka/pull/265) foreslår henholdsvis bounded dead-letter-signal og diagnostisk event-spor. Ingen av dem alene beviser ende-til-ende-kontrakten; tellingene må kunne reconciles på samme lave kardinalitetsflyt.
 
-## Beslutninger før kontrakten kan godkjennes
+### Godkjent shadow-hypotese
 
-1. Sett maksimal aktiv behandlingstid for produsent → Kafka-ACK, ingest → terminal kanalaksept og totalen. Start med `OPPFOLGINGSPLAN_CREATED`; eksisterende 15-minutters alert er en terskel, ikke en vedtatt SLA.
-2. Godkjenn nulltrafikkpolicy per topic: tidsvinduet og hvilke signaler for forventet jobb/runtime, forfalt arbeid og retry-/feilbacklog som samtidig må være friske.
+Teamet godkjente 30. august 2026 følgende hypotese for første produksjonssnitt:
+
+- Durable outbox-opprettelse → lagret `SENT` og målt `handler_acknowledged` etter broker-ACK skal ta høyst **5 minutter** i veggklokketid.
+- Kafka-ACK → durable Budstikka-inbox skal ta høyst **5 minutter** i veggklokketid.
+- Hele flyten skal ta høyst **30 aktive minutter**. Bare legitim `WAIT(sending_window)` pauser klokken; retry, backoff, deploy, applikasjonsfeil, Kafka-forsinkelse og downstream-feil gjør det ikke.
+- Nulltrafikk er tillatt når telemetri, consumerloop og workerlooper er ferske, ingen forfalt kø er eldre enn fristen, legitim `WAIT` er skilt ut og tekniske terminalfeil ikke vokser. Manglende signal gir `UKJENT`, aldri grønt.
+- Produsentens `SENT`/`handler_acknowledged` betyr broker-ACK. Budstikkas delivery-`SENT` betyr akseptert handoff til neste kanal. Ingen av dem betyr lest av sluttbruker.
+- `cancelled_source_no_longer_eligible` og `DROPPED(DEAD)` er forventede bortfall. `cancelled_source_not_found`, malformed-input-dead letter og `FAILED` er tekniske feil.
+- Hypotesen kjøres dashboard-only i **28 sammenhengende produksjonsdager** etter at flytspesifikke signaler og reconciliation finnes. Den aktiverer ikke pager; det krever egen beslutning i [#217](https://github.com/navikt/team-esyfo/issues/217).
+
+Produksjonsmålingen før vedtaket hadde bare omtrent tolv dagers produsenthistorikk. Den viste høy trafikk og ingen vedvarende forfalt kø, men Budstikkas globale metrikker kan ikke avstemmes til denne flyten. Derfor er dette en shadow-hypotese, ikke en bevist SLA, og status er fortsatt `IKKE EVALUERT`.
+
+## Gjenstående beslutninger
+
+1. Gjennomfør og evaluer shadow-perioden for `OPPFOLGINGSPLAN_CREATED`; eksisterende 15-minutters alert er fortsatt operasjonell hygiene, ikke den vedtatte ende-til-ende-fristen.
+2. Godkjenn nulltrafikkpolicy for de øvrige topicene: tidsvinduet og hvilke signaler for forventet jobb/runtime, forfalt arbeid og retry-/feilbacklog som samtidig må være friske.
 3. Klassifiser tvilstilfellene: manglende kilde, leder eller e-post, malformed records og tombstones som expected drop eller teknisk/product failure.
 4. Bekreft aktive eksterne consumer groups, terminalt utfall og reparasjonsansvar med team iSyfo. Airflow forblir utenfor eSyfos driftsscope.
 5. Godkjenn migrasjon per produsent og eventtype. Cutover krever at ny flyt er reconciled, uten gammel trafikk for typen i observasjonsvinduet, uten voksende oldest/retry/dead-letter-backlog, og med verifisert rollback/runbook.
-6. Velg observasjonsperiode og shadow-terskler før et kontraktsbrudd får page. Før dette er signalene diagnostikk.
+6. Velg observasjonsperiode og shadow-terskler for de øvrige topicene. For alle topicer krever paging fortsatt egen impactterskel, shadow-evidens og beslutning i #217; før dette er signalene diagnostikk.
