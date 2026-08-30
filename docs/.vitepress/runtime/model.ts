@@ -227,7 +227,7 @@ export interface BrowserAssessmentDetails {
 	/** Revisjonen som er verifisert deployet i produksjon. */
 	deployedRevision: RevisionAssessment;
 	sampling: "explicit" | "sdk-default" | "missing";
-	/** Eksakt rate i intervallet (0, 1]. Fravær betyr ikke verifisert. */
+	/** Verifisert rate i intervallet (0, 1], fra appkonfig eller pinnet SDK-default. */
 	samplingRate?: number;
 	errorBoundary: "configured" | "missing" | "unverified" | "not-applicable";
 	endToEndTracing: "configured" | "disabled" | "unverified" | "not-applicable";
