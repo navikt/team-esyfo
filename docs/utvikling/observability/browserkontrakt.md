@@ -11,17 +11,17 @@ Aktivt scope er `aktivitetskrav-frontend`, `aktivitetskrav-microfrontend`, `bro-
 | Identitet | `app`, `namespace=team-esyfo`, miljø og eksakt deploy-SHA kan leses i mottatt telemetry. |
 | SDK | `@nais/apm` er pinnet til én eksakt versjon og initialiseres én gang. Rå Faro er migreringsstatus, ikke måltilstand. |
 | Sider | `page.id` kommer fra en kort allowlist. Dynamiske ID-er og ukjente ruter faller til en generell verdi. |
-| URL-er | Path-parametre, query, fragment, credentials og fritekst fjernes før sending. Scrubbingen gjelder alle strenger og nøkler i payloaden. |
+| URL-er | `@nais/apm` eier den obligatoriske PII-vasken. Appen normaliserer egne dynamiske ruter og kjente URL-felt, slik at path-parametre, query, fragment og credentials ikke sendes rått. |
 | Brukerdata | `setUser`, user context, session replay og screenshots er avslått. Aktivering krever en separat privacy- og sikkerhetsbeslutning. |
 | Feil | Én komponent eier hver feil. Error boundary eller rammeverkets tilsvarende toppnivåhåndtering gir recovery uten å sende samme feil flere ganger. |
-| Sampling | Rate er et eksplisitt tall større enn `0` og høyst `1`. SDK-default eller ukjent rate teller som et gap. En samplet session er ikke en unik bruker. |
+| Sampling | Faktisk rate er kjent og større enn `0` og høyst `1`, enten som appkonfigurasjon eller som dokumentert default i den pinnede SDK-versjonen. En samplet session er ikke en unik bruker. |
 | Tracing | På eller av er et bevisst valg. Browsertracing aktiveres først når URL-scrubbing og ende-til-ende-kobling er verifisert. |
 | Sourcemaps | Build-opplasting og faktisk deobfuskering i produksjon bevises separat. |
 | Canary | En syntetisk test viser at app/team/miljø/SHA/rute er riktig, at én feil blir én hendelse, og at rå ID-er og query ikke sendes. |
 
 ## Rollout-gate
 
-En repoendring er klar for menneskereview når statiske tester dekker rutetabell, rekursiv scrubbing, eksplisitt sampling, avslått bruker-/replay-kontekst og single-owner feilfangst. Det er ikke produksjonsbevis.
+En repoendring er klar for menneskereview når fokuserte tester dekker appens rutetabell og URL-normalisering, avslått bruker-/replay-kontekst og single-owner feilfangst. Felles PII-vask, konfigurasjonsoppløsning og SDK-defaults testes i `@nais/apm`; de skal ikke implementeres på nytt i hver app. Dette er ikke produksjonsbevis.
 
 Deretter kreves:
 
@@ -33,7 +33,7 @@ Testen skal bruke genererte canary-verdier og en ufarlig startside, aldri en ree
 
 ## Matrise og status
 
-Runtimeinventarets browsermatrise er fasiten for de elleve flatene. Den viser eier, identitet, SDK-versjon, side-/rutebeskyttelse, release, sampling, sourcemaps, tracing og siste syntetiske kontroll. `mangler`, `ikke verifisert` og SDK-default er gap, aldri grønt.
+Runtimeinventarets browsermatrise er fasiten for de elleve flatene. Den viser eier, identitet, SDK-versjon, side-/rutebeskyttelse, release, sampling, sourcemaps, tracing og siste syntetiske kontroll. `mangler`, `ikke verifisert` og SDK-default uten verifisert numerisk rate er gap, aldri grønt.
 
 Følgende er eksplisitt utenfor utrullingen: `dulting-studio`, `syfojanitor-frontend`, `syfooppfolgingsplanservice` og komponentbiblioteket `dinesykmeldte-sidemeny`. Airflow/data-science-flater og andre namespaces følger sine eiere.
 

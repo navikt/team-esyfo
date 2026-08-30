@@ -417,11 +417,11 @@ export const validateInventory = (
 				implementation.samplingRate <= 0 ||
 				implementation.samplingRate > 1)
 		) {
-			errors.push(`${surface.id} har ugyldig eksplisitt samplingrate.`);
+			errors.push(`${surface.id} har ugyldig samplingrate.`);
 		}
 		if (
-			(implementation.sampling === "explicit") !==
-			(implementation.samplingRate !== undefined)
+			implementation.sampling === "explicit" &&
+			implementation.samplingRate === undefined
 		) {
 			errors.push(
 				`${surface.id} har inkonsistent samplingstatus og samplingrate.`,
@@ -489,11 +489,8 @@ export const validateInventory = (
 			if (!/^\d+\.\d+\.\d+$/.test(implementation.versionRange)) {
 				errors.push(`${surface.id} må pinne @nais/apm til eksakt versjon.`);
 			}
-			if (
-				implementation.sampling !== "explicit" ||
-				implementation.samplingRate === undefined
-			) {
-				errors.push(`${surface.id} mangler eksplisitt samplingrate.`);
+			if (implementation.samplingRate === undefined) {
+				errors.push(`${surface.id} mangler kjent samplingrate.`);
 			}
 			if (
 				implementation.sourceRevision.status !== "verified" ||

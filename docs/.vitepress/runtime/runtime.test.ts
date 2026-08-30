@@ -155,18 +155,20 @@ describe("runtimeinventar", () => {
 			implementation.samplingRate = invalidRate;
 			result = validateInventory(inventory, { asOf: "2026-08-28" });
 			assert.ok(
-				result.errors.some((error) => error.includes("ugyldig eksplisitt")),
+				result.errors.some((error) => error.includes("ugyldig samplingrate")),
 			);
 		}
 		implementation.samplingRate = 1;
 		implementation.sampling = "sdk-default";
 		result = validateInventory(inventory, { asOf: "2026-08-28" });
+		assert.deepEqual(result.errors, []);
+		implementation.samplingRate = undefined;
+		result = validateInventory(inventory, { asOf: "2026-08-28" });
 		assert.ok(
-			result.errors.some((error) =>
-				error.includes("inkonsistent samplingstatus"),
-			),
+			result.errors.some((error) => error.includes("kjent samplingrate")),
 		);
 		implementation.sampling = "explicit";
+		implementation.samplingRate = 1;
 
 		implementation.browserTracing = "configured";
 		implementation.endToEndTracing = "disabled";
