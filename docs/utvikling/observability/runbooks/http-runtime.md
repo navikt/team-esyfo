@@ -5,9 +5,9 @@ Bruk denne for apper som vises i Kontrollrommets flåtematrise eller detaljpanel
 ## 1. Bekreft scope og evidens
 
 1. Åpne [Kontrollrom](https://grafana.nav.cloud.nais.io/d/team-esyfo-control-room-v1/team-esyfo-e28093-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m).
-2. Velg relevant **Omfang**, tidsrom og deretter én **Tjeneste**.
-   - `Omfang` styrer bare oversiktskortene og flåtematrisen.
-   - `Tjeneste` styrer bare detaljpanelene.
+2. Velg relevant **Operativt område**, tidsrom og deretter én **Detaljtjeneste**.
+   - `Operativt område` styrer bare oversiktskortene og flåtematrisen.
+   - `Detaljtjeneste` styrer bare detaljpanelene.
    - Browser-, pipeline-, jobb- og pagerseksjonene har fast scope og følger ingen av variablene.
 3. Les telemetrykolonnen først:
    - `FERSK`: aktuell SERVER-spanserie finnes. Det beviser seriescrape, ikke trafikk.
@@ -24,6 +24,21 @@ Bruk denne for apper som vises i Kontrollrommets flåtematrise eller detaljpanel
 4. Åpne NAIS APM fra raden og avgrens til samme tidsrom. Se etter berørte routes/operations og traces uten å kopiere rå persondata.
 
 Bruk formuleringen **påvist impact** bare når telemetry faktisk viser mislykkede kall eller en domene-/pipelinekontrakt er brutt. Ellers: **ingen impact påvist** eller **ukjent**.
+
+### Legacy ingress-5xx for syfomotebehov
+
+Alerten `HIGH RATIO OF HTTP 5XX RESPONSE` bruker denne ingress-ratioen per `backend` i et femminuttersvindu:
+
+```promql
+100 * sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo", service="syfomotebehov", status=~"^5\\d\\d"}[5m]))
+/
+sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo", service="syfomotebehov"}[5m]))
+```
+
+- Kjør samme uttrykk for samme tidsrom og backend. Dagens grense på `> 2 %` er en legacy-terskel, ikke en SLO.
+- Regelen mangler minimumstrafikk. Én mislykket request ved lav trafikk kan derfor utløse den.
+- Manglende nevner eller `No data` er ukjent, ikke null feil eller frisk tjeneste.
+- Sammenlign med OTel/APM for brukerimpact, men ikke likestill ingress-5xx med `STATUS_CODE_ERROR` i spans.
 
 ## 3. Avklar teknisk helse
 
