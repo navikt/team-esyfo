@@ -1,6 +1,6 @@
 # Runtimeinventar og observability-dekning
 
-Denne siden er Team eSyfos kanoniske, maskinlesbare ønskede produksjonsscope. Den er avgrenset fra [repooversikten](/utvikling/repositories): et repo kan være eid uten å ha en aktiv runtime, mens én runtime kan ha flere browserflater. Browserradene vurderes mot den korte [browserkontrakten](./browserkontrakt).
+Denne siden er Team eSyfos kanoniske, maskinlesbare ønskede produksjonsscope. Den er avgrenset fra [repooversikten](/utvikling/repositories): et repo kan være eid uten å ha en aktiv runtime, mens én runtime kan ha flere browserflater. Browserradene vurderes mot den korte [browserkontrakten](./browserkontrakt), og topicradene utdypes i de [operative Kafka-kontraktene](./kafka-kontrakter).
 
 <RuntimeInventory />
 
@@ -30,7 +30,7 @@ pnpm inventory:coverage -- --evidence /tmp/esyfo-coverage-evidence.json
 
 `inventory:coverage` tar imot den tidsstemplede `coverage evidence v1`-kontrakten og rapporterer `complete`, `partial`, `missing` eller `unknown` per app, jobb, topic og browserflate. Browserens `release-identity` krever matchende immutable kilde- og deploy-SHA; en flytende `main`-referanse er ikke bevis. Kontraktene kommer fra [#203](https://github.com/navikt/team-esyfo/issues/203), [#206](https://github.com/navikt/team-esyfo/issues/206), [#211](https://github.com/navikt/team-esyfo/issues/211) og [#212](https://github.com/navikt/team-esyfo/issues/212); live-evidens følger den enkelte utrullingen. Inntil den finnes, viser siden gapene — ikke en konstruert grønn status.
 
-En Kafka-pipeline får alltid det maskinelle gapet `pipeline-contract` så lenge kontrakten står som `proposed`. Kildegjennomgangen fant ingen godkjente behandlingstidsgrenser for de ti topicene, så fristene står `IKKE DEFINERT` fremfor å vise tidligere, udokumenterte tallforslag. Nulltrafikkpolicy og consumer-lag brukes heller ikke til å evaluere produksjonshelse før kontrakten er godkjent i #212. Dermed kan selv perfekte tekniske signaler ikke gjøre en uavklart pipeline grønn.
+En Kafka-pipeline får alltid det maskinelle gapet `pipeline-contract` så lenge kontrakten står som `proposed`. [Kildegjennomgangen](./kafka-kontrakter) fant ingen godkjente behandlingstidsgrenser for de ti topicene, så fristene står `IKKE DEFINERT` fremfor å vise tidligere, udokumenterte tallforslag. Nulltrafikkpolicy og consumer-lag brukes heller ikke til å evaluere produksjonshelse før kontrakten er godkjent i #212. Dermed kan selv perfekte tekniske signaler ikke gjøre en uavklart pipeline grønn.
 
 Tilsvarende får en browserflate `browser-contract` som maskinelt gap frem til kildekontrakten er implementert. Ferske live-signaler kan derfor ikke skjule manglende privacy-, rute- eller feilkonfigurasjon.
 

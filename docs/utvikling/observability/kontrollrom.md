@@ -59,7 +59,7 @@ En sampled exception, page load eller session skal aldri omtales som en unik bru
 
 ### Pipelines og jobber
 
-Kontrollrommet viser pipelinehelse som `IKKE EVALUERT`, ikke som et feilresultat. Sju pipelinegrupper og ti team-topics er kartlagt; detaljerte produsent-/konsumentruter ligger i [runtimeinventaret](./runtimeinventar). Operativ helse kan først evalueres når [#212](https://github.com/navikt/team-esyfo/issues/212) har avklart expected run, ferskhet, progresjon, eldste ventende og terminalt utfall.
+Kontrollrommet viser pipelinehelse som `IKKE EVALUERT`, ikke som et feilresultat. Sju pipelinegrupper og ti team-topics er kartlagt i [runtimeinventaret](./runtimeinventar), mens [Kafka-kontraktene](./kafka-kontrakter) skiller bevist nåtilstand fra åpne beslutninger. Operativ helse kan først evalueres når [#212](https://github.com/navikt/team-esyfo/issues/212) har godkjent frister, nulltrafikk, progresjon og terminale utfall.
 
 Varslingsreisen viser `syfo-budstikka` som målprosessor og `esyfovarsel` som migrerende legacy-prosessor. Airflow er ekstern sekundærkonsument og er utenfor scope. `esyfovarsel-job` får kun et tidsavgrenset Kubernetes failure-guardrail; `No data` betyr ikke suksess.
 

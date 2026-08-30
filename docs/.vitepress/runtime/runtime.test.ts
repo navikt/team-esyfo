@@ -268,6 +268,27 @@ describe("runtimeinventar", () => {
 		);
 	});
 
+	test("bruker bare manifestbekreftede aktive topic-relasjoner", () => {
+		const varselbus = runtimeInventory.topics.find(
+			({ id }) => id === "topic:varselbus",
+		);
+		assert.ok(varselbus);
+		assert.ok(
+			varselbus.producers.internal.includes(
+				"app:syfo-oppfolgingsplan-backend",
+			),
+		);
+
+		const dinesykmeldte = runtimeInventory.topics.find(
+			({ id }) => id === "topic:dinesykmeldte-hendelser-v2",
+		);
+		assert.ok(dinesykmeldte);
+		assert.ok(dinesykmeldte.producers.internal.includes("app:esyfovarsel"));
+		assert.ok(
+			dinesykmeldte.producers.internal.includes("app:syfo-budstikka"),
+		);
+	});
+
 	test("avviser duplisert runtimeidentitet", () => {
 		const inventory = cloneInventory();
 		inventory.applications[1].runtime = inventory.applications[0].runtime;

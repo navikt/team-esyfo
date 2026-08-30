@@ -1087,6 +1087,7 @@ export const topics: Topic[] = [
 				"app:aktivitetskrav-backend",
 				"app:meroppfolging-backend",
 				"app:syfo-dokumentporten",
+				"app:syfo-oppfolgingsplan-backend",
 				"app:syfomotebehov",
 				"app:syfooppfolgingsplanservice",
 			],
