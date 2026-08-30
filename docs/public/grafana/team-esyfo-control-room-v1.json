@@ -2516,7 +2516,7 @@
               "transformations": []
             }
           },
-          "description": "Kontraktstatus, ikke produksjonshelse. syfo-budstikka er målprosessor, esyfovarsel er migrerende legacy-prosessor, og Airflow er utenfor scope. Expected run, ferskhet, progresjon, eldste ventende og terminalt utfall avklares i #212 før pipelinehelse kan evalueres.",
+          "description": "Kontraktstatus, ikke samlet produksjonshelse. Første tekniske slice viser sykmelding-consumerens poll-alder og committed lag. Expected run, eldste ventende arbeid, terminalt utfall og øvrige pipelinekontrakter avklares i #212. syfo-budstikka er målprosessor, esyfovarsel er migrerende legacy-prosessor, og Airflow er utenfor scope.",
           "id": 21,
           "links": [
             {
@@ -2542,6 +2542,243 @@
               "options": {
                 "content": "**Pipelinehelse: `IKKE EVALUERT`.** 7 grupper / 10 topics er kartlagt. [Avklar kontrakten i #212](https://github.com/navikt/team-esyfo/issues/212) · [se topicruter](https://navikt.github.io/team-esyfo/utvikling/observability/runtimeinventar).",
                 "mode": "markdown"
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-33": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "max by (pod) (kafka_consumer_last_poll_seconds_ago{app=\"syfo-oppfolgingsplan-backend\", namespace=\"team-esyfo\", k8s_cluster_name=\"prod\"})",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "{{pod}}",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Poll-alder"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Sekunder siden siste poll()-kall per eksporterte produksjonspod. IKKE POLLET er Kafka-verdien -1 før første poll. Grønt er under 60 sekunder, gult 60–300 og rødt minst 300. Dette viser consumer-loopens tekniske fremdrift, ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
+          "id": 33,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "NAIS APM",
+              "url": "/a/nais-apm-app/services/team-esyfo/syfo-oppfolgingsplan-backend?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Avgrensede logger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feildrilldown",
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-oppfolgingsplan-backend"
+            },
+            {
+              "targetBlank": true,
+              "title": "HTTP/runtime-runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+            },
+            {
+              "targetBlank": true,
+              "title": "Pipeline-/jobbrunbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
+            }
+          ],
+          "title": "Sykmelding-consumer · poll-alder per pod",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "mappings": [
+                    {
+                      "options": {
+                        "-1": {
+                          "color": "red",
+                          "text": "IKKE POLLET"
+                        }
+                      },
+                      "type": "value"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 60
+                      },
+                      {
+                        "color": "red",
+                        "value": 300
+                      }
+                    ]
+                  },
+                  "unit": "s"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-34": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "max(kafka_consumergroup_group_topic_sum_lag{namespace=\"nais-system\", k8s_cluster_name=\"prod\", group=\"syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2\", topic=\"teamsykmelding.syfo-sendt-sykmelding\"})",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Committed lag"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Committed consumer-group-lag for sykmeldingstopicen. Null betyr ingen observert backlog ved siste scrape, ikke bevist korrekt eller ende-til-ende-levert behandling. Positiv lag kan være kortvarig; No data er Ukjent.",
+          "id": 34,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "NAIS APM",
+              "url": "/a/nais-apm-app/services/team-esyfo/syfo-oppfolgingsplan-backend?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Avgrensede logger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feildrilldown",
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-oppfolgingsplan-backend"
+            },
+            {
+              "targetBlank": true,
+              "title": "HTTP/runtime-runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+            },
+            {
+              "targetBlank": true,
+              "title": "Pipeline-/jobbrunbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
+            }
+          ],
+          "title": "Sykmelding-consumer · committed lag",
+          "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "decimals": 0,
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "blue",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
               }
             },
             "version": "13.1.2"
@@ -3541,8 +3778,34 @@
                 "name": "panel-21"
               },
               "height": 4,
-              "width": 24,
+              "width": 6,
               "x": 0,
+              "y": 63
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-33"
+              },
+              "height": 4,
+              "width": 12,
+              "x": 6,
+              "y": 63
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-34"
+              },
+              "height": 4,
+              "width": 6,
+              "x": 18,
               "y": 63
             }
           },

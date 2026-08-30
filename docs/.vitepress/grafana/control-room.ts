@@ -51,6 +51,10 @@ export const DESIRED_REPLICAS_METRIC = "kube_deployment_spec_replicas";
 export const JOB_FAILED_METRIC = "kube_job_failed";
 export const BUDSTIKKA_LAG_METRIC =
 	"kafka_consumer_fetch_manager_records_lag_max";
+export const KAFKA_CONSUMER_LAST_POLL_METRIC =
+	"kafka_consumer_last_poll_seconds_ago";
+export const KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC =
+	"kafka_consumergroup_group_topic_sum_lag";
 export const DESERIALIZATION_ERROR_METRIC =
 	"syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total";
 
@@ -203,6 +207,8 @@ export const browserExceptionsByServiceQuery = `sum by (service_name) (count_ove
 
 export const jobFailureQuery = `max(max_over_time(${JOB_FAILED_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", job_name=~"esyfovarsel-job.*"}[$__range]))`;
 export const budstikkaLagQuery = `max by (topic) (${BUDSTIKKA_LAG_METRIC}{app="syfo-budstikka", namespace="team-esyfo", k8s_cluster_name="prod", topic="team-esyfo.budstikka.v1"})`;
+export const sykmeldingConsumerPollAgeByPodQuery = `max by (pod) (${KAFKA_CONSUMER_LAST_POLL_METRIC}{app="syfo-oppfolgingsplan-backend", namespace="team-esyfo", k8s_cluster_name="prod"})`;
+export const sykmeldingConsumerCommittedLagQuery = `max(${KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC}{namespace="nais-system", k8s_cluster_name="prod", group="syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2", topic="teamsykmelding.syfo-sendt-sykmelding"})`;
 export const deserializationRateQuery = `sum(rate(${DESERIALIZATION_ERROR_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod"}[5m]))`;
 export const motebehovAvailableRatioQuery = `(100 * max by (deployment) (${AVAILABLE_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) / max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"})) and on(deployment) (max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) > 0)`;
 
@@ -339,6 +345,10 @@ const queryGroup = (
 });
 
 type Threshold = { color: string; value: number };
+type ValueMapping = {
+	type: "value";
+	options: Record<string, { color?: string; text: string }>;
+};
 
 const statPanel = ({
 	id,
@@ -350,6 +360,7 @@ const statPanel = ({
 	colorMode = "value",
 	decimals,
 	links = [],
+	mappings = [],
 }: {
 	id: number;
 	title: string;
@@ -360,6 +371,7 @@ const statPanel = ({
 	colorMode?: "none" | "value";
 	decimals?: number;
 	links?: PanelLink[];
+	mappings?: ValueMapping[];
 }) => ({
 	kind: "Panel",
 	spec: {
@@ -375,6 +387,7 @@ const statPanel = ({
 				fieldConfig: {
 					defaults: {
 						...(decimals === undefined ? {} : { decimals }),
+						...(mappings.length === 0 ? {} : { mappings }),
 						noValue: "Ukjent",
 						thresholds: { mode: "absolute", steps: thresholds },
 						unit,
@@ -729,6 +742,11 @@ const coverageThresholds: Threshold[] = [
 	{ color: "green", value: 100 },
 ];
 const neutralThresholds: Threshold[] = [{ color: "blue", value: 0 }];
+const pollAgeThresholds: Threshold[] = [
+	{ color: "green", value: 0 },
+	{ color: "yellow", value: 60 },
+	{ color: "red", value: 300 },
+];
 
 const selectedService = "meroppfolging-backend";
 const selectedServiceText =
@@ -1059,7 +1077,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			"panel-21": textPanel(
 				21,
 				"30 · Pipelines",
-				"Kontraktstatus, ikke produksjonshelse. syfo-budstikka er målprosessor, esyfovarsel er migrerende legacy-prosessor, og Airflow er utenfor scope. Expected run, ferskhet, progresjon, eldste ventende og terminalt utfall avklares i #212 før pipelinehelse kan evalueres.",
+				"Kontraktstatus, ikke samlet produksjonshelse. Første tekniske slice viser sykmelding-consumerens poll-alder og committed lag. Expected run, eldste ventende arbeid, terminalt utfall og øvrige pipelinekontrakter avklares i #212. syfo-budstikka er målprosessor, esyfovarsel er migrerende legacy-prosessor, og Airflow er utenfor scope.",
 				pipelineCoverageMarkdown(),
 				[
 					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
@@ -1069,6 +1087,49 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					),
 				],
 			),
+			"panel-33": statPanel({
+				id: 33,
+				title: "Sykmelding-consumer · poll-alder per pod",
+				description:
+					"Sekunder siden siste poll()-kall per eksporterte produksjonspod. IKKE POLLET er Kafka-verdien -1 før første poll. Grønt er under 60 sekunder, gult 60–300 og rødt minst 300. Dette viser consumer-loopens tekniske fremdrift, ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
+				query: prometheusQuery(
+					"Poll-alder",
+					sykmeldingConsumerPollAgeByPodQuery,
+					"instant",
+					"{{pod}}",
+				),
+				unit: "s",
+				thresholds: pollAgeThresholds,
+				decimals: 0,
+				mappings: [
+					{
+						options: { "-1": { color: "red", text: "IKKE POLLET" } },
+						type: "value",
+					},
+				],
+				links: [
+					...serviceDataLinks("syfo-oppfolgingsplan-backend"),
+					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
+				],
+			}),
+			"panel-34": statPanel({
+				id: 34,
+				title: "Sykmelding-consumer · committed lag",
+				description:
+					"Committed consumer-group-lag for sykmeldingstopicen. Null betyr ingen observert backlog ved siste scrape, ikke bevist korrekt eller ende-til-ende-levert behandling. Positiv lag kan være kortvarig; No data er Ukjent.",
+				query: prometheusQuery(
+					"Committed lag",
+					sykmeldingConsumerCommittedLagQuery,
+					"instant",
+				),
+				unit: "short",
+				thresholds: neutralThresholds,
+				decimals: 0,
+				links: [
+					...serviceDataLinks("syfo-oppfolgingsplan-backend"),
+					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
+				],
+			}),
 			"panel-22": textPanel(
 				22,
 				"32 · Planlagt jobb",
@@ -1199,7 +1260,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					layoutItem("panel-31", 8, 49, 16, 8),
 					layoutItem("panel-18", 0, 57, 6, 6),
 					layoutItem("panel-20", 6, 57, 18, 6),
-					layoutItem("panel-21", 0, 63, 24, 4),
+					layoutItem("panel-21", 0, 63, 6, 4),
+					layoutItem("panel-33", 6, 63, 12, 4),
+					layoutItem("panel-34", 18, 63, 6, 4),
 					layoutItem("panel-22", 0, 67, 16, 5),
 					layoutItem("panel-23", 16, 67, 8, 5),
 					layoutItem("panel-24", 0, 72, 24, 3),
