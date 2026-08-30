@@ -1284,22 +1284,22 @@
       "name": "SykmeldingConsumerDeserializationErrors",
       "expr": "rate(syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total{namespace=\"team-esyfo\"}[5m]) > 0.1",
       "holdFor": "5m",
-      "semantic": "permanent-delivery-failure",
-      "semanticFamily": "kafka-terminal-record-failure",
+      "semantic": "deserialization-errors",
+      "semanticFamily": "legacy-kafka-deserialization-errors",
       "lifecycle": {
         "state": "permanent"
       },
       "policy": {
-        "decision": "KEEP",
+        "decision": "TUNE",
         "owner": {
           "kind": "team",
           "team": "team-esyfo",
           "repository": "navikt/syfo-oppfolgingsplan-backend",
           "scopeRef": "app:syfo-oppfolgingsplan-backend"
         },
-        "rationale": "Vedvarende deserialiseringsrate betyr at flere records forkastes permanent og kan gi manglende sykmeldingsperioder.",
+        "rationale": "Vedvarende deserialiseringsfeil kan bety at records ikke behandles; legacy-signalet skiller ikke retry fra terminal forkasting og krever avklaring før impact fastslås.",
         "operationalResponse": {
-          "phase": "retained-rule",
+          "phase": "after-tuning",
           "delivery": {
             "tier": "pager",
             "channelPolicyRef": "channel:team-esyfo-pager",
@@ -1310,6 +1310,7 @@
             ]
           }
         },
+        "implementationIssue": "navikt/syfo-oppfolgingsplan-backend#449",
         "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
@@ -1337,8 +1338,9 @@
         }
       ],
       "runbook": {
-        "status": "missing",
-        "issue": "navikt/team-esyfo#211"
+        "status": "linked",
+        "href": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/oppfolgingsplan-deserialisering",
+        "label": "Sykmelding-deserialisering"
       },
       "dashboard": {
         "status": "linked",
@@ -1346,11 +1348,13 @@
         "label": "Feildrilldown"
       },
       "annotations": {
-        "summary": "Sykmelding-consumeren forkaster meldinger permanent.",
-        "consequence": "Oppfølgingsplanen kan mangle sykmeldingsperioder.",
-        "action": "Verifiser serialiseringsmodellen mot topic-kontrakten."
+        "summary": "Sykmelding-consumeren har vedvarende deserialiseringsfeil.",
+        "consequence": "Sykmeldingsperioder kan bli forsinket eller mangle, men signalet beviser ikke permanent tap alene.",
+        "action": "Følg runbooken og avklar terminalt utfall før restart eller replay."
       },
-      "riskNotes": [],
+      "riskNotes": [
+        "legacy-signalet skiller ikke terminal forkasting fra retryforsøk"
+      ],
       "monitoredRefs": [
         "app:syfo-oppfolgingsplan-backend"
       ]
@@ -1991,8 +1995,9 @@
         }
       ],
       "runbook": {
-        "status": "missing",
-        "issue": "navikt/team-esyfo#211"
+        "status": "linked",
+        "href": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/syfomotebehov-tilgjengelighet",
+        "label": "Tilgjengelighet for syfomotebehov"
       },
       "dashboard": {
         "status": "linked",
@@ -2064,8 +2069,9 @@
         }
       ],
       "runbook": {
-        "status": "missing",
-        "issue": "navikt/team-esyfo#211"
+        "status": "linked",
+        "href": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime",
+        "label": "HTTP og runtime"
       },
       "dashboard": {
         "status": "linked",

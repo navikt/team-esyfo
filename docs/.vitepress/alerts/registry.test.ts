@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { reconcileAlertObservations } from "./drift.ts";
 import type { AlertObservationSnapshot, AlertRegistry } from "./model.ts";
-import { alertRegistry } from "./registry.ts";
+import { alertRegistry, RUNBOOK_BASE_URL } from "./registry.ts";
 import {
 	assertValidAlertRegistry,
 	buildAlertRegistryReport,
@@ -239,7 +239,8 @@ describe("alert-register", () => {
 
 		const varselLifecycle = lifecycleById.get("rule:esyfovarsel-down");
 		assert.equal(varselLifecycle?.state, "migrating");
-		if (varselLifecycle?.state !== "migrating") assert.fail("Forventet migrering.");
+		if (varselLifecycle?.state !== "migrating")
+			assert.fail("Forventet migrering.");
 		assert.equal(varselLifecycle.targetDate, undefined);
 		assert.equal(
 			lifecycleById.get("rule:dokumentporten-terminal-varsel-error")?.state,
@@ -260,14 +261,74 @@ describe("alert-register", () => {
 		});
 	});
 
+	test("kobler tre verifiserbare regler til relevante runbooks", () => {
+		const rulesById = new Map(
+			alertRegistry.rules.map((rule) => [rule.id, rule]),
+		);
+		const expectedRunbooks = [
+			[
+				"rule:oppfolgingsplan-sykmelding-deserialization",
+				"oppfolgingsplan-deserialisering",
+				"Sykmelding-deserialisering",
+			],
+			[
+				"rule:motebehov-down",
+				"syfomotebehov-tilgjengelighet",
+				"Tilgjengelighet for syfomotebehov",
+			],
+			["rule:motebehov-http-5xx", "http-runtime", "HTTP og runtime"],
+		] as const;
+
+		for (const [ruleId, path, label] of expectedRunbooks) {
+			assert.deepEqual(rulesById.get(ruleId)?.runbook, {
+				status: "linked",
+				href: `${RUNBOOK_BASE_URL}/${path}`,
+				label,
+			});
+		}
+
+		const report = assertValidAlertRegistry(alertRegistry);
+		assert.equal(report.missingRunbooks.length, 21);
+		assert.ok(
+			expectedRunbooks.every(
+				([ruleId]) => !report.missingRunbooks.includes(ruleId),
+			),
+		);
+
+		const deserializationRule = rulesById.get(
+			"rule:oppfolgingsplan-sykmelding-deserialization",
+		);
+		assert.equal(deserializationRule?.semantic, "deserialization-errors");
+		assert.equal(
+			deserializationRule?.semanticFamily,
+			"legacy-kafka-deserialization-errors",
+		);
+		assert.equal(deserializationRule?.policy.decision, "TUNE");
+		if (deserializationRule?.policy.decision !== "TUNE") {
+			assert.fail("Forventet TUNE-policy for legacy-signalet.");
+		}
+		assert.equal(
+			deserializationRule.policy.implementationIssue,
+			"navikt/syfo-oppfolgingsplan-backend#449",
+		);
+		assert.match(
+			deserializationRule?.policy.rationale ?? "",
+			/skiller ikke retry/,
+		);
+		assert.match(
+			deserializationRule?.annotations.consequence ?? "",
+			/beviser ikke permanent tap alene/,
+		);
+	});
+
 	test("vedtar én policy og én produksjonsrespons for alle 30 regler", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 
 		assert.equal(alertRegistry.schemaVersion, 2);
 		assert.equal(alertRegistry.policy.decisionIssue, "navikt/team-esyfo#210");
 		assert.deepEqual(report.policy.decisionCounts, {
-			KEEP: 10,
-			TUNE: 3,
+			KEEP: 9,
+			TUNE: 4,
 			REPLACE: 4,
 			RETIRE: 11,
 			MIGRATE: 2,
@@ -302,7 +363,10 @@ describe("alert-register", () => {
 			pagerCandidate?.policy.operationalResponse.delivery.tier,
 			"pager",
 		);
-		assert.equal(pagerCandidate?.policy.operationalResponse.phase, "after-tuning");
+		assert.equal(
+			pagerCandidate?.policy.operationalResponse.phase,
+			"after-tuning",
+		);
 		assert.equal(dashboardOnly?.notification.kind, "nais-team-slack");
 		assert.equal(
 			dashboardOnly?.policy.operationalResponse.delivery.tier,
@@ -413,6 +477,20 @@ describe("alert-register", () => {
 					issues.includes("navikt/team-esyfo#217"),
 			),
 		);
+		const deserializationCandidate = report.policy.pagerCandidatesBlocked.find(
+			({ ruleId }) =>
+				ruleId === "rule:oppfolgingsplan-sykmelding-deserialization",
+		);
+		assert.ok(
+			deserializationCandidate?.reasons.includes(
+				"dagens signal er ikke pager-sikkert",
+			),
+		);
+		assert.ok(
+			deserializationCandidate?.issues.includes(
+				"navikt/syfo-oppfolgingsplan-backend#449",
+			),
+		);
 		assert.ok(
 			alertRegistry.rules
 				.filter(
@@ -441,6 +519,18 @@ describe("alert-register", () => {
 				({ id }) => id === "rule:oppfolgingsplan-sykmelding-deserialization",
 			);
 			assert.ok(rule);
+			rule.semantic = "permanent-delivery-failure";
+			rule.semanticFamily = "kafka-terminal-record-failure";
+			rule.policy = {
+				decision: "KEEP",
+				owner: rule.policy.owner,
+				rationale: "Etter tuning måler regelen et verifisert terminalt utfall.",
+				operationalResponse: {
+					phase: "retained-rule",
+					delivery: rule.policy.operationalResponse.delivery,
+				},
+				decidedAt: rule.policy.decidedAt,
+			};
 			rule.runbook = {
 				status: "linked",
 				href: "https://github.com/navikt/team-esyfo/issues/211",
@@ -491,7 +581,8 @@ describe("alert-register", () => {
 		const fullyVerified = prepareCandidate();
 		if (
 			fullyVerified.rule.policy.operationalResponse.delivery.tier !== "pager" ||
-			fullyVerified.rule.policy.operationalResponse.delivery.activation !== "ready"
+			fullyVerified.rule.policy.operationalResponse.delivery.activation !==
+				"ready"
 		) {
 			assert.fail("Forventet ready pager-kandidat.");
 		}

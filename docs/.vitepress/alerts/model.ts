@@ -37,6 +37,7 @@ export type AlertChannelPolicyId =
 export type AlertSemantic =
 	| "availability"
 	| "consumer-lag"
+	| "deserialization-errors"
 	| "definition-conflict"
 	| "http-4xx-ratio"
 	| "http-5xx-ratio"

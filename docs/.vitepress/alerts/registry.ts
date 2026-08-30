@@ -37,6 +37,8 @@ export const GRAFANA_FOLDER_ALERTS_URL =
 	"https://grafana.nav.cloud.nais.io/dashboards/f/K-1b-N_4k/team-esyfo/alerting";
 export const ERROR_DRILLDOWN_URL =
 	"https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown";
+export const RUNBOOK_BASE_URL =
+	"https://navikt.github.io/team-esyfo/utvikling/observability/runbooks";
 
 const repositorySource = (
 	id: AlertSource["id"],
@@ -212,6 +214,8 @@ const linked = (href: string, label: string): TrackedLink => ({
 	href,
 	label,
 });
+const teamRunbook = (path: string, label: string): TrackedLink =>
+	linked(`${RUNBOOK_BASE_URL}/${path}`, label);
 const missingRunbook = (): TrackedLink => ({
 	status: "missing",
 	issue: "navikt/team-esyfo#211",
@@ -1010,16 +1014,17 @@ export const alertRules: AlertRule[] = [
 		name: "SykmeldingConsumerDeserializationErrors",
 		expr: 'rate(syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total{namespace="team-esyfo"}[5m]) > 0.1',
 		holdFor: "5m",
-		semantic: "permanent-delivery-failure",
-		semanticFamily: "kafka-terminal-record-failure",
+		semantic: "deserialization-errors",
+		semanticFamily: "legacy-kafka-deserialization-errors",
 		lifecycle: permanent,
-		policy: keepPolicy(
+		policy: tunePolicy(
 			teamOwner(
 				"navikt/syfo-oppfolgingsplan-backend",
 				"app:syfo-oppfolgingsplan-backend",
 			),
-			"Vedvarende deserialiseringsrate betyr at flere records forkastes permanent og kan gi manglende sykmeldingsperioder.",
+			"Vedvarende deserialiseringsfeil kan bety at records ikke behandles; legacy-signalet skiller ikke retry fra terminal forkasting og krever avklaring før impact fastslås.",
 			blockedPager(),
+			"navikt/syfo-oppfolgingsplan-backend#449",
 		),
 		targetRefs: ["app:syfo-oppfolgingsplan-backend"],
 		externalTargets: ["teamsykmelding sykmeldingsperioder"],
@@ -1029,14 +1034,21 @@ export const alertRules: AlertRule[] = [
 			dev("source:oppfolgingsplan-dev", "warning"),
 			prod("source:oppfolgingsplan-prod", "critical"),
 		],
-		runbook: missingRunbook(),
+		runbook: teamRunbook(
+			"oppfolgingsplan-deserialisering",
+			"Sykmelding-deserialisering",
+		),
 		dashboard: errorDashboard("syfo-oppfolgingsplan-backend"),
 		annotations: {
-			summary: "Sykmelding-consumeren forkaster meldinger permanent.",
-			consequence: "Oppfølgingsplanen kan mangle sykmeldingsperioder.",
-			action: "Verifiser serialiseringsmodellen mot topic-kontrakten.",
+			summary: "Sykmelding-consumeren har vedvarende deserialiseringsfeil.",
+			consequence:
+				"Sykmeldingsperioder kan bli forsinket eller mangle, men signalet beviser ikke permanent tap alene.",
+			action:
+				"Følg runbooken og avklar terminalt utfall før restart eller replay.",
 		},
-		riskNotes: [],
+		riskNotes: [
+			"legacy-signalet skiller ikke terminal forkasting fra retryforsøk",
+		],
 	}),
 	prometheusRule({
 		id: "rule:oppfolgingsplan-sykmelding-runtime-errors",
@@ -1309,7 +1321,10 @@ export const alertRules: AlertRule[] = [
 		journeyRefs: ["journey:meeting-needs", "journey:dialog-meeting"],
 		pipelineRefs: [],
 		deployments: [prod("source:motebehov-prod", "critical")],
-		runbook: missingRunbook(),
+		runbook: teamRunbook(
+			"syfomotebehov-tilgjengelighet",
+			"Tilgjengelighet for syfomotebehov",
+		),
 		dashboard: errorDashboard("syfomotebehov"),
 		annotations: {
 			summary: "syfomotebehov er nede.",
@@ -1336,7 +1351,7 @@ export const alertRules: AlertRule[] = [
 		journeyRefs: ["journey:meeting-needs", "journey:dialog-meeting"],
 		pipelineRefs: [],
 		deployments: [prod("source:motebehov-prod", "warning")],
-		runbook: missingRunbook(),
+		runbook: teamRunbook("http-runtime", "HTTP og runtime"),
 		dashboard: errorDashboard("syfomotebehov"),
 		annotations: {
 			summary: "syfomotebehov har en høy andel 5xx.",

@@ -31,6 +31,7 @@ const ISSUE_REF = /^navikt\/[A-Za-z0-9_.-]+#\d+$/;
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T.+Z$/;
 const UNSAFE_CURRENT_PAGER_SEMANTICS = new Set<AlertSemantic>([
 	"consumer-lag",
+	"deserialization-errors",
 	"log-error-ratio",
 	"raw-consumer-offset",
 	"http-4xx-ratio",
