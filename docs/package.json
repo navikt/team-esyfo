@@ -24,7 +24,7 @@
 		"control-room:test": "node --test .vitepress/grafana/control-room.test.ts",
 		"control-room:check": "node scripts/control-room.ts check",
 		"control-room:export": "node scripts/control-room.ts export",
-		"control-room:grafana-smoke": "node scripts/control-room-grafana-smoke.ts",
+		"grafana-dashboard:smoke": "node scripts/grafana-dashboard-smoke.ts",
 		"preview": "vitepress preview"
 	},
 	"devDependencies": {

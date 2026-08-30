@@ -39,10 +39,15 @@ Kjør fra `docs/`:
 pnpm error-dashboard:test
 pnpm error-dashboard:export
 pnpm error-dashboard:check
+pnpm grafana-dashboard:smoke
 pnpm build
 ```
 
 `error-dashboard:check` sammenligner generert og committed JSON byte for byte. CI feiler derfor dersom inventaret eller builderen endres uten at dashboardartefakten regenereres.
+
+`grafana-dashboard:smoke` importerer både Feildrilldown og Kontrollrom i en
+midlertidig lokal Grafana og sammenligner lagret ressurs og UI-DTO med de
+committede artefaktene. Smoken kjører også i CI.
 
 Før en endring publiseres, skal den importeres i Grafana uten å overskrive UID eller mappe. Verifiser minst `All`, én runtimeapp, én browserapp, en app uten browsertelemetri, et tomt tidsrom og radlenkene til APM, logger og trace.
 
