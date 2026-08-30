@@ -1,3 +1,4 @@
+import type { AreaId } from "../areas.ts";
 import { runtimeInventory } from "../runtime/inventory.ts";
 import {
 	isCurrentLifecycle,
@@ -5,8 +6,8 @@ import {
 } from "../runtime/lifecycle.ts";
 import type {
 	Application,
-	Criticality,
 	IssueRef,
+	JourneyId,
 	Lifecycle,
 } from "../runtime/model.ts";
 
@@ -75,13 +76,6 @@ export const controlRoomApplicationRegex = applicationRegex(
 	controlRoomApplications,
 );
 
-const criticalityLabel: Record<Criticality, string> = {
-	critical: "Kritisk",
-	high: "Høy",
-	standard: "Standard",
-	support: "Støtte",
-};
-
 export const lifecycleLabel = (lifecycle: Lifecycle) => {
 	switch (lifecycle.state) {
 		case "active":
@@ -97,9 +91,24 @@ export const lifecycleLabel = (lifecycle: Lifecycle) => {
 	}
 };
 
+const lifecycleSuffix = (lifecycle: Lifecycle) => {
+	switch (lifecycle.state) {
+		case "active":
+			return "";
+		case "migrating":
+			return " (migrerer)";
+		case "retiring":
+			return " (utfasing)";
+		case "sunset":
+			return ` (sunset ${lifecycle.sunsetOn})`;
+		case "retired":
+			return ` (avviklet ${lifecycle.retiredOn})`;
+	}
+};
+
 export const controlRoomApplicationOptions = controlRoomApplications.map(
 	(application) => ({
-		text: `${application.displayName} · ${criticalityLabel[application.criticality]} · ${lifecycleLabel(application.lifecycle)}`,
+		text: `${application.displayName}${lifecycleSuffix(application.lifecycle)}`,
 		value: application.runtime.name,
 	}),
 );
@@ -109,65 +118,58 @@ const scopeOption = (text: string, applications: Application[]) => ({
 	value: applicationRegex(applications),
 });
 
-const uniqueScopes = (options: Array<{ text: string; value: string }>) => {
-	const seenOptions = new Set<string>();
-	const regexOccurrences = new Map<string, number>();
-	return options.flatMap((option) => {
-		const key = `${option.text}\u0000${option.value}`;
-		if (seenOptions.has(key)) return [];
-		seenOptions.add(key);
-		const occurrence = regexOccurrences.get(option.value) ?? 0;
-		regexOccurrences.set(option.value, occurrence + 1);
-		if (occurrence === 0) return [option];
+const applicationsInArea = (areaRef: AreaId) =>
+	controlRoomApplications.filter(({ context }) =>
+		context.areaRefs.includes(areaRef),
+	);
 
-		// Grafana persists a custom variable by value. Equivalent scopes therefore
-		// need distinct, but semantically identical, RE2 expressions to retain the
-		// selected label after a reload.
-		const inner = option.value.slice(2, -2);
-		const wrappingDepth = occurrence + 1;
-		return [
-			{
-				...option,
-				value: `^${"(".repeat(wrappingDepth)}${inner}${")".repeat(wrappingDepth)}$`,
-			},
-		];
-	});
+const applicationsInJourney = (journeyRef: JourneyId) =>
+	controlRoomApplications.filter(({ context }) =>
+		context.journeyRefs.includes(journeyRef),
+	);
+
+const withRetiringDependencies = (applications: Application[]) => {
+	const applicationIds = new Set<string>(applications.map(({ id }) => id));
+	return controlRoomApplications.filter(
+		(application) =>
+			applicationIds.has(application.id) ||
+			(application.lifecycle.state === "retiring" &&
+				application.lifecycle.consumerRefs.some((consumerRef) =>
+					applicationIds.has(consumerRef),
+				)),
+	);
 };
 
-export const controlRoomScopeOptions = uniqueScopes([
+export const controlRoomScopeOptions = [
 	scopeOption(
-		`Hele operative GCP-flåten (${controlRoomApplications.length})`,
+		`Alle operative GCP-tjenester (${controlRoomApplications.length})`,
 		controlRoomApplications,
 	),
-	...runtimeInventory.journeys.flatMap((journey) => {
-		const applications = controlRoomApplications.filter(({ context }) =>
-			context.journeyRefs.includes(journey.id),
-		);
-		return applications.length > 0
-			? [scopeOption(`Reise · ${journey.name}`, applications)]
-			: [];
-	}),
-	...runtimeInventory.pipelines.flatMap((pipeline) => {
-		const applications = controlRoomApplications.filter(({ context }) =>
-			context.pipelineRefs.includes(pipeline.id),
-		);
-		return applications.length > 0
-			? [scopeOption(`Pipeline · ${pipeline.name}`, applications)]
-			: [];
-	}),
-	...(["migrating", "retiring"] as const).flatMap((state) => {
-		const applications = controlRoomApplications.filter(
-			({ lifecycle }) => lifecycle.state === state,
-		);
-		const label = {
-			migrating: "Migrering",
-			retiring: "Utfasing",
-		}[state];
-		return applications.length > 0
-			? [scopeOption(`${label} (${applications.length})`, applications)]
-			: [];
-	}),
-]);
+	scopeOption("Aktivitetskrav", applicationsInArea("aktivitetskrav")),
+	scopeOption(
+		"Kartleggingsspørsmål",
+		applicationsInArea("kartleggingssporsmal"),
+	),
+	scopeOption("Dine sykmeldte", applicationsInArea("dine-sykmeldte")),
+	scopeOption("Nærmeste leder", applicationsInArea("narmeste-leder")),
+	scopeOption(
+		"Møtebehov og dialogmøte",
+		withRetiringDependencies(applicationsInArea("motebehov")),
+	),
+	scopeOption(
+		"Oppfølgingsplan og dokumenter",
+		applicationsInArea("oppfolgingsplan"),
+	),
+	scopeOption("Mer oppfølging", applicationsInArea("meroppfolging")),
+	scopeOption(
+		"Varslingsmotorer",
+		applicationsInJourney("journey:notifications"),
+	),
+	scopeOption(
+		"Interne driftsverktøy",
+		applicationsInJourney("journey:operational-insight"),
+	),
+];
 
 const issueUrl = (issue: IssueRef) => {
 	const [repository, number] = issue.split("#");
@@ -177,7 +179,7 @@ const issueUrl = (issue: IssueRef) => {
 const issueLink = (issue: IssueRef) => `[${issue}](${issueUrl(issue)})`;
 
 export const scopeMarkdown = () =>
-	`Velg tjeneste for APM, logger og runbook. Ingen samlet brukerimpact-status ennå; \`UKJENT\` og \`MANGLER\` er aldri grønt. [Begreper og scope](${CONTROL_ROOM_GUIDE_URL}).`;
+	`Velg operativt område for toppkort og flåtematrise, og detaljtjeneste for APM, logger og runbook. Ingen samlet brukerimpact-status ennå; \`UKJENT\` og \`MANGLER\` er aldri grønt. [Begreper og scope](${CONTROL_ROOM_GUIDE_URL}).`;
 
 export const browserCoverageMarkdown = () => {
 	const configured = controlRoomBrowserSurfaces.filter(

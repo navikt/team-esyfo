@@ -12,10 +12,10 @@ Leveransen er coverage-first: det vi kan måle korrekt vises live; det vi ikke k
 
 1. **Handle nå:** Se etter OTel-feilstatus, runtimefeil, restarts og lav ready/desired. Les alltid span- og kube-dekning ved siden av.
 2. **Finn raden:** Flåtematrisen viser forventet tjeneste, kritikalitet, livssyklus, telemetry og observerte avvik. Manglende signal gjør raden rød/ukjent; den forsvinner ikke.
-3. **Avgrens én tjeneste:** Velg runtime i `Tjeneste`. Request-rate, OTel-feilratio og P95 gjelder da bare denne identiteten, ikke en uleselig miks av hele flåten.
+3. **Avgrens én tjeneste:** Velg runtime i `Detaljtjeneste`. Request-rate, OTel-feilratio og P95 gjelder da bare denne identiteten, ikke en uleselig miks av hele flåten.
 4. **Følg runbook og drilldown:** Hver runtime og pagerkandidat lenker til APM, avgrensede logger, Feildrilldown og relevant runbook.
 
-`Omfang` filtrerer bare oversiktskortene og flåtematrisen. `Tjeneste` styrer bare detaljpanelene. Dine sykmeldte-, browser-, pipeline-, jobb- og pagerseksjonene har sitt eksplisitte, faste scope og endres ikke av disse valgene.
+`Operativt område` filtrerer bare oversiktskortene og flåtematrisen. `Detaljtjeneste` styrer bare detaljpanelene og er uavhengig av området. Faste seksjoner har sitt eget scope og endres ikke av valgene.
 
 ## Tilstandsord
 
@@ -33,7 +33,7 @@ Kontrollrommet lager ikke én samlet grønn status. Den tidligere `sykepengedage
 
 ### Runtime
 
-- Scope velges som hele flåten, brukerreise, pipeline eller livssyklus.
+- Scope velges som hele flåten eller ett av ni kuraterte operative områder.
 - Runtimeinventaret per 28. august 2026 gir 26 forventede GCP-appkomponenter i den generiske flåten.
 - De tre `syfooppfolgingsplanservice`-komponentene i FSS er ikke generiske flåterader. Fram til sunset 31. august følges de bare med eksisterende, tidsavgrensede regler i Alert-registeret; etter fristen skal shutdown verifiseres i [#208](https://github.com/navikt/team-esyfo/issues/208). Dette hindrer at en GCP-query feilaktig viser dem som `MANGLER`.
 - RED bruker `traces_spanmetrics_calls_total` og `traces_spanmetrics_latency_bucket`, avgrenset til `service_namespace=team-esyfo`, `k8s_cluster_name=prod` og `span_kind=SPAN_KIND_SERVER` for de 24 profilene med HTTP/SERVER-kontrakt.
@@ -118,7 +118,7 @@ i dokumentasjonsbygget i CI.
 
 Før publisering skal artefakten importeres med UID `team-esyfo-control-room-v1` i Team eSyfo-mappen `K-1b-N_4k`. Velg Team Esyfo eksplisitt også ved overwrite. Verifiser minst:
 
-- hele flåten og ett reise-/pipelinescope,
+- hele flåten og ett kuratert operativt område,
 - en valgt backend, frontend og worker,
 - påvist runtimefeil uten OTel-feil,
 - nulltrafikk, `STALE`, `MANGLER` og datasourcefeil,
