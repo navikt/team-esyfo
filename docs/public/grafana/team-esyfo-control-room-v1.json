@@ -63,7 +63,7 @@
                 "overrides": []
               },
               "options": {
-                "content": "Velg tjeneste for APM, logger og runbook. Ingen samlet brukerimpact-status ennå; `UKJENT` og `MANGLER` er aldri grønt. [Begreper og scope](https://navikt.github.io/team-esyfo/utvikling/observability/kontrollrom).",
+                "content": "Velg operativt område for toppkort og flåtematrise, og detaljtjeneste for APM, logger og runbook. Ingen samlet brukerimpact-status ennå; `UKJENT` og `MANGLER` er aldri grønt. [Begreper og scope](https://navikt.github.io/team-esyfo/utvikling/observability/kontrollrom).",
                 "mode": "markdown"
               }
             },
@@ -3923,17 +3923,17 @@
         "spec": {
           "allowCustomValue": false,
           "current": {
-            "text": "Hele operative GCP-flåten (26)",
+            "text": "Alle operative GCP-tjenester (26)",
             "value": "^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$"
           },
-          "description": "Inventardrevet flåte-, reise-, pipeline- eller livssyklusscope. Påvirker oversikt og flåtematrise.",
+          "description": "Filtrerer bare toppkort og flåtematrisen. Faste seksjoner og detaljpaneler endres ikke.",
           "hide": "dontHide",
           "includeAll": false,
-          "label": "Omfang",
+          "label": "Operativt område",
           "multi": false,
           "name": "scope",
           "options": [],
-          "query": "Hele operative GCP-flåten (26) : ^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$,Reise · Aktivitetskrav : ^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend)$,Reise · Kartleggingsspørsmål : ^(bro-frontend|meroppfolging-backend|meroppfolging-microfrontend)$,Reise · Arbeidsgivers oppfølging : ^(dinesykmeldte|dinesykmeldte-backend)$,Reise · Nærmesteleder : ^(dinesykmeldte-backend|esyfo-narmesteleder|narmesteleder-frontend)$,Reise · Møtebehov : ^(bro-frontend|syfomotebehov)$,Reise · Dialogmøte : ^(dialogmote-frontend|dialogmote-microfrontend|syfomotebehov)$,Reise · Oppfølgingsplan : ^(lps-oppfolgingsplan-mottak|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend)$,Reise · Sen oppfølging : ^(meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|sykepengedager-informasjon)$,Reise · Brukernotifikasjoner : ^(esyfovarsel|syfo-budstikka)$,Reise · Brukertilgang : ^(syfobrukertilgang)$,Reise · Dokumentlevering : ^(syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfooppdfgen)$,Reise · Operasjonell innsikt : ^(flaggskipet|lumi-api|lumi-dashboard)$,Pipeline · Varsling : ^(aktivitetskrav-backend|esyfovarsel|meroppfolging-backend|syfo-budstikka|syfo-oppfolgingsplan-backend)$,Pipeline · Kartleggingsspørsmål : ^(meroppfolging-backend)$,Pipeline · Nærmesteleder : ^(dinesykmeldte-backend|esyfo-narmesteleder)$,Pipeline · Oppfølgingsplan fra LPS : ^(lps-oppfolgingsplan-mottak|syfo-dokumentporten|syfo-oppfolgingsplan-backend)$,Pipeline · Sykepengedager : ^(sykepengedager-informasjon)$,Pipeline · Sen oppfølging : ^((meroppfolging-backend))$,Migrering (1) : ^(esyfovarsel)$,Utfasing (1) : ^((syfobrukertilgang))$",
+          "query": "Alle operative GCP-tjenester (26) : ^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$,Aktivitetskrav : ^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend)$,Kartleggingsspørsmål : ^(bro-frontend|meroppfolging-backend|meroppfolging-microfrontend)$,Dine sykmeldte : ^(dinesykmeldte|dinesykmeldte-backend)$,Nærmeste leder : ^(dinesykmeldte-backend|esyfo-narmesteleder|narmesteleder-frontend)$,Møtebehov og dialogmøte : ^(bro-frontend|dialogmote-frontend|dialogmote-microfrontend|syfobrukertilgang|syfomotebehov)$,Oppfølgingsplan og dokumenter : ^(lps-oppfolgingsplan-mottak|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfooppdfgen)$,Mer oppfølging : ^(meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|sykepengedager-informasjon)$,Varslingsmotorer : ^(esyfovarsel|syfo-budstikka)$,Interne driftsverktøy : ^(flaggskipet|lumi-api|lumi-dashboard)$",
           "skipUrlSync": false,
           "valuesFormat": "csv"
         }
@@ -3943,17 +3943,17 @@
         "spec": {
           "allowCustomValue": false,
           "current": {
-            "text": "meroppfolging-backend · Høy · Aktiv",
+            "text": "meroppfolging-backend",
             "value": "meroppfolging-backend"
           },
-          "description": "Én runtime-identitet for detaljpanelene. Påvirker ikke flåtematrisen.",
+          "description": "Velger én tjeneste for detaljpaneler og lenker, uavhengig av operativt område.",
           "hide": "dontHide",
           "includeAll": false,
-          "label": "Tjeneste",
+          "label": "Detaljtjeneste",
           "multi": false,
           "name": "service",
           "options": [],
-          "query": "aktivitetskrav-backend · Høy · Aktiv : aktivitetskrav-backend,aktivitetskrav-frontend · Høy · Aktiv : aktivitetskrav-frontend,aktivitetskrav-microfrontend · Standard · Aktiv : aktivitetskrav-microfrontend,bro-frontend · Høy · Aktiv : bro-frontend,dialogmote-frontend · Høy · Aktiv : dialogmote-frontend,dialogmote-microfrontend · Standard · Aktiv : dialogmote-microfrontend,dinesykmeldte · Kritisk · Aktiv : dinesykmeldte,dinesykmeldte-backend · Kritisk · Aktiv : dinesykmeldte-backend,esyfo-narmesteleder · Høy · Aktiv : esyfo-narmesteleder,esyfovarsel · Høy · Migrerer : esyfovarsel,flaggskipet · Støtte · Aktiv : flaggskipet,lps-oppfolgingsplan-mottak · Høy · Aktiv : lps-oppfolgingsplan-mottak,lumi-api · Støtte · Aktiv : lumi-api,lumi-dashboard · Støtte · Aktiv : lumi-dashboard,meroppfolging-backend · Høy · Aktiv : meroppfolging-backend,meroppfolging-frontend · Høy · Aktiv : meroppfolging-frontend,meroppfolging-microfrontend · Standard · Aktiv : meroppfolging-microfrontend,narmesteleder-frontend · Høy · Aktiv : narmesteleder-frontend,syfo-budstikka · Høy · Aktiv : syfo-budstikka,syfo-dokumentporten · Høy · Aktiv : syfo-dokumentporten,syfo-oppfolgingsplan-backend · Kritisk · Aktiv : syfo-oppfolgingsplan-backend,syfo-oppfolgingsplan-frontend · Kritisk · Aktiv : syfo-oppfolgingsplan-frontend,syfobrukertilgang · Kritisk · Utfasing : syfobrukertilgang,syfomotebehov · Høy · Aktiv : syfomotebehov,syfooppdfgen · Høy · Aktiv : syfooppdfgen,sykepengedager-informasjon · Høy · Aktiv : sykepengedager-informasjon",
+          "query": "aktivitetskrav-backend : aktivitetskrav-backend,aktivitetskrav-frontend : aktivitetskrav-frontend,aktivitetskrav-microfrontend : aktivitetskrav-microfrontend,bro-frontend : bro-frontend,dialogmote-frontend : dialogmote-frontend,dialogmote-microfrontend : dialogmote-microfrontend,dinesykmeldte : dinesykmeldte,dinesykmeldte-backend : dinesykmeldte-backend,esyfo-narmesteleder : esyfo-narmesteleder,esyfovarsel (migrerer) : esyfovarsel,flaggskipet : flaggskipet,lps-oppfolgingsplan-mottak : lps-oppfolgingsplan-mottak,lumi-api : lumi-api,lumi-dashboard : lumi-dashboard,meroppfolging-backend : meroppfolging-backend,meroppfolging-frontend : meroppfolging-frontend,meroppfolging-microfrontend : meroppfolging-microfrontend,narmesteleder-frontend : narmesteleder-frontend,syfo-budstikka : syfo-budstikka,syfo-dokumentporten : syfo-dokumentporten,syfo-oppfolgingsplan-backend : syfo-oppfolgingsplan-backend,syfo-oppfolgingsplan-frontend : syfo-oppfolgingsplan-frontend,syfobrukertilgang (utfasing) : syfobrukertilgang,syfomotebehov : syfomotebehov,syfooppdfgen : syfooppdfgen,sykepengedager-informasjon : sykepengedager-informasjon",
           "skipUrlSync": false,
           "valuesFormat": "csv"
         }

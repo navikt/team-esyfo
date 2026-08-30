@@ -190,22 +190,72 @@ describe("kontrollrom-dashboard", () => {
 		}
 	});
 
-	test("tilbyr inventardrevne scope for flåte, reiser, pipelines og livssyklus", () => {
+	test("tilbyr et kort, kuratert sett operative områder", () => {
 		const labels = controlRoomScopeOptions.map(({ text }) => text);
-		assert.ok(
-			labels.some((label) => label.startsWith("Hele operative GCP-flåten")),
+		assert.deepEqual(labels, [
+			"Alle operative GCP-tjenester (26)",
+			"Aktivitetskrav",
+			"Kartleggingsspørsmål",
+			"Dine sykmeldte",
+			"Nærmeste leder",
+			"Møtebehov og dialogmøte",
+			"Oppfølgingsplan og dokumenter",
+			"Mer oppfølging",
+			"Varslingsmotorer",
+			"Interne driftsverktøy",
+		]);
+
+		const servicesIn = (label: string) => {
+			const option = controlRoomScopeOptions.find(({ text }) => text === label);
+			assert.ok(option);
+			const matcher = new RegExp(option.value);
+			return controlRoomApplications
+				.map(({ runtime }) => runtime.name)
+				.filter((service) => matcher.test(service))
+				.sort();
+		};
+		assert.deepEqual(servicesIn("Varslingsmotorer"), [
+			"esyfovarsel",
+			"syfo-budstikka",
+		]);
+		assert.deepEqual(servicesIn("Interne driftsverktøy"), [
+			"flaggskipet",
+			"lumi-api",
+			"lumi-dashboard",
+		]);
+		assert.deepEqual(servicesIn("Møtebehov og dialogmøte"), [
+			"bro-frontend",
+			"dialogmote-frontend",
+			"dialogmote-microfrontend",
+			"syfobrukertilgang",
+			"syfomotebehov",
+		]);
+		for (const label of labels.slice(1)) {
+			assert.ok(servicesIn(label).length > 0, `${label} kan ikke være tomt`);
+		}
+		const scopedServices = new Set(labels.slice(1).flatMap(servicesIn));
+		assert.deepEqual(
+			controlRoomApplications
+				.map(({ runtime }) => runtime.name)
+				.filter((service) => !scopedServices.has(service)),
+			[],
 		);
-		assert.ok(labels.includes("Reise · Sen oppfølging"));
-		assert.ok(labels.includes("Reise · Dialogmøte"));
-		assert.ok(labels.includes("Pipeline · Varsling"));
-		assert.ok(labels.includes("Pipeline · Sykepengedager"));
-		assert.ok(labels.includes("Migrering (1)"));
-		assert.ok(labels.includes("Utfasing (1)"));
-		assert.ok(!labels.some((label) => label.startsWith("Sunset-guardrail")));
+	});
+
+	test("holder tjenestelisten kort og viser bare relevant livssyklus", () => {
+		const options = new Map(
+			controlRoomApplicationOptions.map(({ text, value }) => [value, text]),
+		);
 		assert.equal(
-			new Set(controlRoomScopeOptions.map(({ text }) => text)).size,
-			controlRoomScopeOptions.length,
+			options.get("aktivitetskrav-backend"),
+			"aktivitetskrav-backend",
 		);
+		assert.equal(options.get("esyfovarsel"), "esyfovarsel (migrerer)");
+		assert.equal(
+			options.get("syfobrukertilgang"),
+			"syfobrukertilgang (utfasing)",
+		);
+		assert.ok([...options.values()].every((label) => !label.includes(" · ")));
 	});
 
 	test("skiller flåtescope fra single-select detaljtjeneste", () => {
@@ -219,11 +269,29 @@ describe("kontrollrom-dashboard", () => {
 			assert.ok(query.includes(scopeVariable));
 		}
 		const variables = buildControlRoomDashboard().spec.variables as Array<{
-			spec: { name: string; multi: boolean; includeAll: boolean };
+			spec: {
+				name: string;
+				label: string;
+				description: string;
+				multi: boolean;
+				includeAll: boolean;
+			};
 		}>;
 		assert.deepEqual(
 			variables.map(({ spec }) => spec.name),
 			["scope", "service"],
+		);
+		assert.deepEqual(
+			variables.map(({ spec }) => spec.label),
+			["Operativt område", "Detaljtjeneste"],
+		);
+		assert.match(
+			variables[0].spec.description,
+			/bare toppkort og flåtematrisen/,
+		);
+		assert.match(
+			variables[1].spec.description,
+			/uavhengig av operativt område/,
 		);
 		assert.ok(variables.every(({ spec }) => !spec.multi && !spec.includeAll));
 	});
