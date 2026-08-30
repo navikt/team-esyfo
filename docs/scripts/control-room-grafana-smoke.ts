@@ -329,10 +329,10 @@ try {
 	);
 
 	const expected = semanticContract(artifact);
-	assert.equal(expected.elementNames.length, 27);
-	assert.equal(expected.layoutItems.length, 27);
+	assert.equal(expected.elementNames.length, 29);
+	assert.equal(expected.layoutItems.length, 29);
 	assert.deepEqual(expected.layoutElementNames, expected.elementNames);
-	assert.equal(new Set(expected.layoutElementNames).size, 27);
+	assert.equal(new Set(expected.layoutElementNames).size, 29);
 	assert.equal(expected.variables.length, 2);
 	assert.deepEqual(
 		expected.variables.map(({ kind, name }) => ({ kind, name })),
@@ -350,7 +350,7 @@ try {
 		"Klare replikaer",
 	]);
 	assert.deepEqual(expected.fleetTransformationGroups, ["merge", "organize"]);
-	assert.equal(expected.queries.length, 27);
+	assert.equal(expected.queries.length, 29);
 	assert.equal(expected.transformations.length, 2);
 	assert.deepEqual(expected.timeSettings, {
 		autoRefresh: "2m",

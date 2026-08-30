@@ -30,6 +30,8 @@ import {
 	httpErrorRatioQuery,
 	JOB_FAILED_METRIC,
 	jobFailureQuery,
+	KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC,
+	KAFKA_CONSUMER_LAST_POLL_METRIC,
 	lowestReadyRatioQuery,
 	missingTelemetryQuery,
 	motebehovAvailableRatioQuery,
@@ -51,6 +53,8 @@ import {
 	SPAN_LATENCY_METRIC,
 	selectedReadyRatioQuery,
 	serializeControlRoomDashboard,
+	sykmeldingConsumerCommittedLagQuery,
+	sykmeldingConsumerPollAgeByPodQuery,
 	telemetryAgeByServiceQuery,
 	telemetryCoverageQuery,
 	telemetryStateByServiceQuery,
@@ -470,9 +474,45 @@ describe("kontrollrom-dashboard", () => {
 		assert.match(jobFailureQuery, /job_name=~"esyfovarsel-job\.\*"/);
 		assert.match(jobFailureQuery, /k8s_cluster_name="prod"/);
 		assert.ok(!jobFailureQuery.includes("vector(0)"));
+		assert.ok(
+			sykmeldingConsumerPollAgeByPodQuery.includes(
+				KAFKA_CONSUMER_LAST_POLL_METRIC,
+			),
+		);
+		assert.match(sykmeldingConsumerPollAgeByPodQuery, /max by \(pod\)/);
+		assert.match(
+			sykmeldingConsumerPollAgeByPodQuery,
+			/app="syfo-oppfolgingsplan-backend"/,
+		);
+		assert.match(
+			sykmeldingConsumerPollAgeByPodQuery,
+			/k8s_cluster_name="prod"/,
+		);
+		assert.ok(!sykmeldingConsumerPollAgeByPodQuery.includes(">= 0"));
+		assert.ok(!sykmeldingConsumerPollAgeByPodQuery.includes("client_id"));
+		assert.ok(!sykmeldingConsumerPollAgeByPodQuery.includes("vector(0)"));
+		assert.ok(
+			sykmeldingConsumerCommittedLagQuery.includes(
+				KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC,
+			),
+		);
+		assert.match(
+			sykmeldingConsumerCommittedLagQuery,
+			/group="syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2"/,
+		);
+		assert.match(
+			sykmeldingConsumerCommittedLagQuery,
+			/topic="teamsykmelding\.syfo-sendt-sykmelding"/,
+		);
+		assert.match(
+			sykmeldingConsumerCommittedLagQuery,
+			/k8s_cluster_name="prod"/,
+		);
 		const serialized = serializeControlRoomDashboard();
 		for (const text of [
 			"30 · Pipelines",
+			"Sykmelding-consumer · poll-alder per pod",
+			"Sykmelding-consumer · committed lag",
 			"syfo-budstikka er målprosessor",
 			"esyfovarsel er migrerende legacy-prosessor",
 			"Expected run",
@@ -508,6 +548,12 @@ describe("kontrollrom-dashboard", () => {
 		assert.ok(!serialized.includes("Foreslått frist"));
 		assert.ok(!serialized.includes("Interne prosessorer"));
 		assert.ok(!jobFailureQuery.includes("airflow"));
+		assert.ok(
+			serialized.includes("ikke null lag eller ende-til-ende-leveranse"),
+		);
+		assert.ok(serialized.includes("Positiv lag kan være kortvarig"));
+		assert.ok(serialized.includes("IKKE POLLET"));
+		assert.ok(serialized.includes('"-1"'));
 	});
 
 	test("gir alle tre pagerkandidater relevant panel, runbook og blocker", () => {
@@ -664,7 +710,7 @@ describe("kontrollrom-dashboard", () => {
 		const queries = collectObjects(buildControlRoomDashboard()).filter(
 			(query) => query.kind === "DataQuery",
 		);
-		assert.equal(queries.length, 27);
+		assert.equal(queries.length, 29);
 		let browserQueries = 0;
 		let builtInQueries = 0;
 		for (const query of queries) {
@@ -893,7 +939,7 @@ describe("kontrollrom-dashboard", () => {
 			{ spec: { id: number } }
 		>;
 		const ids = Object.values(elements).map(({ spec }) => spec.id);
-		assert.equal(ids.length, 27);
+		assert.equal(ids.length, 29);
 		assert.equal(new Set(ids).size, ids.length);
 		const layout = dashboard.spec.layout as {
 			spec: { items: Array<{ spec: { element: { name: string } } }> };
