@@ -2389,7 +2389,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum by (service_name) (count_over_time({kind=\"exception\", service_name=~\"^(aktivitetskrav-frontend|dialogmote-frontend|dinesykmeldte|meroppfolging-frontend|syfo-oppfolgingsplan-frontend)$\"} [$__rate_interval]))",
+                        "expr": "sum by (service_name) (count_over_time({kind=\"exception\", service_name=~\"^(aktivitetskrav-frontend|dialogmote-frontend|dinesykmeldte|meroppfolging-frontend|syfo-oppfolgingsplan-frontend)$\"} [$__auto]))",
                         "queryType": "range"
                       },
                       "version": "v0"

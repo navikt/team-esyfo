@@ -199,7 +199,7 @@ const configuredBrowserServices = [
 ];
 const browserServiceRegex = `^(${configuredBrowserServices.join("|")})$`;
 const browserSelector = `{kind="exception", service_name=~"${browserServiceRegex}"}`;
-export const browserExceptionsByServiceQuery = `sum by (service_name) (count_over_time(${browserSelector} [$__rate_interval]))`;
+export const browserExceptionsByServiceQuery = `sum by (service_name) (count_over_time(${browserSelector} [$__auto]))`;
 
 export const jobFailureQuery = `max(max_over_time(${JOB_FAILED_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", job_name=~"esyfovarsel-job.*"}[$__range]))`;
 export const budstikkaLagQuery = `max by (topic) (${BUDSTIKKA_LAG_METRIC}{app="syfo-budstikka", namespace="team-esyfo", k8s_cluster_name="prod", topic="team-esyfo.budstikka.v1"})`;
