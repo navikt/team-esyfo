@@ -53,7 +53,7 @@ Telemetrykolonnen er inventarforankret:
 
 ### Browser
 
-Kontrollrommet viser en kompakt browserstatus og en diagnostisk exception-graf. Det detaljerte [runtimeinventaret](./runtimeinventar) viser de 11 browserflatene, kildekodekonfigurasjon, browseridentitet, side-ID, privacygap og høy-impact issue. Bare Faro `kind=exception` er live-verifisert i denne leveransen. Miljødimensjonen er ikke verifisert, så exception-grafen har ukjent miljøscope og må ikke omtales som produksjonsstatus. Page loads, sessions og CWV p75 står eksplisitt ukjent til [#206](https://github.com/navikt/team-esyfo/issues/206) har bevist identitet, miljø, numerisk samplingrate og queryschema.
+Kontrollrommet viser en kompakt browserstatus og en diagnostisk exception-graf. Det detaljerte [runtimeinventaret](./runtimeinventar) viser de 11 browserflatene, kildekodekonfigurasjon, browseridentitet, side-ID, privacygap og høy-impact issue. Bare Faro `kind=exception` er live-verifisert i denne leveransen. Miljødimensjonen er ikke verifisert, så exception-grafen har ukjent miljøscope og må ikke omtales som produksjonsstatus. [#206](https://github.com/navikt/team-esyfo/issues/206) definerer browserkontrakten; page loads, sessions og CWV p75 står eksplisitt ukjent til den enkelte flaten har bevist identitet, miljø, numerisk samplingrate og queryschema i sin rollout.
 
 En sampled exception, page load eller session skal aldri omtales som en unik bruker. Verdier med ulik samplingrate skal ikke summeres.
 
@@ -77,7 +77,7 @@ Alle tre står `BLOCKED`. Dashboard og runbook aktiverer ikke pager; aktivering 
 
 - SLO-burn er `IKKE DEFINERT`; alert-policy er ikke en SLO-kontrakt.
 - Siste deploy er `UKJENT`; pod-alder og `kube_deployment_created` brukes ikke som deploybevis.
-- Browser page loads/sessions/CWV venter på #206.
+- Browser page loads/sessions/CWV venter på live-evidens fra utrullingen per flate.
 - Topic-/pipelineutfall venter på #212 og deretter konkrete adaptere.
 - Legacy-jobben mangler siste start, siste suksess og forventet-run-evaluering.
 

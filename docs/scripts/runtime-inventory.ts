@@ -42,7 +42,7 @@ const exportInventory = async () => {
 		failOnOverdueSunset: true,
 		failOnOverdueMigration: true,
 	});
-	const output = resolve(option("--output") ?? ".vitepress/dist/runtime-inventory.v2.json");
+	const output = resolve(option("--output") ?? ".vitepress/dist/runtime-inventory.v3.json");
 	await mkdir(dirname(output), { recursive: true });
 	await writeFile(output, `${JSON.stringify(runtimeInventory, null, 2)}\n`, "utf8");
 	console.log(`Eksporterte runtimeinventar til ${output}`);

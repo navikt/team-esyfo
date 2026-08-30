@@ -324,7 +324,7 @@ const coverageMarkdown = () => {
 	return `### Dekning og tolkning
 
 - **Scope:** ${dashboardApplications.length} nåværende runtimes fra det godkjente inventaret. Overgang: ${lifecycleNotes}.
-- **Browser:** ${configuredBrowserServices.length}/${dashboardBrowserSurfaces.length} flater har konfigurert telemetry. Mangler: ${browserGaps}. Følges i [#206](https://github.com/navikt/team-esyfo/issues/206).
+- **Browser:** ${configuredBrowserServices.length}/${dashboardBrowserSurfaces.length} flater har konfigurert telemetry. Mangler: ${browserGaps}. Se [browserkontrakten](https://navikt.github.io/team-esyfo/utvikling/observability/browserkontrakt).
 - **APM:** ${dashboardApplications.length - unverifiedApmServices.length}/${dashboardApplications.length} tjenester er sett i prod-katalogen. Uverifisert: ${apmGaps}.
 - **Tolkning:** 0 betyr at count-spørringen lyktes uten feiltreff. Tom tabell betyr ingen kvalifiserende treff, ikke at telemetry er komplett. Datakilde- og syntaksfeil skal stå som feil/ukjent.`;
 };

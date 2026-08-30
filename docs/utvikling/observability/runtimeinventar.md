@@ -1,6 +1,6 @@
 # Runtimeinventar og observability-dekning
 
-Denne siden er Team eSyfos kanoniske, maskinlesbare ønskede produksjonsscope. Den er avgrenset fra [repooversikten](/utvikling/repositories): et repo kan være eid uten å ha en aktiv runtime, mens én runtime kan ha flere browserflater.
+Denne siden er Team eSyfos kanoniske, maskinlesbare ønskede produksjonsscope. Den er avgrenset fra [repooversikten](/utvikling/repositories): et repo kan være eid uten å ha en aktiv runtime, mens én runtime kan ha flere browserflater. Browserradene vurderes mot den korte [browserkontrakten](./browserkontrakt).
 
 <RuntimeInventory />
 
@@ -28,11 +28,13 @@ pnpm inventory:coverage -- --evidence /tmp/esyfo-coverage-evidence.json
 
 `inventory:observe` bruker dine eksisterende `kubectl`-rettigheter mot `prod-gcp` og `prod-fss`. Vanlig dokumentasjonsbygg henter aldri live produksjonsdata; CI er deterministisk og bruker samme rene validator og driftmotor som den autentiserte adapteren.
 
-`inventory:coverage` tar imot den tidsstemplede `coverage evidence v1`-kontrakten og rapporterer `complete`, `partial`, `missing` eller `unknown` per app, jobb, topic og browserflate. Browserens `release-identity` krever matchende immutable kilde- og deploy-SHA; en flytende `main`-referanse er ikke bevis. Datakildeadapterne og lenkene leveres av [#203](https://github.com/navikt/team-esyfo/issues/203), [#206](https://github.com/navikt/team-esyfo/issues/206), [#211](https://github.com/navikt/team-esyfo/issues/211) og [#212](https://github.com/navikt/team-esyfo/issues/212). Inntil de finnes, viser siden gapene — ikke en konstruert grønn status.
+`inventory:coverage` tar imot den tidsstemplede `coverage evidence v1`-kontrakten og rapporterer `complete`, `partial`, `missing` eller `unknown` per app, jobb, topic og browserflate. Browserens `release-identity` krever matchende immutable kilde- og deploy-SHA; en flytende `main`-referanse er ikke bevis. Kontraktene kommer fra [#203](https://github.com/navikt/team-esyfo/issues/203), [#206](https://github.com/navikt/team-esyfo/issues/206), [#211](https://github.com/navikt/team-esyfo/issues/211) og [#212](https://github.com/navikt/team-esyfo/issues/212); live-evidens følger den enkelte utrullingen. Inntil den finnes, viser siden gapene — ikke en konstruert grønn status.
 
 En Kafka-pipeline får alltid det maskinelle gapet `pipeline-contract` så lenge kontrakten står som `proposed`. Kildegjennomgangen fant ingen godkjente behandlingstidsgrenser for de ti topicene, så fristene står `IKKE DEFINERT` fremfor å vise tidligere, udokumenterte tallforslag. Nulltrafikkpolicy og consumer-lag brukes heller ikke til å evaluere produksjonshelse før kontrakten er godkjent i #212. Dermed kan selv perfekte tekniske signaler ikke gjøre en uavklart pipeline grønn.
 
-Bygget eksporterer også `runtime-inventory.v2.json`. Versjon 2 gjør uavklart topic-frist, nulltrafikk og lagpolicy eksplisitt; versjon 1 krevde tall og boolske verdier og kunne derfor ikke representere ukjent kontrakt uten å dikte. Senere dashboardgenerering og kontrollrom kan bruke samme kontrakt uten å kopiere en ny app-liste.
+Tilsvarende får en browserflate `browser-contract` som maskinelt gap frem til kildekontrakten er implementert. Ferske live-signaler kan derfor ikke skjule manglende privacy-, rute- eller feilkonfigurasjon.
+
+Bygget eksporterer også `runtime-inventory.v3.json`. Versjon 3 legger til browserkontrakten og nye, eksplisitte browserstatuser; versjon 2 innførte de uavklarte topic-feltene. Senere dashboardgenerering og kontrollrom kan bruke samme kontrakt uten å kopiere en ny app-liste.
 
 ## Godkjenningspunkt
 

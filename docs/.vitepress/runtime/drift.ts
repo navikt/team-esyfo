@@ -381,11 +381,10 @@ const effectiveEvidenceState = (
 ): EvidenceState => {
 	if (evidence.state !== "fresh") return evidence.state;
 	if (evidence.signal === "release-identity") {
-		const commitSha = /^[0-9a-f]{40}$/i;
 		if (
 			!evidence.revision ||
-			!commitSha.test(evidence.revision.sourceCommitSha) ||
-			!commitSha.test(evidence.revision.deployedCommitSha) ||
+			!validCommitSha(evidence.revision.sourceCommitSha) ||
+			!validCommitSha(evidence.revision.deployedCommitSha) ||
 			evidence.revision.sourceCommitSha !== evidence.revision.deployedCommitSha
 		) {
 			return "error";
@@ -471,14 +470,59 @@ export interface ResourceCoverageReport extends CoverageEvaluation {
 	resourceId: SignalEvidence["resourceId"];
 	resourceKind: "application" | "job" | "topic" | "browser-surface";
 	profileId: CoverageProfile["id"];
-	contractGaps: Array<"pipeline-contract">;
+	contractGaps: Array<BrowserContractGap | "pipeline-contract">;
 }
+
+type BrowserContractGap = "browser-contract" | "browser-production-canary";
+
+const validCommitSha = (value: string) => /^[0-9a-f]{40}$/i.test(value);
+
+const passedProductionCanarySha = (
+	surface: RuntimeInventory["browserSurfaces"][number],
+) => {
+	const implementation = surface.currentImplementation;
+	const check = implementation.lastSyntheticCheck;
+	const deployedRevision = implementation.deployedRevision;
+	if (
+		!check ||
+		check.environment !== "prod" ||
+		check.result !== "passed" ||
+		implementation.privacy.canaryVerification !== "verified" ||
+		deployedRevision.status !== "verified" ||
+		check.deployedCommitSha !== deployedRevision.commitSha
+	) {
+		return undefined;
+	}
+	return check.deployedCommitSha;
+};
+
+const browserContractGaps = (
+	surface: RuntimeInventory["browserSurfaces"][number],
+): BrowserContractGap[] => {
+	if (surface.privacyContract.status === "gap") return ["browser-contract"];
+	return passedProductionCanarySha(surface)
+		? []
+		: ["browser-production-canary"];
+};
 
 const withTopicContract = (
 	evaluation: CoverageEvaluation,
 	status: RuntimeInventory["topics"][number]["serviceLevel"]["status"],
 ): CoverageEvaluation => {
-	if (status === "approved" || evaluation.state !== "complete") return evaluation;
+	if (status === "approved" || evaluation.state !== "complete")
+		return evaluation;
+	return {
+		...evaluation,
+		state: "partial",
+	};
+};
+
+const withBrowserContract = (
+	evaluation: CoverageEvaluation,
+	contractGaps: BrowserContractGap[],
+): CoverageEvaluation => {
+	if (contractGaps.length === 0 || evaluation.state !== "complete")
+		return evaluation;
 	return {
 		...evaluation,
 		state: "partial",
@@ -555,8 +599,7 @@ export const evaluateCoverageSnapshot = (
 		if (!baseProfile)
 			throw new Error(`Ukjent dekningsprofil ${resource.coverageProfile}.`);
 		const approvedTopicDeadline =
-			resource.kind === "topic" &&
-			resource.serviceLevel.status === "approved"
+			resource.kind === "topic" && resource.serviceLevel.status === "approved"
 				? resource.serviceLevel.processingDeadlineMinutes
 				: undefined;
 		const requiredSignals = [...baseProfile.requiredSignals];
@@ -578,6 +621,11 @@ export const evaluateCoverageSnapshot = (
 						? resource.schedule.lateAfterMinutes
 						: baseProfile.freshnessMinutes,
 		};
+		const productionCanarySha =
+			resource.kind === "browser-surface" &&
+			resource.privacyContract.status === "implemented"
+				? passedProductionCanarySha(resource)
+				: undefined;
 		const resourceEvidence = snapshot.evidence.map((item) => {
 			if (item.resourceId !== resource.id || item.state !== "fresh")
 				return item;
@@ -611,6 +659,16 @@ export const evaluateCoverageSnapshot = (
 					return { ...item, state: "error" as const };
 				}
 			}
+			if (
+				resource.kind === "browser-surface" &&
+				item.signal === "privacy-canary" &&
+				productionCanarySha &&
+				(!item.revision ||
+					!validCommitSha(item.revision.deployedCommitSha) ||
+					item.revision.deployedCommitSha !== productionCanarySha)
+			) {
+				return { ...item, state: "error" as const };
+			}
 			return item;
 		});
 		const evaluation = evaluateCoverage(
@@ -619,18 +677,22 @@ export const evaluateCoverageSnapshot = (
 			resourceEvidence,
 			now,
 		);
+		const contractGaps =
+			resource.kind === "topic" && resource.serviceLevel.status === "proposed"
+				? (["pipeline-contract"] as const)
+				: resource.kind === "browser-surface"
+					? browserContractGaps(resource)
+					: [];
 		return {
 			resourceId: resource.id,
 			resourceKind: resource.kind,
 			profileId: baseProfile.id,
-			contractGaps:
-				resource.kind === "topic" &&
-				resource.serviceLevel.status === "proposed"
-					? ["pipeline-contract"]
-					: [],
+			contractGaps: [...contractGaps],
 			...(resource.kind === "topic"
 				? withTopicContract(evaluation, resource.serviceLevel.status)
-				: evaluation),
+				: resource.kind === "browser-surface"
+					? withBrowserContract(evaluation, browserContractGaps(resource))
+					: evaluation),
 		};
 	});
 	const summary: CoverageReport["summary"] = {

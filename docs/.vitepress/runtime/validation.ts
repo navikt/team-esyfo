@@ -410,6 +410,137 @@ export const validateInventory = (
 				errors.push(`${surface.id} har rå identifikator i en page-ID.`);
 			}
 		}
+		const implementation = surface.currentImplementation;
+		if (
+			implementation.samplingRate !== undefined &&
+			(!Number.isFinite(implementation.samplingRate) ||
+				implementation.samplingRate <= 0 ||
+				implementation.samplingRate > 1)
+		) {
+			errors.push(`${surface.id} har ugyldig eksplisitt samplingrate.`);
+		}
+		if (
+			(implementation.sampling === "explicit") !==
+			(implementation.samplingRate !== undefined)
+		) {
+			errors.push(
+				`${surface.id} har inkonsistent samplingstatus og samplingrate.`,
+			);
+		}
+		if (
+			implementation.state === "missing" &&
+			implementation.samplingRate !== undefined
+		) {
+			errors.push(`${surface.id} kan ikke ha samplingrate uten browser-SDK.`);
+		}
+		if (implementation.lastSyntheticCheck) {
+			const validSyntheticResult =
+				implementation.lastSyntheticCheck.result === "passed" ||
+				implementation.lastSyntheticCheck.result === "failed";
+			const validSyntheticEnvironment =
+				implementation.lastSyntheticCheck.environment === "dev" ||
+				implementation.lastSyntheticCheck.environment === "prod";
+			if (
+				!validIsoDateTime(implementation.lastSyntheticCheck.checkedAt) ||
+				!validCommitSha(implementation.lastSyntheticCheck.deployedCommitSha) ||
+				!implementation.lastSyntheticCheck.evidence.trim() ||
+				!validSyntheticResult ||
+				!validSyntheticEnvironment
+			) {
+				errors.push(`${surface.id} har ugyldig syntetisk kontrollevidens.`);
+			}
+			const expectedCanaryStatus =
+				implementation.lastSyntheticCheck.result === "passed"
+					? "verified"
+					: implementation.lastSyntheticCheck.result === "failed"
+						? "failed"
+						: undefined;
+			if (
+				expectedCanaryStatus &&
+				implementation.privacy.canaryVerification !== expectedCanaryStatus
+			) {
+				errors.push(
+					`${surface.id} har syntetisk kontroll med inkonsistent canary-status.`,
+				);
+			}
+			if (implementation.lastSyntheticCheck.environment === "prod") {
+				if (implementation.deployedRevision.status !== "verified") {
+					errors.push(
+						`${surface.id} har produksjonscanary uten verifisert produksjonsrevisjon.`,
+					);
+				} else if (
+					implementation.lastSyntheticCheck.deployedCommitSha !==
+					implementation.deployedRevision.commitSha
+				) {
+					errors.push(
+						`${surface.id} sin syntetiske kontroll matcher ikke deployrevisjonen.`,
+					);
+				}
+			}
+		} else if (implementation.privacy.canaryVerification !== "missing") {
+			errors.push(
+				`${surface.id} har canary-status uten siste syntetiske kontroll.`,
+			);
+		}
+		if (
+			implementation.state === "configured" &&
+			implementation.sdk === "nais-apm"
+		) {
+			if (!/^\d+\.\d+\.\d+$/.test(implementation.versionRange)) {
+				errors.push(`${surface.id} må pinne @nais/apm til eksakt versjon.`);
+			}
+			if (
+				implementation.sampling !== "explicit" ||
+				implementation.samplingRate === undefined
+			) {
+				errors.push(`${surface.id} mangler eksplisitt samplingrate.`);
+			}
+			if (
+				implementation.sourceRevision.status !== "verified" ||
+				implementation.releaseIdentity !== "release-id"
+			) {
+				errors.push(
+					`${surface.id} mangler verifisert kilde- eller releaseidentitet.`,
+				);
+			}
+			if (
+				(implementation.browserTracing !== "configured" &&
+					implementation.browserTracing !== "disabled") ||
+				implementation.endToEndTracing !== implementation.browserTracing
+			) {
+				errors.push(`${surface.id} mangler eksplisitt tracingvalg.`);
+			}
+			if (
+				implementation.privacy.routeNormalization !== "configured" ||
+				implementation.privacy.rawUrlSanitization !== "configured"
+			) {
+				errors.push(`${surface.id} mangler rute- eller URL-beskyttelse.`);
+			}
+			if (surface.pageIdentity.status !== "defined") {
+				errors.push(`${surface.id} mangler definert page-identitet.`);
+			}
+			if (
+				implementation.privacy.userContext !== "disabled" ||
+				implementation.privacy.sessionReplay !== "disabled" ||
+				implementation.privacy.screenshotOnError !== "disabled"
+			) {
+				errors.push(
+					`${surface.id} må ha user context, session replay og screenshots avslått.`,
+				);
+			}
+			if (implementation.errorBoundary !== "configured") {
+				errors.push(`${surface.id} mangler verifisert error boundary.`);
+			}
+		}
+		if (
+			surface.privacyContract.status === "implemented" &&
+			(implementation.state !== "configured" ||
+				implementation.sdk !== "nais-apm")
+		) {
+			errors.push(
+				`${surface.id} kan ikke ha implementert browserkontrakt uten @nais/apm.`,
+			);
+		}
 		if (options.asOf) {
 			const age = daysBetween(
 				surface.currentImplementation.assessedAt,
