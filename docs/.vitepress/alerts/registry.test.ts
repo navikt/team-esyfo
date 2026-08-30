@@ -11,19 +11,46 @@ import {
 const copyRegistry = () => structuredClone(alertRegistry) as AlertRegistry;
 
 describe("alert-register", () => {
-	test("avstemmer alle 39 PrometheusRule-instanser og to Grafana-regler", () => {
+	test("avstemmer alle 37 PrometheusRule-instanser og to Grafana-regler", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 
-		assert.equal(report.counts.rules, 31);
-		assert.equal(report.counts.prometheusRules, 29);
-		assert.equal(report.counts.prometheusInstances, 39);
+		assert.equal(report.counts.rules, 30);
+		assert.equal(report.counts.prometheusRules, 28);
+		assert.equal(report.counts.prometheusInstances, 37);
 		assert.equal(report.counts.grafanaRules, 2);
 		assert.equal(report.counts.grafanaInstances, 2);
+		assert.equal(alertRegistry.capturedAt, "2026-08-28T17:45:44Z");
+		assert.equal(alertRegistry.refreshedAt, "2026-08-29T11:53:41Z");
 		assert.deepEqual(report.counts.prometheusByEnvironment, {
-			"dev-gcp": 7,
-			"prod-gcp": 26,
+			"dev-gcp": 6,
+			"prod-gcp": 25,
 			"prod-fss": 6,
 		});
+	});
+
+	test("skiller observasjonssnapshot fra senere registeroppdatering", () => {
+		const registry = copyRegistry();
+		registry.refreshedAt = "2026-08-27T17:45:44Z";
+
+		assert.ok(
+			buildAlertRegistryReport(registry).errors.includes(
+				"refreshedAt kan ikke være før observasjonssnapshotet.",
+			),
+		);
+
+		const invalidSourceRegistry = copyRegistry();
+		const source = invalidSourceRegistry.sources.find(
+			(candidate) =>
+				candidate.kind === "repository" &&
+				candidate.evidenceKind === "default-branch-snapshot",
+		);
+		assert.ok(source?.kind === "repository");
+		source.capturedAt = "ikke-en-dato" as never;
+		assert.ok(
+			buildAlertRegistryReport(invalidSourceRegistry).errors.includes(
+				`${source.id} har ugyldig capturedAt.`,
+			),
+		);
 	});
 
 	test("bevarer NAIS Inactive som enabled og not-firing", () => {
@@ -36,7 +63,7 @@ describe("alert-register", () => {
 			prometheusRuleIds.has(ruleId),
 		);
 
-		assert.equal(observations.length, 39);
+		assert.equal(observations.length, 37);
 		assert.ok(
 			observations.every(
 				({ configuredState, evaluationState, evaluationHealth }) =>
@@ -50,6 +77,28 @@ describe("alert-register", () => {
 				({ configuredState }) => configuredState === "disabled",
 			).length,
 			0,
+		);
+	});
+
+	test("beholder Budstikka-warning og fjerner den deployede critical-regelen", () => {
+		const rulesById = new Map(
+			alertRegistry.rules.map((rule) => [rule.id, rule]),
+		);
+		const budstikkaSources = alertRegistry.sources.filter(
+			({ id }) =>
+				id === "source:budstikka-dev" || id === "source:budstikka-prod",
+		);
+
+		assert.ok(rulesById.has("rule:budstikka-consumer-lag-warning"));
+		assert.ok(!rulesById.has("rule:budstikka-consumer-lag-critical"));
+		assert.equal(budstikkaSources.length, 2);
+		assert.ok(
+			budstikkaSources.every(
+				(source) =>
+					source.kind === "repository" &&
+					source.commitSha === "422a150ca189a8be0c615c35ba9c350d60aab802" &&
+					source.capturedAt === "2026-08-29T11:53:41Z",
+			),
 		);
 	});
 
@@ -211,7 +260,7 @@ describe("alert-register", () => {
 		});
 	});
 
-	test("vedtar én policy og én produksjonsrespons for alle 31 regler", () => {
+	test("vedtar én policy og én produksjonsrespons for alle 30 regler", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 
 		assert.equal(alertRegistry.schemaVersion, 2);
@@ -219,13 +268,13 @@ describe("alert-register", () => {
 		assert.deepEqual(report.policy.decisionCounts, {
 			KEEP: 10,
 			TUNE: 3,
-			REPLACE: 5,
+			REPLACE: 4,
 			RETIRE: 11,
 			MIGRATE: 2,
 			EXTERNAL_ONLY: 0,
 		});
 		assert.deepEqual(report.policy.tierCounts, {
-			pager: 3,
+			pager: 2,
 			ticket: 21,
 			"dashboard-only": 7,
 		});
@@ -351,7 +400,7 @@ describe("alert-register", () => {
 	test("presenterer ingen pager-kandidat som klar før sikkerhetskravene er oppfylt", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 
-		assert.equal(report.policy.pagerCandidatesBlocked.length, 3);
+		assert.equal(report.policy.pagerCandidatesBlocked.length, 2);
 		assert.ok(
 			report.policy.pagerCandidatesBlocked.every(({ reasons }) =>
 				reasons.includes("avbrytende kanal er ikke etablert og verifisert"),
@@ -800,7 +849,7 @@ describe("alert-register", () => {
 		);
 
 		assert.equal(report.status, "unknown");
-		assert.equal(report.unknownEvaluationHealth.length, 41);
+		assert.equal(report.unknownEvaluationHealth.length, 39);
 		assert.match(report.reason ?? "", /evaluatorhelse/);
 	});
 
