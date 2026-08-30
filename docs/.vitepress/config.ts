@@ -112,6 +112,10 @@ export default withMermaid(
 									link: "/utvikling/observability/runtimeinventar",
 								},
 								{
+									text: "Kafka-kontrakter",
+									link: "/utvikling/observability/kafka-kontrakter",
+								},
+								{
 									text: "Browserkontrakt",
 									link: "/utvikling/observability/browserkontrakt",
 								},
