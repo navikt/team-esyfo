@@ -1500,8 +1500,9 @@
         }
       ],
       "runbook": {
-        "status": "missing",
-        "issue": "navikt/team-esyfo#211"
+        "status": "linked",
+        "href": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber#oppfolgingsplan-outbox",
+        "label": "Oppfølgingsplan: utgående varselkø"
       },
       "dashboard": {
         "status": "linked",
@@ -1582,8 +1583,9 @@
         }
       ],
       "runbook": {
-        "status": "missing",
-        "issue": "navikt/team-esyfo#211"
+        "status": "linked",
+        "href": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber#oppfolgingsplan-outbox",
+        "label": "Oppfølgingsplan: utgående varselkø"
       },
       "dashboard": {
         "status": "linked",
@@ -1664,8 +1666,9 @@
         }
       ],
       "runbook": {
-        "status": "missing",
-        "issue": "navikt/team-esyfo#211"
+        "status": "linked",
+        "href": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber#oppfolgingsplan-outbox",
+        "label": "Oppfølgingsplan: utgående varselkø"
       },
       "dashboard": {
         "status": "linked",

@@ -1,14 +1,15 @@
 # Runbook: syfomotebehov tilgjengelighet
 
-Dette er diagnostikk for pagerkandidaten i [syfomotebehov#753](https://github.com/navikt/syfomotebehov/issues/753). Den aktiverer ikke pager. Endelig rute krever dokumentert konsekvens, tuning, observasjonsperiode og second-person-verifikasjon i [#217](https://github.com/navikt/team-esyfo/issues/217).
+Dette er diagnostikk for kandidaten til avbrytende varsling (`pager`) i [syfomotebehov#753](https://github.com/navikt/syfomotebehov/issues/753). Den aktiverer ikke pager. [PR #756](https://github.com/navikt/syfomotebehov/pull/756) foreslår en tydeligere, urutet observasjonsregel (`shadow`) som avgrenser til prod og krever både null tilgjengelige replikaer og ønsket antall større enn null. Frem til den er merget, deployert og live-verifisert er alert-registerets eldre regel fortsatt den faktiske regelen. Endelig rute krever dokumentert konsekvens, tuning, observasjonsperiode og kontroll av en annen person i [#217](https://github.com/navikt/team-esyfo/issues/217).
 
 ## Bekreft signalet
 
-1. Åpne Kontrollrommets panel `syfomotebehov · available/desired`, som speiler alertmetrikken. Bruk også den valgte tjenestens `Ready/desired`-panel som støttediagnostikk.
-2. Bekreft namespace `team-esyfo`, cluster `prod`, deployment `syfomotebehov` og at desired er større enn null.
+1. Åpne Kontrollrommets panel `syfomotebehov · available/desired`. Det viser de samme inputmetrikkene, men speiler ikke eksakt uttrykket til verken legacy-regelen eller #756-kandidaten. Bruk også den valgte tjenestens `Ready/desired`-panel som støttediagnostikk.
+2. Bekreft namespace `team-esyfo`, klynge `prod`, deployment `syfomotebehov` og at ønsket antall replikaer (`desired`) er større enn null. Dette er del av #756-kandidaten og en nødvendig manuell sikkerhetssjekk for den eldre regelen.
 3. Ved tvil, sammenlign `kube_deployment_status_replicas_available` med `kube_deployment_spec_replicas` i Metrics Explore.
 4. Skill:
-   - available/desired 0 % med desired > 0: alertbetingelsen er sann og runtime er utilgjengelig etter det vedvarende vinduet.
+   - Dagens eldre regel: `available == 0`; den har ikke sikkerhetssjekk på ønsket antall replikaer.
+   - #756-kandidat: available/desired 0 % med desired > 0; begge vilkår må være sanne gjennom det vedvarende vinduet.
    - ready og available kan avvike kort under rollout eller på grunn av `minReadySeconds`; bruk available når du bekrefter selve alerten.
    - manglende available-serie: `UKJENT`, ikke 0 % og ikke «nede».
    - desired = 0 eller manglende desired-serie: `UKJENT`, ikke «nede».
@@ -39,4 +40,4 @@ Dette er diagnostikk for pagerkandidaten i [syfomotebehov#753](https://github.co
 
 ## Runbook-test før pager
 
-Test i dev ved å skalere en ufarlig testdeployment eller bruke en kontrollert readiness-fixture. Verifiser 100 %, degradert, 0 %, desired=0, manglende serie, ready/available-avvik og datasourcefeil som separate tilstander. Produksjon skal ikke forstyrres for å teste runbooken.
+#756-uttrykket er eksplisitt avgrenset til `k8s_cluster_name="prod"`, og alertworkflowen deployer bare til prod-gcp. Selve produksjonsregelen kan derfor ikke ende-til-ende-testes ved å skalere en vanlig dev-deployment. Test handlingene med et separat dev-isolert uttrykk eller en kontrollert readiness-fixture, og test produksjonsuttrykkets semantikk med historisk evidens og tabletop. Verifiser 100 %, degradert, 0 %, desired=0, manglende serie, ready/available-avvik og datasourcefeil som separate tilstander. Produksjon skal aldri endres for å teste runbooken.

@@ -1112,7 +1112,10 @@ export const alertRules: AlertRule[] = [
 			dev("source:oppfolgingsplan-dev", "warning"),
 			prod("source:oppfolgingsplan-prod", "critical"),
 		],
-		runbook: missingRunbook(),
+		runbook: teamRunbook(
+			"pipelines-og-jobber#oppfolgingsplan-outbox",
+			"Oppfølgingsplan: utgående varselkø",
+		),
 		dashboard: errorDashboard("syfo-oppfolgingsplan-backend"),
 		annotations: {
 			summary: "Oppfølgingsplan-outboxen leverer ikke varsler raskt nok.",
@@ -1152,7 +1155,10 @@ export const alertRules: AlertRule[] = [
 			dev("source:oppfolgingsplan-dev", "warning"),
 			prod("source:oppfolgingsplan-prod", "warning"),
 		],
-		runbook: missingRunbook(),
+		runbook: teamRunbook(
+			"pipelines-og-jobber#oppfolgingsplan-outbox",
+			"Oppfølgingsplan: utgående varselkø",
+		),
 		dashboard: errorDashboard("syfo-oppfolgingsplan-backend"),
 		annotations: {
 			summary: "Oppfølgingsplan-outboxen har vedvarende utløpte claims.",
@@ -1192,7 +1198,10 @@ export const alertRules: AlertRule[] = [
 			dev("source:oppfolgingsplan-dev", "warning"),
 			prod("source:oppfolgingsplan-prod", "critical"),
 		],
-		runbook: missingRunbook(),
+		runbook: teamRunbook(
+			"pipelines-og-jobber#oppfolgingsplan-outbox",
+			"Oppfølgingsplan: utgående varselkø",
+		),
 		dashboard: errorDashboard("syfo-oppfolgingsplan-backend"),
 		annotations: {
 			summary: "Oppfølgingsplan-outboxen har vedvarende tekniske feil.",
