@@ -1,7 +1,7 @@
 # Kontrollrom
 
 ::: tip Operativ inngang
-[Åpne Team eSyfo – Kontrollrom i Grafana](https://grafana.nav.cloud.nais.io/d/team-esyfo-control-room-v1/team-esyfo-e28093-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m)
+[Åpne Team eSyfo – Kontrollrom i Grafana](https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom/team-esyfo-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m)
 :::
 
 Kontrollrommet er den felles hendelsesinngangen for Team eSyfos operative flåte. Det starter med forventede ressurser fra runtimeinventaret og fyller inn bevist telemetry. En app kan derfor ikke forsvinne fra oversikten bare fordi signalet mangler.
@@ -13,7 +13,7 @@ Leveransen er coverage-first: det vi kan måle korrekt vises live; det vi ikke k
 1. **Handle nå:** Se etter OTel-feilstatus, runtimefeil, restarts og lav ready/desired. Les alltid span- og kube-dekning ved siden av.
 2. **Finn raden:** Flåtematrisen viser forventet tjeneste, kritikalitet, livssyklus, telemetry og observerte avvik. Manglende signal gjør raden rød/ukjent; den forsvinner ikke.
 3. **Avgrens én tjeneste:** Velg runtime i `Detaljtjeneste`. Request-rate, OTel-feilratio og P95 gjelder da bare denne identiteten, ikke en uleselig miks av hele flåten.
-4. **Følg runbook og drilldown:** Hver runtime og pagerkandidat lenker til APM, avgrensede logger, Feildrilldown og relevant runbook.
+4. **Følg runbook og drilldown:** Hver runtime og pagerkandidat lenker til APM, avgrensede logger, Feiloversikt og relevant runbook.
 
 `Operativt område` filtrerer bare oversiktskortene og flåtematrisen. `Detaljtjeneste` styrer bare detaljpanelene og er uavhengig av området. Faste seksjoner har sitt eget scope og endres ikke av valgene.
 
@@ -94,7 +94,7 @@ Alle tre står `BLOCKED`. Dashboard og runbook aktiverer ikke pager; aktivering 
 
 ## For vedlikeholdere
 
-Builderen ligger i `.vitepress/grafana/control-room.ts`, mens inventarscope og generert operatørtekst ligger i `.vitepress/grafana/control-room-scope.ts`. Den reviewbare [Grafana-ressursen](/grafana/team-esyfo-control-room-v1.json) genereres deterministisk.
+Builderen ligger i `.vitepress/grafana/control-room.ts`, mens inventarscope og generert operatørtekst ligger i `.vitepress/grafana/control-room-scope.ts`. Den reviewbare [Grafana-ressursen](/grafana/team-esyfo-kontrollrom.json) genereres deterministisk.
 
 Kjør fra `docs/`:
 
@@ -109,14 +109,14 @@ pnpm build
 `grafana-dashboard:smoke` krever Docker og eksponerer Grafana kun på
 `127.0.0.1`. Den starter
 en midlertidig Grafana med samme versjon som dashboardbyggeren, importerer den
-eksakte Kontrollrom- og Feildrilldown-artefakten gjennom v2-API-et og
+eksakte Kontrollrom- og Feiloversikt-artefakten gjennom v2-API-et og
 sammenligner både lagret ressurs og UI-ens DTO semantisk. Containeren og
 engangspassordet fjernes etter testen.
 Smoken kjører ikke datasource-queryene og rendrer ikke panelene; dette må fortsatt
 verifiseres i Grafana som beskrevet under. Kommandoen kjører også som et eget steg
 i dokumentasjonsbygget i CI.
 
-Før publisering skal artefakten importeres med UID `team-esyfo-control-room-v1` i Team eSyfo-mappen `K-1b-N_4k`. Velg Team Esyfo eksplisitt også ved overwrite. Verifiser minst:
+Før publisering skal artefakten importeres med UID `team-esyfo-kontrollrom` i Team eSyfo-mappen `K-1b-N_4k`. Velg Team Esyfo eksplisitt også ved overwrite. Verifiser minst:
 
 - hele flåten og ett kuratert operativt område,
 - en valgt backend, frontend og worker,

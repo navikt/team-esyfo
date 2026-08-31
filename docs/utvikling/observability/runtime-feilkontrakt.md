@@ -1,7 +1,7 @@
 # Runtime-feilkontrakt
 
-Denne kontrakten definerer den minste personverntrygge errorloggen som gjør en
-runtimefeil grupperbar i [Feildrilldown](./feildrilldown). Den gjelder nye og
+Denne kontrakten definerer den minste kontraktkonforme errorloggen som gjør en
+runtimefeil grupperbar i [Feiloversikt](./feildrilldown). Den gjelder nye og
 endrede errorlogger i Team eSyfos Node- og JVM-apper.
 
 ## Feltkontrakt
@@ -10,8 +10,8 @@ endrede errorlogger i Team eSyfos Node- og JVM-apper.
 |---|---|---|
 | `event_type` | Obligatorisk | Kodeeid, stabil hendelsestype fra et lukket sett, for eksempel `graphql_request_failed`. Maks 80 tegn og format `^[a-z][a-z0-9_.-]{0,79}$`. Verdien skal aldri bygges fra runtime-data. |
 | `error_code` | Valgfritt | Stabil enum-/protokollkode, for eksempel `INTERNAL_SERVER_ERROR`. Ikke exception-melding eller ekstern respons. |
-| `operation` | Valgfritt | Stabil logisk operasjon, for eksempel GraphQL-navnet `SykmeldingById`. Bruk aldri rå URL, path med ID eller query-parametre. |
-| `exception_type` | Valgfritt | Kun kodeeid type-/klassenavn, for eksempel `IllegalStateException` eller `TypeError`; aldri melding eller stack. |
+| `operation` | Valgfritt | Stabil logisk operasjon fra et lukket sett, for eksempel `sykmelding_by_id`. Bruk aldri rått GraphQL-navn, URL, path med ID eller query-parametre. |
+| `exception_type` | Valgfritt | Kun normalisert, kodeeid type-/klassenavn fra et lukket sett, for eksempel `IllegalStateException` eller `TypeError`; aldri ukontrollert `error.name`, melding eller stack. |
 | `logger_name` | Valgfritt | Frameworkets stabile loggernavn. JVM-encoder fyller ofte dette automatisk; fravær i Node er normalt. |
 | `trace_id` | Påkrevd når tracing finnes | W3C/OTel trace-ID fra aktiv span. Ikke generer en erstatning og ikke bruk domene-, person- eller request-ID. |
 
@@ -83,8 +83,8 @@ logger.error(
   {
     event_type: "graphql_request_failed",
     error_code: "INTERNAL_SERVER_ERROR",
-    operation: "SykmeldingById",
-    exception_type: error.name,
+    operation: "sykmelding_by_id",
+    exception_type: normalizeExceptionType(error),
   },
   "GraphQL request failed",
 );
@@ -105,7 +105,7 @@ log.error(
     "GraphQL request failed: {} {} {} {}",
     kv("event_type", "graphql_request_failed"),
     kv("error_code", "INTERNAL_SERVER_ERROR"),
-    kv("operation", "SykmeldingById"),
+    kv("operation", "sykmelding_by_id"),
     kv("exception_type", exception::class.simpleName ?: "UnknownException"),
     exception,
 )
@@ -129,34 +129,34 @@ JSON-loggen og verifiserer:
 5. retry-/propageringslag ikke lager duplikate errorlogger.
 
 Testen skal ligge ved loggpunktet i apprepoet. En kontrollert dev-hendelse kan
-i tillegg brukes til å bekrefte én `typed` logghendelse i Feildrilldown, men er
+i tillegg brukes til å bekrefte én `canonical` logghendelse i Feiloversikt, men er
 ikke en erstatning for kontrakttesten.
 
-## Dashboardets `type_state`
+## Dashboardets `contract_state`
 
-Feildrilldown teller logghendelser, ikke unike feil eller incidents, og
-klassifiserer feltdekningen aggregert:
+Feiloversikt teller logghendelser, ikke unike feil eller incidents, og
+klassifiserer identitetskontrakten aggregert:
 
-- `typed`: trygg `event_type`/legacy `event` eller eksplisitt exception-type;
-- `context_only`: bare trygg kategori eller operasjon finnes;
-- `code_only`: bare trygg kode eller feilstatus finnes;
-- `rejected`: et kandidatfelt finnes, men bryter sikkerhetsformatet;
-- `missing`: ingen trygg typekandidat finnes.
+- `canonical`: gyldig `event_type` finnes;
+- `legacy_type`: en formatvalidert legacy `event`- eller exception/error-type
+  brukes som operativ fallback;
+- `rejected`: et identitetskandidatfelt finnes, men bryter formatet;
+- `missing`: ingen kjent identitetskandidat finnes.
 
-`rejected` er et personvern-/kontraktsavvik. `missing` er et
-instrumenteringsgap som prioriteres etter antall hendelser. Fravær av
-`error_code` eller `logger_name` er ikke alene et kvalitetsgap; begge feltene er
-valgfrie. `typed` i dashboardet beviser heller ikke full kontraktkonformitet,
-fordi legacyfelt kan brukes som kompatibilitetsfallback.
+`rejected`, `missing` og `legacy_type` er kontraktsgap som prioriteres etter
+antall hendelser. Fravær av `error_code`, `operation` eller `logger_name` er
+ikke alene et identitetsgap; feltene er valgfrie. Regex-validering beviser bare
+format, ikke produsentproveniens eller personvern. Full konformitet krever
+derfor kodeeid katalog og producer-nær serialiseringstest.
 
 ## Migrasjon og legacy
 
 - Nye errorlogger følger kontrakten fra første commit.
 - Når et eksisterende feilforløp endres, migreres det terminale loggpunktet og
   duplikate errorlogger fjernes i samme endring.
-- Legacylogger beholdes synlige som `missing`, `context_only`, `code_only` eller
-  `rejected`; dashboardet skal aldri gjette type fra melding eller stack.
-- Migrering prioriteres etter høyt antall `missing`/`rejected`, ikke etter lav
-  kode- eller loggerdekning.
+- Legacylogger beholdes synlige som `legacy_type`, `missing` eller `rejected`;
+  dashboardet skal aldri gjette type fra melding eller stack.
+- Migrering prioriteres etter høyt antall `missing`/`rejected`/`legacy_type`,
+  ikke etter lav kode-, operasjons- eller loggerdekning.
 - Ikke massefyll `event_type=runtime_error`. Hver verdi skal uttrykke et stabilt,
   handlingsrettet teknisk utfall.

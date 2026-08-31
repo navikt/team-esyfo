@@ -10,25 +10,40 @@ import {
 	grafanaVariable,
 	LOKI_DATASOURCE_UID,
 	layoutItem,
+	PROD_TEMPO_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
-	TEMPO_DATASOURCE_UID,
 } from "./dashboard-kit.ts";
 import { runtimeErrorPipeline } from "./runtime-logql.ts";
 
-export { LOKI_DATASOURCE_UID, TEMPO_DATASOURCE_UID } from "./dashboard-kit.ts";
+export {
+	DEV_TEMPO_DATASOURCE_UID,
+	LOKI_DATASOURCE_UID,
+	PROD_TEMPO_DATASOURCE_UID,
+	TEMPO_DATASOURCE_UID,
+} from "./dashboard-kit.ts";
 
-export const ERROR_DASHBOARD_UID = "team-esyfo-error-drilldown";
+export const ERROR_DASHBOARD_UID = "team-esyfo-feiloversikt";
 export const ERROR_DASHBOARD_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
 export const RECENT_RUNTIME_EVENT_LIMIT = 100;
 const APP_VARIABLE = grafanaVariable("app:regex");
-const RUNTIME_ENVIRONMENT_VALUE = grafanaVariable("runtime_environment:raw");
+const BROWSER_APP_VARIABLE = grafanaVariable("browser_app:regex");
 const RUNTIME_ENVIRONMENT_REGEX = grafanaVariable("runtime_environment:regex");
+const RUNTIME_ENVIRONMENT_RAW = grafanaVariable("runtime_environment:raw");
+const TEMPO_DATASOURCE_VARIABLE = grafanaVariable("tempo_datasource:raw");
 const FROM = grafanaVariable("__from");
 const TO = grafanaVariable("__to");
-const FROM_ISO = grafanaVariable("__from:date:iso");
-const TO_ISO = grafanaVariable("__to:date:iso");
 const ROW_VALUE = grafanaVariable("__value.raw");
-const ROW_TIME = grafanaVariable("__value.time");
+const ROW_SERVICE = grafanaVariable('__data.fields["service_name"]');
+const ROW_ERROR_TYPE = grafanaVariable('__data.fields["error_type_display"]');
+const ROW_ERROR_CODE = grafanaVariable('__data.fields["error_code_display"]');
+const ROW_OPERATION = grafanaVariable('__data.fields["operation_display"]');
+const ROW_LEVEL = grafanaVariable('__data.fields["error_level"]');
+const ROW_CONTRACT_GAP = grafanaVariable(
+	'__data.fields["contract_state_display"]',
+);
+const ROW_BROWSER_TYPE = grafanaVariable(
+	'__data.fields["browser_type_display"]',
+);
 
 export const dashboardApplications = runtimeInventory.applications.filter(
 	({ id }) => activeApplicationIds.has(id),
@@ -59,10 +74,6 @@ export const missingBrowserServices = dashboardBrowserSurfaces
 	)
 	.map(({ browserIdentity }) => browserIdentity.serviceName);
 
-export const unverifiedApmServices = dashboardApplications
-	.filter(({ runtimeApm }) => runtimeApm.status !== "linked")
-	.map(({ runtime }) => runtime.name);
-
 const lifecycleLabel = (application: Application) => {
 	switch (application.lifecycle.state) {
 		case "migrating":
@@ -81,12 +92,20 @@ export const dashboardApplicationOptions = dashboardApplications.map(
 	}),
 );
 
+export const dashboardBrowserOptions = configuredBrowserServices.map(
+	(service) => ({ text: service, value: service }),
+);
+
 const escapeLogqlRegex = (value: string) =>
 	value.replace(/[\\.^$|?*+()[\]{}]/g, "\\$&");
 
-export const dashboardApplicationRegex = `^(${dashboardApplicationOptions
-	.map(({ value }) => escapeLogqlRegex(value))
-	.join("|")})$`;
+const inventoryRegex = (values: string[]) =>
+	`^(${values.map(escapeLogqlRegex).join("|")})$`;
+
+export const dashboardApplicationRegex = inventoryRegex(
+	dashboardApplicationOptions.map(({ value }) => value),
+);
+export const dashboardBrowserRegex = inventoryRegex(configuredBrowserServices);
 
 export const runtimeEnvironmentOptions = [
 	{ text: "prod-gcp", value: "prod" },
@@ -94,56 +113,58 @@ export const runtimeEnvironmentOptions = [
 ];
 
 const runtimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"^${RUNTIME_ENVIRONMENT_REGEX}$", service_name=~"${APP_VARIABLE}"}`;
+const browserSelector = `{kind="exception", service_name=~"${BROWSER_APP_VARIABLE}"}`;
 
-export const runtimeTotalQuery = `sum(count_over_time(${runtimeSelector}
+export const runtimeTrendQuery = `sum(count_over_time(${runtimeSelector}
 ${runtimeErrorPipeline}
-[$__range])) or on() vector(0)`;
+| keep service_name
+[$__auto])) or on() vector(0)`;
 
-export const runtimeByServiceQuery = `topk(50, sum by(service_name) (count_over_time(${runtimeSelector}
-${runtimeErrorPipeline}
-[$__range])))`;
+const runtimeSignatureParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
+const runtimeTraceParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, trace_id, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
 
-const browserSelector = `{kind="exception", service_name=~"${APP_VARIABLE}"}`;
-
-export const browserTotalQuery = `sum(count_over_time(${browserSelector} [$__range])) or on() vector(0)`;
-
-export const browserByTypeQuery = `topk(50, sum by(service_name, type) (count_over_time(${browserSelector} | logfmt | __error__="" | type!="" [$__range])))`;
-
-const runtimeClassificationParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, logger_name, trace_id, category, operation, operation_name, operation_camel="operationName", top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
-
-const safeEventTypePattern = "^[a-z][a-z0-9_.-]{0,79}$";
-const safeIdentifierPattern = "^[A-Za-z][A-Za-z0-9_.:$]{0,159}$";
-const safeCodePattern = "^([A-Za-z][A-Za-z0-9_.:$]{0,79}|[1-5][0-9]{2})$";
-const safeGenericTypeAsCodePattern = "^[A-Z][A-Z0-9_]{1,79}$";
-const safeGenericErrorTypePattern =
+export const safeEventTypePattern = "^[a-z][a-z0-9_.-]{0,79}$";
+export const safeGenericErrorTypePattern =
 	"^([A-Za-z][A-Za-z0-9_.:$]{0,143})?(Error|Exception)$";
+export const safeCodePattern = "^([A-Z][A-Z0-9_]{1,79}|[1-5][0-9]{2})$";
+const safeGenericTypeAsCodePattern = "^[A-Z][A-Z0-9_]{1,79}$";
 const safeErrorStatusPattern = "^[45][0-9]{2}$";
 const safeTraceIdPattern = "^[A-Fa-f0-9]{32}$";
+export const safeBrowserTypePattern =
+	"^(Error|TypeError|RangeError|ReferenceError|SyntaxError|URIError|EvalError|AggregateError|AbortError|DOMException|NetworkError|SecurityError|NotFoundError|NotAllowedError|DataCloneError|InvalidStateError|QuotaExceededError|TimeoutError|UnknownError|UnhandledRejection)$";
 
 const safeLabel = (target: string, source: string, pattern: string) =>
 	`| label_format ${target}=\`{{ if and .${source} (not (regexReplaceAll "${pattern}" .${source} "")) }}{{ .${source} }}{{ end }}\``;
 
-const runtimeClassificationLabels = `| drop __error__, __error_details__
+const runtimeSignatureLabels = `| drop __error__, __error_details__
 ${safeLabel("safe_event_type", "event_type", safeEventTypePattern)}
-${safeLabel("safe_event", "event", safeIdentifierPattern)}
+${safeLabel("safe_event", "event", safeEventTypePattern)}
 ${safeLabel(
 	"safe_top_exception_type",
 	"top_exception_type",
-	safeIdentifierPattern,
+	safeGenericErrorTypePattern,
 )}
 ${safeLabel(
 	"safe_nested_exception_type",
 	"nested_exception_type",
-	safeIdentifierPattern,
+	safeGenericErrorTypePattern,
 )}
-${safeLabel("safe_top_error_type", "top_error_type", safeIdentifierPattern)}
+${safeLabel(
+	"safe_top_error_type",
+	"top_error_type",
+	safeGenericErrorTypePattern,
+)}
 ${safeLabel(
 	"safe_nested_error_type",
 	"nested_error_type",
-	safeIdentifierPattern,
+	safeGenericErrorTypePattern,
 )}
 ${safeLabel("safe_top_err_type", "top_err_type", safeGenericErrorTypePattern)}
-${safeLabel("safe_nested_err_type", "nested_err_type", safeIdentifierPattern)}
+${safeLabel(
+	"safe_nested_err_type",
+	"nested_err_type",
+	safeGenericErrorTypePattern,
+)}
 ${safeLabel(
 	"safe_runtime_error_type",
 	"runtime_type",
@@ -158,75 +179,133 @@ ${safeLabel(
 	safeGenericTypeAsCodePattern,
 )}
 ${safeLabel("safe_status", "status", safeErrorStatusPattern)}
-${safeLabel("safe_logger", "logger_name", safeIdentifierPattern)}
-${safeLabel("safe_category", "category", safeIdentifierPattern)}
-${safeLabel("safe_operation", "operation", safeIdentifierPattern)}
-${safeLabel("safe_operation_name", "operation_name", safeIdentifierPattern)}
-${safeLabel("safe_operation_camel", "operation_camel", safeIdentifierPattern)}
-${safeLabel("safe_trace_id", "trace_id", safeTraceIdPattern)}
+${safeLabel("safe_operation", "operation", safeEventTypePattern)}
 | label_format error_type_display=\`{{ if .safe_event_type }}{{ .safe_event_type }}{{ else if .safe_event }}{{ .safe_event }}{{ else if .safe_top_exception_type }}{{ .safe_top_exception_type }}{{ else if .safe_nested_exception_type }}{{ .safe_nested_exception_type }}{{ else if .safe_top_error_type }}{{ .safe_top_error_type }}{{ else if .safe_nested_error_type }}{{ .safe_nested_error_type }}{{ else if .safe_top_err_type }}{{ .safe_top_err_type }}{{ else if .safe_nested_err_type }}{{ .safe_nested_err_type }}{{ else if .safe_runtime_error_type }}{{ .safe_runtime_error_type }}{{ else }}Ikke oppgitt av appen{{ end }}\`
 | label_format error_code_display=\`{{ if .safe_error_code }}{{ .safe_error_code }}{{ else if .safe_code }}{{ .safe_code }}{{ else if .safe_feilkode }}{{ .safe_feilkode }}{{ else if .safe_runtime_type_code }}{{ .safe_runtime_type_code }}{{ else if .safe_status }}{{ .safe_status }}{{ else }}—{{ end }}\`
-| label_format error_source=\`{{ if .safe_logger }}{{ .safe_logger }}{{ else }}—{{ end }}\`
-| label_format error_context=\`{{ if .safe_operation }}operasjon: {{ .safe_operation }}{{ else if .safe_operation_name }}operasjon: {{ .safe_operation_name }}{{ else if .safe_operation_camel }}operasjon: {{ .safe_operation_camel }}{{ else if .safe_category }}kategori: {{ .safe_category }}{{ else }}—{{ end }}\`
-| label_format type_state=\`{{ if or .safe_event_type .safe_event .safe_top_exception_type .safe_nested_exception_type .safe_top_error_type .safe_nested_error_type .safe_top_err_type .safe_nested_err_type .safe_runtime_error_type }}typed{{ else if or .safe_error_code .safe_code .safe_feilkode .safe_runtime_type_code .safe_status }}code_only{{ else if or .event_type .event .top_exception_type .nested_exception_type .top_error_type .nested_error_type .top_err_type .nested_err_type .runtime_type .error_code .code .feilkode .status }}rejected{{ else if or .safe_category .safe_operation .safe_operation_name .safe_operation_camel }}context_only{{ else if or .category .operation .operation_name .operation_camel }}rejected{{ else }}missing{{ end }}\``;
+| label_format operation_display=\`{{ if .safe_operation }}{{ .safe_operation }}{{ else }}—{{ end }}\`
+| label_format contract_state=\`{{ if .safe_event_type }}canonical{{ else if .event_type }}rejected{{ else if or .safe_event .safe_top_exception_type .safe_nested_exception_type .safe_top_error_type .safe_nested_error_type .safe_top_err_type .safe_nested_err_type .safe_runtime_error_type }}legacy_type{{ else if or .event .top_exception_type .nested_exception_type .top_error_type .nested_error_type .top_err_type .nested_err_type .runtime_type }}rejected{{ else }}missing{{ end }}\`
+| label_format contract_state_display=\`{{ if eq .contract_state "canonical" }}Kanonisk feiltype{{ else if eq .contract_state "legacy_type" }}Eldre typefelt{{ else if eq .contract_state "rejected" }}Avvist format{{ else }}Ikke oppgitt av appen{{ end }}\``;
 
-export const runtimeByClassificationQuery = `topk(50, sum by(service_name, error_type_display, error_code_display) (count_over_time(${runtimeSelector}
-${runtimeErrorPipeline}
-${runtimeClassificationParser}
-${runtimeClassificationLabels}
-| keep service_name, error_type_display, error_code_display
-[$__range])))`;
+const runtimeTraceLabels = `${runtimeSignatureLabels}
+${safeLabel("safe_trace_id", "trace_id", safeTraceIdPattern)}
+| label_format error_context=\`{{ .operation_display }}\``;
 
-export const runtimeClassificationCoverageQuery = `sum by(service_name, type_state) (count_over_time(${runtimeSelector}
+const browserTypePipeline = `| logfmt type
+| drop __error__, __error_details__
+${safeLabel("safe_browser_type", "type", safeBrowserTypePattern)}
+| label_format browser_type_display=\`{{ if .safe_browser_type }}{{ .safe_browser_type }}{{ else }}Annen / ikke oppgitt{{ end }}\``;
+
+const runtimeLevelLabel =
+	"| label_format error_level=`{{ .detected_level | lower }}`";
+
+export const runtimeByClassificationQuery = `topk by(error_level) (25, sum by(error_level, service_name, error_type_display, error_code_display, operation_display, action) (count_over_time(${runtimeSelector}
 ${runtimeErrorPipeline}
-${runtimeClassificationParser}
-${runtimeClassificationLabels}
-| keep service_name, type_state
-[$__range]))`;
+${runtimeSignatureParser}
+${runtimeSignatureLabels}
+${runtimeLevelLabel}
+| label_format action=\`Undersøk\`
+| keep error_level, service_name, error_type_display, error_code_display, operation_display, action
+[$__auto])))`;
+
+export const runtimeContractGapQuery = `sum by(service_name, contract_state_display, action) (count_over_time(${runtimeSelector}
+${runtimeErrorPipeline}
+${runtimeSignatureParser}
+${runtimeSignatureLabels}
+| contract_state!="canonical"
+| label_format action=\`Undersøk\`
+| keep service_name, contract_state_display, action
+[$__auto]))`;
+
+export const browserByTypeQuery = `topk(50, sum by(service_name, browser_type_display, action) (count_over_time(${browserSelector}
+${browserTypePipeline}
+| label_format action=\`Undersøk\`
+| keep service_name, browser_type_display, action
+[$__auto])))`;
 
 export const tracedRuntimeErrorsQuery = `${runtimeSelector}
 ${runtimeErrorPipeline}
-${runtimeClassificationParser}
-${runtimeClassificationLabels}
+${runtimeTraceParser}
+${runtimeTraceLabels}
 | safe_trace_id!=""
+| safe_trace_id!="00000000000000000000000000000000"
 | line_format \`{{ .error_type_display }}\`
-| keep service_name, error_type_display, error_code_display, error_context, error_source, type_state, safe_trace_id
+| keep service_name, error_type_display, error_code_display, error_context, safe_trace_id
 | drop __error__, __error_details__`;
 
-export const apmDataLink = (service: string) =>
-	`/a/nais-apm-app/services/team-esyfo/${service}?environment=${RUNTIME_ENVIRONMENT_VALUE}&from=${FROM_ISO}&to=${TO_ISO}`;
-
-export const runtimeLogsDataLink = (service: string) =>
-	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7C${RUNTIME_ENVIRONMENT_VALUE}`;
-
-export const browserLogsDataLink = (service: string) =>
-	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=kind%7C%3D%7Cexception`;
-
 export const traceDataLink = (traceId: string) =>
-	`/a/grafana-exploretraces-app/explore?from=${ROW_TIME}&to=${ROW_TIME}&var-ds=${TEMPO_DATASOURCE_UID}&traceId=${traceId}`;
+	`/a/grafana-exploretraces-app/explore?from=${FROM}&to=${TO}&var-ds=${TEMPO_DATASOURCE_VARIABLE}&traceId=${traceId}`;
 
-const runtimeRowLinks = () => [
-	dataLink("Åpne tjenesten i NAIS APM", apmDataLink(ROW_VALUE)),
-	dataLink(
-		"Åpne runtime-logger i valgt tidsrom",
-		runtimeLogsDataLink(ROW_VALUE),
-	),
-];
+const encodeExploreState = (value: unknown) => {
+	const variables: string[] = [];
+	const withTokens = JSON.stringify(value, (_key, child) => {
+		if (typeof child !== "string") return child;
+		return child.replace(/\$\{[^}]+\}/g, (variable) => {
+			const token = `__GRAFANA_VARIABLE_${variables.length}__`;
+			variables.push(variable);
+			return token;
+		});
+	});
+	return variables.reduce(
+		(encoded, variable, index) =>
+			encoded.replace(`__GRAFANA_VARIABLE_${index}__`, variable),
+		encodeURIComponent(withTokens),
+	);
+};
+
+const lokiExploreDataLink = (expr: string) => {
+	const panes = {
+		A: {
+			datasource: LOKI_DATASOURCE_UID,
+			queries: [
+				{
+					datasource: { type: "loki", uid: LOKI_DATASOURCE_UID },
+					direction: "backward",
+					editorMode: "code",
+					expr,
+					queryType: "range",
+					refId: "A",
+				},
+			],
+			range: { from: FROM, to: TO },
+		},
+	};
+	return `/explore?panes=${encodeExploreState(panes)}&schemaVersion=1&orgId=1`;
+};
+
+const runtimeRowSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"^${RUNTIME_ENVIRONMENT_REGEX}$", service_name="${ROW_SERVICE}"}`;
+
+export const runtimeErrorGroupDataLink = () =>
+	lokiExploreDataLink(`${runtimeRowSelector}
+${runtimeErrorPipeline}
+${runtimeSignatureParser}
+${runtimeSignatureLabels}
+${runtimeLevelLabel}
+| error_type_display=\`${ROW_ERROR_TYPE}\`
+| error_code_display=\`${ROW_ERROR_CODE}\`
+| operation_display=\`${ROW_OPERATION}\`
+| error_level=\`${ROW_LEVEL}\``);
+
+export const runtimeContractGapDataLink = () =>
+	lokiExploreDataLink(`${runtimeRowSelector}
+${runtimeErrorPipeline}
+${runtimeSignatureParser}
+${runtimeSignatureLabels}
+| contract_state_display=\`${ROW_CONTRACT_GAP}\``);
+
+export const browserErrorGroupDataLink = () =>
+	lokiExploreDataLink(`{kind="exception", service_name="${ROW_SERVICE}"}
+${browserTypePipeline}
+| browser_type_display=\`${ROW_BROWSER_TYPE}\``);
 
 const runtimePanelLinks = () => [
+	dataLink(
+		"Runtime-feilkontrakt",
+		"https://navikt.github.io/team-esyfo/utvikling/observability/runtime-feilkontrakt",
+	),
 	dataLink(
 		"HTTP/runtime-runbook",
 		"https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime",
 	),
-	dataLink(
-		"Kontrollrom (kun prod)",
-		`/d/team-esyfo-control-room-v1/team-esyfo-e28093-kontrollrom?orgId=1&from=${FROM}&to=${TO}&timezone=browser`,
-	),
-];
-
-const browserRowLinks = () => [
-	dataLink("Åpne tjenesten i NAIS APM", apmDataLink(ROW_VALUE)),
-	dataLink("Åpne avgrenset browser-loggsøk", browserLogsDataLink(ROW_VALUE)),
 ];
 
 const lokiQuery = (
@@ -246,7 +325,7 @@ const lokiQuery = (
 				editorMode: "code",
 				expr,
 				queryType,
-				...(queryType === "range"
+				...(refId === "Runtimefeil med trace"
 					? { maxLines: RECENT_RUNTIME_EVENT_LIMIT }
 					: {}),
 			},
@@ -259,63 +338,77 @@ const lokiQuery = (
 const queryGroup = (
 	query: ReturnType<typeof lokiQuery>,
 	transformations: Array<Record<string, unknown>> = [],
+	queryOptions: Record<string, unknown> = {},
 ) => ({
 	kind: "QueryGroup",
 	spec: {
 		queries: [query],
-		queryOptions: {},
+		queryOptions,
 		transformations,
 	},
 });
 
-const thresholds = {
+const neutralThresholds = {
 	mode: "absolute",
-	steps: [
-		{ color: "green", value: 0 },
-		{ color: "red", value: 1 },
-	],
+	steps: [{ color: "blue", value: 0 }],
 };
 
-const statPanel = (
-	id: number,
-	title: string,
-	description: string,
-	refId: string,
-	expr: string,
-) => ({
+const runtimeTrendPanel = () => ({
 	kind: "Panel",
 	spec: {
-		data: queryGroup(lokiQuery(refId, expr, "instant")),
-		description,
-		id,
-		links: [],
-		title,
+		data: queryGroup(
+			lokiQuery("Runtimefeil over tid", runtimeTrendQuery, "range"),
+			[],
+			{ interval: "1m", maxDataPoints: 240 },
+		),
+		description:
+			"Volum av runtime-logghendelser på error, critical eller fatal i valgt miljø og tjenestescope. Hendelser, ikke unike feil eller incidents. En endring i nivå eller mønster er et signal til å prioritere tabellen under.",
+		id: 1,
+		links: runtimePanelLinks(),
+		title: "Runtimefeil over tid",
 		vizConfig: {
-			group: "stat",
+			group: "timeseries",
 			kind: "VizConfig",
 			spec: {
 				fieldConfig: {
 					defaults: {
-						noValue: "Ukjent",
-						thresholds,
+						color: { fixedColor: "blue", mode: "fixed" },
+						custom: {
+							axisBorderShow: false,
+							axisCenteredZero: false,
+							axisColorMode: "text",
+							axisLabel: "",
+							axisPlacement: "auto",
+							barAlignment: 0,
+							barWidthFactor: 0.6,
+							drawStyle: "line",
+							fillOpacity: 12,
+							gradientMode: "none",
+							hideFrom: { legend: false, tooltip: false, viz: false },
+							insertNulls: false,
+							lineInterpolation: "linear",
+							lineWidth: 2,
+							pointSize: 4,
+							scaleDistribution: { type: "linear" },
+							showPoints: "never",
+							spanNulls: false,
+							stacking: { group: "A", mode: "none" },
+							thresholdsStyle: { mode: "off" },
+						},
+						noValue: "Ingen treff",
+						thresholds: neutralThresholds,
 						unit: "short",
 					},
 					overrides: [],
 				},
 				options: {
-					colorMode: "value",
-					graphMode: "area",
-					justifyMode: "center",
-					orientation: "auto",
-					percentChangeColorMode: "standard",
-					reduceOptions: {
-						calcs: ["lastNotNull"],
-						fields: "",
-						values: false,
+					legend: {
+						calcs: [],
+						displayMode: "list",
+						placement: "bottom",
+						showLegend: false,
 					},
-					showPercentChange: false,
-					textMode: "auto",
-					wideLayout: true,
+					tooltip: { hideZeros: false, mode: "single", sort: "none" },
 				},
 			},
 			version: GRAFANA_VERSION,
@@ -327,7 +420,6 @@ const organizeTable = (
 	refId: string,
 	renameByName: Record<string, string>,
 	indexByName: Record<string, number>,
-	valueLabel = "Antall",
 ) => ({
 	group: "organize",
 	kind: "Transformation",
@@ -337,7 +429,7 @@ const organizeTable = (
 			includeByName: {},
 			indexByName,
 			renameByName: {
-				[`Value #${refId}`]: valueLabel,
+				[`Value #${refId}`]: "Hendelser",
 				...renameByName,
 			},
 		},
@@ -352,9 +444,9 @@ const tablePanel = ({
 	expr,
 	renameByName,
 	indexByName,
-	links,
+	actionLink,
 	panelLinks = [],
-	valueLabel = "Antall",
+	widths = {},
 }: {
 	id: number;
 	title: string;
@@ -363,14 +455,14 @@ const tablePanel = ({
 	expr: string;
 	renameByName: Record<string, string>;
 	indexByName: Record<string, number>;
-	links: Array<Record<string, unknown>>;
+	actionLink: Record<string, unknown>;
 	panelLinks?: Array<Record<string, unknown>>;
-	valueLabel?: string;
+	widths?: Record<string, number>;
 }) => ({
 	kind: "Panel",
 	spec: {
 		data: queryGroup(lokiQuery(refId, expr, "instant"), [
-			organizeTable(refId, renameByName, indexByName, valueLabel),
+			organizeTable(refId, renameByName, indexByName),
 		]),
 		description,
 		id,
@@ -382,74 +474,42 @@ const tablePanel = ({
 			spec: {
 				fieldConfig: {
 					defaults: {
-						color: { mode: "thresholds" },
 						custom: {
 							align: "auto",
 							cellOptions: { type: "auto" },
 							footer: { reducers: [] },
 							inspect: false,
 						},
-						thresholds,
+						noValue: "—",
 					},
-					// Grafana 13.1.2 matcher kildefeltnavnet også etter organize-rename.
 					overrides: [
 						{
-							matcher: { id: "byName", options: "service_name" },
-							properties: [{ id: "links", value: links }],
+							matcher: { id: "byName", options: "action" },
+							properties: [
+								{ id: "links", value: [actionLink] },
+								{
+									id: "custom.cellOptions",
+									value: { type: "data-links" },
+								},
+								{ id: "custom.width", value: 120 },
+							],
 						},
 						{
-							matcher: { id: "byName", options: valueLabel },
-							properties: [{ id: "custom.width", value: 100 }],
+							matcher: { id: "byName", options: "Hendelser" },
+							properties: [{ id: "custom.width", value: 95 }],
 						},
+						...Object.entries(widths).map(([field, width]) => ({
+							matcher: { id: "byName", options: field },
+							properties: [{ id: "custom.width", value: width }],
+						})),
 					],
 				},
 				options: {
 					cellHeight: "sm",
 					enablePagination: true,
 					showHeader: true,
-					sortBy: [{ desc: true, displayName: valueLabel }],
+					sortBy: [{ desc: true, displayName: "Hendelser" }],
 				},
-			},
-			version: GRAFANA_VERSION,
-		},
-	},
-});
-
-const coverageMarkdown = () => {
-	const lifecycleNotes = dashboardApplications
-		.filter(({ lifecycle }) => lifecycle.state !== "active")
-		.map((application) => `\`${lifecycleLabel(application)}\``)
-		.join(", ");
-	const browserGaps = missingBrowserServices
-		.map((name) => `\`${name}\``)
-		.join(", ");
-	const apmGaps = unverifiedApmServices.map((name) => `\`${name}\``).join(", ");
-
-	return `### Dekning og tolkning
-
-- **Runtime-scope:** Valgt runtime-miljø og ${dashboardApplications.length} nåværende tjenester fra det godkjente inventaret. Overgang: ${lifecycleNotes}.
-- **Browser · miljøscope UKJENT:** Runtime-miljø filtrerer ikke Faro-panelene. ${configuredBrowserServices.length}/${dashboardBrowserSurfaces.length} flater har konfigurert telemetry. Mangler: ${browserGaps}. Se [browserkontrakten](https://navikt.github.io/team-esyfo/utvikling/observability/browserkontrakt).
-- **APM:** ${dashboardApplications.length - unverifiedApmServices.length}/${dashboardApplications.length} tjenester er sett i prod-katalogen. Uverifisert: ${apmGaps}.
-- **Tolkning:** Tallene er logghendelser, ikke unike feil, incidents eller berørte brukere. «Ikke oppgitt av appen» er et instrumenteringsgap, ikke en feiltype. Dekningspanelet skiller typet, kontekst-only, kode-only, avvist format og manglende klassifisering. 0 betyr at count-spørringen lyktes uten feiltreff. Tom tabell betyr ingen kvalifiserende treff, ikke at telemetry er komplett. Trace-tabellen er et utvalg på maks ${RECENT_RUNTIME_EVENT_LIMIT} JSON-hendelser med trace. Datakilde- og syntaksfeil skal stå som feil/ukjent.`;
-};
-
-const textPanel = () => ({
-	kind: "Panel",
-	spec: {
-		data: {
-			kind: "QueryGroup",
-			spec: { queries: [], queryOptions: {}, transformations: [] },
-		},
-		description: "Dekning generert fra det godkjente runtimeinventaret.",
-		id: 3,
-		links: [],
-		title: "Slik leses dashboardet",
-		vizConfig: {
-			group: "text",
-			kind: "VizConfig",
-			spec: {
-				fieldConfig: { defaults: {}, overrides: [] },
-				options: { content: coverageMarkdown(), mode: "markdown" },
 			},
 			version: GRAFANA_VERSION,
 		},
@@ -475,6 +535,37 @@ const tracedErrorsPanel = () => ({
 					},
 				},
 				{
+					group: "groupBy",
+					kind: "Transformation",
+					spec: {
+						options: {
+							fields: {
+								Time: { aggregations: ["max"], operation: "aggregate" },
+								error_code_display: {
+									aggregations: [],
+									operation: "groupby",
+								},
+								error_context: {
+									aggregations: [],
+									operation: "groupby",
+								},
+								error_type_display: {
+									aggregations: [],
+									operation: "groupby",
+								},
+								safe_trace_id: {
+									aggregations: [],
+									operation: "groupby",
+								},
+								service_name: {
+									aggregations: [],
+									operation: "groupby",
+								},
+							},
+						},
+					},
+				},
+				{
 					group: "organize",
 					kind: "Transformation",
 					spec: {
@@ -482,34 +573,30 @@ const tracedErrorsPanel = () => ({
 							excludeByName: {},
 							includeByName: {},
 							indexByName: {
-								Time: 0,
+								"Time (max)": 0,
 								service_name: 1,
 								error_type_display: 2,
 								error_code_display: 3,
 								error_context: 4,
-								error_source: 5,
-								type_state: 6,
-								safe_trace_id: 7,
+								safe_trace_id: 5,
 							},
 							renameByName: {
-								Time: "Tidspunkt",
-								service_name: "Tjeneste",
-								error_type_display: "Feiltype",
+								"Time (max)": "Tidspunkt",
+								error_context: "Operasjon",
 								error_code_display: "Kode",
-								error_context: "Trygg kontekst",
-								error_source: "Kilde (logger)",
-								type_state: "Klassifiseringsstatus",
+								error_type_display: "Feiltype",
 								safe_trace_id: "Trace",
+								service_name: "Tjeneste",
 							},
 						},
 					},
 				},
 			],
 		),
-		description: `Diagnostisk utvalg av maksimalt ${RECENT_RUNTIME_EVENT_LIMIT} nyeste JSON-parsebare runtime-logghendelser med trace i valgt runtime-miljø. Radene er ikke unike feil eller incidents; samme trace kan gi flere hendelser. Feiltype kommer bare fra dokumenterte event-, exception- og error-felt; kode, trygg kontekst, loggerkilde og klassifiseringsstatus vises separat. Trace-ID vises ikke, og rå melding, stack og URL returneres ikke. Klikk tjenesten for APM eller runtime-logger i valgt tidsrom.`,
-		id: 6,
+		description: `Deduplisert utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste trace-koblede runtimehendelsene, gruppert på trace, tjeneste, feiltype, kode og operasjon. Trace-kolonnen åpner hele forløpet. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry. Rå melding, stack, URL og payload returneres ikke til tabellen.`,
+		id: 3,
 		links: runtimePanelLinks(),
-		title: `Nyeste traced runtimehendelser (maks ${RECENT_RUNTIME_EVENT_LIMIT})`,
+		title: `Nyeste runtimefeil med trace (maks ${RECENT_RUNTIME_EVENT_LIMIT})`,
 		vizConfig: {
 			group: "table",
 			kind: "VizConfig",
@@ -522,13 +609,9 @@ const tracedErrorsPanel = () => ({
 							footer: { reducers: [] },
 							inspect: false,
 						},
+						noValue: "—",
 					},
-					// Grafana 13.1.2 matcher kildefeltnavnet også etter organize-rename.
 					overrides: [
-						{
-							matcher: { id: "byName", options: "service_name" },
-							properties: [{ id: "links", value: runtimeRowLinks() }],
-						},
 						{
 							matcher: { id: "byName", options: "safe_trace_id" },
 							properties: [
@@ -540,12 +623,27 @@ const tracedErrorsPanel = () => ({
 									id: "custom.cellOptions",
 									value: { type: "data-links" },
 								},
-								{ id: "custom.width", value: 140 },
+								{ id: "custom.width", value: 105 },
 							],
 						},
 						{
-							matcher: { id: "byName", options: "Time" },
-							properties: [{ id: "custom.width", value: 190 }],
+							matcher: { id: "byName", options: "Time (max)" },
+							properties: [{ id: "custom.width", value: 175 }],
+						},
+						{
+							matcher: { id: "byName", options: "service_name" },
+							properties: [{ id: "custom.width", value: 245 }],
+						},
+						{
+							matcher: { id: "byName", options: "error_code_display" },
+							properties: [{ id: "custom.width", value: 310 }],
+						},
+						{
+							matcher: {
+								id: "byName",
+								options: "error_context",
+							},
+							properties: [{ id: "custom.width", value: 220 }],
 						},
 					],
 				},
@@ -558,6 +656,27 @@ const tracedErrorsPanel = () => ({
 			},
 			version: GRAFANA_VERSION,
 		},
+	},
+});
+
+const primaryLayout = () => ({
+	kind: "GridLayout",
+	spec: {
+		items: [
+			layoutItem("panel-1", 0, 0, 24, 6),
+			layoutItem("panel-2", 0, 6, 24, 12),
+			layoutItem("panel-3", 0, 18, 24, 11),
+		],
+	},
+});
+
+const secondaryLayout = () => ({
+	kind: "GridLayout",
+	spec: {
+		items: [
+			layoutItem("panel-4", 0, 0, 24, 10),
+			layoutItem("panel-5", 0, 10, 24, 10),
+		],
 	},
 });
 
@@ -590,98 +709,139 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 		],
 		cursorSync: "Off",
 		description:
-			"Personvernsikker drilldown for runtimefeil i valgt runtime-miljø og browserfeil med ukjent miljøscope. Generert fra runtimeinventaret i navikt/team-esyfo.",
-		editable: true,
+			"Operatørflate for å finne hvilke runtimefeil som øker, hvor de skjer og hvilket trace eller loggsøk som gir neste steg. Browserdiagnostikk og kontraktsgap er sekundære fordi miljø og metadata ikke har samme kvalitet.",
+		editable: false,
 		elements: {
-			"panel-1": statPanel(
-				1,
-				"Runtimefeil · logghendelser",
-				"Antall error-, critical- og fatal-logghendelser i valgt tidsrom, ikke unike feil, incidents eller berørte brukere. Browservideresendte logger er ekskludert; browser-exceptions måles separat i Faro der det er konfigurert. 0 er et vellykket tomt resultat; datakildefeil er ukjent.",
-				"Runtimefeil totalt",
-				runtimeTotalQuery,
-			),
-			"panel-2": statPanel(
-				2,
-				"Browser-exceptions · miljøscope UKJENT",
-				"Antall Faro exception-logghendelser i valgt tidsrom, ikke unike feil eller berørte brukere. Runtime-miljø filtrerer ikke dette panelet fordi Faro-miljøfeltet ikke er verifisert. Dette sier heller ikke at alle browserflater har telemetry.",
-				"Browserfeil totalt",
-				browserTotalQuery,
-			),
-			"panel-3": textPanel(),
-			"panel-4": tablePanel({
-				id: 4,
-				title: "Runtimefeil etter tjeneste og type",
+			"panel-1": runtimeTrendPanel(),
+			"panel-2": tablePanel({
+				id: 2,
+				title: "Vanligste runtimefeil per nivå (topp 25)",
 				description:
-					"Hovedoversikt over error-, critical- og fatal-logghendelser i valgt runtime-miljø, gruppert på tjeneste, personvernsikker feiltype og kode. «Ikke oppgitt av appen» og «—» betyr at appen ikke sendte feltet i et godkjent format; dashboardet utleder aldri type fra rå melding, stack eller URL. Hendelser uten trace er med.",
+					"Prioriteringsvisning for valgt miljø og tjeneste, med inntil 25 grupper per error-, critical- og fatal-nivå slik at lavvolums critical/fatal ikke forsvinner bak vanlige error-hendelser. Feiltype, kode og operasjon er kodeeid metadata; rå message vises først i Explore. Handlingen åpner samme gruppe med nivå og scope bevart. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry.",
 				refId: "Runtimefeil etter type",
 				expr: runtimeByClassificationQuery,
 				renameByName: {
-					service_name: "Tjeneste",
-					error_type_display: "Feiltype",
+					action: "Handling",
+					error_level: "Nivå",
 					error_code_display: "Kode",
+					error_type_display: "Feiltype",
+					operation_display: "Operasjon",
+					service_name: "Tjeneste",
+				},
+				indexByName: {
+					error_level: 0,
+					service_name: 1,
+					error_type_display: 2,
+					error_code_display: 3,
+					operation_display: 4,
+					"Value #Runtimefeil etter type": 5,
+					action: 6,
+				},
+				actionLink: dataLink("Se logger", runtimeErrorGroupDataLink()),
+				panelLinks: runtimePanelLinks(),
+				widths: {
+					error_level: 95,
+					error_code_display: 310,
+					operation_display: 230,
+					service_name: 220,
+				},
+			}),
+			"panel-3": tracedErrorsPanel(),
+			"panel-4": tablePanel({
+				id: 4,
+				title: "Loggmetadata som må forbedres",
+				description:
+					"Viser bare hendelser som ikke bruker gyldig kanonisk event_type. Eldre typefelt betyr at dashboardet måtte bruke en migreringsfallback; avvist betyr feil format; Ikke oppgitt av appen betyr at ingen identitetskandidat ble sendt. Kode og operasjon er valgfri metadata og brukes ikke som erstatning for feilidentitet. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry.",
+				refId: "Runtime-kontraktsgap",
+				expr: runtimeContractGapQuery,
+				renameByName: {
+					action: "Handling",
+					contract_state_display: "Gap",
+					service_name: "Tjeneste",
 				},
 				indexByName: {
 					service_name: 0,
-					error_type_display: 1,
-					error_code_display: 2,
-					"Value #Runtimefeil etter type": 3,
+					contract_state_display: 1,
+					"Value #Runtime-kontraktsgap": 2,
+					action: 3,
 				},
-				links: runtimeRowLinks(),
+				actionLink: dataLink("Se logger", runtimeContractGapDataLink()),
 				panelLinks: runtimePanelLinks(),
-				valueLabel: "Logghendelser",
+				widths: { contract_state_display: 170, service_name: 250 },
 			}),
 			"panel-5": tablePanel({
 				id: 5,
-				title: "Browser-exceptions per tjeneste og type · miljøscope UKJENT",
+				title: "Nettleserfeil (topp 50 · miljø ikke verifisert)",
 				description:
-					"Teller Faro exception-logghendelser gruppert på tjeneste og trygg type, ikke unike feil eller berørte brukere. Runtime-miljø filtrerer ikke dette panelet fordi Faro-miljøfeltet ikke er verifisert. Dette dekker bare flater med konfigurert browsertelemetri. Rå value, melding og dynamisk URL hentes ikke inn i panelet.",
+					"Sekundær Faro-diagnostikk for konfigurerte nettleserflater. Kjøremiljøet påvirker ikke dette panelet. Bare en lukket liste med kjente exception-typer vises; øvrige og ikke-parsebare hendelser samles som Annen / ikke oppgitt. Handlingen åpner nettleserlogger uten å påstå et kjøremiljø. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry.",
 				refId: "Browserfeil",
 				expr: browserByTypeQuery,
 				renameByName: {
-					type: "Feiltype",
-					service_name: "Tjeneste",
+					action: "Handling",
+					browser_type_display: "Feiltype",
+					service_name: "Nettleserflate",
 				},
 				indexByName: {
 					service_name: 0,
-					type: 1,
+					browser_type_display: 1,
 					"Value #Browserfeil": 2,
+					action: 3,
 				},
-				links: browserRowLinks(),
-				valueLabel: "Logghendelser",
-			}),
-			"panel-6": tracedErrorsPanel(),
-			"panel-7": tablePanel({
-				id: 7,
-				title: "Klassifiseringsdekning for runtimefeil",
-				description:
-					"Datakvalitet per tjeneste i valgt runtime-miljø uten top-k-begrensning. typed har en godkjent event-/exception-/error-type; code_only har bare kode; context_only har bare trygg operasjon eller kategori; rejected betyr at et kandidatfelt ikke bestod den konservative formatkontrollen; missing betyr at appen ikke oppga noen kjent klassifiseringskontekst. Loggernavn er valgfritt og teller ikke som klassifiseringsdekning. Panelet bruker aldri rå melding, stack eller URL.",
-				refId: "Runtime-klassifiseringsdekning",
-				expr: runtimeClassificationCoverageQuery,
-				renameByName: {
-					service_name: "Tjeneste",
-					type_state: "Klassifiseringsstatus",
-				},
-				indexByName: {
-					service_name: 0,
-					type_state: 1,
-					"Value #Runtime-klassifiseringsdekning": 2,
-				},
-				links: runtimeRowLinks(),
-				panelLinks: runtimePanelLinks(),
-				valueLabel: "Logghendelser",
+				actionLink: dataLink("Se logger", browserErrorGroupDataLink()),
+				panelLinks: [
+					dataLink(
+						"Browserkontrakt",
+						"https://navikt.github.io/team-esyfo/utvikling/observability/browserkontrakt",
+					),
+				],
+				widths: { browser_type_display: 210, service_name: 250 },
 			}),
 		},
 		layout: {
-			kind: "GridLayout",
+			kind: "RowsLayout",
 			spec: {
-				items: [
-					layoutItem("panel-1", 0, 0, 6, 5),
-					layoutItem("panel-2", 6, 0, 6, 5),
-					layoutItem("panel-3", 12, 0, 12, 5),
-					layoutItem("panel-4", 0, 5, 12, 12),
-					layoutItem("panel-5", 12, 5, 12, 12),
-					layoutItem("panel-7", 0, 17, 24, 12),
-					layoutItem("panel-6", 0, 29, 24, 12),
+				rows: [
+					{
+						kind: "RowsLayoutRow",
+						spec: {
+							collapse: false,
+							hideHeader: true,
+							layout: primaryLayout(),
+							title: "Operativ feilsøking",
+						},
+					},
+					{
+						kind: "RowsLayoutRow",
+						spec: {
+							collapse: true,
+							hideHeader: false,
+							layout: secondaryLayout(),
+							title: "Datakvalitet og nettleserfeil",
+							variables: [
+								{
+									kind: "CustomVariable",
+									spec: {
+										allValue: dashboardBrowserRegex,
+										allowCustomValue: false,
+										current: { text: "All", value: ["$__all"] },
+										description:
+											"Bare nettleserflater med konfigurert telemetry. Miljø er ikke verifisert og velgeren påvirker bare nettleserpanelet.",
+										hide: "dontHide",
+										includeAll: true,
+										label: "Nettleserflate · miljø ukjent",
+										multi: true,
+										name: "browser_app",
+										options: [],
+										query: dashboardBrowserOptions
+											.map(({ text, value }) => `${text} : ${value}`)
+											.join(","),
+										skipUrlSync: false,
+										valuesFormat: "csv",
+									},
+								},
+							],
+						},
+					},
 				],
 			},
 		},
@@ -690,24 +850,15 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 		preload: false,
 		tags: ["team-esyfo", "errors", "observability", "managed-as-code"],
 		timeSettings: {
-			autoRefresh: "30s",
-			autoRefreshIntervals: [
-				"5s",
-				"10s",
-				"30s",
-				"1m",
-				"5m",
-				"15m",
-				"30m",
-				"1h",
-			],
+			autoRefresh: "1m",
+			autoRefreshIntervals: ["30s", "1m", "5m", "15m", "30m", "1h"],
 			fiscalYearStartMonth: 0,
 			from: "now-6h",
 			hideTimepicker: false,
 			to: "now",
 			timezone: "browser",
 		},
-		title: "Team eSyfo – Feildrilldown",
+		title: "Team eSyfo – Feiloversikt",
 		variables: [
 			{
 				kind: "CustomVariable",
@@ -715,10 +866,10 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					allowCustomValue: false,
 					current: { text: "prod-gcp", value: "prod" },
 					description:
-						"Filtrerer bare runtimepanelene og styrer miljøet i runtime-lenker til APM og logger. Browserpanelene har ukjent miljøscope og påvirkes ikke.",
+						"Filtrerer runtimepanelene og runtime-lenker. Browserdiagnostikk har ikke verifisert miljø og påvirkes ikke.",
 					hide: "dontHide",
 					includeAll: false,
-					label: "Runtime-miljø",
+					label: "Kjøremiljø",
 					multi: false,
 					name: "runtime_environment",
 					options: [],
@@ -730,13 +881,34 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				},
 			},
 			{
+				kind: "DatasourceVariable",
+				spec: {
+					allowCustomValue: false,
+					current: {
+						text: "prod-gcp-tempo",
+						value: PROD_TEMPO_DATASOURCE_UID,
+					},
+					description:
+						"Skjult, avledet Tempo-datakilde for valgt kjøremiljø. Holder trace-lenker i samme dev/prod-scope som runtime-loggene.",
+					hide: "hideVariable",
+					includeAll: false,
+					multi: false,
+					name: "tempo_datasource",
+					options: [],
+					pluginId: "tempo",
+					refresh: "onDashboardLoad",
+					regex: `/^${RUNTIME_ENVIRONMENT_RAW}-gcp-tempo$/`,
+					skipUrlSync: true,
+				},
+			},
+			{
 				kind: "CustomVariable",
 				spec: {
 					allValue: dashboardApplicationRegex,
 					allowCustomValue: false,
 					current: { text: "All", value: ["$__all"] },
 					description:
-						"Eksakt nåværende tjenestescope fra runtimeinventaret. Overgangstilstander vises i etiketten.",
+						"Eksakt runtime-scope fra inventaret. Velg én tjeneste når topp 25 per nivå ikke er komplett nok.",
 					hide: "dontHide",
 					includeAll: true,
 					label: "Tjeneste",

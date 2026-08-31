@@ -143,7 +143,7 @@ describe("kontrollrom-dashboard", () => {
 	test("bruker stabil identitet, Team eSyfo-mappen og live-verifiserte datasources", () => {
 		const dashboard = buildControlRoomDashboard();
 		const serialized = serializeControlRoomDashboard();
-		assert.equal(CONTROL_ROOM_UID, "team-esyfo-control-room-v1");
+		assert.equal(CONTROL_ROOM_UID, "team-esyfo-kontrollrom");
 		assert.equal(CONTROL_ROOM_FOLDER_UID, "K-1b-N_4k");
 		assert.equal(MIMIR_DATASOURCE_UID, "PA58DA793C7250F1B");
 		assert.equal(LOKI_DATASOURCE_UID, "PEA2100DC89AE9FE2");
@@ -697,10 +697,10 @@ describe("kontrollrom-dashboard", () => {
 		);
 		assert.ok(urls.some((url) => url.includes("nais-apm-app")));
 		assert.ok(urls.some((url) => url.includes("lokiexplore-app")));
-		assert.ok(urls.some((url) => url.includes("team-esyfo-error-drilldown")));
+		assert.ok(urls.some((url) => url.includes("team-esyfo-feiloversikt")));
 		assert.ok(
 			urls
-				.filter((url) => url.includes("team-esyfo-error-drilldown"))
+				.filter((url) => url.includes("team-esyfo-feiloversikt"))
 				.every((url) => url.includes("var-runtime_environment=prod")),
 		);
 		assert.ok(urls.includes(RUNTIME_RUNBOOK_URL));
@@ -840,7 +840,7 @@ describe("kontrollrom-dashboard", () => {
 			if (template.startsWith("/")) {
 				assert.match(
 					parsed.pathname,
-					/^\/(a\/(nais-apm-app|grafana-lokiexplore-app)|d\/team-esyfo-error-drilldown)\//,
+					/^\/(a\/(nais-apm-app|grafana-lokiexplore-app)|d\/team-esyfo-feiloversikt)\//,
 				);
 			}
 		}

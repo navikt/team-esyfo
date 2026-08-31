@@ -30,7 +30,7 @@ import {
 } from "./dashboard-kit.ts";
 import { runtimeErrorPipeline } from "./runtime-logql.ts";
 
-export const CONTROL_ROOM_UID = "team-esyfo-control-room-v1";
+export const CONTROL_ROOM_UID = "team-esyfo-kontrollrom";
 export const CONTROL_ROOM_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
 
 const FROM = grafanaVariable("__from");
@@ -266,12 +266,12 @@ export const runtimeLogsDataLink = (service: string) =>
 	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod`;
 
 export const errorDashboardDataLink = (service: string) =>
-	`/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${FROM}&to=${TO}&var-runtime_environment=prod&var-app=${service}`;
+	`/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${FROM}&to=${TO}&var-runtime_environment=prod&var-app=${service}`;
 
 const serviceDataLinks = (service: string) => [
 	dataLink("NAIS APM", apmDataLink(service)),
 	dataLink("Avgrensede logger", runtimeLogsDataLink(service)),
-	dataLink("Feildrilldown", errorDashboardDataLink(service)),
+	dataLink("Feiloversikt", errorDashboardDataLink(service)),
 	dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL),
 ];
 
@@ -1073,7 +1073,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				links: [dataLink("Browser-runbook", BROWSER_RUNBOOK_URL)],
 				fieldLinks: [
 					dataLink("Browser-runbook", BROWSER_RUNBOOK_URL),
-					dataLink("Feildrilldown", errorDashboardDataLink(FIELD_SERVICE)),
+					dataLink("Feiloversikt", errorDashboardDataLink(FIELD_SERVICE)),
 				],
 			}),
 			"panel-21": textPanel(

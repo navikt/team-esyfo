@@ -5,7 +5,7 @@
     "annotations": {
       "grafana.app/folder": "K-1b-N_4k"
     },
-    "name": "team-esyfo-control-room-v1"
+    "name": "team-esyfo-kontrollrom"
   },
   "spec": {
     "annotations": [
@@ -818,8 +818,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
             },
             {
               "targetBlank": true,
@@ -888,8 +888,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
                     },
                     {
                       "targetBlank": true,
@@ -988,8 +988,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
             },
             {
               "targetBlank": true,
@@ -1058,8 +1058,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
                     },
                     {
                       "targetBlank": true,
@@ -1362,8 +1362,8 @@
                           },
                           {
                             "targetBlank": true,
-                            "title": "Feildrilldown",
-                            "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__value.raw}"
+                            "title": "Feiloversikt",
+                            "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__value.raw}"
                           },
                           {
                             "targetBlank": true,
@@ -1675,8 +1675,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     },
                     {
                       "targetBlank": true,
@@ -1814,8 +1814,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     },
                     {
                       "targetBlank": true,
@@ -1957,8 +1957,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     },
                     {
                       "targetBlank": true,
@@ -2049,8 +2049,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
             },
             {
               "targetBlank": true,
@@ -2157,8 +2157,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
             },
             {
               "targetBlank": true,
@@ -2265,8 +2265,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
             },
             {
               "targetBlank": true,
@@ -2462,8 +2462,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     }
                   ],
                   "noValue": "Ukjent",
@@ -2599,8 +2599,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
             },
             {
               "targetBlank": true,
@@ -2727,8 +2727,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
             },
             {
               "targetBlank": true,
@@ -3004,8 +3004,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-budstikka"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-budstikka"
             },
             {
               "targetBlank": true,
@@ -3079,8 +3079,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-budstikka"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-budstikka"
                     },
                     {
                       "targetBlank": true,
@@ -3184,8 +3184,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
             },
             {
               "targetBlank": true,
@@ -3259,8 +3259,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
                     },
                     {
                       "targetBlank": true,
@@ -3368,8 +3368,8 @@
             },
             {
               "targetBlank": true,
-              "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfomotebehov"
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfomotebehov"
             },
             {
               "targetBlank": true,
@@ -3443,8 +3443,8 @@
                     },
                     {
                       "targetBlank": true,
-                      "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfomotebehov"
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfomotebehov"
                     },
                     {
                       "targetBlank": true,

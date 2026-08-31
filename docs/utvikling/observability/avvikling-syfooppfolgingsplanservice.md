@@ -76,4 +76,4 @@ Lenker eller skjermbilder:
 
 #208 kan lukkes når en separat, bekreftet produksjonscutover er fulgt av ryddede aktive dashboard-, inventory-, topic- og alertreferanser, uten blindsoner eller falske hendelser. Oppgaven eier ikke resten av tjenesteavviklingen.
 
-Runtimeinventaret holder de tre ressursene som `sunset` frem til bekreftet cutover. Dashboardtestene låser dem ute av aktivt Kontrollrom- og feildrilldown-scope.
+Runtimeinventaret holder de tre ressursene som `sunset` frem til bekreftet cutover. Dashboardtestene låser dem ute av aktivt Kontrollrom- og Feiloversikt-scope.

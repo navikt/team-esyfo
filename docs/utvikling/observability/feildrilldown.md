@@ -1,55 +1,85 @@
-# Feildrilldown
+# Feiloversikt
 
-[Team eSyfo – Feildrilldown](https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=$__all&refresh=30s) er teamets felles inngang til runtimefeil. Runtime-miljø velges eksplisitt mellom `prod-gcp` og `dev-gcp`, med produksjon som standard. Dashboardet viser også browser-exceptions, men skiller dem tydelig ut fordi deres miljøscope ennå ikke er verifisert.
+[Team eSyfo – Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=$__all&var-browser_app=$__all&refresh=1m) er teamets arbeidsflate for runtimefeil. Produksjon er standard, men `prod-gcp` og `dev-gcp` velges eksplisitt. Nettleserfeil ligger i en separat, sammenfoldet del fordi browserstrømmen ennå ikke har et verifisert miljøfelt.
 
-Dashboardet er en drilldown, ikke kontrollrommet for all teknisk helse. Tilgjengelighet, latency, saturation, restarts, Kafka-flyt og syntetiske reiser kommer i [kontrollrommet i #211](https://github.com/navikt/team-esyfo/issues/211).
+Dashboardet er en drilldown, ikke kontrollrommet for all teknisk helse. Tilgjengelighet, latency, saturation, restarts, Kafka-flyt og syntetiske reiser hører hjemme i [kontrollrommet](./kontrollrom).
+
+## Operatørflyt
+
+Den primære, åpne delen har én rekkefølge:
+
+1. **Runtimefeil over tid** viser om feilvolumet endrer seg i valgt scope.
+2. **Vanligste runtimefeil per nivå (topp 25)** viser hvor volumet kommer fra og hvilken feilidentitet og kode som er tilgjengelig. Topp-listen beregnes separat for `error`, `critical` og `fatal`.
+3. **Nyeste runtimefeil med trace (maks 100)** gir konkrete forløp å undersøke videre.
+
+Hovedtabellen har en egen handling som åpner samme feilgruppe i Grafana Explore. Miljø, tjeneste, feiltype, kode, operasjon og tidsrom følger med; operatøren starter derfor ikke på nytt i et uavgrenset loggsøk. Trace-tabellen er deduplisert på trace, tjeneste, feiltype, kode og operasjon, men beholder ulike feil i samme trace.
+
+Den sammenfoldede raden **Datakvalitet og nettleserfeil** inneholder:
+
+- **Loggmetadata som må forbedres**, som viser bare tjenester og hendelser uten gyldig kanonisk `event_type`.
+- **Nettleserfeil**, som har sin egen inventarstyrte flatevelger inne i den sammenfoldede raden og aldri arver valgt kjøremiljø.
+
+Panelbeskrivelser og lenker til kontrakt og runbook ligger i panelmenyene. Dashboardet har ikke et stort forklaringspanel som skyver feilinformasjonen ut av første skjermbilde.
 
 ## Scope og datakilder
 
-- Tjenestevalgene genereres fra det [godkjente runtimeinventaret](./runtimeinventar). `active`, `migrating` og `retiring` er med; `sunset`, `retired` og eksplisitte exclusions er ute.
-- Runtime-miljø er single-select uten `All`. Grafana viser `prod-gcp`/`dev-gcp`, mens Loki og NAIS APM bruker de interne verdiene `prod`/`dev`. Runtimequeryer bruker eksakt likhet på `k8s_cluster_name`; `prod-fss` er ikke med.
-- Runtimefeil kommer fra Loki-datasource `PEA2100DC89AE9FE2` og filtreres positivt på structured metadata `detected_level=error|critical|fatal`. Logger som browseren har videresendt via `next-logger` og merket `x_isFrontend=true`, ekskluderes både når markøren finnes som Loki-metadata og når den bare finnes i JSON-linjen. Ikke-JSON runtime-logger beholdes. Det betyr ikke at alle ekskluderte logger blir Faro-exceptions.
-- Browserfeil kommer fra den separate Faro-strømmen `kind=exception` der den er konfigurert. Runtime-miljø filtrerer ikke browserpanelene, og de er derfor merket `miljøscope UKJENT`.
-- Tempo-datasource for trace er `P8A28344D07741F8D`.
-- Dashboard-UID er `team-esyfo-error-drilldown`, og det skal ligge i Team eSyfo-mappen med UID `K-1b-N_4k`.
+- Runtime-tjenestene genereres fra det [godkjente runtimeinventaret](./runtimeinventar). `active`, `migrating` og `retiring` er med; `sunset`, `retired` og eksplisitte exclusions er ute.
+- Runtime-miljø er single-select uten `All`. Grafana viser `prod-gcp`/`dev-gcp`, mens Loki bruker `prod`/`dev`. Queryene bruker ankret eksaktmatch på `k8s_cluster_name`; `prod-fss` er ikke med.
+- Runtimefeil kommer fra Loki-datasource `PEA2100DC89AE9FE2` og filtreres positivt på structured metadata `detected_level=error|critical|fatal`.
+- Logger som browseren har videresendt via `next-logger` og merket `x_isFrontend=true`, ekskluderes både når markøren finnes som Loki-metadata og når den bare finnes i JSON-linjen. Ikke-JSON runtime-logger beholdes i trend og hovedtelling.
+- Nettleserfeil kommer fra den separate Faro-strømmen `kind=exception`. Flatevelgeren inneholder bare de fem flatene som inventaret markerer med konfigurert telemetry.
+- Trace-datakilden avledes skjult fra kjøremiljøet: `prod-gcp-tempo` (`P8A28344D07741F8D`) for prod og `dev-gcp-tempo` (`P95CC91DC09CABFC8`) for dev.
+- Dashboard-UID er `team-esyfo-feiloversikt`, og ressursen skal ligge i Team eSyfo-mappen med UID `K-1b-N_4k`.
 
-Overgangstilstander står synlig i tjenestevelgeren. Det gjør at `esyfovarsel` kan overvåkes under migreringen til `syfo-budstikka`, og at `syfobrukertilgang` beholder nødvendig kontroll frem til utfasing er besluttet og fullført.
+Overgangstilstander står synlig i runtime-velgeren. Det gjør at `esyfovarsel` kan følges under migreringen til `syfo-budstikka`, og at `syfobrukertilgang` beholder nødvendig kontroll frem til utfasing er fullført.
 
-## Feiltype og «Ikke oppgitt av appen»
+## Feiltype, kode og kontraktsgap
 
-Hovedtabellen grupperer på tjeneste, personvernsikker feiltype og kode. Det er en prioriteringsvisning, ikke en oversikt over unike feil eller incidents. Feiltype velges i denne rekkefølgen:
+`event_type` er den kanoniske, stabile identiteten til en logisk feilhendelse. Hovedtabellen velger feiltype i denne rekkefølgen:
 
-1. `event_type` eller `event`
-2. eksplisitte exception-felt: `exception.type`, `error.type` eller `err.type`
-3. `Ikke oppgitt av appen`
+1. gyldig `event_type`
+2. formatvalidert legacy `event`
+3. formatvaliderte exception-/error-felt som ender på `Error` eller `Exception`
+4. `Ikke oppgitt av appen`
 
-Kode velges separat fra `error_code`, `code` eller `feilkode`. Live-data har også vist uppercase kodeverdier som `INTERNAL_SERVER_ERROR` i top-level `type`; derfor brukes `type` bare når verdien matcher et strengt kodeformat, og aldri som generell feiltype. HTTP `4xx`/`5xx`-status er siste kodefallback.
+Eldre fallbackfelt beholdes midlertidig for at dashboardet skal være operativt mens appene migreres. De er ikke kontraktkonforme bare fordi formatet er gyldig. Datakvalitetspanelet skiller derfor mellom:
 
-`logger_name` brukes aldri som feiltype; navn som `Application` eller `ControllerExceptionHandler` sier hvor loggen kom fra, ikke hvilken feil som skjedde. `Ikke oppgitt av appen` betyr at logghendelsen har riktig alvorlighetsgrad, men mangler et trygt strukturert identitetsfelt. Dashboardet forsøker ikke å gjette type fra fri tekst.
+- **Eldre typefelt**: dashboardet måtte bruke et eldre strukturert typefelt.
+- **Avvist format**: et kandidatfelt fantes, men brøt den konservative formatkontrollen.
+- **Ikke oppgitt av appen**: ingen kjent identitetskandidat ble sendt.
 
-Tallene i runtime- og browserpanelene er **logghendelser**, ikke unike feil, incidents eller berørte brukere. Flere logger kan tilhøre samme feilforløp eller trace. Den aggregerte signaturtabellen er derfor prioriteringsvisningen; trace-tabellen er et diagnostisk utvalg på maksimalt 100 nyeste JSON-parsebare hendelser med trace-ID.
+Kode er valgfri metadata og velges separat fra `error_code`, `code`, `feilkode`, en streng uppercase legacy-kode i `type`, eller HTTP `4xx`/`5xx`. Manglende kode vises som `—`; den gjør ikke hendelsen til en egen feilklasse. Operasjon er også valgfri, kodeeid kontekst og vises i hovedtabellen, men er ikke en erstatning for `event_type`.
 
-Nye og endrede loggpunkter skal følge [runtime-feilkontrakten](./runtime-feilkontrakt), som definerer stabil hendelsestype, personvern, konformitetstest og migrering av legacylogger.
+`logger_name` er fjernet fra operatørflaten. Navn som `Application` eller `ControllerExceptionHandler` forteller hvor en logglinje ble skrevet, men sjelden hva som feilet. Nye og endrede loggpunkter skal følge [runtime-feilkontrakten](./runtime-feilkontrakt), som definerer stabil hendelsestype, tillatt metadata, konformitetstest og migrering av legacylogger.
 
-## Personvernkontrakt
+## Personvern og kardinalitet
 
-Hovedoversikten viser bare allowlistede, regex-validerte tjenestenavn, feiltyper, koder og antall. Det separate dekningspanelet viser `typed`, `context_only`, `code_only`, `rejected` og `missing`. Trace-ID valideres som 32 hextegn, skjules bak handlingen og brukes bare til å åpne riktig trace. Panelene viser ikke rå logglinje, melding, stacktrace, request body, valideringsskjema, person- eller sesjonsidentifikator eller full dynamisk URL.
+Dashboardet returnerer bare eksplisitt utvalgte strukturerte felt. Det viser ikke rå logglinje, melding, stacktrace, request body, valideringsskjema, person-/sesjonsidentifikator eller full dynamisk URL.
 
-Trace-tabellen bruker selektiv JSON-ekstraksjon og overskriver original feillinje med den sanitiserte hendelsen før Loki returnerer resultatet. Et rått loggsøk åpnes bare etter en eksplisitt handling og avgrenses til tjenesten og dashboardets valgte tidsrom. Trace-handlingen er den eneste radhandlingen som peker på én eksakt hendelseskontekst.
+Regex-validering alene beviser ikke at produsenten bruker et felt riktig. Derfor omtales legacyfeltene som **formatvaliderte**, ikke som personvernsikre. Den langsiktige garantien kommer fra den eide kontrakten, et lukket event-katalog i appen og producer-nære konformitetstester.
 
-Browserfeil grupperes på Faro-feltet `type`; feltet `value` hentes ikke inn i panelet. [Browserkontrakten](./browserkontrakt) kommer fra [#206](https://github.com/navikt/team-esyfo/issues/206), mens live-evidens eies av utrullingen per flate. En tom browserflate betyr derfor ikke automatisk at brukerne ikke opplever feil.
+Browserfeltet `type` behandles strengere: bare en lukket liste med kjente JavaScript-/DOM-exceptiontyper, inkludert den live-observerte `UnhandledRejection`, vises. Alt annet og alle ikke-parsebare hendelser aggregeres som `Annen / ikke oppgitt`. Rå Faro-`value`, melding og dynamisk URL hentes ikke inn i panelet.
 
-## Slik tolkes 0, tomt og ukjent
+Trace-ID må være 32 hextegn og kan ikke være W3C/OTel sin ugyldige null-ID. ID-en skjules bak handlingen **Åpne trace**. Loki-resultatet omskrives til den validerte feiltypen før det når tabellen.
 
-- **0 feil** betyr at count-spørringen lyktes og ikke fant kvalifiserende hendelser i valgt scope.
-- **Tom tabell** betyr at den konkrete tabellspørringen ikke fant treff. Det er ikke bevis på komplett telemetry.
-- **Ikke oppgitt av appen** betyr at feilhendelsen finnes, men at tjenesten ikke logger en trygg, stabil feilidentitet som dashboardet kan bruke.
-- **Telemetry ikke konfigurert** vises som inventargenerert dekningsgap i dashboardet.
-- **Ukjent eller feil** betyr at datasource eller spørring feilet. Det skal aldri tolkes som grønt.
+Et rått loggsøk åpnes bare etter den eksplisitte handlingen **Se logger**. Hovedtabellens Explore-lenk filtrerer på den samme, utledede feiltypen, koden og operasjonen; der er den opprinnelige `message`-teksten tilgjengelig. Kontraktsgap og browsergrupper har tilsvarende scope-korrekte lenker.
+
+## Telling, tomt resultat og kost
+
+Tallene er **logghendelser**, ikke unike feil, incidents eller berørte brukere. Flere logger kan tilhøre samme feilforløp. Trend og metriske Loki-queryer bruker Grafanas `$__auto`, beholder bare nødvendige labels før aggregering og begrenser trendens oppløsning til 240 datapunkter med minimumsintervall ett minutt.
+
+- **0 i trenden** betyr at count-spørringen lyktes uten kvalifiserende treff.
+- **Tom tabell** betyr at den konkrete tabellspørringen ikke fant treff. Det beviser ikke komplett telemetry.
+- **Ikke oppgitt av appen** betyr at feilhendelsen finnes, men at appen ikke sendte en brukbar feilidentitet.
+- **Datasource- eller queryfeil** skal stå som feil/ukjent og må aldri tolkes som grønt.
+
+Standard refresh er ett minutt. Intervallene 5 og 10 sekunder er fjernet. Den sekundære raden starter sammenfoldet med `preload=false`; Query Inspector skal brukes ved publisering for å bekrefte om Grafana-versjonen også unngår å kjøre de sammenfoldede queryene.
+
+`Topp 25 per nivå` er en prioriteringsvisning, ikke en full flåteliste. Nivå normaliseres til lowercase før gruppering, så `ERROR`, `Error` og `error` bruker samme bøtte. Velg én tjeneste når listen ikke er komplett nok.
 
 ## Dashboard som kode
 
-Kilden ligger i `.vitepress/grafana/error-drilldown.ts`. Den reviewbare [Grafana-ressursen](/team-esyfo/grafana/team-esyfo-error-drilldown.json) genereres deterministisk og er artefakten som publiseres.
+Kilden ligger i `.vitepress/grafana/error-drilldown.ts`. Den reviewbare [Grafana-ressursen](/team-esyfo/grafana/team-esyfo-feiloversikt.json) genereres deterministisk og er artefakten som publiseres. Dashboardet er `editable=false`; endringer skal gå via kode og review.
 
 Kjør fra `docs/`:
 
@@ -61,23 +91,26 @@ pnpm grafana-dashboard:smoke
 pnpm build
 ```
 
-`error-dashboard:check` sammenligner generert og committed JSON byte for byte. CI feiler derfor dersom inventaret eller builderen endres uten at dashboardartefakten regenereres.
+Testene dekker blant annet panelhierarki, sammenfoldet sekundærrad, queryshape, separate allowlister, eksakte radlenker, kanonisk/eldre/avvist/manglende klassifisering, browsercanaries, tracevalidering og fravær av råfelt. `grafana-dashboard:smoke` importerer ressursen i samme Grafana-versjon som produksjon og sammenligner ressurs, DTO, layout, `preload`, `editable` og `liveNow` semantisk.
 
-`grafana-dashboard:smoke` importerer både Feildrilldown og Kontrollrom i en
-midlertidig lokal Grafana og sammenligner lagret ressurs og UI-DTO med de
-committede artefaktene. Smoken kjører også i CI.
+Publisering til produksjons-Grafana er foreløpig manuell. Den committede JSON-filen er fasit. Før overwrite skal gjeldende live-dashboard eksporteres som rollback-kopi. Importer deretter den genererte ressursen med samme UID og mappe, hent live-ressursen tilbake og sammenlign semantisk med artefakten.
 
-Publisering til produksjons-Grafana er foreløpig manuell. Den committede JSON-filen er fasit; kode og artefakt kan derfor være nyere enn dashboardet som faktisk ligger i Grafana. Før en oppdatering skal gjeldende live-dashboard eksporteres som rollback-kopi. Importer deretter den genererte ressursen med samme UID og mappe, hent live-ressursen tilbake og sammenlign semantisk med artefakten.
+Verifiser minst:
 
-Verifiser minst både `prod-gcp` og `dev-gcp`, `All` i tjenestevelgeren, én runtimeapp, én browserapp, en app uten browsertelemetri, et tomt tidsrom og radlenkene til APM, logger og trace. Ugyldige runtime-miljøverdier skal gi no-data, aldri blande miljøer. Bruk Query Inspector til å bekrefte eksakt `k8s_cluster_name`, både metadata- og JSON-varianten av `x_isFrontend`, at klassifiseringsspørringene returnerer uten parserfeil, og at forespørselskostnaden er akseptabel for standardtidsrommet. UI-smoken beviser import og roundtrip lokalt, men kjører ikke Loki-spørringene mot produksjonsdata.
+- `prod-gcp` og `dev-gcp`, `All` og én runtime-tjeneste
+- at nettleserpanelet og nettleserlenken ikke får kjøremiljø
+- at første skjermbilde viser miljø, trend, feilgrupper og handling uten forklaringsvegg
+- at feilgruppehandlingen åpner Explore med riktig miljø, tjeneste, type, kode og tidsrom
+- at trace-tabellen har seks kolonner og ingen identiske `(trace, tjeneste, feiltype, kode)`-rader
+- at sekundærraden starter lukket, og om queryene faktisk utsettes
+- Query Inspector-resultat for bytes skannet, svartid, serieantall og parserfeil i standardvinduet
 
-Første publisering ble verifisert i produksjons-Grafana 28. august 2026 med eksakt generert artefakt, stabil UID og Team eSyfo-mappen. Reelle runtime- og browserhendelser bekreftet error-pathene, APM- og logglenkene åpnet riktig tjeneste og scope, og en persistiert trace-lenke åpnet riktig trace. Valg av `aktivitetskrav-backend` i samme seks-timersvindu bekreftet `0` i begge totalpanelene, `No data` i gruppetabellene og `No rows` i trace-tabellen. Reelle, sanitiserte hendelser ble brukt som sterkere integrasjonsevidens enn å skrive syntetiske feillogger til produksjon.
-
-Etter eksplisitt teamgodkjenning ble de gamle dashboardene `eSyfo: Error details` og den uvirksomme `eSyfo: Error summary` slettet i stedet for å ligge igjen som markerte erstatningsflater. `Team eSyfo – ERROR logs` ble beholdt uendret fordi den fortsatt er i bruk.
+Ugyldige runtime-miljøverdier skal gi no-data, aldri blande miljøer. UI-smoken beviser import og roundtrip lokalt, men produksjons-Loki må fortsatt verifiseres live.
 
 ## Referanser
 
 - [NAIS: Opprett dashboard](https://doc.nais.io/observability/metrics/how-to/dashboard/)
 - [Grafana: Observability as code](https://grafana.com/docs/grafana/latest/as-code/observability-as-code/)
 - [Grafana: Data links](https://grafana.com/docs/grafana/latest/visualizations/panels-visualizations/configure-data-links/)
-- [Grafana Loki: Log queries](https://grafana.com/docs/loki/latest/query/log_queries/)
+- [Grafana: Explore URL schema](https://grafana.com/docs/grafana/latest/visualizations/explore/get-started-with-explore/#generate-explore-urls-from-external-tools)
+- [Grafana Loki: Query best practices](https://grafana.com/docs/loki/latest/query/bp-query/)

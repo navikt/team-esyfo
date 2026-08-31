@@ -324,7 +324,7 @@ describe("alert-register", () => {
 	test("låser prodvarslenes feildrilldown-lenker til runtime-miljø prod", () => {
 		const drilldownHrefs = alertRegistry.rules.flatMap(({ dashboard }) =>
 			dashboard.status === "linked" &&
-			dashboard.href.includes("team-esyfo-error-drilldown")
+			dashboard.href.includes("team-esyfo-feiloversikt")
 				? [dashboard.href]
 				: [],
 		);

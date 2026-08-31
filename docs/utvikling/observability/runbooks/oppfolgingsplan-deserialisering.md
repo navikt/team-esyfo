@@ -14,7 +14,7 @@ Dette er en blokkert pagerkandidat. Ingen pager aktiveres før recovery/reconcil
 
 ## Avgrens konsekvens uten persondata
 
-1. Åpne `syfo-oppfolgingsplan-backend` i APM og Feildrilldown for samme tidsrom.
+1. Åpne `syfo-oppfolgingsplan-backend` i APM og Feiloversikt for samme tidsrom.
 2. Bruk sanitert logger-/exception-type, schema-versjon, topic/partition og offset der dette er trygt. Ikke kopier record payload, fødselsnummer, sykmeldingsinnhold eller rå stacktrace til GitHub/Slack.
 3. Sammenlign consumerens forventede skjema med produsentens faktisk deployerte kontrakt/revision.
 4. Tell berørte records og tidsrom. En metrikkrate alene identifiserer ikke hvilke personer eller oppfølgingsplaner som mangler data.

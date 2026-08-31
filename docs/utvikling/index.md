@@ -38,7 +38,7 @@ Pull request-rutiner, GitHub Flow og konvensjoner for kodesamarbeid i teamet.
 
 [Bauta-rutiner i Slack](https://nav-it.slack.com/docs/T5LNAMWNA/F05QS0SG09F) — Vaktrutiner og beredskap
 
-[Grafana: Team eSyfo – Feildrilldown](https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=$__all&refresh=30s) — Felles inngang til runtimefeil i valgt miljø og browserfeil med ukjent miljøscope
+[Grafana: Team eSyfo – Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=$__all&refresh=1m) — Felles inngang til runtimefeil i valgt miljø og browserfeil med ukjent miljøscope
 
 [Grafana: Team eSyfo – ERROR logs](https://grafana.nav.cloud.nais.io/d/team-esyfo-error-summary/team-esyfo-error-logs?orgId=1&from=now-6h&to=now&timezone=browser&var-cluster=prod&var-team=team-esyfo&var-app=$__all&var-source=PEA2100DC89AE9FE2&var-ex_level=unknown&var-ex_level=info&var-ex_level=warn&var-fmt=%7C%20__error__%3D%22%22&var-search_regex=&var-search_message=&refresh=30s) — Eksisterende detaljert loggflate, beholdt mens den fortsatt er i bruk
 
