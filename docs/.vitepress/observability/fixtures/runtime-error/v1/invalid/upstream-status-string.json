@@ -1,0 +1,4 @@
+{
+	"event_type": "sykmelding_lookup_failed",
+	"upstream_status": "502"
+}

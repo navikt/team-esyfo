@@ -5,8 +5,11 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vitepress dev",
-		"build": "pnpm typecheck && pnpm inventory:check && pnpm inventory:test && pnpm alert-register:check && pnpm alert-register:test && pnpm grafana-dashboard:test && pnpm error-dashboard:check && pnpm control-room:check && vitepress build && pnpm inventory:export",
+		"build": "pnpm typecheck && pnpm runtime-error-contract:check && pnpm runtime-error-contract:test && pnpm inventory:check && pnpm inventory:test && pnpm alert-register:check && pnpm alert-register:test && pnpm grafana-dashboard:test && pnpm error-dashboard:check && pnpm control-room:check && vitepress build && pnpm inventory:export",
 		"typecheck": "vue-tsc --noEmit",
+		"runtime-error-contract:check": "node scripts/runtime-error-contract.ts check",
+		"runtime-error-contract:test": "node --test .vitepress/observability/runtime-error-contract.test.ts",
+		"runtime-error-contract:export": "node scripts/runtime-error-contract.ts export",
 		"inventory:check": "node scripts/runtime-inventory.ts check",
 		"inventory:test": "node --test .vitepress/runtime/*.test.ts",
 		"inventory:export": "node scripts/runtime-inventory.ts export",
@@ -28,9 +31,10 @@
 		"preview": "vitepress preview"
 	},
 	"devDependencies": {
-		"@types/node": "^24.10.0",
 		"@biomejs/biome": "^2.4.14",
 		"@braintree/sanitize-url": "^7.1.2",
+		"@types/node": "^24.10.0",
+		"ajv": "^8.20.0",
 		"cytoscape": "^3.33.3",
 		"cytoscape-cose-bilkent": "^4.1.0",
 		"dayjs": "^1.11.20",
