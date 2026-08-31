@@ -104,7 +104,7 @@ Bruk `StructuredArguments.kv` og la MDC/OTel-integrasjonen levere `trace_id`:
 import net.logstash.logback.argument.StructuredArguments.kv
 
 log.error(
-    "GraphQL request failed: {} {} {} {}",
+    "GraphQL request failed: {} {} {} {} {}",
     kv("event_type", "graphql_request_failed"),
     kv("error_code", "INTERNAL_SERVER_ERROR"),
     kv("operation", "sykmelding_by_id"),
