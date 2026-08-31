@@ -69,7 +69,7 @@ Varslingsreisen viser `syfo-budstikka` som målprosessor og `esyfovarsel` som mi
 
 De tre kandidatene fra [#210](https://github.com/navikt/team-esyfo/issues/210) har egne diagnostikkpaneler og runbooklenker:
 
-- Budstikka-lag er kun diagnostikk mens ende-til-ende-ferskhet/eldste alder og terminale utfall bygges i [syfo-budstikka#260](https://github.com/navikt/syfo-budstikka/issues/260).
+- Budstikka-lag er kun transportdiagnostikk. Produsentens outbox og Budstikkas egne inbox-/delivery-køer vurderes separat i [#212](https://github.com/navikt/team-esyfo/issues/212) og rulles ut via [#219](https://github.com/navikt/team-esyfo/issues/219).
 - Oppfølgingsplan har et verifisert legacy-signal for observerte deserialiseringsfeil. Signalet skiller ennå ikke terminal forkasting fra retryforsøk; dette og recovery/reconciliation avklares i [syfo-oppfolgingsplan-backend#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449).
 - `syfomotebehov` har guarded ready/desired sammen med single-service RED; tuning og konsekvens avklares i [syfomotebehov#753](https://github.com/navikt/syfomotebehov/issues/753).
 
