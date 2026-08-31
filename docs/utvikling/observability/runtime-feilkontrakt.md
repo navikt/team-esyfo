@@ -107,6 +107,19 @@ En statisk, personvernvurdert loggmelding kan fortsatt finnes i råloggen, men
 dashboardet bruker den aldri som signatur. Ikke send et helt error-, request-
 eller response-objekt bare for å oppfylle denne kontrakten.
 
+Dimensjonsreglene er ikke grensen for personverntesten. Den produsentnære
+testen skal søke i **hele den serialiserte JSON-loggen**. Canaries skal ikke
+finnes noe sted — heller ikke i formattert `message`, `stack_trace`, nested
+`exception`, `cause` eller `suppressed`, MDC eller appspesifikke ekstrafelt.
+Det er ikke tilstrekkelig å kontrollere bare feltene i tabellen over.
+
+Et rått `Throwable`-/`Error`-objekt er heller ikke trygg diagnosekontekst som
+standard. Loggeren kan serialisere melding, cause, suppressed exceptions og
+hele stacken selv om ingen av verdiene er lagt i et eksplisitt `kv`-felt.
+Utelat objektet, eller lag en ny sanitert representasjon med statisk melding,
+uten cause/suppressed og eventuelt et lite, allowlistet og avgrenset utvalg
+kodeeide stack frames. Test alltid den faktiske JSON-serialiseringen.
+
 En dokumentert oppstrømskontrakt kan gjøre et avgrenset feilobjekt trygt og
 nyttig å logge. [Pdl-Api oppgir for eksempel](https://navikt.github.io/pdl/#_feilmeldinger_fra_pdl_api_graphql_response_errors)
 at elementene i GraphQL-`errors` ikke inneholder personinformasjon, og anbefaler
@@ -117,6 +130,8 @@ den finnes, for eksempel `not_found` til `PDL_NOT_FOUND`; ikke kopier en
 ukjent runtimeverdi direkte til `error_code`. Garantien gjelder feilobjektene,
 ikke GraphQL-`data`, requestvariabler eller lokal person- og domenekontekst, og
 friteksten brukes fortsatt aldri som dashboardsignatur.
+Dette er et eksplisitt unntak basert på den dokumenterte oppstrømskontrakten,
+ikke en generell tillatelse til å logge exceptions eller responsobjekter.
 
 ## Node/Pino
 
@@ -155,12 +170,22 @@ log.error(
     kv("operation", "hent_sykmelding"),
     kv("upstream_status", 502),
     kv("exception_type", normalizeExceptionType(exception)),
-    exception,
 )
 ```
 
 Ikke avled `exception_type` fra stacktekst. Ikke legg throwable-meldingen,
 request-URL eller person-/domeneidentifikatorer i de strukturerte feltene.
+Det trygge standardeksemplet utelater throwable helt: et ekstra
+`exception`-argument blir tolket av SLF4J/Logback og kan eksponere rå melding,
+cause, suppressed exceptions og `stack_trace`.
+
+Hvis kodeplassering er nødvendig for feilsøking, bruk en ny sanitert throwable
+med statisk melding, tom cause/suppressed og et fast maksimalt antall
+allowlistede stack frames. Ikke muter eller videresend originalen, og la en
+serialiseringstest bevise at ingen canary finnes i den komplette JSON-linjen.
+Dokumentert trygge upstream-objekter, som PDLs GraphQL-`errors`, kan legges i et
+eksplisitt diagnosefelt etter reglene over; de skal ikke pakkes inn som rå
+throwable.
 
 ## Konformitetstest i apprepoet
 
@@ -174,7 +199,9 @@ JSON-loggen og verifiserer:
    heltall i serialisert JSON fra `100` til `599`, og `trace_id` er 32 hextegn
    når testen kjører i en aktiv span;
 4. miljøfelter og canaries for fødselsnummer, UUID, e-post, URL, message,
-   stack og payload ikke finnes i dimensjonsfeltene;
+   stack og payload ikke finnes **noe sted i hele den serialiserte JSON-linjen**,
+   inkludert formattert `message`, nested exception, `cause`, `suppressed`, MDC
+   og appspesifikke ekstrafelt;
 5. retry-/propageringslag ikke lager duplikate errorlogger.
 
 Testen skal ligge ved loggpunktet i apprepoet. En kontrollert dev-hendelse kan

@@ -15,6 +15,24 @@ import {
 } from "./runtime-error-contract.ts";
 
 const fixtureRoot = new URL("./fixtures/runtime-error/v1/", import.meta.url);
+const contractDocumentation = readFileSync(
+	new URL(
+		"../../utvikling/observability/runtime-feilkontrakt.md",
+		import.meta.url,
+	),
+	"utf8",
+);
+
+const documentationSection = (start: string, end: string) => {
+	const startIndex = contractDocumentation.indexOf(start);
+	const endIndex = contractDocumentation.indexOf(
+		end,
+		startIndex + start.length,
+	);
+	assert.notEqual(startIndex, -1, `Fant ikke dokumentasjonsseksjonen ${start}`);
+	assert.notEqual(endIndex, -1, `Fant ikke slutten ${end}`);
+	return contractDocumentation.slice(startIndex, endIndex);
+};
 
 const readFixtures = (group: "valid" | "invalid" | "boundary") =>
 	readdirSync(new URL(`${group}/`, fixtureRoot), { encoding: "utf8" })
@@ -129,6 +147,67 @@ describe("runtime-feilkontrakt v1", () => {
 			false,
 		);
 		assert.equal("request_url" in fixtures["privacy-test-required.json"], true);
+	});
+
+	test("dokumenterer trygg throwable-standard og personverntest av hele JSON-linjen", () => {
+		const kotlinSection = documentationSection(
+			"## Kotlin/LogstashEncoder",
+			"## Konformitetstest i apprepoet",
+		);
+		const kotlinExample = kotlinSection.match(/```kotlin\n([\s\S]*?)```/)?.[1];
+		assert.ok(kotlinExample, "Kotlin-eksemplet mangler");
+		const logCall = kotlinExample.match(/log\.error\(\n([\s\S]*?)\n\)/)?.[1];
+		assert.ok(logCall, "Kotlin-eksemplet mangler log.error-kallet");
+		const argumentsAfterMessage = logCall
+			.split("\n")
+			.slice(1)
+			.map((line) => line.trim())
+			.filter(Boolean);
+		assert.deepEqual(
+			argumentsAfterMessage,
+			[
+				'kv("event_type", "sykmelding_lookup_failed"),',
+				'kv("error_code", "UPSTREAM_HTTP_ERROR"),',
+				'kv("operation", "hent_sykmelding"),',
+				'kv("upstream_status", 502),',
+				'kv("exception_type", normalizeExceptionType(exception)),',
+			],
+			"Standardeksemplet skal bare sende de eksplisitte, sikre kv-feltene etter meldingen",
+		);
+		assert.match(
+			kotlinSection,
+			/Det trygge standardeksemplet utelater throwable helt/,
+		);
+		for (const leakPath of ["cause", "suppressed", "stack_trace"]) {
+			assert.match(kotlinSection, new RegExp(`\\b${leakPath}\\b`));
+		}
+
+		const conformitySection = documentationSection(
+			"## Konformitetstest i apprepoet",
+			"## Dashboardets `contract_state`",
+		);
+		assert.match(
+			conformitySection,
+			/ikke finnes \*\*noe sted i hele den serialiserte JSON-linjen\*\*/,
+		);
+		for (const leakPath of ["message", "cause", "suppressed", "MDC"]) {
+			assert.match(conformitySection, new RegExp(`\\b${leakPath}\\b`));
+		}
+
+		const privacySection = documentationSection(
+			"## Personvern og kardinalitet",
+			"## Node/Pino",
+		);
+		assert.match(privacySection, /navikt\.github\.io\/pdl/);
+		assert.match(privacySection, /GraphQL-`errors`/);
+		assert.match(
+			privacySection,
+			/Dette er et eksplisitt unntak basert på den dokumenterte oppstrømskontrakten/,
+		);
+		assert.match(
+			runtimeErrorContractV1Schema.$comment,
+			/privacy canaries are absent from the entire serialized JSON log/,
+		);
 	});
 
 	test("publisert schema er eksakt generert fra samme kilde", () => {

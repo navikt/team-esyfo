@@ -68,7 +68,7 @@ export const runtimeErrorContractV1Schema = {
 	},
 	additionalProperties: true,
 	$comment:
-		"This schema proves shape only. Producer-near tests must also prove a closed event catalogue, privacy, bounded cardinality, active-span trace propagation and one terminal error log.",
+		"This schema proves shape only. Producer-near tests must also prove a closed event catalogue, bounded cardinality, active-span trace propagation, one terminal error log, and that privacy canaries are absent from the entire serialized JSON log.",
 } as const;
 
 export const serializeRuntimeErrorContractV1 = () =>
