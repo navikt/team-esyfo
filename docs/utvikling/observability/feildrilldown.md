@@ -10,9 +10,9 @@ Den primære, åpne delen har én rekkefølge:
 
 1. **Runtimefeil over tid** viser om feilvolumet endrer seg i valgt scope.
 2. **Vanligste runtimefeil per nivå (topp 25)** viser hvor volumet kommer fra og hvilken feilidentitet og kode som er tilgjengelig. Topp-listen beregnes separat for `error`, `critical` og `fatal`.
-3. **Nyeste runtimefeil med trace (maks 100)** gir konkrete forløp å undersøke videre.
+3. **Nyeste runtimefeil med trace (maks 100)** gir konkrete forløp å undersøke videre, med valgfri HTTP-status fra tjenesten som ble kalt.
 
-Hovedtabellen har en egen handling som åpner samme feilgruppe i Grafana Explore. Miljø, tjeneste, feiltype, kode, operasjon og tidsrom følger med; operatøren starter derfor ikke på nytt i et uavgrenset loggsøk. Trace-tabellen er deduplisert på trace, tjeneste, feiltype, kode og operasjon, men beholder ulike feil i samme trace.
+Hovedtabellen har en egen handling som åpner samme feilgruppe i Grafana Explore. Miljø, tjeneste, feiltype, kode, operasjon og tidsrom følger med; operatøren starter derfor ikke på nytt i et uavgrenset loggsøk. Trace-tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace.
 
 Den sammenfoldede raden **Datakvalitet og nettleserfeil** inneholder:
 
@@ -48,7 +48,9 @@ Eldre fallbackfelt beholdes midlertidig for at dashboardet skal være operativt 
 - **Avvist format**: et kandidatfelt fantes, men brøt den konservative formatkontrollen.
 - **Ikke oppgitt av appen**: ingen kjent identitetskandidat ble sendt.
 
-Kode er valgfri metadata og velges separat fra `error_code`, `code`, `feilkode`, en streng uppercase legacy-kode i `type`, eller HTTP `4xx`/`5xx`. Manglende kode vises som `—`; den gjør ikke hendelsen til en egen feilklasse. Operasjon er også valgfri, kodeeid kontekst og vises i hovedtabellen, men er ikke en erstatning for `event_type`.
+Kode er valgfri metadata og velges separat fra `error_code`, `code`, `feilkode`, en streng uppercase legacy-kode i `type`, eller HTTP `4xx`/`5xx` fra det tvetydige legacyfeltet `status`. Manglende kode vises som `—`; den gjør ikke hendelsen til en egen feilklasse. Operasjon er også valgfri, kodeeid kontekst og vises i hovedtabellen, men er ikke en erstatning for `event_type`.
+
+`upstream_status` er et eget, valgfritt JSON-number fra `100` til `599`. Det beskriver HTTP-responsen fra tjenesten operasjonen kalte og vises bare som **HTTP-status fra kall** i trace-tabellen. Feltet endrer ikke feiltype, kode eller gruppering i hovedtabellen. Legacy `status` fyller ikke denne kolonnen; slik unngår dashboardet å gjette om en eldre status gjelder egen respons, en upstream eller noe annet. Loki kan områdevalidere den uttrukne verdien, men producerens serialiseringstest må bevise at JSON-typen faktisk er number.
 
 `logger_name` er fjernet fra operatørflaten. Navn som `Application` eller `ControllerExceptionHandler` forteller hvor en logglinje ble skrevet, men sjelden hva som feilet. Nye og endrede loggpunkter skal følge [runtime-feilkontrakten](./runtime-feilkontrakt), som definerer stabil hendelsestype, tillatt metadata, konformitetstest og migrering av legacylogger.
 
@@ -101,7 +103,7 @@ Verifiser minst:
 - at nettleserpanelet og nettleserlenken ikke får kjøremiljø
 - at første skjermbilde viser miljø, trend, feilgrupper og handling uten forklaringsvegg
 - at feilgruppehandlingen åpner Explore med riktig miljø, tjeneste, type, kode og tidsrom
-- at trace-tabellen har seks kolonner og ingen identiske `(trace, tjeneste, feiltype, kode)`-rader
+- at trace-tabellen har sju kolonner og ingen identiske `(trace, tjeneste, feiltype, kode, operasjon, HTTP-status fra kall)`-rader
 - at sekundærraden starter lukket, og om queryene faktisk utsettes
 - Query Inspector-resultat for bytes skannet, svartid, serieantall og parserfeil i standardvinduet
 

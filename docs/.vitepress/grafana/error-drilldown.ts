@@ -121,12 +121,15 @@ ${runtimeErrorPipeline}
 [$__auto])) or on() vector(0)`;
 
 const runtimeSignatureParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
-const runtimeTraceParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, trace_id, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
+const runtimeTraceParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, upstream_status, trace_id, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
 
 export const safeEventTypePattern = "^[a-z][a-z0-9_.-]{0,79}$";
 export const safeGenericErrorTypePattern =
 	"^([A-Za-z][A-Za-z0-9_.:$]{0,143})?(Error|Exception)$";
 export const safeCodePattern = "^([A-Z][A-Z0-9_]{1,79}|[1-5][0-9]{2})$";
+// Loki stringifies extracted JSON scalars. Producer tests enforce the number type;
+// this pattern keeps only the allowed integer range in the operator view.
+export const safeUpstreamStatusPattern = "^[1-5][0-9]{2}$";
 const safeGenericTypeAsCodePattern = "^[A-Z][A-Z0-9_]{1,79}$";
 const safeErrorStatusPattern = "^[45][0-9]{2}$";
 const safeTraceIdPattern = "^[A-Fa-f0-9]{32}$";
@@ -187,7 +190,13 @@ ${safeLabel("safe_operation", "operation", safeEventTypePattern)}
 | label_format contract_state_display=\`{{ if eq .contract_state "canonical" }}Kanonisk feiltype{{ else if eq .contract_state "legacy_type" }}Eldre typefelt{{ else if eq .contract_state "rejected" }}Avvist format{{ else }}Ikke oppgitt av appen{{ end }}\``;
 
 const runtimeTraceLabels = `${runtimeSignatureLabels}
+${safeLabel(
+	"safe_upstream_status",
+	"upstream_status",
+	safeUpstreamStatusPattern,
+)}
 ${safeLabel("safe_trace_id", "trace_id", safeTraceIdPattern)}
+| label_format upstream_status_display=\`{{ if .safe_upstream_status }}{{ .safe_upstream_status }}{{ else }}—{{ end }}\`
 | label_format error_context=\`{{ .operation_display }}\``;
 
 const browserTypePipeline = `| logfmt type
@@ -229,7 +238,7 @@ ${runtimeTraceLabels}
 | safe_trace_id!=""
 | safe_trace_id!="00000000000000000000000000000000"
 | line_format \`{{ .error_type_display }}\`
-| keep service_name, error_type_display, error_code_display, error_context, safe_trace_id
+| keep service_name, error_type_display, error_code_display, error_context, upstream_status_display, safe_trace_id
 | drop __error__, __error_details__`;
 
 export const traceDataLink = (traceId: string) =>
@@ -553,6 +562,10 @@ const tracedErrorsPanel = () => ({
 									aggregations: [],
 									operation: "groupby",
 								},
+								upstream_status_display: {
+									aggregations: [],
+									operation: "groupby",
+								},
 								safe_trace_id: {
 									aggregations: [],
 									operation: "groupby",
@@ -578,7 +591,8 @@ const tracedErrorsPanel = () => ({
 								error_type_display: 2,
 								error_code_display: 3,
 								error_context: 4,
-								safe_trace_id: 5,
+								upstream_status_display: 5,
+								safe_trace_id: 6,
 							},
 							renameByName: {
 								"Time (max)": "Tidspunkt",
@@ -587,13 +601,14 @@ const tracedErrorsPanel = () => ({
 								error_type_display: "Feiltype",
 								safe_trace_id: "Trace",
 								service_name: "Tjeneste",
+								upstream_status_display: "HTTP-status fra kall",
 							},
 						},
 					},
 				},
 			],
 		),
-		description: `Deduplisert utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste trace-koblede runtimehendelsene, gruppert på trace, tjeneste, feiltype, kode og operasjon. Trace-kolonnen åpner hele forløpet. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry. Rå melding, stack, URL og payload returneres ikke til tabellen.`,
+		description: `Deduplisert utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste trace-koblede runtimehendelsene. Valgfri HTTP-status fra kalt tjeneste er detaljkontekst og påvirker ikke feiltype eller kode. Trace-kolonnen åpner hele forløpet. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry. Rå melding, stack, URL og payload returneres ikke til tabellen.`,
 		id: 3,
 		links: runtimePanelLinks(),
 		title: `Nyeste runtimefeil med trace (maks ${RECENT_RUNTIME_EVENT_LIMIT})`,
@@ -644,6 +659,13 @@ const tracedErrorsPanel = () => ({
 								options: "error_context",
 							},
 							properties: [{ id: "custom.width", value: 220 }],
+						},
+						{
+							matcher: {
+								id: "byName",
+								options: "upstream_status_display",
+							},
+							properties: [{ id: "custom.width", value: 165 }],
 						},
 					],
 				},

@@ -9,12 +9,12 @@ import {
 	browserErrorGroupDataLink,
 	buildErrorDashboard,
 	configuredBrowserServices,
+	DEV_TEMPO_DATASOURCE_UID,
 	dashboardApplicationOptions,
 	dashboardApplicationRegex,
 	dashboardApplications,
 	dashboardBrowserOptions,
 	dashboardBrowserRegex,
-	DEV_TEMPO_DATASOURCE_UID,
 	ERROR_DASHBOARD_FOLDER_UID,
 	ERROR_DASHBOARD_UID,
 	LOKI_DATASOURCE_UID,
@@ -30,6 +30,7 @@ import {
 	safeCodePattern,
 	safeEventTypePattern,
 	safeGenericErrorTypePattern,
+	safeUpstreamStatusPattern,
 	serializeErrorDashboard,
 	TEMPO_DATASOURCE_UID,
 	traceDataLink,
@@ -405,6 +406,33 @@ describe("feiloversikt-dashboard", () => {
 		);
 	});
 
+	test("holder upstream-status som avgrenset detaljkontekst", () => {
+		for (const valid of ["100", "204", "301", "429", "500", "599"]) {
+			assert.ok(fullMatch(safeUpstreamStatusPattern, valid));
+		}
+		for (const invalid of ["99", "600", "-1", "429.0", "5xx", "unknown"]) {
+			assert.ok(!fullMatch(safeUpstreamStatusPattern, invalid));
+		}
+
+		assert.ok(!runtimeByClassificationQuery.includes("upstream_status"));
+		assert.match(tracedRuntimeErrorsQuery, /\| json .*upstream_status/);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/safe_upstream_status=.*\^\[1-5\]\[0-9\]\{2\}\$/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/label_format upstream_status_display=/,
+		);
+		assert.match(tracedRuntimeErrorsQuery, /\| keep .*upstream_status_display/);
+		const displayLine = tracedRuntimeErrorsQuery
+			.split("\n")
+			.find((line) => line.includes("label_format upstream_status_display="));
+		assert.ok(displayLine?.includes(".safe_upstream_status"));
+		assert.ok(!displayLine?.includes(".safe_status"));
+		assert.match(runtimeByClassificationQuery, /else if \.safe_status/);
+	});
+
 	test("browserfeltet har en lukket typeallowlist og ingen runtime-påstand", () => {
 		for (const valid of [
 			"Error",
@@ -437,7 +465,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.ok(!expr.includes("runtime_environment"));
 	});
 
-	test("tracepanelet har seks arbeidskolonner og dedupliserer identiske feil", () => {
+	test("tracepanelet har sju arbeidskolonner og dedupliserer identiske feil", () => {
 		const trace = JSON.stringify(panels()["panel-3"]);
 		assert.match(trace, /Nyeste runtimefeil med trace \(maks 100\)/);
 		assert.equal(RECENT_RUNTIME_EVENT_LIMIT, 100);
@@ -450,6 +478,7 @@ describe("feiloversikt-dashboard", () => {
 			'"error_type_display":"Feiltype"',
 			'"error_code_display":"Kode"',
 			'"error_context":"Operasjon"',
+			'"upstream_status_display":"HTTP-status fra kall"',
 			'"safe_trace_id":"Trace"',
 		]) {
 			assert.ok(trace.includes(column));
@@ -468,7 +497,7 @@ describe("feiloversikt-dashboard", () => {
 		);
 		assert.match(
 			tracedRuntimeErrorsQuery,
-			/\| keep service_name, error_type_display, error_code_display, error_context, safe_trace_id/,
+			/\| keep service_name, error_type_display, error_code_display, error_context, upstream_status_display, safe_trace_id/,
 		);
 	});
 

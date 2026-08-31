@@ -11,6 +11,7 @@ endrede errorlogger i Team eSyfos Node- og JVM-apper.
 | `event_type` | Obligatorisk | Kodeeid, stabil hendelsestype fra et lukket sett, for eksempel `graphql_request_failed`. Maks 80 tegn og format `^[a-z][a-z0-9_.-]{0,79}$`. Verdien skal aldri bygges fra runtime-data. |
 | `error_code` | Valgfritt | Stabil enum-/protokollkode, for eksempel `INTERNAL_SERVER_ERROR`. Ikke exception-melding eller ekstern respons. |
 | `operation` | Valgfritt | Stabil logisk operasjon fra et lukket sett, for eksempel `sykmelding_by_id`. Bruk aldri rått GraphQL-navn, URL, path med ID eller query-parametre. |
+| `upstream_status` | Valgfritt | HTTP-status fra tjenesten operasjonen kalte, som JSON-number fra og med `100` til og med `599`. Feltet er diagnostisk kontekst, ikke feiltype eller `error_code`, og utelates når det ikke kom en HTTP-respons. |
 | `exception_type` | Valgfritt | Kun normalisert, kodeeid type-/klassenavn fra et lukket sett, for eksempel `IllegalStateException` eller `TypeError`; aldri ukontrollert `error.name`, melding eller stack. |
 | `logger_name` | Valgfritt | Frameworkets stabile loggernavn. JVM-encoder fyller ofte dette automatisk; fravær i Node er normalt. |
 | `trace_id` | Påkrevd når tracing finnes | W3C/OTel trace-ID fra aktiv span. Ikke generer en erstatning og ikke bruk domene-, person- eller request-ID. |
@@ -84,6 +85,7 @@ logger.error(
     event_type: "graphql_request_failed",
     error_code: "INTERNAL_SERVER_ERROR",
     operation: "sykmelding_by_id",
+    upstream_status: 502,
     exception_type: normalizeExceptionType(error),
   },
   "GraphQL request failed",
@@ -106,6 +108,7 @@ log.error(
     kv("event_type", "graphql_request_failed"),
     kv("error_code", "INTERNAL_SERVER_ERROR"),
     kv("operation", "sykmelding_by_id"),
+    kv("upstream_status", 502),
     kv("exception_type", exception::class.simpleName ?: "UnknownException"),
     exception,
 )
@@ -122,8 +125,9 @@ JSON-loggen og verifiserer:
 1. nøyaktig én `error`-logg for én kontrollert, terminal logisk feil;
 2. `event_type` er en forventet konstant, matcher formatet og tilhører appens
    lukkede allowlist;
-3. valgfrie felt matcher forventede, stabile verdier, og `trace_id` er 32
-   hextegn når testen kjører i en aktiv span;
+3. valgfrie felt matcher forventede, stabile verdier; `upstream_status` er et
+   heltall i serialisert JSON fra `100` til `599`, og `trace_id` er 32 hextegn
+   når testen kjører i en aktiv span;
 4. miljøfelter og canaries for fødselsnummer, UUID, e-post, URL, message,
    stack og payload ikke finnes i dimensjonsfeltene;
 5. retry-/propageringslag ikke lager duplikate errorlogger.
@@ -144,10 +148,11 @@ klassifiserer identitetskontrakten aggregert:
 - `missing`: ingen kjent identitetskandidat finnes.
 
 `rejected`, `missing` og `legacy_type` er kontraktsgap som prioriteres etter
-antall hendelser. Fravær av `error_code`, `operation` eller `logger_name` er
-ikke alene et identitetsgap; feltene er valgfrie. Regex-validering beviser bare
-format, ikke produsentproveniens eller personvern. Full konformitet krever
-derfor kodeeid katalog og producer-nær serialiseringstest.
+antall hendelser. Fravær av `error_code`, `operation`, `upstream_status` eller
+`logger_name` er ikke alene et identitetsgap; feltene er valgfrie.
+Regex-validering beviser bare format, ikke JSON-type, produsentproveniens eller
+personvern. Full konformitet krever derfor kodeeid katalog og producer-nær
+serialiseringstest.
 
 ## Migrasjon og legacy
 
@@ -156,6 +161,11 @@ derfor kodeeid katalog og producer-nær serialiseringstest.
   duplikate errorlogger fjernes i samme endring.
 - Legacylogger beholdes synlige som `legacy_type`, `missing` eller `rejected`;
   dashboardet skal aldri gjette type fra melding eller stack.
+- Det tvetydige legacyfeltet `status` beholdes midlertidig som eksisterende
+  fallback under **Kode**, men tolkes aldri som `upstream_status` og fyller ikke
+  kolonnen **HTTP-status fra kall**. Endrede produsenter sender det eksplisitte
+  `upstream_status`-feltet som JSON-number og beholder en separat `error_code`
+  når en stabil kode finnes.
 - Migrering prioriteres etter høyt antall `missing`/`rejected`/`legacy_type`,
   ikke etter lav kode-, operasjons- eller loggerdekning.
 - Ikke massefyll `event_type=runtime_error`. Hver verdi skal uttrykke et stabilt,
