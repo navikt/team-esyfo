@@ -887,6 +887,11 @@ describe("kontrollrom-dashboard", () => {
 				query,
 				/detected_level=~`\(\?i\)\(error\|critical\|fatal\)`/,
 			);
+			assert.ok(query.includes('!= `"x_isFrontend":true`'));
+			assert.ok(
+				query.indexOf('!= `"x_isFrontend":true`') <
+					query.indexOf("k8s_container_name"),
+			);
 			assert.ok(!query.includes("message"));
 			assert.ok(!query.includes("stack_trace"));
 		}

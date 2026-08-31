@@ -87,11 +87,12 @@ export const dashboardApplicationRegex = `^(${dashboardApplicationOptions
 const runtimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"prod|prod-fss", service_name=~"${APP_VARIABLE}"}`;
 const runtimeNoiseFilter =
 	"| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`";
+const forwardedBrowserLogFilter = '!= `"x_isFrontend":true`';
 const runtimeErrorFilter = "| detected_level=~`(?i)(error|critical|fatal)`";
 
-export const runtimeTotalQuery = `sum(count_over_time(${runtimeSelector} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range])) or on() vector(0)`;
+export const runtimeTotalQuery = `sum(count_over_time(${runtimeSelector} ${forwardedBrowserLogFilter} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range])) or on() vector(0)`;
 
-export const runtimeByServiceQuery = `topk(50, sum by(service_name) (count_over_time(${runtimeSelector} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range])))`;
+export const runtimeByServiceQuery = `topk(50, sum by(service_name) (count_over_time(${runtimeSelector} ${forwardedBrowserLogFilter} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range])))`;
 
 const browserSelector = `{kind="exception", service_name=~"${APP_VARIABLE}"}`;
 
@@ -100,6 +101,7 @@ export const browserTotalQuery = `sum(count_over_time(${browserSelector} [$__ran
 export const browserByTypeQuery = `topk(50, sum by(service_name, type) (count_over_time(${browserSelector} | logfmt | __error__="" | type!="" [$__range])))`;
 
 export const tracedRuntimeErrorsQuery = `${runtimeSelector}
+${forwardedBrowserLogFilter}
 ${runtimeNoiseFilter}
 ${runtimeErrorFilter}
 | json logger_name, trace_id
@@ -485,7 +487,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 			"panel-1": statPanel(
 				1,
 				"Runtimefeil",
-				"Antall runtimefeil med positivt verifisert detected_level i valgt tidsrom. 0 er et vellykket tomt resultat; datakildefeil er ukjent.",
+				"Antall runtimefeil med positivt verifisert detected_level i valgt tidsrom. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. 0 er et vellykket tomt resultat; datakildefeil er ukjent.",
 				"Runtimefeil totalt",
 				runtimeTotalQuery,
 			),
@@ -501,7 +503,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				id: 4,
 				title: "Runtimefeil per tjeneste",
 				description:
-					"Teller alle runtimeformater med positivt detected_level uten å laste rå feilmelding. Klikk tjenesten for APM eller et tids- og tjenesteavgrenset loggsøk.",
+					"Teller runtimeformater med positivt detected_level uten browservideresendte logger eller rå feilmelding. Browser-exceptions måles separat i Faro der det er konfigurert. Klikk tjenesten for APM eller et tids- og tjenesteavgrenset loggsøk.",
 				refId: "Runtimefeil",
 				expr: runtimeByServiceQuery,
 				renameByName: { service_name: "Tjeneste" },

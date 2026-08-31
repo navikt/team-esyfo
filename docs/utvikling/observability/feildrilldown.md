@@ -7,8 +7,8 @@ Dashboardet er en drilldown, ikke kontrollrommet for all teknisk helse. Tilgjeng
 ## Scope og datakilder
 
 - Tjenestevalgene genereres fra det [godkjente runtimeinventaret](./runtimeinventar). `active`, `migrating` og `retiring` er med; `sunset`, `retired` og eksplisitte exclusions er ute.
-- Runtimefeil kommer fra Loki-datasource `PEA2100DC89AE9FE2` og filtreres positivt på structured metadata `detected_level=error|critical|fatal`.
-- Browserfeil kommer fra den separate Faro-strømmen `kind=exception`. Den får ikke påtvunget runtime-labels som den ikke har.
+- Runtimefeil kommer fra Loki-datasource `PEA2100DC89AE9FE2` og filtreres positivt på structured metadata `detected_level=error|critical|fatal`. Logger som browseren har videresendt via `next-logger` og merket `x_isFrontend=true`, ekskluderes fra runtimekategorien. Det betyr ikke at alle slike logger blir Faro-exceptions.
+- Browserfeil kommer fra den separate Faro-strømmen `kind=exception` der den er konfigurert. Den får ikke påtvunget runtime-labels som den ikke har.
 - Tempo-datasource for trace er `P8A28344D07741F8D`.
 - Dashboard-UID er `team-esyfo-error-drilldown`, og det skal ligge i Team eSyfo-mappen med UID `K-1b-N_4k`.
 
