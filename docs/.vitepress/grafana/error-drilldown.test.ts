@@ -107,18 +107,28 @@ describe("feildrilldown-dashboard", () => {
 	});
 
 	test("bruker positivt nivåfelt for runtime og separat Faro-schema", () => {
-		for (const query of [runtimeTotalQuery, runtimeByServiceQuery]) {
+		for (const query of [
+			runtimeTotalQuery,
+			runtimeByServiceQuery,
+			tracedRuntimeErrorsQuery,
+		]) {
 			assert.match(query, /service_namespace="team-esyfo"/);
 			assert.match(query, /k8s_cluster_name=~"prod\|prod-fss"/);
 			assert.match(
 				query,
 				/detected_level=~`\(\?i\)\(error\|critical\|fatal\)`/,
 			);
+			assert.ok(query.includes('!= `"x_isFrontend":true`'));
+			assert.ok(
+				query.indexOf('!= `"x_isFrontend":true`') <
+					query.indexOf("k8s_container_name"),
+			);
 			assert.ok(!query.includes('level="ERROR"'));
 			assert.ok(!query.includes("level !~"));
 		}
 		for (const query of [browserTotalQuery, browserByTypeQuery]) {
 			assert.match(query, /kind="exception"/);
+			assert.ok(!query.includes("x_isFrontend"));
 			assert.ok(!query.includes("service_namespace"));
 			assert.ok(!query.includes("k8s_cluster_name"));
 			assert.ok(!query.includes("value"));

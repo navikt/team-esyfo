@@ -53,7 +53,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=~\"prod|prod-fss\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range])) or on() vector(0)",
+                        "expr": "sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=~\"prod|prod-fss\", service_name=~\"${app:regex}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range])) or on() vector(0)",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -66,7 +66,7 @@
               "transformations": []
             }
           },
-          "description": "Antall runtimefeil med positivt verifisert detected_level i valgt tidsrom. 0 er et vellykket tomt resultat; datakildefeil er ukjent.",
+          "description": "Antall runtimefeil med positivt verifisert detected_level i valgt tidsrom. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. 0 er et vellykket tomt resultat; datakildefeil er ukjent.",
           "id": 1,
           "links": [],
           "title": "Runtimefeil",
@@ -251,7 +251,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "topk(50, sum by(service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=~\"prod|prod-fss\", service_name=~\"${app:regex}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range])))",
+                        "expr": "topk(50, sum by(service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=~\"prod|prod-fss\", service_name=~\"${app:regex}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range])))",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -285,7 +285,7 @@
               ]
             }
           },
-          "description": "Teller alle runtimeformater med positivt detected_level uten å laste rå feilmelding. Klikk tjenesten for APM eller et tids- og tjenesteavgrenset loggsøk.",
+          "description": "Teller runtimeformater med positivt detected_level uten browservideresendte logger eller rå feilmelding. Browser-exceptions måles separat i Faro der det er konfigurert. Klikk tjenesten for APM eller et tids- og tjenesteavgrenset loggsøk.",
           "id": 4,
           "links": [],
           "title": "Runtimefeil per tjeneste",
@@ -543,7 +543,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "{service_namespace=\"team-esyfo\", k8s_cluster_name=~\"prod|prod-fss\", service_name=~\"${app:regex}\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| json logger_name, trace_id\n| __error__=\"\"\n| trace_id!=\"\"\n| label_format error_group=`{{ if .logger_name }}{{ .logger_name }}{{ else }}uklassifisert{{ end }}`\n| line_format `{{ .error_group }}`\n| keep service_name, error_group, trace_id\n| drop __error__, __error_details__",
+                        "expr": "{service_namespace=\"team-esyfo\", k8s_cluster_name=~\"prod|prod-fss\", service_name=~\"${app:regex}\"}\n!= `\"x_isFrontend\":true`\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| json logger_name, trace_id\n| __error__=\"\"\n| trace_id!=\"\"\n| label_format error_group=`{{ if .logger_name }}{{ .logger_name }}{{ else }}uklassifisert{{ end }}`\n| line_format `{{ .error_group }}`\n| keep service_name, error_group, trace_id\n| drop __error__, __error_details__",
                         "queryType": "range",
                         "maxLines": 100
                       },

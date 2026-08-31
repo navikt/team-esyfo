@@ -145,13 +145,14 @@ export const otelErrorsByServiceQuery = `((${fleetOtelErrorsByService}) or on(se
 
 const runtimeNoiseFilter =
 	"| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`";
+const forwardedBrowserLogFilter = '!= `"x_isFrontend":true`';
 const runtimeErrorFilter = "| detected_level=~`(?i)(error|critical|fatal)`";
 const fleetRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name=~"${SCOPE_VARIABLE}"}`;
 const selectedRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name="${SERVICE_VARIABLE}"}`;
 
-export const runtimeErrorCountQuery = `sum(count_over_time(${selectedRuntimeSelector} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range]))`;
+export const runtimeErrorCountQuery = `sum(count_over_time(${selectedRuntimeSelector} ${forwardedBrowserLogFilter} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range]))`;
 
-export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector} ${runtimeNoiseFilter} ${runtimeErrorFilter} [5m]))`;
+export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector} ${forwardedBrowserLogFilter} ${runtimeNoiseFilter} ${runtimeErrorFilter} [5m]))`;
 export const fleetServicesWithRuntimeErrorsQuery = `count((${runtimeErrorsByServiceQuery}) > 0)`;
 
 const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[24h])))`;
@@ -812,7 +813,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				id: 32,
 				title: "Runtimefeil 5m · tjenester",
 				description:
-					"Antall tjenester med minst én påvist error-, critical- eller fatal-klassifisert logglinje siste fem minutter. No data er ukjent; panelet konstruerer ikke null uten positiv loggevidens.",
+					"Antall tjenester med minst én påvist error-, critical- eller fatal-klassifisert runtime-logglinje siste fem minutter. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. No data er ukjent; panelet konstruerer ikke null uten positiv loggevidens.",
 				query: lokiQuery(
 					"Tjenester med runtimefeil",
 					fleetServicesWithRuntimeErrorsQuery,
@@ -1014,7 +1015,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				id: 15,
 				title: "Valgt tjeneste · runtimefeil",
 				description:
-					"Positivt klassifiserte error|critical|fatal-logger for valgt runtime. No data er ukjent, ikke null; panelet gjør ingen ekstra full-loggskann for å konstruere en kunstig null.",
+					"Positivt klassifiserte error|critical|fatal-logger for valgt runtime. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. No data er ukjent, ikke null; panelet gjør ingen ekstra full-loggskann for å konstruere en kunstig null.",
 				query: lokiQuery("Runtimefeil", runtimeErrorCountQuery),
 				unit: "short",
 				thresholds: deviationThresholds,

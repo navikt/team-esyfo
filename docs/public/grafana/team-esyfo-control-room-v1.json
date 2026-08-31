@@ -184,7 +184,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "count((sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [5m]))) > 0)",
+                        "expr": "count((sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [5m]))) > 0)",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -197,7 +197,7 @@
               "transformations": []
             }
           },
-          "description": "Antall tjenester med minst én påvist error-, critical- eller fatal-klassifisert logglinje siste fem minutter. No data er ukjent; panelet konstruerer ikke null uten positiv loggevidens.",
+          "description": "Antall tjenester med minst én påvist error-, critical- eller fatal-klassifisert runtime-logglinje siste fem minutter. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. No data er ukjent; panelet konstruerer ikke null uten positiv loggevidens.",
           "id": 32,
           "links": [
             {
@@ -1202,7 +1202,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [5m]))",
+                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [5m]))",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -2021,7 +2021,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"${service:raw}\"} | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range]))",
+                        "expr": "sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"${service:raw}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range]))",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -2034,7 +2034,7 @@
               "transformations": []
             }
           },
-          "description": "Positivt klassifiserte error|critical|fatal-logger for valgt runtime. No data er ukjent, ikke null; panelet gjør ingen ekstra full-loggskann for å konstruere en kunstig null.",
+          "description": "Positivt klassifiserte error|critical|fatal-logger for valgt runtime. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. No data er ukjent, ikke null; panelet gjør ingen ekstra full-loggskann for å konstruere en kunstig null.",
           "id": 15,
           "links": [
             {
