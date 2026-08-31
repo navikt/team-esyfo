@@ -155,7 +155,11 @@ describe("feildrilldown-dashboard", () => {
 			tracedRuntimeErrorsQuery,
 		]) {
 			assert.match(query, /service_namespace="team-esyfo"/);
-			assert.match(query, /k8s_cluster_name="\$\{runtime_environment:raw\}"/);
+			assert.match(
+				query,
+				/k8s_cluster_name=~"\^\$\{runtime_environment:regex\}\$"/,
+			);
+			assert.ok(!query.includes("runtime_environment:raw"));
 			assert.ok(!query.includes("prod-fss"));
 			assert.ok(!query.includes("prod-gcp"));
 			assert.match(

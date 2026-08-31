@@ -21,7 +21,8 @@ export const ERROR_DASHBOARD_UID = "team-esyfo-error-drilldown";
 export const ERROR_DASHBOARD_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
 export const RECENT_RUNTIME_EVENT_LIMIT = 100;
 const APP_VARIABLE = grafanaVariable("app:regex");
-const RUNTIME_ENVIRONMENT = grafanaVariable("runtime_environment:raw");
+const RUNTIME_ENVIRONMENT_VALUE = grafanaVariable("runtime_environment:raw");
+const RUNTIME_ENVIRONMENT_REGEX = grafanaVariable("runtime_environment:regex");
 const FROM = grafanaVariable("__from");
 const TO = grafanaVariable("__to");
 const FROM_ISO = grafanaVariable("__from:date:iso");
@@ -92,7 +93,7 @@ export const runtimeEnvironmentOptions = [
 	{ text: "dev-gcp", value: "dev" },
 ];
 
-const runtimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="${RUNTIME_ENVIRONMENT}", service_name=~"${APP_VARIABLE}"}`;
+const runtimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"^${RUNTIME_ENVIRONMENT_REGEX}$", service_name=~"${APP_VARIABLE}"}`;
 
 export const runtimeTotalQuery = `sum(count_over_time(${runtimeSelector}
 ${runtimeErrorPipeline}
@@ -193,10 +194,10 @@ ${runtimeClassificationLabels}
 | drop __error__, __error_details__`;
 
 export const apmDataLink = (service: string) =>
-	`/a/nais-apm-app/services/team-esyfo/${service}?environment=${RUNTIME_ENVIRONMENT}&from=${FROM_ISO}&to=${TO_ISO}`;
+	`/a/nais-apm-app/services/team-esyfo/${service}?environment=${RUNTIME_ENVIRONMENT_VALUE}&from=${FROM_ISO}&to=${TO_ISO}`;
 
 export const runtimeLogsDataLink = (service: string) =>
-	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7C${RUNTIME_ENVIRONMENT}`;
+	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7C${RUNTIME_ENVIRONMENT_VALUE}`;
 
 export const browserLogsDataLink = (service: string) =>
 	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=kind%7C%3D%7Cexception`;
