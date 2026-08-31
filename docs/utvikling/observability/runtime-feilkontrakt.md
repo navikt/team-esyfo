@@ -22,10 +22,13 @@ duplisere dem i loggpayloaden.
 ## Eierskap og leveransemodell
 
 `team-esyfo` eier den normative, funksjonelle kontrakten, migreringsstatusen og
-dashboardtolkningen. Hvert apprepo eier sitt eget lukkede sett av
-`event_type`-verdier og konformitetstestene ved de faktiske loggpunktene. En ny
-domenespesifikk hendelsestype skal derfor ikke kreve release av en sentral
-runtimepakke.
+dashboardtolkningen. Runtimeinventar, dashboardkilder, alert-register og
+runbooks blir også her, fordi de utgjør teamets operative kontrollplan. Et
+senere verktøyrepo er ikke et nytt hjem for «all observability».
+
+Hvert apprepo eier sitt eget lukkede sett av `event_type`-verdier og
+konformitetstestene ved de faktiske loggpunktene. En ny domenespesifikk
+hendelsestype skal derfor ikke kreve release av en sentral runtimepakke.
 
 Første utrulling bruker appenes eksisterende Pino- og SLF4J/Logback-API-er. Det
 publiseres ikke en npm- eller Maven-runtimeavhengighet før minst én Node- og én
