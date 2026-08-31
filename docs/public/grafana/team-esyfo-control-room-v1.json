@@ -3020,7 +3020,7 @@
             {
               "targetBlank": true,
               "title": "Blokkerende oppgave",
-              "url": "https://github.com/navikt/syfo-budstikka/issues/260"
+              "url": "https://github.com/navikt/team-esyfo/issues/219"
             }
           ],
           "title": "Budstikka · consumer-lag · diagnostikk",
@@ -3095,7 +3095,7 @@
                     {
                       "targetBlank": true,
                       "title": "Blokkerende oppgave",
-                      "url": "https://github.com/navikt/syfo-budstikka/issues/260"
+                      "url": "https://github.com/navikt/team-esyfo/issues/219"
                     }
                   ],
                   "noValue": "Ukjent",

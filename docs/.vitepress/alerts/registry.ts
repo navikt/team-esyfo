@@ -703,10 +703,10 @@ export const alertRules: AlertRule[] = [
 		lifecycle: notificationMigration,
 		policy: migratePolicy(
 			teamOwner("navikt/esyfovarsel", "app:esyfovarsel"),
-			"All-replicas-down beholdes som en tidsavgrenset ticket-guardrail under migreringen. Eventuell pager bygges på Budstikkas ende-til-ende-signal, ikke legacy-appens podtilstand.",
+			"All-replicas-down beholdes som en tidsavgrenset ticket-guardrail under migreringen. Eventuell pager bygges på Budstikkas egne kø-, freshness- og terminalsignaler, ikke legacy-appens podtilstand.",
 			ticket(),
 			"navikt/esyfovarsel#1094",
-			plannedReplacement("navikt/syfo-budstikka#260", [
+			plannedReplacement("navikt/team-esyfo#218", [
 				"app:syfo-budstikka",
 				"topic:budstikka.v1",
 			]),
@@ -980,9 +980,9 @@ export const alertRules: AlertRule[] = [
 		lifecycle: permanent,
 		policy: tunePolicy(
 			teamOwner("navikt/syfo-budstikka", "app:syfo-budstikka"),
-			"Varselgrensen er bedre enn lag > 0, men skal kalibreres mot forventet trafikk og ende-til-ende-ferskhet.",
+			"Varselgrensen er bedre enn lag > 0, men skal kalibreres mot forventet trafikk og Budstikkas egne kø- og freshnesssignaler; lag alene beviser ikke leveringsstopp.",
 			ticket(),
-			"navikt/syfo-budstikka#260",
+			"navikt/team-esyfo#219",
 		),
 		targetRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
 		monitoredRefs: ["app:syfo-budstikka", "topic:budstikka.v1"],
@@ -1006,7 +1006,7 @@ export const alertRules: AlertRule[] = [
 				"Følg runbooken: bekreft lagtrenden, og sjekk dead letters, inbox-feil og logger.",
 		},
 		riskNotes: [
-			"må avstemmes mot forventet trafikk og ende-til-ende-ferskhet i #212",
+			"må vurderes sammen med forventet trafikk, køalder og worker-ferskhet i #212/#219",
 		],
 	}),
 	prometheusRule({
@@ -1432,10 +1432,10 @@ export const alertRules: AlertRule[] = [
 		lifecycle: notificationMigration,
 		policy: migratePolicy(
 			teamOwner("navikt/syfo-dokumentporten", "app:syfo-dokumentporten"),
-			"Terminal feil er et godt domeneutfall, men én melding krever ticket; ansvaret skal migreres til Budstikkas ende-til-ende-flyt.",
+			"Terminal feil er et godt domeneutfall, men én melding krever ticket; ansvaret skal migreres til Budstikkas egne delivery- og terminalsignaler.",
 			ticket(),
 			"navikt/team-esyfo#218",
-			plannedReplacement("navikt/syfo-budstikka#260", [
+			plannedReplacement("navikt/team-esyfo#218", [
 				"app:syfo-budstikka",
 				"topic:budstikka.v1",
 			]),
@@ -1565,10 +1565,10 @@ export const alertRules: AlertRule[] = [
 		lifecycle: notificationMigration,
 		policy: replacePolicy(
 			teamOwner("navikt/team-esyfo", "pipeline:notifications"),
-			"Den pausede differansen sammenligner kandidater med et senere legacy-tellepunkt etter deler av fanouten og er verken regnskapsmessig eller prosessornøytral. Erstatningen må dekke akkurat SM_MER_VEILEDNING ende til ende.",
+			"Den pausede differansen sammenligner kandidater med et senere legacy-tellepunkt etter deler av fanouten og er verken regnskapsmessig eller prosessornøytral. Erstatningen må vise separat produsent- og prosessorhelse for SM_MER_VEILEDNING uten å innføre per-hendelse-regnskap.",
 			dashboardOnly(),
 			"navikt/team-esyfo#213",
-			plannedReplacement("navikt/syfo-budstikka#260", [
+			plannedReplacement("navikt/team-esyfo#218", [
 				"app:meroppfolging-backend",
 				"app:syfo-budstikka",
 				"topic:budstikka.v1",
@@ -1588,7 +1588,7 @@ export const alertRules: AlertRule[] = [
 			"live-verifisert 2026-08-29: konfigurert tilstand er NoData når queryen ikke gir data eller alle verdier er null, og Error ved evalueringsfeil eller timeout",
 			"live-verifisert 2026-08-29: det koblede dashboardet med UID de2wwv58swrnkd finnes ikke lenger",
 			"Budstikkas nåværende metrikker kan ikke avgrenses til den aktuelle SM_MER_VEILEDNING-slicen",
-			"#260 erstatter bare regelen dersom den konkrete slicen er SM_MER_VEILEDNING og inkluderer produsentens eligible/published samt terminalt utfall",
+			"#218 må avklare separat produsent- og prosessorhelse for SM_MER_VEILEDNING; den pausede differansen erstattes ikke av nytt per-hendelse-regnskap",
 			"må forbli pauset og skal ikke kopieres til en PrometheusRule eller bygges videre i esyfovarsel",
 		],
 	}),

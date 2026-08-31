@@ -644,14 +644,15 @@ describe("kontrollrom-dashboard", () => {
 			DESERIALIZATION_ERROR_METRIC,
 			DESERIALIZATION_RUNBOOK_URL,
 			MOTEBEHOV_RUNBOOK_URL,
-			"syfo-budstikka/issues/260",
 			"syfo-oppfolgingsplan-backend/issues/449",
 			"syfomotebehov/issues/753",
 			"team-esyfo/issues/217",
+			"team-esyfo/issues/219",
 			"BLOCKED",
 		]) {
 			assert.ok(serialized.includes(expected));
 		}
+		assert.ok(!serialized.includes("syfo-budstikka/issues/260"));
 		assert.ok(!serialized.includes('"legendFormat": "permanente feil"'));
 	});
 

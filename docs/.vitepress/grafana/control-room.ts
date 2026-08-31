@@ -1176,12 +1176,12 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				links: pagerLinks(
 					"syfo-budstikka",
 					BUDSTIKKA_RUNBOOK_URL,
-					"https://github.com/navikt/syfo-budstikka/issues/260",
+					"https://github.com/navikt/team-esyfo/issues/219",
 				),
 				fieldLinks: pagerLinks(
 					"syfo-budstikka",
 					BUDSTIKKA_RUNBOOK_URL,
-					"https://github.com/navikt/syfo-budstikka/issues/260",
+					"https://github.com/navikt/team-esyfo/issues/219",
 				),
 			}),
 			"panel-26": timeSeriesPanel({

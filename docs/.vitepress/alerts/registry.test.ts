@@ -353,6 +353,39 @@ describe("alert-register", () => {
 		);
 	});
 
+	test("holder Budstikka-ansvar separat uten den tilbaketrukne #260-kontrakten", () => {
+		const rulesById = new Map(
+			alertRegistry.rules.map((rule) => [rule.id, rule]),
+		);
+		const lagRule = rulesById.get("rule:budstikka-consumer-lag-warning");
+		assert.equal(lagRule?.policy.decision, "TUNE");
+		if (lagRule?.policy.decision !== "TUNE") {
+			assert.fail("Forventet TUNE-policy for Budstikka-lag.");
+		}
+		assert.equal(lagRule.policy.implementationIssue, "navikt/team-esyfo#219");
+
+		for (const ruleId of [
+			"rule:esyfovarsel-down",
+			"rule:dokumentporten-terminal-varsel-error",
+			"rule:grafana-varsel-avvik",
+		] as const) {
+			const policy = rulesById.get(ruleId)?.policy;
+			assert.ok(policy);
+			if (policy.decision !== "MIGRATE" && policy.decision !== "REPLACE") {
+				assert.fail(`Forventet erstatningspolicy for ${ruleId}.`);
+			}
+			assert.equal(policy.replacement.status, "planned");
+			if (policy.replacement.status !== "planned") {
+				assert.fail(`Forventet planlagt erstatning for ${ruleId}.`);
+			}
+			assert.equal(policy.replacement.issue, "navikt/team-esyfo#218");
+		}
+
+		const serialized = JSON.stringify(alertRegistry);
+		assert.ok(!serialized.includes("#260"));
+		assert.ok(!serialized.includes("eligible/published samt terminalt utfall"));
+	});
+
 	test("skiller fasebundet policy fra faktisk varslingsrute", () => {
 		const byId = new Map(alertRegistry.rules.map((rule) => [rule.id, rule]));
 		const pagerCandidate = byId.get("rule:motebehov-down");

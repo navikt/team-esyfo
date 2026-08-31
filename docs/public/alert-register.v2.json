@@ -513,7 +513,7 @@
           "repository": "navikt/esyfovarsel",
           "scopeRef": "app:esyfovarsel"
         },
-        "rationale": "All-replicas-down beholdes som en tidsavgrenset ticket-guardrail under migreringen. Eventuell pager bygges på Budstikkas ende-til-ende-signal, ikke legacy-appens podtilstand.",
+        "rationale": "All-replicas-down beholdes som en tidsavgrenset ticket-guardrail under migreringen. Eventuell pager bygges på Budstikkas egne kø-, freshness- og terminalsignaler, ikke legacy-appens podtilstand.",
         "operationalResponse": {
           "phase": "during-migration",
           "delivery": {
@@ -524,7 +524,7 @@
         "implementationIssue": "navikt/esyfovarsel#1094",
         "replacement": {
           "status": "planned",
-          "issue": "navikt/syfo-budstikka#260",
+          "issue": "navikt/team-esyfo#218",
           "targetRefs": [
             "app:syfo-budstikka",
             "topic:budstikka.v1"
@@ -1214,7 +1214,7 @@
           "repository": "navikt/syfo-budstikka",
           "scopeRef": "app:syfo-budstikka"
         },
-        "rationale": "Varselgrensen er bedre enn lag > 0, men skal kalibreres mot forventet trafikk og ende-til-ende-ferskhet.",
+        "rationale": "Varselgrensen er bedre enn lag > 0, men skal kalibreres mot forventet trafikk og Budstikkas egne kø- og freshnesssignaler; lag alene beviser ikke leveringsstopp.",
         "operationalResponse": {
           "phase": "after-tuning",
           "delivery": {
@@ -1222,7 +1222,7 @@
             "channelPolicyRef": "channel:esyfo-alarm"
           }
         },
-        "implementationIssue": "navikt/syfo-budstikka#260",
+        "implementationIssue": "navikt/team-esyfo#219",
         "decidedAt": "2026-08-28T19:13:53Z"
       },
       "targetRefs": [
@@ -1264,7 +1264,7 @@
         "action": "Følg runbooken: bekreft lagtrenden, og sjekk dead letters, inbox-feil og logger."
       },
       "riskNotes": [
-        "må avstemmes mot forventet trafikk og ende-til-ende-ferskhet i #212"
+        "må vurderes sammen med forventet trafikk, køalder og worker-ferskhet i #212/#219"
       ],
       "monitoredRefs": [
         "app:syfo-budstikka",
@@ -2288,7 +2288,7 @@
           "repository": "navikt/syfo-dokumentporten",
           "scopeRef": "app:syfo-dokumentporten"
         },
-        "rationale": "Terminal feil er et godt domeneutfall, men én melding krever ticket; ansvaret skal migreres til Budstikkas ende-til-ende-flyt.",
+        "rationale": "Terminal feil er et godt domeneutfall, men én melding krever ticket; ansvaret skal migreres til Budstikkas egne delivery- og terminalsignaler.",
         "operationalResponse": {
           "phase": "during-migration",
           "delivery": {
@@ -2299,7 +2299,7 @@
         "implementationIssue": "navikt/team-esyfo#218",
         "replacement": {
           "status": "planned",
-          "issue": "navikt/syfo-budstikka#260",
+          "issue": "navikt/team-esyfo#218",
           "targetRefs": [
             "app:syfo-budstikka",
             "topic:budstikka.v1"
@@ -2617,7 +2617,7 @@
           "repository": "navikt/team-esyfo",
           "scopeRef": "pipeline:notifications"
         },
-        "rationale": "Den pausede differansen sammenligner kandidater med et senere legacy-tellepunkt etter deler av fanouten og er verken regnskapsmessig eller prosessornøytral. Erstatningen må dekke akkurat SM_MER_VEILEDNING ende til ende.",
+        "rationale": "Den pausede differansen sammenligner kandidater med et senere legacy-tellepunkt etter deler av fanouten og er verken regnskapsmessig eller prosessornøytral. Erstatningen må vise separat produsent- og prosessorhelse for SM_MER_VEILEDNING uten å innføre per-hendelse-regnskap.",
         "operationalResponse": {
           "phase": "replacement",
           "delivery": {
@@ -2627,7 +2627,7 @@
         "implementationIssue": "navikt/team-esyfo#213",
         "replacement": {
           "status": "planned",
-          "issue": "navikt/syfo-budstikka#260",
+          "issue": "navikt/team-esyfo#218",
           "targetRefs": [
             "app:meroppfolging-backend",
             "app:syfo-budstikka",
@@ -2670,7 +2670,7 @@
         "live-verifisert 2026-08-29: konfigurert tilstand er NoData når queryen ikke gir data eller alle verdier er null, og Error ved evalueringsfeil eller timeout",
         "live-verifisert 2026-08-29: det koblede dashboardet med UID de2wwv58swrnkd finnes ikke lenger",
         "Budstikkas nåværende metrikker kan ikke avgrenses til den aktuelle SM_MER_VEILEDNING-slicen",
-        "#260 erstatter bare regelen dersom den konkrete slicen er SM_MER_VEILEDNING og inkluderer produsentens eligible/published samt terminalt utfall",
+        "#218 må avklare separat produsent- og prosessorhelse for SM_MER_VEILEDNING; den pausede differansen erstattes ikke av nytt per-hendelse-regnskap",
         "må forbli pauset og skal ikke kopieres til en PrometheusRule eller bygges videre i esyfovarsel"
       ],
       "monitoredRefs": [
