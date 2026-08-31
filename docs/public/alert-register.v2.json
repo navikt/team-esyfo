@@ -387,7 +387,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=aktivitetskrav-backend",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=aktivitetskrav-backend",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -468,7 +468,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=aktivitetskrav-backend",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=aktivitetskrav-backend",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -556,7 +556,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=esyfovarsel",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=esyfovarsel",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -648,7 +648,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=esyfovarsel",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=esyfovarsel",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -822,7 +822,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lps-oppfolgingsplan-mottak",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lps-oppfolgingsplan-mottak",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -894,7 +894,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -964,7 +964,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1034,7 +1034,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1104,7 +1104,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1175,7 +1175,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1255,7 +1255,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-budstikka",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-budstikka",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1344,7 +1344,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1425,7 +1425,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1505,7 +1505,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1587,7 +1587,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1669,7 +1669,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1754,7 +1754,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfobrukertilgang",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfobrukertilgang",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1839,7 +1839,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfobrukertilgang",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfobrukertilgang",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -1922,7 +1922,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfobrukertilgang",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfobrukertilgang",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -2001,7 +2001,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -2075,7 +2075,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -2161,7 +2161,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -2243,7 +2243,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
         "label": "Feildrilldown"
       },
       "annotations": {
@@ -2332,7 +2332,7 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-dokumentporten",
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-dokumentporten",
         "label": "Feildrilldown"
       },
       "annotations": {

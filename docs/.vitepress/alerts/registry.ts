@@ -226,7 +226,7 @@ const missingDashboard = (): TrackedLink => ({
 });
 const errorDashboard = (app: string): TrackedLink =>
 	linked(
-		`${ERROR_DRILLDOWN_URL}?orgId=1&from=now-6h&to=now&timezone=browser&var-app=${app}`,
+		`${ERROR_DRILLDOWN_URL}?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=${app}`,
 		"Feildrilldown",
 	);
 

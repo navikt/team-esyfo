@@ -28,6 +28,7 @@ import {
 	MIMIR_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
+import { runtimeErrorPipeline } from "./runtime-logql.ts";
 
 export const CONTROL_ROOM_UID = "team-esyfo-control-room-v1";
 export const CONTROL_ROOM_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
@@ -143,16 +144,16 @@ export const fleetServicesWithOtelErrorsQuery = `count((${fleetOtelErrorsByServi
 export const requestsByServiceQuery = fleetRequestsByService;
 export const otelErrorsByServiceQuery = `((${fleetOtelErrorsByService}) or on(service_name) ((${fleetRequestsByService}) * 0)) and on(service_name) ((${fleetRequestsByService}) > 0)`;
 
-const runtimeNoiseFilter =
-	"| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`";
-const forwardedBrowserLogFilter = '!= `"x_isFrontend":true`';
-const runtimeErrorFilter = "| detected_level=~`(?i)(error|critical|fatal)`";
 const fleetRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name=~"${SCOPE_VARIABLE}"}`;
 const selectedRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name="${SERVICE_VARIABLE}"}`;
 
-export const runtimeErrorCountQuery = `sum(count_over_time(${selectedRuntimeSelector} ${forwardedBrowserLogFilter} ${runtimeNoiseFilter} ${runtimeErrorFilter} [$__range]))`;
+export const runtimeErrorCountQuery = `sum(count_over_time(${selectedRuntimeSelector}
+${runtimeErrorPipeline}
+[$__range]))`;
 
-export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector} ${forwardedBrowserLogFilter} ${runtimeNoiseFilter} ${runtimeErrorFilter} [5m]))`;
+export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector}
+${runtimeErrorPipeline}
+[5m]))`;
 export const fleetServicesWithRuntimeErrorsQuery = `count((${runtimeErrorsByServiceQuery}) > 0)`;
 
 const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[24h])))`;
@@ -265,7 +266,7 @@ export const runtimeLogsDataLink = (service: string) =>
 	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod`;
 
 export const errorDashboardDataLink = (service: string) =>
-	`/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${FROM}&to=${TO}&var-app=${service}`;
+	`/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${FROM}&to=${TO}&var-runtime_environment=prod&var-app=${service}`;
 
 const serviceDataLinks = (service: string) => [
 	dataLink("NAIS APM", apmDataLink(service)),

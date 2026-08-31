@@ -688,12 +688,21 @@ describe("kontrollrom-dashboard", () => {
 		assert.match(apmDataLink(rowValue), /\$\{__from:date:iso\}/);
 		assert.match(runtimeLogsDataLink(rowValue), /\$\{__from\}/);
 		assert.match(errorDashboardDataLink(rowValue), /var-app=/);
+		assert.match(
+			errorDashboardDataLink(rowValue),
+			/var-runtime_environment=prod/,
+		);
 		const urls = collectByKey(buildControlRoomDashboard(), "url").filter(
 			(value): value is string => typeof value === "string",
 		);
 		assert.ok(urls.some((url) => url.includes("nais-apm-app")));
 		assert.ok(urls.some((url) => url.includes("lokiexplore-app")));
 		assert.ok(urls.some((url) => url.includes("team-esyfo-error-drilldown")));
+		assert.ok(
+			urls
+				.filter((url) => url.includes("team-esyfo-error-drilldown"))
+				.every((url) => url.includes("var-runtime_environment=prod")),
+		);
 		assert.ok(urls.includes(RUNTIME_RUNBOOK_URL));
 	});
 
@@ -887,10 +896,12 @@ describe("kontrollrom-dashboard", () => {
 				query,
 				/detected_level=~`\(\?i\)\(error\|critical\|fatal\)`/,
 			);
-			assert.ok(query.includes('!= `"x_isFrontend":true`'));
+			assert.ok(query.includes('| x_isFrontend!="true"'));
+			assert.ok(query.includes('| json forwarded_browser="x_isFrontend"'));
+			assert.ok(query.includes('| forwarded_browser!="true"'));
 			assert.ok(
-				query.indexOf('!= `"x_isFrontend":true`') <
-					query.indexOf("k8s_container_name"),
+				query.indexOf("k8s_container_name") <
+					query.indexOf('| x_isFrontend!="true"'),
 			);
 			assert.ok(!query.includes("message"));
 			assert.ok(!query.includes("stack_trace"));

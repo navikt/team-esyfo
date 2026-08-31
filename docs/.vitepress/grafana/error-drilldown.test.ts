@@ -16,7 +16,11 @@ import {
 	ERROR_DASHBOARD_FOLDER_UID,
 	ERROR_DASHBOARD_UID,
 	LOKI_DATASOURCE_UID,
+	RECENT_RUNTIME_EVENT_LIMIT,
+	runtimeByClassificationQuery,
 	runtimeByServiceQuery,
+	runtimeClassificationCoverageQuery,
+	runtimeEnvironmentOptions,
 	runtimeLogsDataLink,
 	runtimeTotalQuery,
 	serializeErrorDashboard,
@@ -89,7 +93,7 @@ describe("feildrilldown-dashboard", () => {
 		}
 	});
 
-	test("låser prod-lenkene til dagens prod-gcp-scope", () => {
+	test("bruker ett eksplisitt runtime-miljø i queryer og lenker", () => {
 		assert.deepEqual(
 			[...new Set(dashboardApplications.map(({ runtime }) => runtime.cluster))],
 			["prod-gcp"],
@@ -99,10 +103,46 @@ describe("feildrilldown-dashboard", () => {
 				({ runtime }) => runtime.namespace === "team-esyfo",
 			),
 		);
-		assert.match(apmDataLink(`\${__value.raw}`), /environment=prod/);
+		assert.match(
+			apmDataLink(`\${__value.raw}`),
+			/environment=\$\{runtime_environment:raw\}/,
+		);
 		assert.match(
 			runtimeLogsDataLink(`\${__value.raw}`),
-			/k8s_cluster_name%7C%3D%7Cprod/,
+			/k8s_cluster_name%7C%3D%7C\$\{runtime_environment:raw\}/,
+		);
+		assert.ok(!apmDataLink(`\${__value.raw}`).includes("prod-gcp"));
+		assert.ok(!runtimeLogsDataLink(`\${__value.raw}`).includes("prod-fss"));
+	});
+
+	test("har single-select runtime-miljø med prod-default og uten All", () => {
+		assert.deepEqual(runtimeEnvironmentOptions, [
+			{ text: "prod-gcp", value: "prod" },
+			{ text: "dev-gcp", value: "dev" },
+		]);
+		const variables = buildErrorDashboard().spec.variables as Array<{
+			spec: Record<string, unknown> & {
+				current: unknown;
+				name: string;
+				query: string;
+			};
+		}>;
+		const environment = variables.find(
+			({ spec }) => spec.name === "runtime_environment",
+		)?.spec;
+		assert.ok(environment);
+		assert.equal(environment.label, "Runtime-miljø");
+		assert.deepEqual(environment.current, {
+			text: "prod-gcp",
+			value: "prod",
+		});
+		assert.equal(environment.query, "prod-gcp : prod,dev-gcp : dev");
+		assert.equal(environment.includeAll, false);
+		assert.equal(environment.allowCustomValue, false);
+		assert.equal(environment.multi, false);
+		assert.match(
+			String(environment.description),
+			/Browserpanelene.*påvirkes ikke/,
 		);
 	});
 
@@ -110,18 +150,24 @@ describe("feildrilldown-dashboard", () => {
 		for (const query of [
 			runtimeTotalQuery,
 			runtimeByServiceQuery,
+			runtimeByClassificationQuery,
+			runtimeClassificationCoverageQuery,
 			tracedRuntimeErrorsQuery,
 		]) {
 			assert.match(query, /service_namespace="team-esyfo"/);
-			assert.match(query, /k8s_cluster_name=~"prod\|prod-fss"/);
+			assert.match(query, /k8s_cluster_name="\$\{runtime_environment:raw\}"/);
+			assert.ok(!query.includes("prod-fss"));
+			assert.ok(!query.includes("prod-gcp"));
 			assert.match(
 				query,
 				/detected_level=~`\(\?i\)\(error\|critical\|fatal\)`/,
 			);
-			assert.ok(query.includes('!= `"x_isFrontend":true`'));
+			assert.ok(query.includes('| x_isFrontend!="true"'));
+			assert.ok(query.includes('| json forwarded_browser="x_isFrontend"'));
+			assert.ok(query.includes('| forwarded_browser!="true"'));
 			assert.ok(
-				query.indexOf('!= `"x_isFrontend":true`') <
-					query.indexOf("k8s_container_name"),
+				query.indexOf("k8s_container_name") <
+					query.indexOf('| x_isFrontend!="true"'),
 			);
 			assert.ok(!query.includes('level="ERROR"'));
 			assert.ok(!query.includes("level !~"));
@@ -133,6 +179,111 @@ describe("feildrilldown-dashboard", () => {
 			assert.ok(!query.includes("k8s_cluster_name"));
 			assert.ok(!query.includes("value"));
 		}
+		assert.equal(
+			browserTotalQuery,
+			`sum(count_over_time({kind="exception", service_name=~"\${app:regex}"} [$__range])) or on() vector(0)`,
+		);
+		assert.equal(
+			browserByTypeQuery,
+			`topk(50, sum by(service_name, type) (count_over_time({kind="exception", service_name=~"\${app:regex}"} | logfmt | __error__="" | type!="" [$__range])))`,
+		);
+		const elements = buildErrorDashboard().spec.elements as Record<
+			string,
+			unknown
+		>;
+		for (const panel of [elements["panel-2"], elements["panel-5"]]) {
+			assert.match(JSON.stringify(panel), /miljøscope UKJENT/);
+			assert.match(JSON.stringify(panel), /Runtime-miljø filtrerer ikke/);
+		}
+	});
+
+	test("prioriterer runtimefeil etter tjeneste og type før traced eksempler", () => {
+		const dashboard = buildErrorDashboard();
+		const elements = dashboard.spec.elements as Record<
+			string,
+			Record<string, unknown>
+		>;
+		const summaryPanel = JSON.stringify(elements["panel-4"]);
+		assert.match(summaryPanel, /Runtimefeil etter tjeneste og type/);
+		assert.match(summaryPanel, /"service_name":"Tjeneste"/);
+		assert.match(summaryPanel, /"error_type_display":"Feiltype"/);
+		assert.match(summaryPanel, /"error_code_display":"Kode"/);
+		assert.match(summaryPanel, /Logghendelser/);
+		assert.match(summaryPanel, /Hendelser uten trace er med/);
+		assert.ok(!summaryPanel.includes("Kilde (logger)"));
+		assert.ok(!summaryPanel.includes("Grunnlag"));
+		assert.ok(!summaryPanel.includes("Feilgruppe"));
+
+		const layout = dashboard.spec.layout as {
+			spec: {
+				items: Array<{
+					spec: { element: { name: string }; y: number };
+				}>;
+			};
+		};
+		const yByPanel = new Map(
+			layout.spec.items.map(({ spec }) => [spec.element.name, spec.y]),
+		);
+		assert.ok(
+			(yByPanel.get("panel-4") ?? Infinity) < (yByPanel.get("panel-6") ?? 0),
+		);
+	});
+
+	test("grupperer alle runtimefeil med samme sanitiserte signaturkontrakt", () => {
+		assert.match(runtimeByClassificationQuery, /^topk\(50,/);
+		assert.match(
+			runtimeByClassificationQuery,
+			/sum by\(service_name, error_type_display, error_code_display\)/,
+		);
+		assert.match(
+			runtimeByClassificationQuery,
+			/\| keep service_name, error_type_display, error_code_display/,
+		);
+		assert.match(runtimeByClassificationQuery, /Ikke oppgitt av appen/);
+		assert.match(runtimeByClassificationQuery, /else }}—\{\{ end/);
+		assert.ok(!runtimeByClassificationQuery.includes('trace_id!=""'));
+		assert.ok(!runtimeByClassificationQuery.includes("line_format"));
+		for (const forbidden of [
+			"message",
+			"stack_trace",
+			"request_body",
+			"__line__",
+		]) {
+			assert.ok(!runtimeByClassificationQuery.includes(forbidden));
+		}
+	});
+
+	test("viser full klassifiseringsdekning per tjeneste uten top-k", () => {
+		assert.match(
+			runtimeClassificationCoverageQuery,
+			/^sum by\(service_name, type_state\)/,
+		);
+		assert.ok(!runtimeClassificationCoverageQuery.includes("topk("));
+		for (const state of [
+			"typed",
+			"context_only",
+			"code_only",
+			"rejected",
+			"missing",
+		]) {
+			assert.ok(runtimeClassificationCoverageQuery.includes(state));
+		}
+		assert.match(
+			runtimeClassificationCoverageQuery,
+			/\| keep service_name, type_state/,
+		);
+
+		const coveragePanel = JSON.stringify(
+			(
+				buildErrorDashboard().spec.elements as Record<
+					string,
+					Record<string, unknown>
+				>
+			)["panel-7"],
+		);
+		assert.match(coveragePanel, /Klassifiseringsdekning for runtimefeil/);
+		assert.match(coveragePanel, /"type_state":"Klassifiseringsstatus"/);
+		assert.match(coveragePanel, /uten top-k-begrensning/);
 	});
 
 	test("skiller vellykket null fra datakildefeil", () => {
@@ -148,15 +299,75 @@ describe("feildrilldown-dashboard", () => {
 	});
 
 	test("returnerer bare sanitiserte tracedata fra Loki", () => {
-		assert.match(tracedRuntimeErrorsQuery, /\| json logger_name, trace_id/);
 		assert.match(
 			tracedRuntimeErrorsQuery,
-			/\| line_format `\{\{ \.error_group \}\}`/,
+			/\| json event_type, event, error_code, code, feilkode, runtime_type="type", status, logger_name, trace_id, category, operation/,
 		);
 		assert.match(
 			tracedRuntimeErrorsQuery,
-			/\| keep service_name, error_group, trace_id/,
+			/top_exception_type="exception_type"/,
 		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/nested_exception_type="exception\.type"/,
+		);
+		assert.match(tracedRuntimeErrorsQuery, /top_error_type="error_type"/);
+		assert.match(tracedRuntimeErrorsQuery, /nested_error_type="error\.type"/);
+		assert.match(tracedRuntimeErrorsQuery, /top_err_type="err_type"/);
+		assert.match(tracedRuntimeErrorsQuery, /nested_err_type="err\.type"/);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/label_format error_type_display=.*\.safe_event_type.*\.safe_event.*\.safe_top_exception_type.*\.safe_nested_exception_type.*\.safe_top_error_type.*\.safe_nested_error_type.*\.safe_top_err_type.*\.safe_nested_err_type.*\.safe_runtime_error_type.*Ikke oppgitt av appen/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/label_format error_source=.*\.safe_logger.*else }}—/,
+		);
+		const typeClassification = tracedRuntimeErrorsQuery.match(
+			/\| label_format error_type_display=.*$/m,
+		)?.[0];
+		assert.ok(typeClassification);
+		assert.ok(!typeClassification.includes("safe_logger"));
+		assert.match(tracedRuntimeErrorsQuery, /regexReplaceAll/);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/safe_event_type=.*\^\[a-z\]\[a-z0-9_\.-\]\{0,79\}\$/,
+		);
+		assert.match(tracedRuntimeErrorsQuery, /\^\[A-Za-z\]/);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/safe_error_code[\s\S]*safe_code[\s\S]*safe_feilkode[\s\S]*safe_runtime_type_code[\s\S]*safe_status[\s\S]*else }}—/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/safe_runtime_type_code=.*\^\[A-Z\]\[A-Z0-9_\]/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/safe_runtime_error_type=.*\(Error\|Exception\)\$/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/safe_status=.*\^\[45\]\[0-9\]\{2\}\$/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/\| line_format `\{\{ \.error_type_display \}\}`/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/\| keep service_name, error_type_display, error_code_display, error_context, error_source, type_state, safe_trace_id/,
+		);
+		assert.match(
+			tracedRuntimeErrorsQuery,
+			/safe_trace_id=.*\^\[A-Fa-f0-9\]\{32\}\$/,
+		);
+		assert.match(tracedRuntimeErrorsQuery, /\| safe_trace_id!=""/);
+		assert.match(tracedRuntimeErrorsQuery, /typed/);
+		assert.match(tracedRuntimeErrorsQuery, /code_only/);
+		assert.match(tracedRuntimeErrorsQuery, /context_only/);
+		assert.match(tracedRuntimeErrorsQuery, /rejected/);
+		assert.match(tracedRuntimeErrorsQuery, /missing/);
 		assert.match(
 			tracedRuntimeErrorsQuery,
 			/\| drop __error__, __error_details__/,
@@ -171,6 +382,15 @@ describe("feildrilldown-dashboard", () => {
 		]) {
 			assert.ok(!tracedRuntimeErrorsQuery.includes(forbidden));
 		}
+		assert.ok(!tracedRuntimeErrorsQuery.includes("uklassifisert"));
+		assert.ok(!tracedRuntimeErrorsQuery.includes("error_group"));
+		assert.ok(!tracedRuntimeErrorsQuery.includes(", type,"));
+		assert.ok(!typeClassification.includes(".runtime_type"));
+		const codeClassification = tracedRuntimeErrorsQuery.match(
+			/\| label_format error_code_display=.*$/m,
+		)?.[0];
+		assert.ok(codeClassification);
+		assert.ok(!codeClassification.includes(".runtime_type"));
 	});
 
 	test("bruker radens tjeneste, tidsrom og betinget trace i dyplenker", () => {
@@ -210,10 +430,22 @@ describe("feildrilldown-dashboard", () => {
 		assert.match(serializedPanel, /"group":"extractFields"/);
 		assert.match(serializedPanel, /"source":"labels"/);
 		assert.match(serializedPanel, /"replace":true/);
-		assert.match(serializedPanel, /"trace_id":"Trace"/);
+		assert.match(
+			serializedPanel,
+			/Nyeste traced runtimehendelser \(maks 100\)/,
+		);
+		assert.equal(RECENT_RUNTIME_EVENT_LIMIT, 100);
+		assert.match(serializedPanel, /"error_type_display":"Feiltype"/);
+		assert.match(serializedPanel, /"error_code_display":"Kode"/);
+		assert.match(serializedPanel, /"error_context":"Trygg kontekst"/);
+		assert.match(serializedPanel, /"error_source":"Kilde \(logger\)"/);
+		assert.match(serializedPanel, /"type_state":"Klassifiseringsstatus"/);
+		assert.match(serializedPanel, /"safe_trace_id":"Trace"/);
 		assert.match(serializedPanel, /"type":"data-links"/);
 		assert.match(serializedPanel, /Åpne trace/);
+		assert.match(serializedPanel, /ikke unike feil eller incidents/);
 		assert.ok(!serializedPanel.includes('"group":"logs"'));
+		assert.ok(!serializedPanel.includes("Feilgruppe"));
 	});
 
 	test("holder personverncanaries ute av dashboarddefinisjonen", () => {

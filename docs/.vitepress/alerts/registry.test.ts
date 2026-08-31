@@ -321,6 +321,22 @@ describe("alert-register", () => {
 		);
 	});
 
+	test("låser prodvarslenes feildrilldown-lenker til runtime-miljø prod", () => {
+		const drilldownHrefs = alertRegistry.rules.flatMap(({ dashboard }) =>
+			dashboard.status === "linked" &&
+			dashboard.href.includes("team-esyfo-error-drilldown")
+				? [dashboard.href]
+				: [],
+		);
+		assert.ok(drilldownHrefs.length > 0);
+		assert.ok(
+			drilldownHrefs.every(
+				(href) =>
+					new URL(href).searchParams.get("var-runtime_environment") === "prod",
+			),
+		);
+	});
+
 	test("vedtar én policy og én produksjonsrespons for alle 30 regler", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 

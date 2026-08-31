@@ -184,7 +184,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "count((sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [5m]))) > 0)",
+                        "expr": "count((sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n[5m]))) > 0)",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -819,7 +819,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
             },
             {
               "targetBlank": true,
@@ -889,7 +889,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
                     },
                     {
                       "targetBlank": true,
@@ -989,7 +989,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
             },
             {
               "targetBlank": true,
@@ -1059,7 +1059,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=dinesykmeldte-backend"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
                     },
                     {
                       "targetBlank": true,
@@ -1202,7 +1202,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [5m]))",
+                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"${scope:raw}\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n[5m]))",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -1363,7 +1363,7 @@
                           {
                             "targetBlank": true,
                             "title": "Feildrilldown",
-                            "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__value.raw}"
+                            "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__value.raw}"
                           },
                           {
                             "targetBlank": true,
@@ -1676,7 +1676,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__field.labels.service_name}"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     },
                     {
                       "targetBlank": true,
@@ -1815,7 +1815,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__field.labels.service_name}"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     },
                     {
                       "targetBlank": true,
@@ -1958,7 +1958,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__field.labels.service_name}"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     },
                     {
                       "targetBlank": true,
@@ -2021,7 +2021,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"${service:raw}\"} != `\"x_isFrontend\":true` | k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector` | detected_level=~`(?i)(error|critical|fatal)` [$__range]))",
+                        "expr": "sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=\"${service:raw}\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n[$__range]))",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -2050,7 +2050,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${service:raw}"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
             },
             {
               "targetBlank": true,
@@ -2158,7 +2158,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${service:raw}"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
             },
             {
               "targetBlank": true,
@@ -2266,7 +2266,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${service:raw}"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
             },
             {
               "targetBlank": true,
@@ -2463,7 +2463,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=${__field.labels.service_name}"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
                     }
                   ],
                   "noValue": "Ukjent",
@@ -2600,7 +2600,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-oppfolgingsplan-backend"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
             },
             {
               "targetBlank": true,
@@ -2728,7 +2728,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-oppfolgingsplan-backend"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
             },
             {
               "targetBlank": true,
@@ -3005,7 +3005,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-budstikka"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-budstikka"
             },
             {
               "targetBlank": true,
@@ -3080,7 +3080,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-budstikka"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-budstikka"
                     },
                     {
                       "targetBlank": true,
@@ -3185,7 +3185,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-oppfolgingsplan-backend"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
             },
             {
               "targetBlank": true,
@@ -3260,7 +3260,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfo-oppfolgingsplan-backend"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
                     },
                     {
                       "targetBlank": true,
@@ -3369,7 +3369,7 @@
             {
               "targetBlank": true,
               "title": "Feildrilldown",
-              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfomotebehov"
+              "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfomotebehov"
             },
             {
               "targetBlank": true,
@@ -3444,7 +3444,7 @@
                     {
                       "targetBlank": true,
                       "title": "Feildrilldown",
-                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-app=syfomotebehov"
+                      "url": "/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfomotebehov"
                     },
                     {
                       "targetBlank": true,
