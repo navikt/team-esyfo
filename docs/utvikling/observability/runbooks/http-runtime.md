@@ -4,7 +4,7 @@ Bruk denne for apper som vises i Kontrollrommets flåtematrise eller detaljpanel
 
 ## 1. Bekreft scope og evidens
 
-1. Åpne [Kontrollrom](https://grafana.nav.cloud.nais.io/d/team-esyfo-control-room-v1/team-esyfo-e28093-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m).
+1. Åpne [Kontrollrom](https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom/team-esyfo-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m).
 2. Velg relevant **Operativt område**, tidsrom og deretter én **Detaljtjeneste**.
    - `Operativt område` styrer bare oversiktskortene og flåtematrisen.
    - `Detaljtjeneste` styrer bare detaljpanelene.
@@ -43,7 +43,7 @@ sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo",
 ## 3. Avklar teknisk helse
 
 1. Se runtimefeil, restarts og ready/desired uavhengig av HTTP-panelene.
-2. Åpne Feildrilldown og det avgrensede loggsøket fra tjenesteraden.
+2. Åpne Feiloversikt og det avgrensede loggsøket fra tjenesteraden.
 3. Grupper på stabilt teknisk felt, for eksempel logger eller exception-type. Ikke bruk rå melding, payload eller URL som issue-fingerprint.
 4. Kontroller nylige endringer i NAIS Console/GitHub. Kontrollrommet viser foreløpig ikke verifisert deploy-SHA eller deploytid; pod-alder er ikke deploybevis.
 
@@ -69,7 +69,7 @@ sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo",
 
 Kjør som tabletop eller i dev med en ufarlig testtjeneste:
 
-1. Bruk et tidsrom med kjent trafikk og bekreft APM-/logg-/Feildrilldown-lenkene.
+1. Bruk et tidsrom med kjent trafikk og bekreft APM-/logg-/Feiloversikt-lenkene.
 2. Bruk et tidsrom eller en tjeneste uten SERVER-serie og bekreft at den står som `STALE`/`MANGLER`, ikke grønn.
 3. Bruk en kjent runtimefeil uten OTel-feil og bekreft at sannhetene ikke kollapses.
 4. Avbryt testen hvis den krever produksjonsfeil, ekte payload eller personidentifikator.

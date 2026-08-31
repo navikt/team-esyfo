@@ -128,7 +128,11 @@ export default withMermaid(
 									link: "/utvikling/observability/alert-register",
 								},
 								{
-									text: "Feildrilldown",
+									text: "Runtime-feilkontrakt",
+									link: "/utvikling/observability/runtime-feilkontrakt",
+								},
+								{
+									text: "Feiloversikt",
 									link: "/utvikling/observability/feildrilldown",
 								},
 								{

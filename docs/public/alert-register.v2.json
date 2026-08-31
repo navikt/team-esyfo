@@ -387,8 +387,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=aktivitetskrav-backend",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=aktivitetskrav-backend",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "aktivitetskrav-backend har ukonsumerte records på varsel-topicen.",
@@ -468,8 +468,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=aktivitetskrav-backend",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=aktivitetskrav-backend",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "aktivitetskrav-backend har ukonsumerte records på vurderingstopicen.",
@@ -556,8 +556,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=esyfovarsel",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=esyfovarsel",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "App esyfovarsel er nede.",
@@ -648,8 +648,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=esyfovarsel",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=esyfovarsel",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "esyfovarsel har en høy andel Warning/Error-logger.",
@@ -822,8 +822,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lps-oppfolgingsplan-mottak",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lps-oppfolgingsplan-mottak",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "lps-oppfolgingsplan-mottak har ukonsumerte Altinn-meldinger.",
@@ -894,8 +894,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Lumi avviser innsendinger på grunn av definisjonskonflikt.",
@@ -964,8 +964,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Lumi feiler ved behandling av survey-innsendinger.",
@@ -1034,8 +1034,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Lumi avviser uvanlig mange survey-innsendinger.",
@@ -1104,8 +1104,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Automatisk sletting av gamle Lumi-svar feiler.",
@@ -1175,8 +1175,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=lumi-api",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=lumi-api",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Automatisk sletting av gamle Lumi-svar har ikke fullført.",
@@ -1255,8 +1255,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-budstikka",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-budstikka",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Budstikka har hatt mer enn 100 meldinger lag i 15 minutter.",
@@ -1344,8 +1344,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Sykmelding-consumeren har vedvarende deserialiseringsfeil.",
@@ -1425,8 +1425,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Sykmelding-consumeren har gjentatte transiente feil.",
@@ -1505,8 +1505,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Oppfølgingsplan-outboxen leverer ikke varsler raskt nok.",
@@ -1587,8 +1587,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Oppfølgingsplan-outboxen har vedvarende utløpte claims.",
@@ -1669,8 +1669,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-oppfolgingsplan-backend",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Oppfølgingsplan-outboxen har vedvarende tekniske feil.",
@@ -1754,8 +1754,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfobrukertilgang",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfobrukertilgang",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "syfobrukertilgang er nede.",
@@ -1839,8 +1839,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfobrukertilgang",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfobrukertilgang",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "syfobrukertilgang har en høy andel 5xx.",
@@ -1922,8 +1922,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfobrukertilgang",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfobrukertilgang",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "syfobrukertilgang har en høy andel 4xx.",
@@ -2001,8 +2001,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "syfomotebehov er nede.",
@@ -2075,8 +2075,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "syfomotebehov har en høy andel 5xx.",
@@ -2161,8 +2161,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "syfomotebehov har en høy andel 4xx.",
@@ -2243,8 +2243,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfomotebehov",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfomotebehov",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "syfomotebehov har ukonsumerte oppfølgingstilfelle-meldinger.",
@@ -2332,8 +2332,8 @@
       },
       "dashboard": {
         "status": "linked",
-        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown?orgId=1&from=now-6h&to=now&timezone=browser&var-app=syfo-dokumentporten",
-        "label": "Feildrilldown"
+        "href": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=syfo-dokumentporten",
+        "label": "Feiloversikt"
       },
       "annotations": {
         "summary": "Varselinstruks har gått til terminal ERROR.",

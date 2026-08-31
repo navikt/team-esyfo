@@ -19,7 +19,7 @@ Dette er diagnostikk for pagerkandidaten i [syfomotebehov#753](https://github.co
 1. Velg `syfomotebehov` som detaljtjeneste.
 2. Les request-rate, OTel-feilstatus og P95 i samme tidsrom.
 3. Se begge relevante reiser: Møtebehov og Dialogmøte. Runtimeutilgjengelighet er en pagerkandidat først når forventet arbeid eller brukerflyt faktisk kan rammes.
-4. Åpne APM, Feildrilldown og avgrensede logger fra panelet.
+4. Åpne APM, Feiloversikt og avgrensede logger fra panelet.
 5. Kontroller pågående rollout i NAIS Console. Pod-alder er ikke verifisert deploytid.
 
 ## Tiltak

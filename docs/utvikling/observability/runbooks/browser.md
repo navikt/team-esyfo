@@ -1,6 +1,6 @@
 # Runbook: browser
 
-Browserdelen i Kontrollrommet skiller kildekodekonfigurasjon fra operative målinger. Per nå er bare Faro `kind=exception` live-verifisert for Team eSyfos Feildrilldown. [Browserkontrakten](../browserkontrakt) kommer fra [#206](https://github.com/navikt/team-esyfo/issues/206); page loads, sessions, sideidentitet og CWV p75 forblir `UKJENT` til den enkelte flaten har bestått rollout-gatene.
+Browserdelen i Kontrollrommet skiller kildekodekonfigurasjon fra operative målinger. Per nå er bare Faro `kind=exception` live-verifisert for Team eSyfos Feiloversikt. [Browserkontrakten](../browserkontrakt) kommer fra [#206](https://github.com/navikt/team-esyfo/issues/206); page loads, sessions, sideidentitet og CWV p75 forblir `UKJENT` til den enkelte flaten har bestått rollout-gatene.
 
 ## 1. Bekreft identitet og dekning
 
@@ -13,7 +13,7 @@ Browserdelen i Kontrollrommet skiller kildekodekonfigurasjon fra operative måli
 
 ## 2. Triage et browser-unntak
 
-1. Åpne Feildrilldown fra Kontrollrommet og velg samme tidsrom og service.
+1. Åpne Feiloversikt fra Kontrollrommet og velg samme tidsrom og service.
 2. Se på stabil exception-type/fingerprint og normalisert side-ID når den finnes.
 3. Ikke summer hendelser på tvers av flater med ulik eller ukjent samplingrate.
 4. Omtal en exception som en **samplet hendelse**, ikke en session eller bruker.
@@ -41,5 +41,5 @@ I dev eller med en eksisterende, ufarlig exception:
 
 1. Bekreft at exceptionen vises på riktig browseridentitet.
 2. Bekreft at sourcemap/deobfuscation ikke eksponerer payload eller identifikatorer.
-3. Bekreft at APM-/Feildrilldown-lenkene beholder valgt tidsrom.
+3. Bekreft at APM-/Feiloversikt-lenkene beholder valgt tidsrom.
 4. Kjør privacy-canary for rå URL, user context, console capture og session replay før en flate markeres dekket.

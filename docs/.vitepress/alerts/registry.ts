@@ -36,7 +36,7 @@ export const NAIS_APPLICATIONS_URL =
 export const GRAFANA_FOLDER_ALERTS_URL =
 	"https://grafana.nav.cloud.nais.io/dashboards/f/K-1b-N_4k/team-esyfo/alerting";
 export const ERROR_DRILLDOWN_URL =
-	"https://grafana.nav.cloud.nais.io/d/team-esyfo-error-drilldown/team-esyfo-e28093-feildrilldown";
+	"https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt";
 export const RUNBOOK_BASE_URL =
 	"https://navikt.github.io/team-esyfo/utvikling/observability/runbooks";
 
@@ -226,8 +226,8 @@ const missingDashboard = (): TrackedLink => ({
 });
 const errorDashboard = (app: string): TrackedLink =>
 	linked(
-		`${ERROR_DRILLDOWN_URL}?orgId=1&from=now-6h&to=now&timezone=browser&var-app=${app}`,
-		"Feildrilldown",
+		`${ERROR_DRILLDOWN_URL}?orgId=1&from=now-6h&to=now&timezone=browser&var-runtime_environment=prod&var-app=${app}`,
+		"Feiloversikt",
 	);
 
 const naisNotification: AlertNotificationRoute = {

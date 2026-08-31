@@ -83,12 +83,28 @@ const sortSemantically = (values: unknown[]) =>
 			JSON.stringify(left).localeCompare(JSON.stringify(right)),
 		);
 
+const collectLayoutItems = (layout: unknown): unknown[] => {
+	if (!layout || typeof layout !== "object") return [];
+	const { kind, spec } = layout as { kind?: string; spec?: JsonRecord };
+	if (kind === "GridLayout") {
+		return Array.isArray(spec?.items) ? spec.items : [];
+	}
+	if (kind === "RowsLayout") {
+		const rows = Array.isArray(spec?.rows) ? spec.rows : [];
+		return rows.flatMap((row) => {
+			const rowSpec = (row as { spec?: JsonRecord }).spec;
+			return collectLayoutItems(rowSpec?.layout);
+		});
+	}
+	return [];
+};
+
 const semanticContract = (resource: JsonRecord) => {
 	const metadata = resource.metadata as JsonRecord;
 	const annotations = metadata.annotations as JsonRecord;
 	const spec = resource.spec as JsonRecord;
 	const elements = spec.elements as JsonRecord;
-	const layout = spec.layout as { spec: { items: unknown[] } };
+	const layout = spec.layout;
 	const variables = spec.variables as Array<{ kind: string; spec: JsonRecord }>;
 	const queries = sortSemantically(
 		collectObjects(spec)
@@ -99,7 +115,8 @@ const semanticContract = (resource: JsonRecord) => {
 				spec: querySpec,
 			})),
 	);
-	const layoutElementNames = layout.spec.items
+	const layoutItems = collectLayoutItems(layout);
+	const layoutElementNames = layoutItems
 		.map(
 			(item) =>
 				(
@@ -116,10 +133,14 @@ const semanticContract = (resource: JsonRecord) => {
 		folder: annotations["grafana.app/folder"],
 		title: spec.title,
 		timeSettings: spec.timeSettings,
+		preload: spec.preload,
+		editable: spec.editable,
+		liveNow: spec.liveNow,
 		elements: canonicalize(elements),
 		elementNames: Object.keys(elements).sort(),
 		layoutElementNames,
-		layoutItems: layout.spec.items.map(canonicalize),
+		layout: canonicalize(layout),
+		layoutItems: layoutItems.map(canonicalize),
 		variables: variables.map(canonicalize),
 		queries,
 		transformations: sortSemantically(
