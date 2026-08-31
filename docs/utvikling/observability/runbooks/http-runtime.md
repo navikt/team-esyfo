@@ -25,9 +25,9 @@ Bruk denne for apper som vises i Kontrollrommets flåtematrise eller detaljpanel
 
 Bruk formuleringen **påvist impact** bare når telemetry faktisk viser mislykkede kall eller en domene-/pipelinekontrakt er brutt. Ellers: **ingen impact påvist** eller **ukjent**.
 
-### Legacy ingress-5xx for syfomotebehov
+### syfomotebehov: dagens regel og foreslått observasjonsregel
 
-Alerten `HIGH RATIO OF HTTP 5XX RESPONSE` bruker denne ingress-ratioen per `backend` i et femminuttersvindu:
+Det live-verifiserte registersnapshotet inneholder fortsatt alerten `HIGH RATIO OF HTTP 5XX RESPONSE`. Den bruker denne ingress-ratioen per `backend` i et femminuttersvindu:
 
 ```promql
 100 * sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo", service="syfomotebehov", status=~"^5\\d\\d"}[5m]))
@@ -39,6 +39,15 @@ sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo",
 - Regelen mangler minimumstrafikk. Én mislykket request ved lav trafikk kan derfor utløse den.
 - Manglende nevner eller `No data` er ukjent, ikke null feil eller frisk tjeneste.
 - Sammenlign med OTel/APM for brukerimpact, men ikke likestill ingress-5xx med `STATUS_CODE_ERROR` i spans.
+
+[syfomotebehov-PR #756](https://github.com/navikt/syfomotebehov/pull/756) foreslår å erstatte denne med en urutet observasjonsregel (`shadow`) basert på produksjonens SERVER-spans. Kandidaten krever samtidig:
+
+- mer enn 2 prosent HTTP 5xx i et 15-minuttersvindu,
+- minst 20 SERVER-spans med HTTP-status fra 1xx til 5xx,
+- en beregnet økning på minst 3 HTTP 5xx SERVER-spans,
+- og at alle vilkårene er sanne sammenhengende i 5 minutter.
+
+Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende totalserie forblir `No data`. SERVER-spans uten `http_response_status_code` er ikke med i nevneren og må behandles som et telemetrygap, ikke som vellykkede kall. Regelen er merket for observasjonsmodus (`shadow`) og ikke-avbrytende oppfølging (`ticket`); den er ikke pager eller bevis på brukerimpact alene. Den generiske 4xx-regelen fjernes også i #756, men først når endringen faktisk er deployert. Frem til #756 er merget, deployert og live-avstemt skal registeret og hendelseshåndteringen fortsatt behandle ingress-reglene som de faktiske live-reglene. Etter deploy må kilde-SHA, fingerprint, timing og live-observasjon oppdateres samlet i alert-registeret.
 
 ## 3. Avklar teknisk helse
 

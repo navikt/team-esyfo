@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 import { reconcileAlertObservations } from "./drift.ts";
 import type { AlertObservationSnapshot, AlertRegistry } from "./model.ts";
@@ -261,7 +262,7 @@ describe("alert-register", () => {
 		});
 	});
 
-	test("kobler tre verifiserbare regler til relevante runbooks", () => {
+	test("kobler verifiserbare regler til relevante runbooks", () => {
 		const rulesById = new Map(
 			alertRegistry.rules.map((rule) => [rule.id, rule]),
 		);
@@ -270,6 +271,21 @@ describe("alert-register", () => {
 				"rule:oppfolgingsplan-sykmelding-deserialization",
 				"oppfolgingsplan-deserialisering",
 				"Sykmelding-deserialisering",
+			],
+			[
+				"rule:oppfolgingsplan-outbox-oldest-due",
+				"pipelines-og-jobber#oppfolgingsplan-outbox",
+				"Oppfølgingsplan: utgående varselkø",
+			],
+			[
+				"rule:oppfolgingsplan-outbox-expired-claims",
+				"pipelines-og-jobber#oppfolgingsplan-outbox",
+				"Oppfølgingsplan: utgående varselkø",
+			],
+			[
+				"rule:oppfolgingsplan-outbox-persistent-failures",
+				"pipelines-og-jobber#oppfolgingsplan-outbox",
+				"Oppfølgingsplan: utgående varselkø",
 			],
 			[
 				"rule:motebehov-down",
@@ -287,8 +303,20 @@ describe("alert-register", () => {
 			});
 		}
 
+		const pipelineRunbook = readFileSync(
+			new URL(
+				"../../utvikling/observability/runbooks/pipelines-og-jobber.md",
+				import.meta.url,
+			),
+			"utf8",
+		);
+		assert.match(
+			pipelineRunbook,
+			/^## Oppfølgingsplan: utgående varselkø \{#oppfolgingsplan-outbox\}$/m,
+		);
+
 		const report = assertValidAlertRegistry(alertRegistry);
-		assert.equal(report.missingRunbooks.length, 21);
+		assert.equal(report.missingRunbooks.length, 18);
 		assert.ok(
 			expectedRunbooks.every(
 				([ruleId]) => !report.missingRunbooks.includes(ruleId),
