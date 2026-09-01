@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 import Ajv from "ajv";
 import {
+	assertPublishedRuntimeErrorContractIsImmutable,
 	runtimeDashboardTraceIdPattern,
 	runtimeErrorCodePattern,
 	runtimeErrorContractPublicPath,
@@ -219,6 +220,24 @@ describe("runtime-feilkontrakt v1", () => {
 			"utf8",
 		);
 		assert.equal(published, serializeRuntimeErrorContractV1());
+	});
+
+	test("nekter å endre en kontraktversjon som finnes på base-ref", () => {
+		const current = serializeRuntimeErrorContractV1();
+		assert.doesNotThrow(() =>
+			assertPublishedRuntimeErrorContractIsImmutable(undefined, current),
+		);
+		assert.doesNotThrow(() =>
+			assertPublishedRuntimeErrorContractIsImmutable(current, current),
+		);
+		assert.throws(
+			() =>
+				assertPublishedRuntimeErrorContractIsImmutable(
+					current.replace('"event_type"', '"changed_event_type"'),
+					current,
+				),
+			/immutable/,
+		);
 	});
 
 	test("mønstrene som gjenbrukes i Loki holder seg innenfor RE2", () => {

@@ -73,3 +73,14 @@ export const runtimeErrorContractV1Schema = {
 
 export const serializeRuntimeErrorContractV1 = () =>
 	`${JSON.stringify(runtimeErrorContractV1Schema, null, 2)}\n`;
+
+export const assertPublishedRuntimeErrorContractIsImmutable = (
+	publishedAtBase: string | undefined,
+	current: string,
+) => {
+	if (publishedAtBase !== undefined && publishedAtBase !== current) {
+		throw new Error(
+			`Publisert runtime-feilkontrakt v${runtimeErrorContractVersion} er immutable. Opprett en ny kontraktversjon i stedet.`,
+		);
+	}
+};

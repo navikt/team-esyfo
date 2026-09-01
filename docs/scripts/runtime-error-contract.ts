@@ -1,6 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { dirname, relative, resolve } from "node:path";
 import {
+	assertPublishedRuntimeErrorContractIsImmutable,
 	runtimeErrorContractPublicPath,
 	serializeRuntimeErrorContractV1,
 } from "../.vitepress/observability/runtime-error-contract.ts";
@@ -17,6 +19,42 @@ const output = resolve(
 	option("--output") ?? `public/${runtimeErrorContractPublicPath}`,
 );
 
+const canonicalOutput = resolve(`public/${runtimeErrorContractPublicPath}`);
+
+const readPublishedContractAtBase = () => {
+	if (output !== canonicalOutput) return undefined;
+
+	const configuredBaseRef =
+		option("--base-ref") ??
+		process.env.RUNTIME_ERROR_CONTRACT_BASE_REF?.trim() ??
+		"origin/main";
+	if (!configuredBaseRef) return undefined;
+
+	const repositoryRoot = spawnSync(
+		"git",
+		["rev-parse", "--show-toplevel"],
+		{ encoding: "utf8" },
+	);
+	if (repositoryRoot.status !== 0) return undefined;
+
+	const repositoryPath = relative(repositoryRoot.stdout.trim(), output).replaceAll(
+		"\\",
+		"/",
+	);
+	const publishedAtBase = spawnSync(
+		"git",
+		["show", `${configuredBaseRef}:${repositoryPath}`],
+		{ encoding: "utf8" },
+	);
+	if (publishedAtBase.status === 0) return publishedAtBase.stdout;
+	if (/does not exist|exists on disk, but not in|path .* not in/i.test(publishedAtBase.stderr)) {
+		return undefined;
+	}
+	throw new Error(
+		`Kunne ikke kontrollere publisert kontrakt mot ${configuredBaseRef}: ${publishedAtBase.stderr.trim()}`,
+	);
+};
+
 const check = async () => {
 	const expected = serializeRuntimeErrorContractV1();
 	const actual = await readFile(output, "utf8");
@@ -25,6 +63,10 @@ const check = async () => {
 			`Kontraktartefakten er utdatert: ${output}. Kjør pnpm runtime-error-contract:export.`,
 		);
 	}
+	assertPublishedRuntimeErrorContractIsImmutable(
+		readPublishedContractAtBase(),
+		actual,
+	);
 	console.log(`Kontraktartefakt OK: ${output}`);
 };
 
