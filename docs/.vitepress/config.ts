@@ -120,7 +120,7 @@ export default withMermaid(
 									link: "/utvikling/observability/browserkontrakt",
 								},
 								{
-									text: "Avviklingsport",
+									text: "Avvikling (historikk)",
 									link: "/utvikling/observability/avvikling-syfooppfolgingsplanservice",
 								},
 								{

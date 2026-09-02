@@ -637,11 +637,10 @@ export const applications: Application[] = [
 		role: "backend-api",
 		criticality: "standard",
 		lifecycle: {
-			state: "sunset",
-			sunsetOn: "2026-08-31",
-			replacementRefs: ["app:syfo-oppfolgingsplan-backend"],
-			reason: "Tjenesten avvikles ved månedsskiftet.",
-			decision: "navikt/team-esyfo#208",
+			state: "retired",
+			retiredOn: "2026-09-02",
+			reason:
+				"Produksjonstjenesten er stanset og erstattet av syfo-oppfolgingsplan-backend; observability-cleanup følges i #208.",
 		},
 		context: context(["oppfolgingsplan"], ["journey:follow-up-plan"]),
 		coverageProfile: "legacy-http",
@@ -653,11 +652,10 @@ export const applications: Application[] = [
 		role: "infrastructure",
 		criticality: "support",
 		lifecycle: {
-			state: "sunset",
-			sunsetOn: "2026-08-31",
-			replacementRefs: [],
-			reason: "Redis-instansen forsvinner sammen med tjenesten.",
-			decision: "navikt/team-esyfo#208",
+			state: "retired",
+			retiredOn: "2026-09-02",
+			reason:
+				"Redis er ikke lenger del av forventet produksjonsruntime etter tjenestestopp; eventuelle gjenværende ressurser er drift som ryddes i #208.",
 		},
 		context: context(["oppfolgingsplan"], ["journey:follow-up-plan"]),
 		coverageProfile: "infrastructure",
@@ -673,11 +671,10 @@ export const applications: Application[] = [
 		role: "infrastructure",
 		criticality: "support",
 		lifecycle: {
-			state: "sunset",
-			sunsetOn: "2026-08-31",
-			replacementRefs: [],
-			reason: "Eksportøren forsvinner sammen med Redis-instansen.",
-			decision: "navikt/team-esyfo#208",
+			state: "retired",
+			retiredOn: "2026-09-02",
+			reason:
+				"Redis-exporter er ikke lenger del av forventet produksjonsruntime etter tjenestestopp; eventuelle gjenværende ressurser er drift som ryddes i #208.",
 		},
 		context: context(["oppfolgingsplan"], ["journey:follow-up-plan"]),
 		coverageProfile: "infrastructure",
@@ -1089,7 +1086,6 @@ export const topics: Topic[] = [
 				"app:syfo-dokumentporten",
 				"app:syfo-oppfolgingsplan-backend",
 				"app:syfomotebehov",
-				"app:syfooppfolgingsplanservice",
 			],
 			external: [
 				external(
