@@ -2,8 +2,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { dirname, relative, resolve } from "node:path";
 import {
-	assertPublishedRuntimeErrorContractIsImmutable,
-	runtimeErrorContractPublicPath,
+	assertPublishedRuntimeErrorContractsAreImmutable,
+	runtimeErrorContractV1PublicPath,
 	serializeRuntimeErrorContractV1,
 } from "../.vitepress/observability/runtime-error-contract.ts";
 
@@ -16,43 +16,81 @@ const option = (name: string) => {
 };
 
 const output = resolve(
-	option("--output") ?? `public/${runtimeErrorContractPublicPath}`,
+	option("--output") ?? `public/${runtimeErrorContractV1PublicPath}`,
 );
 
-const canonicalOutput = resolve(`public/${runtimeErrorContractPublicPath}`);
+const canonicalOutput = resolve(`public/${runtimeErrorContractV1PublicPath}`);
+const canonicalContractDirectory = resolve("public/contracts/runtime-error");
 
-const readPublishedContractAtBase = () => {
-	if (output !== canonicalOutput) return undefined;
+const git = (gitArgs: string[], description: string) => {
+	const result = spawnSync("git", gitArgs, { encoding: "utf8" });
+	if (result.status !== 0) {
+		throw new Error(`${description}: ${result.stderr.trim()}`);
+	}
+	return result.stdout;
+};
 
-	const configuredBaseRef =
+const repositoryRoot = () =>
+	git(["rev-parse", "--show-toplevel"], "Fant ikke repository root").trim();
+
+const configuredBaseRef = () => {
+	const baseRef =
 		option("--base-ref") ??
 		process.env.RUNTIME_ERROR_CONTRACT_BASE_REF?.trim() ??
 		"origin/main";
-	if (!configuredBaseRef) return undefined;
+	if (!baseRef) {
+		throw new Error("Base-ref for kontraktkontroll kan ikke være tom");
+	}
+	return baseRef;
+};
 
-	const repositoryRoot = spawnSync(
-		"git",
-		["rev-parse", "--show-toplevel"],
-		{ encoding: "utf8" },
-	);
-	if (repositoryRoot.status !== 0) return undefined;
+const readPublishedContractsAtBase = () => {
+	if (output !== canonicalOutput) return {};
 
-	const repositoryPath = relative(repositoryRoot.stdout.trim(), output).replaceAll(
+	const root = repositoryRoot();
+	const contractDirectory = relative(root, canonicalContractDirectory).replaceAll(
 		"\\",
 		"/",
 	);
-	const publishedAtBase = spawnSync(
-		"git",
-		["show", `${configuredBaseRef}:${repositoryPath}`],
-		{ encoding: "utf8" },
+	const baseRef = configuredBaseRef();
+	const paths = git(
+		[
+			"-C",
+			root,
+			"ls-tree",
+			"-r",
+			"--name-only",
+			baseRef,
+			"--",
+			contractDirectory,
+		],
+		`Kunne ikke liste publiserte kontrakter på ${baseRef}`,
+	)
+		.split("\n")
+		.filter((path) => path.endsWith("/schema.json"));
+
+	return Object.fromEntries(
+		paths.map((path) => [
+			path,
+			git(
+				["-C", root, "show", `${baseRef}:${path}`],
+				`Kunne ikke lese publisert kontrakt ${path} på ${baseRef}`,
+			),
+		]),
 	);
-	if (publishedAtBase.status === 0) return publishedAtBase.stdout;
-	if (/does not exist|exists on disk, but not in|path .* not in/i.test(publishedAtBase.stderr)) {
-		return undefined;
+};
+
+const readCurrentPublishedContracts = async (paths: string[]) => {
+	const root = repositoryRoot();
+	const contracts: Record<string, string> = {};
+	for (const path of paths) {
+		try {
+			contracts[path] = await readFile(resolve(root, path), "utf8");
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+		}
 	}
-	throw new Error(
-		`Kunne ikke kontrollere publisert kontrakt mot ${configuredBaseRef}: ${publishedAtBase.stderr.trim()}`,
-	);
+	return contracts;
 };
 
 const check = async () => {
@@ -63,9 +101,10 @@ const check = async () => {
 			`Kontraktartefakten er utdatert: ${output}. Kjør pnpm runtime-error-contract:export.`,
 		);
 	}
-	assertPublishedRuntimeErrorContractIsImmutable(
-		readPublishedContractAtBase(),
-		actual,
+	const publishedAtBase = readPublishedContractsAtBase();
+	assertPublishedRuntimeErrorContractsAreImmutable(
+		publishedAtBase,
+		await readCurrentPublishedContracts(Object.keys(publishedAtBase)),
 	);
 	console.log(`Kontraktartefakt OK: ${output}`);
 };

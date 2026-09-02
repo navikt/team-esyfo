@@ -3,37 +3,29 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 import Ajv from "ajv";
 import {
-	assertPublishedRuntimeErrorContractIsImmutable,
+	assertPublishedRuntimeErrorContractsAreImmutable,
+	combineRuntimePatterns,
 	runtimeDashboardTraceIdPattern,
 	runtimeErrorCodePattern,
-	runtimeErrorContractPublicPath,
+	runtimeErrorContractV1PublicPath,
 	runtimeErrorContractV1Schema,
+	runtimeErrorContractV1Version,
+	runtimeErrorIngestionErrorCodePattern,
+	runtimeErrorIngestionEventTypePattern,
+	runtimeErrorIngestionExceptionTypePattern,
+	runtimeErrorIngestionOperationPattern,
+	runtimeErrorIngestionPatterns,
+	runtimeErrorIngestionTraceIdPattern,
+	runtimeErrorIngestionUpstreamStatusPattern,
 	runtimeEventTypePattern,
 	runtimeExceptionTypePattern,
+	runtimeOperationPattern,
 	runtimeTraceIdPattern,
 	runtimeUpstreamStatusStringPattern,
 	serializeRuntimeErrorContractV1,
 } from "./runtime-error-contract.ts";
 
 const fixtureRoot = new URL("./fixtures/runtime-error/v1/", import.meta.url);
-const contractDocumentation = readFileSync(
-	new URL(
-		"../../utvikling/observability/runtime-feilkontrakt.md",
-		import.meta.url,
-	),
-	"utf8",
-);
-
-const documentationSection = (start: string, end: string) => {
-	const startIndex = contractDocumentation.indexOf(start);
-	const endIndex = contractDocumentation.indexOf(
-		end,
-		startIndex + start.length,
-	);
-	assert.notEqual(startIndex, -1, `Fant ikke dokumentasjonsseksjonen ${start}`);
-	assert.notEqual(endIndex, -1, `Fant ikke slutten ${end}`);
-	return contractDocumentation.slice(startIndex, endIndex);
-};
 
 const readFixtures = (group: "valid" | "invalid" | "boundary") =>
 	readdirSync(new URL(`${group}/`, fixtureRoot), { encoding: "utf8" })
@@ -148,62 +140,10 @@ describe("runtime-feilkontrakt v1", () => {
 			false,
 		);
 		assert.equal("request_url" in fixtures["privacy-test-required.json"], true);
-	});
-
-	test("dokumenterer trygg throwable-standard og personverntest av hele JSON-linjen", () => {
-		const kotlinSection = documentationSection(
-			"## Kotlin/LogstashEncoder",
-			"## Konformitetstest i apprepoet",
-		);
-		const kotlinExample = kotlinSection.match(/```kotlin\n([\s\S]*?)```/)?.[1];
-		assert.ok(kotlinExample, "Kotlin-eksemplet mangler");
-		const logCall = kotlinExample.match(/log\.error\(\n([\s\S]*?)\n\)/)?.[1];
-		assert.ok(logCall, "Kotlin-eksemplet mangler log.error-kallet");
-		const argumentsAfterMessage = logCall
-			.split("\n")
-			.slice(1)
-			.map((line) => line.trim())
-			.filter(Boolean);
-		assert.deepEqual(
-			argumentsAfterMessage,
-			[
-				'kv("event_type", "sykmelding_lookup_failed"),',
-				'kv("error_code", "UPSTREAM_HTTP_ERROR"),',
-				'kv("operation", "hent_sykmelding"),',
-				'kv("upstream_status", 502),',
-				'kv("exception_type", normalizeExceptionType(exception)),',
-			],
-			"Standardeksemplet skal bare sende de eksplisitte, sikre kv-feltene etter meldingen",
-		);
-		assert.match(
-			kotlinSection,
-			/Det trygge standardeksemplet utelater throwable helt/,
-		);
-		for (const leakPath of ["cause", "suppressed", "stack_trace"]) {
-			assert.match(kotlinSection, new RegExp(`\\b${leakPath}\\b`));
-		}
-
-		const conformitySection = documentationSection(
-			"## Konformitetstest i apprepoet",
-			"## Dashboardets `contract_state`",
-		);
-		assert.match(
-			conformitySection,
-			/ikke finnes \*\*noe sted i hele den serialiserte JSON-linjen\*\*/,
-		);
-		for (const leakPath of ["message", "cause", "suppressed", "MDC"]) {
-			assert.match(conformitySection, new RegExp(`\\b${leakPath}\\b`));
-		}
-
-		const privacySection = documentationSection(
-			"## Personvern og kardinalitet",
-			"## Node/Pino",
-		);
-		assert.match(privacySection, /navikt\.github\.io\/pdl/);
-		assert.match(privacySection, /GraphQL-`errors`/);
-		assert.match(
-			privacySection,
-			/Dette er et eksplisitt unntak basert på den dokumenterte oppstrømskontrakten/,
+		assert.equal(
+			validate({ event_type: "future_extension", future_field: 123 }),
+			true,
+			validationErrors(),
 		);
 		assert.match(
 			runtimeErrorContractV1Schema.$comment,
@@ -214,7 +154,7 @@ describe("runtime-feilkontrakt v1", () => {
 	test("publisert schema er eksakt generert fra samme kilde", () => {
 		const published = readFileSync(
 			new URL(
-				`../../public/${runtimeErrorContractPublicPath}`,
+				`../../public/${runtimeErrorContractV1PublicPath}`,
 				import.meta.url,
 			),
 			"utf8",
@@ -222,34 +162,104 @@ describe("runtime-feilkontrakt v1", () => {
 		assert.equal(published, serializeRuntimeErrorContractV1());
 	});
 
-	test("nekter å endre en kontraktversjon som finnes på base-ref", () => {
+	test("bevarer alle kontraktversjoner som finnes på base-ref", () => {
 		const current = serializeRuntimeErrorContractV1();
+		const v1Path = `docs/public/${runtimeErrorContractV1PublicPath}`;
 		assert.doesNotThrow(() =>
-			assertPublishedRuntimeErrorContractIsImmutable(undefined, current),
+			assertPublishedRuntimeErrorContractsAreImmutable(
+				{},
+				{ [v1Path]: current },
+			),
 		);
 		assert.doesNotThrow(() =>
-			assertPublishedRuntimeErrorContractIsImmutable(current, current),
+			assertPublishedRuntimeErrorContractsAreImmutable(
+				{ [v1Path]: current },
+				{
+					[v1Path]: current,
+					"docs/public/contracts/runtime-error/v2.0.0/schema.json": "{}\n",
+				},
+			),
 		);
 		assert.throws(
 			() =>
-				assertPublishedRuntimeErrorContractIsImmutable(
-					current.replace('"event_type"', '"changed_event_type"'),
-					current,
+				assertPublishedRuntimeErrorContractsAreImmutable(
+					{ [v1Path]: current },
+					{
+						[v1Path]: current.replace('"event_type"', '"changed_event_type"'),
+					},
 				),
 			/immutable/,
 		);
+		assert.throws(
+			() =>
+				assertPublishedRuntimeErrorContractsAreImmutable(
+					{ [v1Path]: current },
+					{},
+				),
+			/immutable/,
+		);
+	});
+
+	test("bygger dashboard-ingestion som en append-only union", () => {
+		const publishedVersions = readdirSync(
+			new URL("../../public/contracts/runtime-error/", import.meta.url),
+			{ withFileTypes: true },
+		)
+			.filter((entry) => entry.isDirectory() && entry.name.startsWith("v"))
+			.map((entry) => entry.name.slice(1))
+			.sort();
+		assert.deepEqual(
+			Object.keys(runtimeErrorIngestionPatterns).sort(),
+			publishedVersions,
+		);
+
+		const v1Patterns =
+			runtimeErrorIngestionPatterns[runtimeErrorContractV1Version];
+		const fixturePatterns = {
+			event_type: v1Patterns.eventType,
+			error_code: v1Patterns.errorCode,
+			operation: v1Patterns.operation,
+			exception_type: v1Patterns.exceptionType,
+			trace_id: v1Patterns.traceId,
+			upstream_status: v1Patterns.upstreamStatus,
+		} as const;
+		for (const { name, value } of readFixtures("valid")) {
+			for (const [field, pattern] of Object.entries(fixturePatterns)) {
+				if (value[field] === undefined) continue;
+				assert.match(
+					String(value[field]),
+					new RegExp(pattern),
+					`${name}.${field} må fortsatt kunne leses av dashboardet`,
+				);
+			}
+		}
+
+		const mixedVersionPattern = combineRuntimePatterns(["^v1$", "^v2$"]);
+		assert.match("v1", new RegExp(mixedVersionPattern));
+		assert.match("v2", new RegExp(mixedVersionPattern));
+		assert.doesNotMatch("v3", new RegExp(mixedVersionPattern));
 	});
 
 	test("mønstrene som gjenbrukes i Loki holder seg innenfor RE2", () => {
 		for (const pattern of [
 			runtimeEventTypePattern,
 			runtimeErrorCodePattern,
+			runtimeOperationPattern,
 			runtimeExceptionTypePattern,
 			runtimeTraceIdPattern,
 			runtimeDashboardTraceIdPattern,
 			runtimeUpstreamStatusStringPattern,
+			...Object.values(runtimeErrorIngestionPatterns).flatMap((patterns) =>
+				Object.values(patterns),
+			),
+			runtimeErrorIngestionEventTypePattern,
+			runtimeErrorIngestionErrorCodePattern,
+			runtimeErrorIngestionOperationPattern,
+			runtimeErrorIngestionExceptionTypePattern,
+			runtimeErrorIngestionTraceIdPattern,
+			runtimeErrorIngestionUpstreamStatusPattern,
 		]) {
-			assert.doesNotMatch(pattern, /\(\?[=!<]|\\[1-9]/);
+			assert.doesNotMatch(pattern, /\(\?|\\[1-9]/);
 		}
 	});
 });

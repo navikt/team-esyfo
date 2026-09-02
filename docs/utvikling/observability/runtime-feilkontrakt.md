@@ -45,9 +45,11 @@ ved loggeroppsettet i Node- og JVM-appene.
 Appspesifikke metadatafelt er tillatt når de har et tydelig diagnostisk behov
 og en kodeeid, avgrenset verdi. De eies og testes i apprepoet. Et felt som skal
 brukes på tvers av apper eller i hoveddashboardet, tas først inn som felles felt
-i en ny, eksakt kontraktversjon. Publiserte versjonsstier er immutable. En ny
-minorversjon krever kollisjonskontroll mot appfelter og må fortsatt godta alle
-gyldige kompatibilitets-fixtures; ellers er endringen en ny majorversjon.
+i en ny, eksakt kontraktversjon. Publiserte versjonsstier er immutable. Siden
+schemaet tillater ukjente appfelter på rotnivå, er det potensielt brytende å
+promotere eller begrense et slikt feltnavn senere; det krever derfor en ny
+majorversjon. En minorversjon kan bare løsne validering eller endre metadata på
+en måte som fortsatt godtar alle dokumenter som var gyldige i forrige versjon.
 
 ## Eierskap og leveransemodell
 
@@ -63,16 +65,11 @@ hendelsestype skal derfor ikke kreve release av en sentral runtimepakke.
 Første utrulling bruker appenes eksisterende Pino- og SLF4J/Logback-API-er. Det
 publiseres ikke en npm- eller Maven-runtimeavhengighet før minst én Node- og én
 JVM-pilot har bevist et stabilt felles adaptergrensesnitt. Når den repeterte
-mekanikken er kjent, flyttes maskinlesbart schema, generator, reusable
-GitHub Action og eventuelle buildverktøy til et eget observability-repo. Dette
-repoet skal da være eneste kilde for de kjørbare artefaktene, mens `team-esyfo`
-beholder funksjonell dokumentasjon, dashboard og en pinnet kontraktversjon.
-
-Målbildet er schema-first med genererte lokale TS-/Kotlin-typer og validering av
-faktisk serialisert JSON i CI. Genererte kilder kan committes i apprepoet, slik
-at applikasjonen får compile-time-sikkerhet uten en ny produksjonsdependency.
-En collector kan senere normalisere legacy og lage dekningsmetrikk, men skal
-aldri gjette `event_type` fra melding eller stack.
+mekanikken er kjent, vurderer teamet om den har nok verdi til å forvaltes som
+generator, reusable GitHub Action eller buildverktøy i et eget
+observability-repo. Dette er en mulig senere forenkling, ikke en leveranse eller
+en beslutning i v1. Fram til en slik beslutning ligger schemaet her og appene
+eier sine små, lokale typer og produsenttester.
 
 ### Én feil, én semantisk errorlogg
 
@@ -113,25 +110,24 @@ finnes noe sted — heller ikke i formattert `message`, `stack_trace`, nested
 `exception`, `cause` eller `suppressed`, MDC eller appspesifikke ekstrafelt.
 Det er ikke tilstrekkelig å kontrollere bare feltene i tabellen over.
 
-Et rått `Throwable`-/`Error`-objekt er heller ikke trygg diagnosekontekst som
-standard. Loggeren kan serialisere melding, cause, suppressed exceptions og
-hele stacken selv om ingen av verdiene er lagt i et eksplisitt `kv`-felt.
-Utelat objektet, eller lag en ny sanitert representasjon med statisk melding,
-uten cause/suppressed og eventuelt et lite, allowlistet og avgrenset utvalg
-kodeeide stack frames. Test alltid den faktiske JSON-serialiseringen.
+Kontrakten over regulerer dashboardsignaturen; den erstatter ikke
+loggerplattformens og APM-løsningens vanlige håndtering av `Throwable`/`Error`,
+stack og feilgruppering. Behold throwable når det er den etablerte og
+personvernvurderte praksisen ved loggpunktet. For feiltyper som kan inneholde
+sensitiv input, logges bare trygge, strukturerte felt. Ikke innfør app-lokale
+«sanitiserte throwables» eller egne stack-allowlister for å oppfylle denne
+kontrakten. Test den faktiske JSON-serialiseringen med relevante canaries.
 
-En dokumentert oppstrømskontrakt kan gjøre et avgrenset feilobjekt trygt og
-nyttig å logge. [Pdl-Api oppgir for eksempel](https://navikt.github.io/pdl/#_feilmeldinger_fra_pdl_api_graphql_response_errors)
+En dokumentert oppstrømskontrakt kan fastslå at et avgrenset feilobjekt er trygt
+og nyttig å logge. [Pdl-Api oppgir](https://navikt.github.io/pdl/#_feilmeldinger_fra_pdl_api_graphql_response_errors)
 at elementene i GraphQL-`errors` ikke inneholder personinformasjon, og anbefaler
-at konsumentene logger dem.
-Behold da den diagnostiske feilmeldingen i råloggen. Map en stabil
+at konsumentene logger dem. PDL-feilene beholdes derfor i råloggen. Map en stabil
 `extensions.code` gjennom en kodeeid normalisering til kontraktens format når
 den finnes, for eksempel `not_found` til `PDL_NOT_FOUND`; ikke kopier en
 ukjent runtimeverdi direkte til `error_code`. Garantien gjelder feilobjektene,
 ikke GraphQL-`data`, requestvariabler eller lokal person- og domenekontekst, og
-friteksten brukes fortsatt aldri som dashboardsignatur.
-Dette er et eksplisitt unntak basert på den dokumenterte oppstrømskontrakten,
-ikke en generell tillatelse til å logge exceptions eller responsobjekter.
+friteksten brukes fortsatt aldri som dashboardsignatur. Dette er en dokumentert
+trygg PDL-praksis, ikke en generell regel for andre responsobjekter.
 
 ## Node/Pino
 
@@ -170,22 +166,17 @@ log.error(
     kv("operation", "hent_sykmelding"),
     kv("upstream_status", 502),
     kv("exception_type", normalizeExceptionType(exception)),
+    exception,
 )
 ```
 
 Ikke avled `exception_type` fra stacktekst. Ikke legg throwable-meldingen,
 request-URL eller person-/domeneidentifikatorer i de strukturerte feltene.
-Det trygge standardeksemplet utelater throwable helt: et ekstra
-`exception`-argument blir tolket av SLF4J/Logback og kan eksponere rå melding,
-cause, suppressed exceptions og `stack_trace`.
-
-Hvis kodeplassering er nødvendig for feilsøking, bruk en ny sanitert throwable
-med statisk melding, tom cause/suppressed og et fast maksimalt antall
-allowlistede stack frames. Ikke muter eller videresend originalen, og la en
-serialiseringstest bevise at ingen canary finnes i den komplette JSON-linjen.
-Dokumentert trygge upstream-objekter, som PDLs GraphQL-`errors`, kan legges i et
-eksplisitt diagnosefelt etter reglene over; de skal ikke pakkes inn som rå
-throwable.
+Throwable beholdes her slik at Logback/APM kan levere stack og feilgruppering.
+Hvis den konkrete feilen kan inneholde sensitiv input, utelates objektet ved
+dette loggpunktet og den trygge strukturerte konteksten beholdes. Dokumentert
+trygge upstream-objekter, som PDLs GraphQL-`errors`, kan legges i et eksplisitt
+diagnosefelt etter reglene over.
 
 ## Konformitetstest i apprepoet
 
@@ -225,6 +216,10 @@ antall hendelser. Fravær av `error_code`, `operation`, `upstream_status` eller
 Regex-validering beviser bare format, ikke JSON-type, produsentproveniens eller
 personvern. Full konformitet krever derfor kodeeid katalog og producer-nær
 serialiseringstest.
+
+Dashboardets formatmønstre er en append-only ingest-kontrakt. Når en ny
+kontraktversjon introduserer et nytt gyldig format, legges mønsteret til uten å
+fjerne støtte for apper som fortsatt er pinnet til en eldre publisert versjon.
 
 ## Migrasjon og legacy
 

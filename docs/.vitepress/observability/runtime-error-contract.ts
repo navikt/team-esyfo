@@ -10,14 +10,65 @@ export const runtimeDashboardTraceIdPattern = "^[A-Fa-f0-9]{32}$";
 // authority for the producer-side number type and integer range.
 export const runtimeUpstreamStatusStringPattern = "^[1-5][0-9]{2}$";
 
-export const runtimeErrorContractVersion = "1.0.0";
-export const runtimeErrorContractPublicPath = `contracts/runtime-error/v${runtimeErrorContractVersion}/schema.json`;
-export const runtimeErrorContractUrl = `https://navikt.github.io/team-esyfo/${runtimeErrorContractPublicPath}`;
+export const runtimeErrorContractV1Version = "1.0.0";
+export const runtimeErrorContractV1PublicPath = `contracts/runtime-error/v${runtimeErrorContractV1Version}/schema.json`;
+export const runtimeErrorContractV1Url = `https://navikt.github.io/team-esyfo/${runtimeErrorContractV1PublicPath}`;
+
+export const combineRuntimePatterns = (patterns: readonly string[]) => {
+	if (patterns.length === 0) {
+		throw new Error("Minst ett runtime-feilmønster må være støttet");
+	}
+	return patterns.length === 1 ? patterns[0] : `(${patterns.join("|")})`;
+};
+
+// Dashboard ingestion is deliberately versioned and append-only. A future
+// contract version is added here without removing patterns for producers that
+// are still pinned to an older published schema.
+export const runtimeErrorIngestionPatterns = {
+	[runtimeErrorContractV1Version]: {
+		eventType: runtimeEventTypePattern,
+		errorCode: runtimeErrorCodePattern,
+		operation: runtimeOperationPattern,
+		exceptionType: runtimeExceptionTypePattern,
+		traceId: runtimeDashboardTraceIdPattern,
+		upstreamStatus: runtimeUpstreamStatusStringPattern,
+	},
+} as const;
+
+export const runtimeErrorIngestionEventTypePattern = combineRuntimePatterns(
+	Object.values(runtimeErrorIngestionPatterns).map(
+		({ eventType }) => eventType,
+	),
+);
+export const runtimeErrorIngestionExceptionTypePattern = combineRuntimePatterns(
+	Object.values(runtimeErrorIngestionPatterns).map(
+		({ exceptionType }) => exceptionType,
+	),
+);
+export const runtimeErrorIngestionErrorCodePattern = combineRuntimePatterns(
+	Object.values(runtimeErrorIngestionPatterns).map(
+		({ errorCode }) => errorCode,
+	),
+);
+export const runtimeErrorIngestionOperationPattern = combineRuntimePatterns(
+	Object.values(runtimeErrorIngestionPatterns).map(
+		({ operation }) => operation,
+	),
+);
+export const runtimeErrorIngestionTraceIdPattern = combineRuntimePatterns(
+	Object.values(runtimeErrorIngestionPatterns).map(({ traceId }) => traceId),
+);
+export const runtimeErrorIngestionUpstreamStatusPattern =
+	combineRuntimePatterns(
+		Object.values(runtimeErrorIngestionPatterns).map(
+			({ upstreamStatus }) => upstreamStatus,
+		),
+	);
 
 export const runtimeErrorContractV1Schema = {
 	$schema: "http://json-schema.org/draft-07/schema#",
-	$id: runtimeErrorContractUrl,
-	title: `Team eSyfo runtime error contract v${runtimeErrorContractVersion}`,
+	$id: runtimeErrorContractV1Url,
+	title: `Team eSyfo runtime error contract v${runtimeErrorContractV1Version}`,
 	description:
 		"Minimum metadata contract for a terminal runtime error log. Application-specific and framework fields are allowed, but remain subject to local privacy and cardinality tests.",
 	type: "object",
@@ -68,19 +119,21 @@ export const runtimeErrorContractV1Schema = {
 	},
 	additionalProperties: true,
 	$comment:
-		"This schema proves shape only. Producer-near tests must also prove a closed event catalogue, bounded cardinality, active-span trace propagation, one terminal error log, and that privacy canaries are absent from the entire serialized JSON log.",
+		"This schema proves shape only. Root-level application fields are an open extension space, so promoting or constraining a previously unknown root field requires a new major version. Producer-near tests must also prove a closed event catalogue, bounded cardinality, active-span trace propagation, one terminal error log, and that privacy canaries are absent from the entire serialized JSON log.",
 } as const;
 
 export const serializeRuntimeErrorContractV1 = () =>
 	`${JSON.stringify(runtimeErrorContractV1Schema, null, 2)}\n`;
 
-export const assertPublishedRuntimeErrorContractIsImmutable = (
-	publishedAtBase: string | undefined,
-	current: string,
+export const assertPublishedRuntimeErrorContractsAreImmutable = (
+	publishedAtBase: Readonly<Record<string, string>>,
+	currentPublished: Readonly<Record<string, string>>,
 ) => {
-	if (publishedAtBase !== undefined && publishedAtBase !== current) {
-		throw new Error(
-			`Publisert runtime-feilkontrakt v${runtimeErrorContractVersion} er immutable. Opprett en ny kontraktversjon i stedet.`,
-		);
+	for (const [path, baseContent] of Object.entries(publishedAtBase)) {
+		if (currentPublished[path] !== baseContent) {
+			throw new Error(
+				`Publisert runtime-feilkontrakt er immutable: ${path}. Gjenopprett filen byte-identisk og opprett en ny kontraktversjon i stedet.`,
+			);
+		}
 	}
 };

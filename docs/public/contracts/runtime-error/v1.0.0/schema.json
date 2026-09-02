@@ -50,5 +50,5 @@
     }
   },
   "additionalProperties": true,
-  "$comment": "This schema proves shape only. Producer-near tests must also prove a closed event catalogue, bounded cardinality, active-span trace propagation, one terminal error log, and that privacy canaries are absent from the entire serialized JSON log."
+  "$comment": "This schema proves shape only. Root-level application fields are an open extension space, so promoting or constraining a previously unknown root field requires a new major version. Producer-near tests must also prove a closed event catalogue, bounded cardinality, active-span trace propagation, one terminal error log, and that privacy canaries are absent from the entire serialized JSON log."
 }
