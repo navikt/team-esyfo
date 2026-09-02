@@ -233,7 +233,7 @@ describe("alert-register", () => {
 		}
 	});
 
-	test("holder migrering, retiring og sunset eksplisitt", () => {
+	test("holder migrering og oppryddingsgjeld eksplisitt", () => {
 		const lifecycleById = new Map(
 			alertRegistry.rules.map(({ id, lifecycle }) => [id, lifecycle]),
 		);
@@ -256,8 +256,9 @@ describe("alert-register", () => {
 			"retiring",
 		);
 		assert.deepEqual(lifecycleById.get("rule:oppfolgingsplanservice-down"), {
-			state: "sunset",
-			sunsetOn: "2026-08-31",
+			state: "retiring",
+			reason:
+				"Produksjonstjenesten er stanset, men de sist observerte prod-fss-reglene beholdes som oppryddingsgjeld frem til en ny live-avstemming beviser at de er borte.",
 			issue: "navikt/team-esyfo#208",
 		});
 	});

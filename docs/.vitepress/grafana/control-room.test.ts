@@ -157,7 +157,7 @@ describe("kontrollrom-dashboard", () => {
 		assert.ok(!serialized.includes("PD969E40991D5C4A8"));
 	});
 
-	test("genererer GCP-flåten og holder FSS-sunset som separat guardrail", () => {
+	test("genererer GCP-flåten uten avviklede FSS-ressurser", () => {
 		assert.equal(CONTROL_ROOM_BASELINE_AS_OF, "2026-08-28");
 		const expected = runtimeInventory.applications.filter(
 			({ lifecycle, runtime }) =>
@@ -167,16 +167,17 @@ describe("kontrollrom-dashboard", () => {
 		assert.equal(controlRoomApplications.length, 26);
 		assert.equal(controlRoomServerApplications.length, 24);
 		assert.equal(controlRoomApplicationOptions.length, 26);
-		assert.equal(controlRoomSunsetApplications.length, 3);
-		for (const sunset of [
+		assert.equal(controlRoomSunsetApplications.length, 0);
+		for (const retired of [
 			"syfooppfolgingsplanservice",
 			"syfooppfolgingsplanservice-redis",
 			"syfooppfolgingsplanservice-redisexporter",
 		]) {
-			assert.ok(!expectedScopeVectorQuery.includes(sunset));
+			assert.ok(!expectedScopeVectorQuery.includes(retired));
 			assert.ok(
-				controlRoomSunsetApplications.some(
-					({ runtime }) => runtime.name === sunset,
+				runtimeInventory.applications.some(
+					({ lifecycle, runtime }) =>
+						runtime.name === retired && lifecycle.state === "retired",
 				),
 			);
 		}
