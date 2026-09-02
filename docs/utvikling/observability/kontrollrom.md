@@ -35,7 +35,7 @@ Kontrollrommet lager ikke én samlet grønn status. Den tidligere `sykepengedage
 
 - Scope velges som hele flåten eller ett av ni kuraterte operative områder.
 - Runtimeinventaret per 28. august 2026 gir 26 forventede GCP-appkomponenter i den generiske flåten.
-- De tre `syfooppfolgingsplanservice`-komponentene i FSS er ikke generiske flåterader. Fram til sunset 31. august følges de bare med eksisterende, tidsavgrensede regler i Alert-registeret; etter fristen skal shutdown verifiseres i [#208](https://github.com/navikt/team-esyfo/issues/208). Dette hindrer at en GCP-query feilaktig viser dem som `MANGLER`.
+- De tre avviklede `syfooppfolgingsplanservice`-komponentene i FSS er ikke generiske flåterader eller del av dekningsnevneren. Hvis de fortsatt observeres etter tjenestestoppen, vises de som runtime-drift som følges i [#208](https://github.com/navikt/team-esyfo/issues/208).
 - RED bruker `traces_spanmetrics_calls_total` og `traces_spanmetrics_latency_bucket`, avgrenset til `service_namespace=team-esyfo`, `k8s_cluster_name=prod` og `span_kind=SPAN_KIND_SERVER` for de 24 profilene med HTTP/SERVER-kontrakt.
 - `esyfovarsel` og `syfo-budstikka` er workers. De står som `ANNEN KONTRAKT` i SERVER-kolonnen og inngår ikke i SERVER-dekningsnevneren; deres operative kontroll ligger i pipeline-/jobbsignalene.
 - OTel `STATUS_CODE_ERROR` omtales som spanstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact.

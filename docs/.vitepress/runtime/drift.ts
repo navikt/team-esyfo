@@ -289,14 +289,17 @@ export const reconcileRuntime = (
 		.filter(
 			(resource) =>
 				resource.lifecycle.state === "retired" &&
+				resource.lifecycle.retiredOn <= asOfDate &&
 				observedResourceIds.has(resource.id),
 		)
 		.map(({ id }) => id);
 	const sunsetInRuntime = knownResources
 		.filter(
 			(resource) =>
-				resource.lifecycle.state === "sunset" &&
-				resource.lifecycle.sunsetOn >= asOfDate &&
+				((resource.lifecycle.state === "sunset" &&
+					resource.lifecycle.sunsetOn >= asOfDate) ||
+					(resource.lifecycle.state === "retired" &&
+						resource.lifecycle.retiredOn > asOfDate)) &&
 				observedResourceIds.has(resource.id),
 		)
 		.map(({ id }) => id);
