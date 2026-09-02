@@ -1,0 +1,4 @@
+{
+	"event_type": "sykmelding_lookup_failed",
+	"request_url": "https://example.test/sykmeldinger/123"
+}

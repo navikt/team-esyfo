@@ -1,4 +1,13 @@
 import {
+	combineRuntimePatterns,
+	runtimeErrorIngestionErrorCodePattern,
+	runtimeErrorIngestionEventTypePattern,
+	runtimeErrorIngestionExceptionTypePattern,
+	runtimeErrorIngestionOperationPattern,
+	runtimeErrorIngestionTraceIdPattern,
+	runtimeErrorIngestionUpstreamStatusPattern,
+} from "../observability/runtime-error-contract.ts";
+import {
 	activeApplicationIds,
 	runtimeInventory,
 } from "../runtime/inventory.ts";
@@ -123,16 +132,22 @@ ${runtimeErrorPipeline}
 const runtimeSignatureParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
 const runtimeTraceParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, upstream_status, trace_id, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
 
-export const safeEventTypePattern = "^[a-z][a-z0-9_.-]{0,79}$";
+export const safeEventTypePattern = runtimeErrorIngestionEventTypePattern;
 export const safeGenericErrorTypePattern =
-	"^([A-Za-z][A-Za-z0-9_.:$]{0,143})?(Error|Exception)$";
-export const safeCodePattern = "^([A-Z][A-Z0-9_]{1,79}|[1-5][0-9]{2})$";
+	runtimeErrorIngestionExceptionTypePattern;
+// Dashboard ingestion remains tolerant of numeric legacy codes. New producers
+// are held to their published JSON Schema and app-local tests.
+export const safeCodePattern = combineRuntimePatterns([
+	runtimeErrorIngestionErrorCodePattern,
+	"^[1-5][0-9]{2}$",
+]);
 // Loki stringifies extracted JSON scalars. Producer tests enforce the number type;
 // this pattern keeps only the allowed integer range in the operator view.
-export const safeUpstreamStatusPattern = "^[1-5][0-9]{2}$";
+export const safeUpstreamStatusPattern =
+	runtimeErrorIngestionUpstreamStatusPattern;
 const safeGenericTypeAsCodePattern = "^[A-Z][A-Z0-9_]{1,79}$";
 const safeErrorStatusPattern = "^[45][0-9]{2}$";
-const safeTraceIdPattern = "^[A-Fa-f0-9]{32}$";
+const safeTraceIdPattern = runtimeErrorIngestionTraceIdPattern;
 export const safeBrowserTypePattern =
 	"^(Error|TypeError|RangeError|ReferenceError|SyntaxError|URIError|EvalError|AggregateError|AbortError|DOMException|NetworkError|SecurityError|NotFoundError|NotAllowedError|DataCloneError|InvalidStateError|QuotaExceededError|TimeoutError|UnknownError|UnhandledRejection)$";
 
@@ -182,7 +197,7 @@ ${safeLabel(
 	safeGenericTypeAsCodePattern,
 )}
 ${safeLabel("safe_status", "status", safeErrorStatusPattern)}
-${safeLabel("safe_operation", "operation", safeEventTypePattern)}
+${safeLabel("safe_operation", "operation", runtimeErrorIngestionOperationPattern)}
 | label_format error_type_display=\`{{ if .safe_event_type }}{{ .safe_event_type }}{{ else if .safe_event }}{{ .safe_event }}{{ else if .safe_top_exception_type }}{{ .safe_top_exception_type }}{{ else if .safe_nested_exception_type }}{{ .safe_nested_exception_type }}{{ else if .safe_top_error_type }}{{ .safe_top_error_type }}{{ else if .safe_nested_error_type }}{{ .safe_nested_error_type }}{{ else if .safe_top_err_type }}{{ .safe_top_err_type }}{{ else if .safe_nested_err_type }}{{ .safe_nested_err_type }}{{ else if .safe_runtime_error_type }}{{ .safe_runtime_error_type }}{{ else }}Ikke oppgitt av appen{{ end }}\`
 | label_format error_code_display=\`{{ if .safe_error_code }}{{ .safe_error_code }}{{ else if .safe_code }}{{ .safe_code }}{{ else if .safe_feilkode }}{{ .safe_feilkode }}{{ else if .safe_runtime_type_code }}{{ .safe_runtime_type_code }}{{ else if .safe_status }}{{ .safe_status }}{{ else }}—{{ end }}\`
 | label_format operation_display=\`{{ if .safe_operation }}{{ .safe_operation }}{{ else }}—{{ end }}\`
