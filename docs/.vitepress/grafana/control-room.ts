@@ -33,14 +33,14 @@ import {
 	runtimeErrorPipeline,
 	runtimeRejectionPipeline,
 } from "./runtime-logql.ts";
+import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
+export { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
 
 export const CONTROL_ROOM_UID = "team-esyfo-kontrollrom";
 export const CONTROL_ROOM_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
 
 const FROM = grafanaVariable("__from");
 const TO = grafanaVariable("__to");
-const FROM_ISO = grafanaVariable("__from:date:iso");
-const TO_ISO = grafanaVariable("__to:date:iso");
 const SCOPE_VARIABLE = grafanaVariable("scope:raw");
 const SERVICE_VARIABLE = grafanaVariable("service:raw");
 const ROW_VALUE = grafanaVariable("__value.raw");
@@ -170,6 +170,14 @@ export const restartsByServiceQuery = `sum by (service_name) (label_replace(${fl
 export const restartCountQuery = `sum(max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[24h])))`;
 export const fleetServicesWithRestartsQuery = `count((${restartsByServiceQuery}) > 0) or on() vector(0)`;
 
+const recentRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[15m])))`;
+export const recentRestartsByServiceQuery = `sum by (service_name) (label_replace(${recentRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
+export const fleetServicesWithRecentRestartsQuery = `count((${recentRestartsByServiceQuery}) > 0) or on() vector(0)`;
+const podRestartsQuery = (window: string) =>
+	`max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[${window}]))`;
+// Latest reason on current pods, not the cause of every restart in a window.
+export const podTerminationReasonQuery = `max by (pod, container, reason) (kube_pod_container_status_last_terminated_reason{${selectedKubeContainerSelector}}) == 1`;
+
 const readyByDeployment = (selector: string) =>
 	`max by (deployment) (${READY_REPLICAS_METRIC}{${selector}})`;
 const desiredByDeployment = (selector: string) =>
@@ -267,12 +275,6 @@ export const dinesykmeldteDeviationRateQuery = [
 ].join(" or ");
 
 export const dinesykmeldteOutcomeRateQuery = `${dinesykmeldteTrafficRateQuery} or ${dinesykmeldteDeviationRateQuery}`;
-
-export const apmDataLink = (service: string) =>
-	`/a/nais-apm-app/services/team-esyfo/${service}?environment=prod&from=${FROM_ISO}&to=${TO_ISO}`;
-
-export const runtimeLogsDataLink = (service: string) =>
-	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod`;
 
 export const errorDashboardDataLink = (service: string) =>
 	`/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${FROM}&to=${TO}&var-runtime_environment=prod&var-app=${service}`;
@@ -519,6 +521,7 @@ const fleetTablePanel = () => {
 		"Value #Requests": "Requests",
 		"Value #OTel-feil": "OTel-feil",
 		"Value #Runtimefeil": "Runtimefeil 5m",
+		"Value #Nylige restarts": "Restarts 15m",
 		"Value #Restarts": "Restarts 24t",
 		"Value #Klare replikaer": "Klare replikaer",
 	};
@@ -541,11 +544,10 @@ const fleetTablePanel = () => {
 			],
 		],
 		[
-			"Value #Restarts",
+			"Value #Nylige restarts",
 			[
 				{ color: "gray", value: 0 },
 				{ color: "yellow", value: 1 },
-				{ color: "red", value: 3 },
 			],
 		],
 	];
@@ -576,6 +578,13 @@ const fleetTablePanel = () => {
 						"table",
 					),
 					lokiQuery("Runtimefeil", runtimeErrorsByServiceQuery),
+					prometheusQuery(
+						"Nylige restarts",
+						recentRestartsByServiceQuery,
+						"instant",
+						"",
+						"table",
+					),
 					prometheusQuery(
 						"Restarts",
 						restartsByServiceQuery,
@@ -648,7 +657,7 @@ const fleetTablePanel = () => {
 												options: {
 													"0": { color: "green", text: "FERSK" },
 													"1": { color: "yellow", text: "STALE" },
-													"2": { color: "red", text: "MANGLER" },
+													"2": { color: "yellow", text: "MANGLER" },
 													"3": { color: "blue", text: "ANNEN KONTRAKT" },
 												},
 												type: "value",
@@ -701,7 +710,7 @@ const fleetTablePanel = () => {
 							{ desc: true, displayName: "Runtimefeil 5m" },
 							{ desc: false, displayName: "Klare replikaer" },
 							{ desc: true, displayName: "OTel-feil" },
-							{ desc: true, displayName: "Restarts 24t" },
+							{ desc: true, displayName: "Restarts 15m" },
 							{ desc: true, displayName: "SERVER-span" },
 						],
 					},
@@ -711,6 +720,109 @@ const fleetTablePanel = () => {
 		},
 	};
 };
+
+const podDiagnosticsPanel = () => ({
+	kind: "Panel",
+	spec: {
+		id: 36,
+		title: "Valgt tjeneste · podder og restart-årsak",
+		description:
+			"Estimerte restarts i faste 15m- og 24t-vinduer, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+		links: serviceDataLinks(SERVICE_VARIABLE),
+		data: queryGroup(
+			[
+				prometheusQuery(
+					"Restarts 15m",
+					podRestartsQuery("15m"),
+					"instant",
+					"",
+					"table",
+				),
+				prometheusQuery(
+					"Restarts 24t",
+					podRestartsQuery("24h"),
+					"instant",
+					"",
+					"table",
+				),
+				prometheusQuery(
+					"Siste årsak",
+					podTerminationReasonQuery,
+					"instant",
+					"",
+					"table",
+				),
+			],
+			[
+				mergeTableFrames,
+				{
+					kind: "Transformation",
+					group: "organize",
+					spec: {
+						options: {
+							excludeByName: {
+								Time: true,
+								container: true,
+								"Value #Siste årsak": true,
+							},
+							indexByName: {
+								pod: 0,
+								"Value #Restarts 15m": 1,
+								"Value #Restarts 24t": 2,
+								reason: 3,
+							},
+							renameByName: {
+								pod: "Pod",
+								"Value #Restarts 15m": "Restarts 15m",
+								"Value #Restarts 24t": "Restarts 24t",
+								reason: "Siste årsak · tidspunkt ukjent",
+							},
+						},
+					},
+				},
+			],
+		),
+		vizConfig: {
+			kind: "VizConfig",
+			group: "table",
+			version: GRAFANA_VERSION,
+			spec: {
+				fieldConfig: {
+					defaults: {
+						noValue: "Ukjent",
+						decimals: 0,
+						custom: { cellOptions: { type: "auto" }, inspect: false },
+					},
+					overrides: [
+						{
+							matcher: { id: "byName", options: "pod" },
+							properties: [
+								{
+									id: "links",
+									value: [
+										dataLink(
+											"Podlogger · valgt tidsrom",
+											`${runtimeLogsDataLink(SERVICE_VARIABLE)}&var-filters=k8s_pod_name%7C%3D%7C${ROW_VALUE}`,
+										),
+									],
+								},
+							],
+						},
+					],
+				},
+				options: {
+					showHeader: true,
+					cellHeight: "sm",
+					enablePagination: true,
+					sortBy: [
+						{ displayName: "Restarts 15m", desc: true },
+						{ displayName: "Restarts 24t", desc: true },
+					],
+				},
+			},
+		},
+	},
+});
 
 const textPanel = (
 	id: number,
@@ -744,15 +856,19 @@ const deviationThresholds: Threshold[] = [
 ];
 const readyThresholds: Threshold[] = [
 	{ color: "red", value: 0 },
-	{ color: "yellow", value: 99.999 },
+	{ color: "yellow", value: 0.001 },
 	{ color: "green", value: 100 },
 ];
 const coverageThresholds: Threshold[] = [
-	{ color: "red", value: 0 },
+	{ color: "yellow", value: 0 },
 	{ color: "yellow", value: 99.999 },
 	{ color: "green", value: 100 },
 ];
 const neutralThresholds: Threshold[] = [{ color: "blue", value: 0 }];
+const attentionThresholds: Threshold[] = [
+	{ color: "gray", value: 0 },
+	{ color: "yellow", value: 1 },
+];
 const pollAgeThresholds: Threshold[] = [
 	{ color: "green", value: 0 },
 	{ color: "yellow", value: 60 },
@@ -844,7 +960,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					"instant",
 				),
 				unit: "short",
-				thresholds: deviationThresholds,
+				thresholds: attentionThresholds,
 				decimals: 0,
 				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
 			}),
@@ -872,24 +988,24 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-4": statPanel({
 				id: 4,
-				title: "Restarts 24t · tjenester",
+				title: "Restarts 15m · antall tjenester",
 				description:
-					"Antall tjenester med minst én deduplisert containerrestart siste 24 timer. Fast vindu, uavhengig av valgt dashboardtidsrom.",
+					"Antall tjenester med observerte containerrestarts siste 15 minutter, ikke antall restarts. Gult betyr undersøk, ikke påvist nedetid. Normal oppretting og fjerning av podder teller ikke. Flåtematrisen viser også nøytral 24-timers historikk. Begge vinduer er faste.",
 				query: prometheusQuery(
 					"Tjenester med restarts",
-					fleetServicesWithRestartsQuery,
+					fleetServicesWithRecentRestartsQuery,
 					"instant",
 				),
 				unit: "short",
-				thresholds: deviationThresholds,
+				thresholds: attentionThresholds,
 				decimals: 0,
 				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-5": statPanel({
 				id: 5,
-				title: "Laveste ready/desired %",
+				title: "Klare replikaer nå · laveste %",
 				description:
-					"Laveste klare/ønskede replikaandel i valgt scope. desired=0 filtreres bort i stedet for å gi NaN eller grønt.",
+					"Øyeblikksbilde av laveste klare/ønskede replikaandel. Kan falle kort ved deploy eller skalering; ikke alene en incident. desired=0 filtreres bort. Sjekk utviklingen for valgt tjeneste før konklusjon.",
 				query: prometheusQuery(
 					"Laveste ready",
 					lowestReadyRatioQuery,
@@ -1002,6 +1118,23 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				],
 			}),
 			"panel-10": fleetTablePanel(),
+			"panel-36": podDiagnosticsPanel(),
+			"panel-37": timeSeriesPanel({
+				id: 37,
+				title: "Valgt tjeneste · klare replikaer over tid",
+				description:
+					"Klar/ønsket replikaandel i valgt tidsrom. Et kort fall kan skyldes deploy eller skalering; vedvarende mangel krever undersøkelse. Dette er ikke deployidentitet eller en vedtatt alarmgrense. desired=0 og manglende serie blir ikke grønt.",
+				query: prometheusQuery(
+					"Klare replikaer",
+					selectedReadyRatioQuery,
+					"range",
+					"{{deployment}}",
+				),
+				unit: "percent",
+				thresholds: readyThresholds,
+				links: serviceDataLinks(SERVICE_VARIABLE),
+				fieldLinks: serviceDataLinks(SERVICE_VARIABLE),
+			}),
 			"panel-12": timeSeriesPanel({
 				id: 12,
 				title: "02 · Valgt tjeneste · request-rate",
@@ -1056,12 +1189,12 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-16": statPanel({
 				id: 16,
-				title: "Valgt tjeneste · restarts · 24t",
+				title: "Valgt tjeneste · restarthistorikk 24t",
 				description:
-					"Dedupliserte containerrestarts siste 24 timer for valgt runtime.",
+					"Historiske containerrestarts siste 24 timer, også fra podder som er erstattet. Ikke nåværende helsestatus. Prometheus estimerer tellerøkningen. Se poddiagnostikken for nylige restarts og sist registrerte årsak.",
 				query: prometheusQuery("Restarts", restartCountQuery, "instant"),
 				unit: "short",
-				thresholds: deviationThresholds,
+				thresholds: neutralThresholds,
 				decimals: 0,
 				links: serviceDataLinks(SERVICE_VARIABLE),
 			}),
@@ -1290,19 +1423,21 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					layoutItem("panel-15", 0, 43, 8, 6),
 					layoutItem("panel-16", 8, 43, 8, 6),
 					layoutItem("panel-17", 16, 43, 8, 6),
-					layoutItem("panel-30", 0, 49, 8, 8),
-					layoutItem("panel-31", 8, 49, 16, 8),
-					layoutItem("panel-18", 0, 57, 6, 6),
-					layoutItem("panel-20", 6, 57, 18, 6),
-					layoutItem("panel-21", 0, 63, 6, 4),
-					layoutItem("panel-33", 6, 63, 12, 4),
-					layoutItem("panel-34", 18, 63, 6, 4),
-					layoutItem("panel-22", 0, 67, 16, 5),
-					layoutItem("panel-23", 16, 67, 8, 5),
-					layoutItem("panel-24", 0, 72, 24, 3),
-					layoutItem("panel-25", 0, 75, 8, 10),
-					layoutItem("panel-26", 8, 75, 8, 10),
-					layoutItem("panel-27", 16, 75, 8, 10),
+					layoutItem("panel-36", 0, 49, 16, 8),
+					layoutItem("panel-37", 16, 49, 8, 8),
+					layoutItem("panel-30", 0, 57, 8, 8),
+					layoutItem("panel-31", 8, 57, 16, 8),
+					layoutItem("panel-18", 0, 65, 6, 6),
+					layoutItem("panel-20", 6, 65, 18, 6),
+					layoutItem("panel-21", 0, 71, 6, 4),
+					layoutItem("panel-33", 6, 71, 12, 4),
+					layoutItem("panel-34", 18, 71, 6, 4),
+					layoutItem("panel-22", 0, 75, 16, 5),
+					layoutItem("panel-23", 16, 75, 8, 5),
+					layoutItem("panel-24", 0, 80, 24, 3),
+					layoutItem("panel-25", 0, 83, 8, 10),
+					layoutItem("panel-26", 8, 83, 8, 10),
+					layoutItem("panel-27", 16, 83, 8, 10),
 				],
 			},
 		},

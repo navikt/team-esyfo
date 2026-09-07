@@ -124,6 +124,51 @@ const collectByKey = (value: unknown, key: string, found: unknown[] = []) => {
 	return found;
 };
 
+test("skiller nylige restarts, historikk og datadekning", () => {
+	const elements = buildControlRoomDashboard().spec.elements as Record<
+		string,
+		unknown
+	>;
+	assert.match(JSON.stringify(elements["panel-4"]), /Restarts 15m/);
+	assert.match(
+		collectByKey(elements["panel-4"], "expr")[0] as string,
+		/\[15m\]/,
+	);
+	for (const id of ["panel-3", "panel-6", "panel-7", "panel-16"]) {
+		assert.ok(!JSON.stringify(elements[id]).includes('"color":"red"'), id);
+	}
+	const diagnostic = elements["panel-36"];
+	assert.ok(diagnostic, "Poddiagnostikk mangler");
+	const queries = collectByKey(diagnostic, "expr") as string[];
+	assert.ok(
+		queries.some(
+			(q) => q.includes("last_terminated_reason") && q.includes("== 1"),
+		),
+	);
+	assert.ok(queries.some((q) => q.includes("[15m]")));
+	assert.ok(queries.some((q) => q.includes("[24h]")));
+	assert.ok(
+		queries.every(
+			(q) =>
+				q.includes('container="${service:raw}"') &&
+				q.includes('k8s_cluster_name="prod"'),
+		),
+	);
+	assert.ok(
+		!JSON.stringify(diagnostic).includes("last_terminated_timestamp"),
+		"Tidspunktmetrikken er ikke tilgjengelig i prod",
+	);
+});
+
+test("readinessgrafens lenker bruker valgt tjeneste selv om serien bare har deployment-label", () => {
+	const panel = (
+		buildControlRoomDashboard().spec.elements as Record<string, unknown>
+	)["panel-37"];
+	const urls = collectByKey(panel, "url") as string[];
+	assert.ok(urls.some((url) => url.includes("${service:raw}")));
+	assert.ok(urls.every((url) => !url.includes("__field.labels.service_name")));
+});
+
 const collectObjects = (
 	value: unknown,
 	found: Array<Record<string, unknown>> = [],
@@ -766,6 +811,7 @@ describe("kontrollrom-dashboard", () => {
 			"Requests",
 			"OTel-feil",
 			"Runtimefeil",
+			"Nylige restarts",
 			"Restarts",
 			"Klare replikaer",
 		]);
@@ -816,7 +862,7 @@ describe("kontrollrom-dashboard", () => {
 			{ desc: true, displayName: "Runtimefeil 5m" },
 			{ desc: false, displayName: "Klare replikaer" },
 			{ desc: true, displayName: "OTel-feil" },
-			{ desc: true, displayName: "Restarts 24t" },
+			{ desc: true, displayName: "Restarts 15m" },
 			{ desc: true, displayName: "SERVER-span" },
 		]);
 	});
@@ -825,7 +871,7 @@ describe("kontrollrom-dashboard", () => {
 		const queries = collectObjects(buildControlRoomDashboard()).filter(
 			(query) => query.kind === "DataQuery",
 		);
-		assert.equal(queries.length, 30);
+		assert.equal(queries.length, 35);
 		let browserQueries = 0;
 		let builtInQueries = 0;
 		for (const query of queries) {
@@ -1007,7 +1053,7 @@ describe("kontrollrom-dashboard", () => {
 		assert.equal(fleet.y, 11);
 		assert.equal(
 			Math.max(...layout.spec.items.map(({ spec }) => spec.y + spec.height)),
-			85,
+			93,
 		);
 
 		const panelsBeforeFleet = layout.spec.items.filter(
@@ -1033,8 +1079,8 @@ describe("kontrollrom-dashboard", () => {
 				"OTel-feil · tjenester",
 				"Runtimefeil 5m · tjenester",
 				"API-avvisninger 5m · tjenester",
-				"Restarts 24t · tjenester",
-				"Laveste ready/desired %",
+				"Restarts 15m · antall tjenester",
+				"Klare replikaer nå · laveste %",
 				"Tjenester uten SERVER-spanserie",
 			],
 		);
@@ -1070,7 +1116,7 @@ describe("kontrollrom-dashboard", () => {
 			{ spec: { id: number } }
 		>;
 		const ids = Object.values(elements).map(({ spec }) => spec.id);
-		assert.equal(ids.length, 30);
+		assert.equal(ids.length, 32);
 		assert.equal(new Set(ids).size, ids.length);
 		const layout = dashboard.spec.layout as {
 			spec: { items: Array<{ spec: { element: { name: string } } }> };

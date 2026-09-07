@@ -11,7 +11,7 @@ Leveransen er coverage-first: det vi kan måle korrekt vises live; det vi ikke k
 ## Firetrinns hendelsesløype
 
 1. **Handle nå:** Se etter OTel-feilstatus, runtimefeil, restarts og lav ready/desired. Les alltid span- og kube-dekning ved siden av.
-2. **Finn raden:** Flåtematrisen viser forventet tjeneste, kritikalitet, livssyklus, telemetry og observerte avvik. Manglende signal gjør raden rød/ukjent; den forsvinner ikke.
+2. **Finn raden:** Flåtematrisen viser forventet tjeneste, kritikalitet, livssyklus, telemetry og observerte avvik. Manglende signal vises som gult dekningsgap/ukjent, ikke som påvist appfeil; raden forsvinner ikke.
 3. **Avgrens én tjeneste:** Velg runtime i `Detaljtjeneste`. Request-rate, OTel-feilratio og P95 gjelder da bare denne identiteten, ikke en uleselig miks av hele flåten.
 4. **Følg runbook og drilldown:** Hver runtime og pagerkandidat lenker til APM, avgrensede logger, Feiloversikt og relevant runbook.
 
@@ -43,6 +43,9 @@ Kontrollrommet lager ikke én samlet grønn status. Den tidligere `sykepengedage
 - OTel `STATUS_CODE_ERROR` omtales som spanstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact.
 - De to Dine sykmeldte-panelene avgrenser `GET /api/minesykmeldte` og `GET /api/virksomheter`. Rute-/labelkontrakten og 200/`STATUS_CODE_UNSET` er live-verifisert mot NAIS APM-spanmetrikker. 2xx uten OTel-feilstatus er `good`; 4xx uten OTel-feilstatus vises nøytralt som `http_4xx`, mens 5xx eller OTel-feilstatus er `technical_failure`. Texas kan maskere tekniske introspeksjonsfeil som 401, så 4xx kalles ikke forventet før et bounded appsignal skiller årsakene i [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729).
 - Kube-signaler dedupliseres og `desired=0` filtreres bort.
+- Restart-kortet teller **tjenester med restarts siste 15 minutter**, ikke antall restarts. Gult betyr at signalet bør undersøkes, ikke påvist nedetid. Flåtematrisen viser både 15 minutter og nøytral 24-timers historikk; vinduene er faste uavhengig av tidsvelgeren. Normal oppretting/fjerning av podder ved deploy eller skalering øker ikke containerens restart-teller.
+- Poddiagnostikken for valgt tjeneste viser restarts og **sist registrerte avslutningsårsak på nåværende podder**. Den knytter ikke én årsak til alle historiske restarts. Tidspunkt for avslutningen er ikke tilgjengelig i dagens metrikkgrunnlag. `OOMKilled` viser minnedrap; `Error` krever videre undersøkelse. Erstattede podder kan ha restarthistorikk uten tilgjengelig årsak. Klikk podnavnet for avgrensede logger i valgt tidsrom.
+- Klare/ønskede replikaer er et øyeblikksbilde, ikke en deployalarm. Grafen for valgt tjeneste skiller korte fall ved deploy/skalering fra vedvarende mangel. Ingen deployhendelser undertrykkes automatisk.
 - Flåtematrisen teller bare positivt klassifiserte `detected_level=error|critical|fatal` siste fem minutter. Browserlogger videresendt via `next-logger` med `x_isFrontend=true` er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. Matrisen gjør ikke en ekstra full-loggskann for å konstruere null; `No data` er ukjent. Valgt tjeneste kan undersøkes over dashboardets valgte tidsrom.
 
 Telemetrykolonnen er inventarforankret:

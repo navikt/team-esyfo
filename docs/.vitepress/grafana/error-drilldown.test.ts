@@ -369,7 +369,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(main, /"operation_display":"Operasjon"/);
 		assert.match(main, /"action":"Handling"/);
 		assert.match(main, /"Value #Runtimefeil etter type":"Hendelser"/);
-		assert.match(main, /Se logger/);
+		assert.match(main, /Logger for denne gruppen/);
 		assert.ok(!main.includes("Feilgruppe"));
 		assert.ok(!main.includes("Logghendelser"));
 	});
@@ -429,7 +429,7 @@ describe("feiloversikt-dashboard", () => {
 		const gapPanel = JSON.stringify(panels()["panel-4"]);
 		assert.match(gapPanel, /Loggmetadata som må forbedres/);
 		assert.match(gapPanel, /Kode og operasjon er valgfri metadata/);
-		assert.match(gapPanel, /Se logger/);
+		assert.match(gapPanel, /Logger for denne gruppen/);
 		assert.match(
 			decodedExplorePane(runtimeContractGapDataLink()).A.queries[0]?.expr ?? "",
 			/contract_state_display=`Eldre typefelt`/,
@@ -615,4 +615,24 @@ describe("feiloversikt-dashboard", () => {
 			assert.ok(!serialized.includes(canary));
 		}
 	});
+});
+test("runtime-rader tilbyr både presist loggsøk, enkel loggvisning og APM", () => {
+	const elements = buildErrorDashboard().spec.elements as Record<
+		string,
+		unknown
+	>;
+	for (const id of ["panel-2", "panel-4", "panel-6"]) {
+		const serialized = JSON.stringify(elements[id]);
+		assert.match(serialized, /NAIS APM/);
+		assert.match(serialized, /Alle tjenestelogger/);
+		assert.match(serialized, /environment=\$\{runtime_environment:raw\}/);
+		assert.match(
+			serialized,
+			/k8s_cluster_name%7C%3D%7C\$\{runtime_environment:raw\}/,
+		);
+		assert.match(serialized, /from=\$\{__from:date:iso\}/);
+		assert.match(serialized, /\/explore\?panes=/);
+	}
+	assert.match(JSON.stringify(elements["panel-3"]), /NAIS APM/);
+	assert.ok(!JSON.stringify(elements["panel-5"]).includes("NAIS APM"));
 });

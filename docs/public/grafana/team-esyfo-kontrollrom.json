@@ -316,7 +316,7 @@
                         "value": 0
                       },
                       {
-                        "color": "red",
+                        "color": "yellow",
                         "value": 1
                       }
                     ]
@@ -457,7 +457,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "count((sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"${scope:raw}\"}[24h]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))) > 0) or on() vector(0)",
+                        "expr": "count((sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"${scope:raw}\"}[15m]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))) > 0) or on() vector(0)",
                         "instant": true,
                         "interval": "",
                         "legendFormat": "",
@@ -473,7 +473,7 @@
               "transformations": []
             }
           },
-          "description": "Antall tjenester med minst én deduplisert containerrestart siste 24 timer. Fast vindu, uavhengig av valgt dashboardtidsrom.",
+          "description": "Antall tjenester med observerte containerrestarts siste 15 minutter, ikke antall restarts. Gult betyr undersøk, ikke påvist nedetid. Normal oppretting og fjerning av podder teller ikke. Flåtematrisen viser også nøytral 24-timers historikk. Begge vinduer er faste.",
           "id": 4,
           "links": [
             {
@@ -482,7 +482,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Restarts 24t · tjenester",
+          "title": "Restarts 15m · antall tjenester",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -499,7 +499,7 @@
                         "value": 0
                       },
                       {
-                        "color": "red",
+                        "color": "yellow",
                         "value": 1
                       }
                     ]
@@ -566,7 +566,7 @@
               "transformations": []
             }
           },
-          "description": "Laveste klare/ønskede replikaandel i valgt scope. desired=0 filtreres bort i stedet for å gi NaN eller grønt.",
+          "description": "Øyeblikksbilde av laveste klare/ønskede replikaandel. Kan falle kort ved deploy eller skalering; ikke alene en incident. desired=0 filtreres bort. Sjekk utviklingen for valgt tjeneste før konklusjon.",
           "id": 5,
           "links": [
             {
@@ -575,7 +575,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Laveste ready/desired %",
+          "title": "Klare replikaer nå · laveste %",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -593,7 +593,7 @@
                       },
                       {
                         "color": "yellow",
-                        "value": 99.999
+                        "value": 0.001
                       },
                       {
                         "color": "green",
@@ -679,7 +679,7 @@
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "red",
+                        "color": "yellow",
                         "value": 0
                       },
                       {
@@ -770,7 +770,7 @@
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "red",
+                        "color": "yellow",
                         "value": 0
                       },
                       {
@@ -1313,6 +1313,31 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
+                        "expr": "sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"${scope:raw}\"}[15m]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Nylige restarts"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
                         "expr": "sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"${scope:raw}\"}[24h]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))",
                         "format": "table",
                         "instant": true,
@@ -1381,8 +1406,9 @@
                         "Value #Requests": 5,
                         "Value #OTel-feil": 6,
                         "Value #Runtimefeil": 7,
-                        "Value #Restarts": 8,
-                        "Value #Klare replikaer": 9
+                        "Value #Nylige restarts": 8,
+                        "Value #Restarts": 9,
+                        "Value #Klare replikaer": 10
                       },
                       "renameByName": {
                         "service_name": "Tjeneste",
@@ -1393,6 +1419,7 @@
                         "Value #Requests": "Requests",
                         "Value #OTel-feil": "OTel-feil",
                         "Value #Runtimefeil": "Runtimefeil 5m",
+                        "Value #Nylige restarts": "Restarts 15m",
                         "Value #Restarts": "Restarts 24t",
                         "Value #Klare replikaer": "Klare replikaer"
                       }
@@ -1484,7 +1511,7 @@
                                 "text": "STALE"
                               },
                               "2": {
-                                "color": "red",
+                                "color": "yellow",
                                 "text": "MANGLER"
                               },
                               "3": {
@@ -1567,7 +1594,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Value #Restarts"
+                      "options": "Value #Nylige restarts"
                     },
                     "properties": [
                       {
@@ -1582,10 +1609,6 @@
                             {
                               "color": "yellow",
                               "value": 1
-                            },
-                            {
-                              "color": "red",
-                              "value": 3
                             }
                           ]
                         }
@@ -1619,7 +1642,7 @@
                             },
                             {
                               "color": "yellow",
-                              "value": 99.999
+                              "value": 0.001
                             },
                             {
                               "color": "green",
@@ -1657,13 +1680,382 @@
                   },
                   {
                     "desc": true,
-                    "displayName": "Restarts 24t"
+                    "displayName": "Restarts 15m"
                   },
                   {
                     "desc": true,
                     "displayName": "SERVER-span"
                   }
                 ]
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-36": {
+        "kind": "Panel",
+        "spec": {
+          "id": 36,
+          "title": "Valgt tjeneste · podder og restart-årsak",
+          "description": "Estimerte restarts i faste 15m- og 24t-vinduer, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "NAIS APM",
+              "url": "/a/nais-apm-app/services/team-esyfo/${service:raw}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Avgrensede logger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+            },
+            {
+              "targetBlank": true,
+              "title": "HTTP/runtime-runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+            }
+          ],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[15m]))",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Restarts 15m"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[24h]))",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Restarts 24t"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "max by (pod, container, reason) (kube_pod_container_status_last_terminated_reason{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}) == 1",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Siste årsak"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "group": "merge",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "container": true,
+                        "Value #Siste årsak": true
+                      },
+                      "indexByName": {
+                        "pod": 0,
+                        "Value #Restarts 15m": 1,
+                        "Value #Restarts 24t": 2,
+                        "reason": 3
+                      },
+                      "renameByName": {
+                        "pod": "Pod",
+                        "Value #Restarts 15m": "Restarts 15m",
+                        "Value #Restarts 24t": "Restarts 24t",
+                        "reason": "Siste årsak · tidspunkt ukjent"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ukjent",
+                  "decimals": 0,
+                  "custom": {
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "pod"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "Podlogger · valgt tidsrom",
+                            "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-filters=k8s_pod_name%7C%3D%7C${__value.raw}"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "enablePagination": true,
+                "sortBy": [
+                  {
+                    "displayName": "Restarts 15m",
+                    "desc": true
+                  },
+                  {
+                    "displayName": "Restarts 24t",
+                    "desc": true
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-37": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": true,
+                        "expr": "(100 * (max by (deployment) (kube_deployment_status_replicas_ready{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"${service:raw}\"}) or on(deployment) (max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"${service:raw}\"}) * 0)) / max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"${service:raw}\"})) and on(deployment) (max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=\"${service:raw}\"}) > 0)",
+                        "instant": false,
+                        "interval": "",
+                        "legendFormat": "{{deployment}}",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Klare replikaer"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Klar/ønsket replikaandel i valgt tidsrom. Et kort fall kan skyldes deploy eller skalering; vedvarende mangel krever undersøkelse. Dette er ikke deployidentitet eller en vedtatt alarmgrense. desired=0 og manglende serie blir ikke grønt.",
+          "id": 37,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "NAIS APM",
+              "url": "/a/nais-apm-app/services/team-esyfo/${service:raw}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Avgrensede logger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feiloversikt",
+              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+            },
+            {
+              "targetBlank": true,
+              "title": "HTTP/runtime-runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+            }
+          ],
+          "title": "Valgt tjeneste · klare replikaer over tid",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "NAIS APM",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${service:raw}?environment=prod&from=${__from:date:iso}&to=${__to:date:iso}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Avgrensede logger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "HTTP/runtime-runbook",
+                      "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": 0
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 0.001
+                      },
+                      {
+                        "color": "green",
+                        "value": 100
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
               }
             },
             "version": "13.1.2"
@@ -2232,7 +2624,7 @@
               "transformations": []
             }
           },
-          "description": "Dedupliserte containerrestarts siste 24 timer for valgt runtime.",
+          "description": "Historiske containerrestarts siste 24 timer, også fra podder som er erstattet. Ikke nåværende helsestatus. Prometheus estimerer tellerøkningen. Se poddiagnostikken for nylige restarts og sist registrerte årsak.",
           "id": 16,
           "links": [
             {
@@ -2256,7 +2648,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Valgt tjeneste · restarts · 24t",
+          "title": "Valgt tjeneste · restarthistorikk 24t",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2269,12 +2661,8 @@
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "gray",
+                        "color": "blue",
                         "value": 0
-                      },
-                      {
-                        "color": "red",
-                        "value": 1
                       }
                     ]
                   },
@@ -2382,7 +2770,7 @@
                       },
                       {
                         "color": "yellow",
-                        "value": 99.999
+                        "value": 0.001
                       },
                       {
                         "color": "green",
@@ -3562,7 +3950,7 @@
                       },
                       {
                         "color": "yellow",
-                        "value": 99.999
+                        "value": 0.001
                       },
                       {
                         "color": "green",
@@ -3826,12 +4214,38 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
+                "name": "panel-36"
+              },
+              "height": 8,
+              "width": 16,
+              "x": 0,
+              "y": 49
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-37"
+              },
+              "height": 8,
+              "width": 8,
+              "x": 16,
+              "y": 49
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
                 "name": "panel-30"
               },
               "height": 8,
               "width": 8,
               "x": 0,
-              "y": 49
+              "y": 57
             }
           },
           {
@@ -3844,7 +4258,7 @@
               "height": 8,
               "width": 16,
               "x": 8,
-              "y": 49
+              "y": 57
             }
           },
           {
@@ -3857,7 +4271,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 57
+              "y": 65
             }
           },
           {
@@ -3870,7 +4284,7 @@
               "height": 6,
               "width": 18,
               "x": 6,
-              "y": 57
+              "y": 65
             }
           },
           {
@@ -3883,7 +4297,7 @@
               "height": 4,
               "width": 6,
               "x": 0,
-              "y": 63
+              "y": 71
             }
           },
           {
@@ -3896,7 +4310,7 @@
               "height": 4,
               "width": 12,
               "x": 6,
-              "y": 63
+              "y": 71
             }
           },
           {
@@ -3909,7 +4323,7 @@
               "height": 4,
               "width": 6,
               "x": 18,
-              "y": 63
+              "y": 71
             }
           },
           {
@@ -3922,7 +4336,7 @@
               "height": 5,
               "width": 16,
               "x": 0,
-              "y": 67
+              "y": 75
             }
           },
           {
@@ -3935,7 +4349,7 @@
               "height": 5,
               "width": 8,
               "x": 16,
-              "y": 67
+              "y": 75
             }
           },
           {
@@ -3948,7 +4362,7 @@
               "height": 3,
               "width": 24,
               "x": 0,
-              "y": 72
+              "y": 80
             }
           },
           {
@@ -3961,7 +4375,7 @@
               "height": 10,
               "width": 8,
               "x": 0,
-              "y": 75
+              "y": 83
             }
           },
           {
@@ -3974,7 +4388,7 @@
               "height": 10,
               "width": 8,
               "x": 8,
-              "y": 75
+              "y": 83
             }
           },
           {
@@ -3987,7 +4401,7 @@
               "height": 10,
               "width": 8,
               "x": 16,
-              "y": 75
+              "y": 83
             }
           }
         ]
