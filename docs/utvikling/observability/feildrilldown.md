@@ -10,7 +10,10 @@ Den primære, åpne delen har én rekkefølge:
 
 1. **Runtimefeil over tid** viser om feilvolumet endrer seg i valgt scope.
 2. **Vanligste runtimefeil per nivå (topp 25)** viser hvor volumet kommer fra og hvilken feilidentitet og kode som er tilgjengelig. Topp-listen beregnes separat for `error`, `critical` og `fatal`.
-3. **Nyeste runtimefeil med trace (maks 100)** gir konkrete forløp å undersøke videre, med valgfri HTTP-status fra tjenesten som ble kalt.
+3. **API-avvisninger (WARN · topp 50)** viser avviste kall separat fra runtimefeil, gruppert på tjeneste, operasjon, kode og avvisningsgrunn. Gjentatte avvisninger kan avsløre feil i klient eller konfigurasjon selv om serveren avviser korrekt.
+4. **Nyeste runtimefeil med trace (maks 100)** gir konkrete forløp å undersøke videre, med valgfri HTTP-status fra tjenesten som ble kalt.
+
+Avvisningspanelet omfatter bare `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak vises som `UNSPECIFIED`. **Se logger** bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
 
 Hovedtabellen har en egen handling som åpner samme feilgruppe i Grafana Explore. Miljø, tjeneste, feiltype, kode, operasjon og tidsrom følger med; operatøren starter derfor ikke på nytt i et uavgrenset loggsøk. Trace-tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace.
 
@@ -103,6 +106,7 @@ Verifiser minst:
 - at nettleserpanelet og nettleserlenken ikke får kjøremiljø
 - at første skjermbilde viser miljø, trend, feilgrupper og handling uten forklaringsvegg
 - at feilgruppehandlingen åpner Explore med riktig miljø, tjeneste, type, kode og tidsrom
+- at avvisningspanelet er åpent, viser WARN separat og åpner samme tjeneste, operasjon, kode og avvisningsgrunn i Explore
 - at trace-tabellen har sju kolonner og ingen identiske `(trace, tjeneste, feiltype, kode, operasjon, HTTP-status fra kall)`-rader
 - at sekundærraden starter lukket, og om queryene faktisk utsettes
 - Query Inspector-resultat for bytes skannet, svartid, serieantall og parserfeil i standardvinduet

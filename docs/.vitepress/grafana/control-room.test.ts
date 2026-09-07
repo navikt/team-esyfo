@@ -75,6 +75,42 @@ import {
 } from "./control-room-scope.ts";
 import { LOKI_DATASOURCE_UID, MIMIR_DATASOURCE_UID } from "./dashboard-kit.ts";
 
+test("viser avvisninger som eget WARN-signal uten å blande dem med runtimefeil", () => {
+	const dashboard = buildControlRoomDashboard();
+	const panel = (dashboard.spec.elements as Record<string, unknown>)[
+		"panel-35"
+	];
+	assert.ok(panel, "Avvisningsindikatoren mangler");
+	const query = collectByKey(panel, "expr")[0] as string;
+	assert.match(query, /detected_level=~`\(\?i\)\(warn\|warning\)`/);
+	assert.match(query, /event_type="api_request_rejected"/);
+	assert.match(query, /service_name=~"\$\{scope:raw\}"/);
+	assert.match(query, /k8s_cluster_name="prod"/);
+	assert.match(query, /\[5m\]/);
+	assert.ok(!query.includes("error|critical|fatal"));
+	assert.ok(!query.includes("vector(0)"));
+	const urls = collectByKey(panel, "url") as string[];
+	const link = urls.find(
+		(url) => url.startsWith("/explore?") && url.includes("${scope:raw}"),
+	);
+	assert.ok(link);
+	const materialized = link.replaceAll(
+		"${scope:raw}",
+		"^(flaggskipet|sample-service)$",
+	);
+	const pane = JSON.parse(
+		new URL(materialized, "https://grafana.test").searchParams.get("panes") ??
+			"{}",
+	).A;
+	assert.match(
+		pane.queries[0].expr,
+		/service_name=~"\^\(flaggskipet\|sample-service\)\$"/,
+	);
+	assert.match(pane.queries[0].expr, /event_type="api_request_rejected"/);
+	assert.equal(pane.range.from, "${__from}");
+	assert.equal(pane.range.to, "${__to}");
+});
+
 const collectByKey = (value: unknown, key: string, found: unknown[] = []) => {
 	if (!value || typeof value !== "object") return found;
 	if (Array.isArray(value)) {
@@ -789,7 +825,7 @@ describe("kontrollrom-dashboard", () => {
 		const queries = collectObjects(buildControlRoomDashboard()).filter(
 			(query) => query.kind === "DataQuery",
 		);
-		assert.equal(queries.length, 29);
+		assert.equal(queries.length, 30);
 		let browserQueries = 0;
 		let builtInQueries = 0;
 		for (const query of queries) {
@@ -841,7 +877,7 @@ describe("kontrollrom-dashboard", () => {
 			if (template.startsWith("/")) {
 				assert.match(
 					parsed.pathname,
-					/^\/(a\/(nais-apm-app|grafana-lokiexplore-app)|d\/team-esyfo-feiloversikt)\//,
+					/^\/(explore$|(a\/(nais-apm-app|grafana-lokiexplore-app)|d\/team-esyfo-feiloversikt)\/)/,
 				);
 			}
 		}
@@ -934,7 +970,7 @@ describe("kontrollrom-dashboard", () => {
 			collectByKey(buildControlRoomDashboard(), "group").filter(
 				(value) => value === "loki",
 			).length,
-			4,
+			5,
 		);
 	});
 
@@ -979,7 +1015,15 @@ describe("kontrollrom-dashboard", () => {
 		);
 		assert.deepEqual(
 			panelsBeforeFleet.map(({ spec }) => spec.element.name),
-			["panel-1", "panel-2", "panel-32", "panel-4", "panel-5", "panel-3"],
+			[
+				"panel-1",
+				"panel-2",
+				"panel-32",
+				"panel-35",
+				"panel-4",
+				"panel-5",
+				"panel-3",
+			],
 		);
 		assert.deepEqual(
 			panelsBeforeFleet
@@ -988,6 +1032,7 @@ describe("kontrollrom-dashboard", () => {
 			[
 				"OTel-feil · tjenester",
 				"Runtimefeil 5m · tjenester",
+				"API-avvisninger 5m · tjenester",
 				"Restarts 24t · tjenester",
 				"Laveste ready/desired %",
 				"Tjenester uten SERVER-spanserie",
@@ -1025,7 +1070,7 @@ describe("kontrollrom-dashboard", () => {
 			{ spec: { id: number } }
 		>;
 		const ids = Object.values(elements).map(({ spec }) => spec.id);
-		assert.equal(ids.length, 29);
+		assert.equal(ids.length, 30);
 		assert.equal(new Set(ids).size, ids.length);
 		const layout = dashboard.spec.layout as {
 			spec: { items: Array<{ spec: { element: { name: string } } }> };

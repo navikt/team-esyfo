@@ -28,7 +28,11 @@ import {
 	MIMIR_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
-import { runtimeErrorPipeline } from "./runtime-logql.ts";
+import { runtimeRejectionScopeDataLink } from "./error-drilldown.ts";
+import {
+	runtimeErrorPipeline,
+	runtimeRejectionPipeline,
+} from "./runtime-logql.ts";
 
 export const CONTROL_ROOM_UID = "team-esyfo-kontrollrom";
 export const CONTROL_ROOM_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
@@ -155,6 +159,11 @@ export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_ti
 ${runtimeErrorPipeline}
 [5m]))`;
 export const fleetServicesWithRuntimeErrorsQuery = `count((${runtimeErrorsByServiceQuery}) > 0)`;
+
+export const fleetServicesWithApiRejectionsQuery = `count((sum by (service_name) (count_over_time(${fleetRuntimeSelector}
+${runtimeRejectionPipeline}
+| keep service_name
+[5m]))) > 0)`;
 
 const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[24h])))`;
 export const restartsByServiceQuery = `sum by (service_name) (label_replace(${fleetRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
@@ -839,6 +848,28 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				decimals: 0,
 				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
 			}),
+			"panel-35": statPanel({
+				id: 35,
+				title: "API-avvisninger 5m · tjenester",
+				description:
+					"Antall tjenester i valgt område med WARN-hendelsen api_request_rejected siste fem minutter. Bare tjenester som produserer denne hendelsen er dekket; ikke alle WARN eller HTTP 4xx. Avvisning er ikke automatisk driftsfeil, men kan avsløre feil i klient eller konfigurasjon. No data er ukjent. Logglenken bevarer området og valgt tidsrom; velg siste fem minutter for samme tellevindu. Feiloversikt har egen årsakstabell.",
+				query: lokiQuery(
+					"Tjenester med API-avvisninger",
+					fleetServicesWithApiRejectionsQuery,
+				),
+				unit: "short",
+				thresholds: [
+					{ color: "text", value: 0 },
+					{ color: "yellow", value: 1 },
+				],
+				decimals: 0,
+				links: [
+					dataLink(
+						"Se avvisninger i valgt område",
+						runtimeRejectionScopeDataLink(SCOPE_VARIABLE),
+					),
+				],
+			}),
 			"panel-4": statPanel({
 				id: 4,
 				title: "Restarts 24t · tjenester",
@@ -1243,9 +1274,10 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			spec: {
 				items: [
 					layoutItem("panel-1", 0, 0, 24, 3),
-					layoutItem("panel-2", 0, 3, 8, 4),
-					layoutItem("panel-32", 8, 3, 8, 4),
-					layoutItem("panel-4", 16, 3, 8, 4),
+					layoutItem("panel-2", 0, 3, 6, 4),
+					layoutItem("panel-32", 6, 3, 6, 4),
+					layoutItem("panel-35", 12, 3, 6, 4),
+					layoutItem("panel-4", 18, 3, 6, 4),
 					layoutItem("panel-5", 0, 7, 12, 4),
 					layoutItem("panel-3", 12, 7, 12, 4),
 					layoutItem("panel-10", 0, 11, 24, 16),

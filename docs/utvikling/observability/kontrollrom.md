@@ -17,6 +17,8 @@ Leveransen er coverage-first: det vi kan måle korrekt vises live; det vi ikke k
 
 `Operativt område` filtrerer bare oversiktskortene og flåtematrisen. `Detaljtjeneste` styrer bare detaljpanelene og er uavhengig av området. Faste seksjoner har sitt eget scope og endres ikke av valgene.
 
+**API-avvisninger 5m · tjenester** viser separat hvor mange tjenester i valgt område som har logget WARN med `event_type=api_request_rejected` siste fem minutter. Det gule signalet er ikke automatisk driftsfeil: gjentatte avvisninger kan skyldes feil input, klientintegrasjon eller tokenkonfigurasjon. Det omfatter bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. No data er ukjent, ikke bevist null. Lenken åpner avgrensede avvisningslogger i Explore med samme område og valgt tidsrom; velg siste fem minutter der for å matche indikatorens faste tellevindu. Feiloversikt har i tillegg en egen tabell med avvisningsgrunner.
+
 ## Tilstandsord
 
 | Dimensjon | Tillatte tolkninger |
