@@ -159,7 +159,7 @@ const panel = (
 				fieldConfig: {
 					defaults: {
 						noValue: "Ingen måledata",
-						unit: "short",
+						unit: type === "timeseries" ? "short" : "locale",
 						decimals: 0,
 						color: { mode: "palette-classic" },
 						...(type === "table" ? { custom: { filterable: true } } : {}),
