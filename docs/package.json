@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vitepress dev",
-		"build": "pnpm typecheck && pnpm inventory:check && pnpm inventory:test && pnpm alert-register:check && pnpm alert-register:test && pnpm grafana-dashboard:test && pnpm error-dashboard:check && pnpm control-room:check && vitepress build && pnpm inventory:export",
+		"build": "pnpm typecheck && pnpm inventory:check && pnpm inventory:test && pnpm alert-register:check && pnpm alert-register:test && pnpm grafana-dashboard:test && pnpm error-dashboard:check && pnpm control-room:check && pnpm aid-dashboard:check && vitepress build && pnpm inventory:export",
 		"typecheck": "vue-tsc --noEmit",
 		"inventory:check": "node scripts/runtime-inventory.ts check",
 		"inventory:test": "node --test .vitepress/runtime/*.test.ts",
@@ -24,6 +24,8 @@
 		"control-room:test": "node --test .vitepress/grafana/control-room.test.ts",
 		"control-room:check": "node scripts/control-room.ts check",
 		"control-room:export": "node scripts/control-room.ts export",
+		"aid-dashboard:check": "node scripts/aid-dashboard.ts check",
+		"aid-dashboard:export": "node scripts/aid-dashboard.ts export",
 		"grafana-dashboard:smoke": "node scripts/grafana-dashboard-smoke.ts",
 		"preview": "vitepress preview"
 	},

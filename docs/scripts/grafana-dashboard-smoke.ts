@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { AID_DASHBOARD_UID } from "../.vitepress/grafana/aid-delivery-usage.ts";
 import {
 	CONTROL_ROOM_FOLDER_UID,
 	CONTROL_ROOM_UID,
@@ -31,6 +32,10 @@ const dashboardArtifacts = [CONTROL_ROOM_UID, ERROR_DASHBOARD_UID].map((uid) => 
 	),
 	uid,
 }));
+dashboardArtifacts.push({
+	artifactPath: fileURLToPath(new URL("../public/grafana/team-esyfo-aid.json", import.meta.url)),
+	uid: AID_DASHBOARD_UID,
+});
 
 type JsonRecord = Record<string, unknown>;
 
