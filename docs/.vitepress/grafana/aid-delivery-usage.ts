@@ -1,4 +1,10 @@
 import {
+	aidPlanConfirmedTrendQuery,
+	aidPlanCreationsQuery,
+	aidPlanDecisionsQuery,
+	aidPlanViewsQuery,
+} from "./aid-plan-queries.ts";
+import {
 	GRAFANA_VERSION,
 	type GrafanaDashboardResource,
 	grafanaVariable,
@@ -107,6 +113,15 @@ const query = (
 });
 
 type Query = ReturnType<typeof query>;
+
+const groupColors = [
+	["tiltak", "blue"],
+	["kontroll", "orange"],
+	["utenfor_scope", "purple"],
+	["ukjent", "gray"],
+	["blandet", "yellow"],
+] as const;
+
 const panel = (
 	id: number,
 	title: string,
@@ -179,21 +194,21 @@ const panel = (
 					overrides:
 						type === "timeseries"
 							? [
-									{
-										matcher: { id: "byRegexp", options: "^tiltak" },
+									...groupColors.map(([group, color]) => ({
+										matcher: { id: "byRegexp", options: `/^${group}/` },
 										properties: [
 											{
 												id: "color",
-												value: { mode: "fixed", fixedColor: "blue" },
+												value: { mode: "fixed", fixedColor: color },
 											},
 										],
-									},
+									})),
 									{
-										matcher: { id: "byRegexp", options: "^kontroll" },
+										matcher: { id: "byRegexp", options: "/ · standard$/" },
 										properties: [
 											{
-												id: "color",
-												value: { mode: "fixed", fixedColor: "orange" },
+												id: "custom.lineStyle",
+												value: { fill: "dash", dash: [6, 3] },
 											},
 										],
 									},
@@ -240,6 +255,8 @@ const backendDescription =
 	"Hele valgt miljø, ikke bare AID eller pilotområdet. Hendelser/vellykkede API-operasjoner, ikke unike personer. Ingen gruppe- eller påminnelsesvalgsegmentering. Increase er et estimat mellom scrape-tidspunkter.";
 const browserDescription =
 	"Påminnelsen i Dine sykmeldte, tiltakspakke 1. Browserhendelser, ikke personer eller hele pilotpopulasjonen. Tildelt gruppe vises separat fra levert variant. Ingen treff er ikke dokumentasjon på null bruk. Ukjent tildeling kan skyldes feil, toggle av eller manglende vurdering.";
+const planDescription =
+	"Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk.";
 
 export const buildAidDashboard = (): GrafanaDashboardResource => {
 	const elements: Record<string, ReturnType<typeof panel>> = {
@@ -248,7 +265,7 @@ export const buildAidDashboard = (): GrafanaDashboardResource => {
 			"AID · levering og bruk",
 			`**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.
 
-**To datagrunnlag:** Backendtallene under gjelder hele valgt miljø. Gruppe, faktisk visning og påminnelsesvalg finnes foreløpig bare i den nye Dine sykmeldte-målingen. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard).`,
+**Tre separate målinger:** Påminnelsen i Dine sykmeldte, arbeidsgivers planskjema og backendtall for hele valgt miljø. Gruppe og levert variant finnes i browsermålingene; påminnelsesvalg finnes bare for påminnelsen om å lage plan. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard).`,
 		),
 		"panel-14": textPanel(
 			14,
@@ -294,8 +311,50 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-19": textPanel(
 			19,
-			"03 · Oppfølgingsplan og valg · hele miljøet",
+			"04 · Oppfølgingsplan og valg · hele miljøet",
 			`Disse eksisterende backendtellerne er bevart. De kan **ikke** filtreres på tildelt gruppe eller påminnelsesvalg ennå. Trinnene er ikke én brukertrakt: deling kan gjelde en plan opprettet før valgt tidsrom. Nav-løsningen og LPS må ikke antas å ha samme dekning.`,
+		),
+		"panel-21": textPanel(
+			21,
+			"03 · Planskjema · levering og opprettelse",
+			`**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.
+
+«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr at klienten mottok vellykket svar fra opprettelses-API-et, ikke bekreftet varsling. Evalueringspåminnelsens ja/nei-valg måles ikke her.`,
+		),
+		"panel-22": panel(
+			22,
+			"Planskjema · tildelt gruppe → levert variant",
+			`${planDescription} Én beslutning per montering/lederkontekst, ikke per rerender eller stegbytte.`,
+			[query(aidPlanDecisionsQuery, "loki", "Planbeslutninger")],
+			"table",
+		),
+		"panel-23": panel(
+			23,
+			"Planskjema · faktiske visninger",
+			`${planDescription} Første viewport-visning av skjemabeholderen. Beviser ikke at innholdet er lest.`,
+			[query(aidPlanViewsQuery, "loki", "Planvisninger")],
+			"table",
+		),
+		"panel-24": panel(
+			24,
+			"Planopprettelse · forsøk, bekreftet og feilet",
+			`${planDescription} Forsøk og resultat er separate hendelser, ikke tall som skal summeres til antall opprettelser. Bekreftet kan også gjelde en ny versjon av en plan. Feilet betyr manglende klientbekreftelse; planen kan likevel være lagret. Utkast og ugyldig skjema teller ikke som opprettelsesforsøk.`,
+			[query(aidPlanCreationsQuery, "loki", "Planopprettelser")],
+			"table",
+		),
+		"panel-25": panel(
+			25,
+			"Bekreftede planopprettelser · rullerende døgn",
+			`${planDescription} Hvert punkt teller hendelser siste 24 timer, ikke kalenderdøgn. Gruppe og variant vises separat. Standardskjema har stiplet linje. Ingen konverteringsprosent eller kausal effekt.`,
+			[
+				query(
+					aidPlanConfirmedTrendQuery,
+					"loki",
+					"{{gruppe}} · {{variant}}",
+					true,
+				),
+			],
+			"timeseries",
 		),
 		"panel-6": panel(
 			6,
@@ -332,7 +391,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-20": panel(
 			20,
-			"04 · Leveringsgap og mislykkede handlinger",
+			"05 · Påminnelsen · leveringsgap og mislykkede handlinger",
 			browserDescription,
 			[query(aidFailuresQuery, "loki", "Gap og feil")],
 			"table",
@@ -342,7 +401,8 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 			"Definisjoner og neste måletrinn",
 			`- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.
 - **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.
-- **Neste:** øvrige AID-flater, planhandlinger med autoritativ gruppekontekst, evalueringspåminnelse og bekreftet utsending. Ingen ekstra Flaggskipet-kall bare for telemetri.
+- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.
+- **Neste:** evalueringspåminnelsens valg, øvrige AID-flater og bekreftet utsending fra en autoritativ kilde.
 - **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).
 - Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.`,
 		),
@@ -382,19 +442,24 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 						layoutItem("panel-16", 12, 8, 12, 8),
 						layoutItem("panel-17", 0, 16, 12, 9),
 						layoutItem("panel-18", 12, 16, 12, 9),
-						layoutItem("panel-19", 0, 25, 24, 3),
-						layoutItem("panel-2", 0, 28, 6, 4),
-						layoutItem("panel-3", 6, 28, 6, 4),
-						layoutItem("panel-4", 12, 28, 6, 4),
-						layoutItem("panel-5", 18, 28, 6, 4),
-						layoutItem("panel-8", 0, 32, 8, 4),
-						layoutItem("panel-9", 8, 32, 8, 4),
-						layoutItem("panel-10", 16, 32, 8, 4),
-						layoutItem("panel-6", 0, 36, 24, 8),
-						layoutItem("panel-11", 0, 44, 12, 7),
-						layoutItem("panel-12", 12, 44, 12, 7),
-						layoutItem("panel-20", 0, 51, 24, 7),
-						layoutItem("panel-13", 0, 58, 24, 7),
+						layoutItem("panel-21", 0, 25, 24, 4),
+						layoutItem("panel-22", 0, 29, 12, 8),
+						layoutItem("panel-23", 12, 29, 12, 8),
+						layoutItem("panel-24", 0, 37, 12, 9),
+						layoutItem("panel-25", 12, 37, 12, 9),
+						layoutItem("panel-19", 0, 46, 24, 3),
+						layoutItem("panel-2", 0, 49, 6, 4),
+						layoutItem("panel-3", 6, 49, 6, 4),
+						layoutItem("panel-4", 12, 49, 6, 4),
+						layoutItem("panel-5", 18, 49, 6, 4),
+						layoutItem("panel-8", 0, 53, 8, 4),
+						layoutItem("panel-9", 8, 53, 8, 4),
+						layoutItem("panel-10", 16, 53, 8, 4),
+						layoutItem("panel-6", 0, 57, 24, 8),
+						layoutItem("panel-11", 0, 65, 12, 7),
+						layoutItem("panel-12", 12, 65, 12, 7),
+						layoutItem("panel-20", 0, 72, 24, 7),
+						layoutItem("panel-13", 0, 79, 24, 8),
 					],
 				},
 			},
