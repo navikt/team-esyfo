@@ -16,6 +16,60 @@ const queries = [
 	aidPlanConfirmedTrendQuery,
 ];
 
+test("Grafana matchers preserve group colors and distinguish standard series", () => {
+	const panels = buildAidDashboard().spec.elements as Record<
+		string,
+		{
+			spec: {
+				vizConfig: {
+					spec: {
+						fieldConfig: {
+							overrides: {
+								matcher: { id: string; options: string };
+								properties: unknown[];
+							}[];
+						};
+					};
+				};
+			};
+		}
+	>;
+	const overrides =
+		panels["panel-25"].spec.vizConfig.spec.fieldConfig.overrides;
+	const [treatment, control, outside, unknown, mixed, standard] = overrides.map(
+		({ matcher }) => {
+			assert.equal(matcher.id, "byRegexp");
+			// Grafana treats undelimited patterns as whole-name matches.
+			assert.match(matcher.options, /^\/.*\/$/);
+			return new RegExp(matcher.options.slice(1, -1));
+		},
+	);
+	for (const name of ["tiltak", "tiltak · aid", "tiltak · standard"])
+		assert.ok(treatment.test(name), name);
+	for (const name of ["kontroll", "kontroll · standard"])
+		assert.ok(control.test(name), name);
+	for (const group of ["tiltak", "kontroll", "utenfor_scope", "ukjent"])
+		assert.ok(standard.test(`${group} · standard`), group);
+	assert.equal(standard.test("tiltak · aid"), false);
+	assert.equal(treatment.test("kontroll · standard"), false);
+	assert.equal(control.test("tiltak · standard"), false);
+	assert.ok(outside.test("utenfor_scope · standard"));
+	assert.ok(unknown.test("ukjent · standard"));
+	assert.equal(unknown.test("kontroll · standard"), false);
+	assert.ok(mixed.test("blandet"));
+	assert.deepEqual(
+		overrides.map(({ properties }) => properties),
+		[
+			[{ id: "color", value: { mode: "fixed", fixedColor: "blue" } }],
+			[{ id: "color", value: { mode: "fixed", fixedColor: "orange" } }],
+			[{ id: "color", value: { mode: "fixed", fixedColor: "purple" } }],
+			[{ id: "color", value: { mode: "fixed", fixedColor: "gray" } }],
+			[{ id: "color", value: { mode: "fixed", fixedColor: "yellow" } }],
+			[{ id: "custom.lineStyle", value: { fill: "dash", dash: [6, 3] } }],
+		],
+	);
+});
+
 test("plan queries isolate the producer, environment and exact v1 event contract", () => {
 	for (const query of queries) {
 		assert.match(query, /^sum by \(gruppe, variant(?:, utfall)?\)/);

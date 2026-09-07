@@ -113,6 +113,15 @@ const query = (
 });
 
 type Query = ReturnType<typeof query>;
+
+const groupColors = [
+	["tiltak", "blue"],
+	["kontroll", "orange"],
+	["utenfor_scope", "purple"],
+	["ukjent", "gray"],
+	["blandet", "yellow"],
+] as const;
+
 const panel = (
 	id: number,
 	title: string,
@@ -185,26 +194,17 @@ const panel = (
 					overrides:
 						type === "timeseries"
 							? [
-									{
-										matcher: { id: "byRegexp", options: "^tiltak" },
+									...groupColors.map(([group, color]) => ({
+										matcher: { id: "byRegexp", options: `/^${group}/` },
 										properties: [
 											{
 												id: "color",
-												value: { mode: "fixed", fixedColor: "blue" },
+												value: { mode: "fixed", fixedColor: color },
 											},
 										],
-									},
+									})),
 									{
-										matcher: { id: "byRegexp", options: "^kontroll" },
-										properties: [
-											{
-												id: "color",
-												value: { mode: "fixed", fixedColor: "orange" },
-											},
-										],
-									},
-									{
-										matcher: { id: "byRegexp", options: " · standard$" },
+										matcher: { id: "byRegexp", options: "/ · standard$/" },
 										properties: [
 											{
 												id: "custom.lineStyle",

@@ -419,7 +419,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^tiltak"
+                      "options": "/^tiltak/"
                     },
                     "properties": [
                       {
@@ -434,7 +434,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^kontroll"
+                      "options": "/^kontroll/"
                     },
                     "properties": [
                       {
@@ -449,7 +449,52 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": " · standard$"
+                      "options": "/^utenfor_scope/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "purple"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^ukjent/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "gray"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^blandet/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "yellow"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/ · standard$/"
                     },
                     "properties": [
                       {
@@ -886,7 +931,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^tiltak"
+                      "options": "/^tiltak/"
                     },
                     "properties": [
                       {
@@ -901,7 +946,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^kontroll"
+                      "options": "/^kontroll/"
                     },
                     "properties": [
                       {
@@ -916,7 +961,52 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": " · standard$"
+                      "options": "/^utenfor_scope/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "purple"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^ukjent/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "gray"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^blandet/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "yellow"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/ · standard$/"
                     },
                     "properties": [
                       {
@@ -1059,7 +1149,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^tiltak"
+                      "options": "/^tiltak/"
                     },
                     "properties": [
                       {
@@ -1074,7 +1164,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^kontroll"
+                      "options": "/^kontroll/"
                     },
                     "properties": [
                       {
@@ -1089,7 +1179,52 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": " · standard$"
+                      "options": "/^utenfor_scope/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "purple"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^ukjent/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "gray"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^blandet/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "yellow"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/ · standard$/"
                     },
                     "properties": [
                       {
@@ -1209,7 +1344,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^tiltak"
+                      "options": "/^tiltak/"
                     },
                     "properties": [
                       {
@@ -1224,7 +1359,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^kontroll"
+                      "options": "/^kontroll/"
                     },
                     "properties": [
                       {
@@ -1239,7 +1374,52 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": " · standard$"
+                      "options": "/^utenfor_scope/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "purple"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^ukjent/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "gray"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^blandet/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "yellow"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/ · standard$/"
                     },
                     "properties": [
                       {
@@ -1359,7 +1539,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^tiltak"
+                      "options": "/^tiltak/"
                     },
                     "properties": [
                       {
@@ -1374,7 +1554,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "^kontroll"
+                      "options": "/^kontroll/"
                     },
                     "properties": [
                       {
@@ -1389,7 +1569,52 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": " · standard$"
+                      "options": "/^utenfor_scope/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "purple"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^ukjent/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "gray"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^blandet/"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "yellow"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/ · standard$/"
                     },
                     "properties": [
                       {
