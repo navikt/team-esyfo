@@ -118,6 +118,10 @@ const decodedExplorePane = (url: string) => {
 		.replaceAll('${__data.fields["error_code_display"]}', "SAMPLE_CODE")
 		.replaceAll('${__data.fields["operation_display"]}', "sample.operation")
 		.replaceAll('${__data.fields["error_level"]}', "error")
+		.replaceAll(
+			'${__data.fields["rejection_reason_display"]}',
+			"TOO_MANY_ORGNUMRE",
+		)
 		.replaceAll('${__data.fields["contract_state_display"]}', "Eldre typefelt")
 		.replaceAll('${__data.fields["browser_type_display"]}', "TypeError");
 	const encoded = new URL(
@@ -135,6 +139,55 @@ const decodedExplorePane = (url: string) => {
 };
 
 describe("feiloversikt-dashboard", () => {
+	test("viser WARN-avvisninger separat og åpent med årsak og logglenke", () => {
+		const panel = panels()["panel-6"];
+		assert.ok(panel, "Avvisningspanelet mangler");
+		const query = collectByKey(panel, "expr")[0] as string;
+		assert.match(query, /detected_level=~`\(\?i\)\(warn\|warning\)`/);
+		assert.match(query, /event_type="api_request_rejected"/);
+		assert.match(
+			query,
+			/sum by\(service_name, operation_display, error_code_display, rejection_reason_display, action\)/,
+		);
+		assert.match(
+			query,
+			/\| keep service_name, operation_display, error_code_display, rejection_reason_display, action/,
+		);
+		assert.match(
+			query,
+			/k8s_cluster_name=~"\^\$\{runtime_environment:regex\}\$"/,
+		);
+		assert.match(query, /service_name=~"\$\{app:regex\}"/);
+		assert.ok(!query.includes("error|critical|fatal"));
+		assert.ok(!query.includes("[$__range]"));
+		const rows = (
+			buildErrorDashboard().spec.layout as {
+				spec: { rows: Array<{ spec: { collapse: boolean; layout: unknown } }> };
+			}
+		).spec.rows;
+		assert.ok(
+			rows.some(
+				({ spec }) =>
+					!spec.collapse &&
+					collectByKey(spec.layout, "name").includes("panel-6"),
+			),
+		);
+		const link = (collectByKey(panel, "url") as string[]).find((url) =>
+			url.startsWith("/explore?"),
+		);
+		assert.ok(link);
+		const pane = decodedExplorePane(link).A;
+		assert.match(pane.queries[0].expr, /event_type="api_request_rejected"/);
+		assert.match(pane.queries[0].expr, /service_name="sample-service"/);
+		assert.match(pane.queries[0].expr, /operation_display=`sample.operation`/);
+		assert.match(
+			pane.queries[0].expr,
+			/rejection_reason_display=`TOO_MANY_ORGNUMRE`/,
+		);
+		assert.equal(pane.range.from, "${__from}");
+		assert.equal(pane.range.to, "${__to}");
+	});
+
 	test("bruker stabil identitet, autoritativ kode og gjeldende datasources", () => {
 		const dashboard = buildErrorDashboard();
 		const serialized = serializeErrorDashboard();
@@ -247,19 +300,19 @@ describe("feiloversikt-dashboard", () => {
 			layout.spec.rows[0]?.spec.layout.spec.items.map(
 				({ spec }) => spec.element.name,
 			),
-			["panel-1", "panel-2", "panel-3"],
+			["panel-1", "panel-2", "panel-6", "panel-3"],
 		);
 		assert.ok(
 			layout.spec.rows[0]?.spec.layout.spec.items.every(
 				({ spec }) => spec.width === 24,
 			),
 		);
-		assert.equal(Object.keys(panels()).length, 5);
+		assert.equal(Object.keys(panels()).length, 6);
 		assert.ok(!serializeErrorDashboard().includes('"group": "stat"'));
 		assert.ok(!serializeErrorDashboard().includes('"group": "text"'));
 	});
 
-	test("bruker fem avgrensede Loki-queryer med minst ett minutts refresh", () => {
+	test("bruker seks avgrensede Loki-queryer med minst ett minutts refresh", () => {
 		for (const query of [
 			runtimeTrendQuery,
 			runtimeByClassificationQuery,
@@ -303,7 +356,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.ok(!serialized.includes('"10s"'));
 		assert.match(serialized, /"maxDataPoints": 240/);
 		assert.match(serialized, /"interval": "1m"/);
-		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 5);
+		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 6);
 	});
 
 	test("viser en operativ hovedtabell med eksplisitt handling", () => {

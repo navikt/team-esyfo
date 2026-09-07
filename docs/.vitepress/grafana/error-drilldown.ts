@@ -13,7 +13,10 @@ import {
 	PROD_TEMPO_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
-import { runtimeErrorPipeline } from "./runtime-logql.ts";
+import {
+	runtimeErrorPipeline,
+	runtimeRejectionPipeline,
+} from "./runtime-logql.ts";
 
 export {
 	DEV_TEMPO_DATASOURCE_UID,
@@ -38,6 +41,9 @@ const ROW_ERROR_TYPE = grafanaVariable('__data.fields["error_type_display"]');
 const ROW_ERROR_CODE = grafanaVariable('__data.fields["error_code_display"]');
 const ROW_OPERATION = grafanaVariable('__data.fields["operation_display"]');
 const ROW_LEVEL = grafanaVariable('__data.fields["error_level"]');
+const ROW_REJECTION_REASON = grafanaVariable(
+	'__data.fields["rejection_reason_display"]',
+);
 const ROW_CONTRACT_GAP = grafanaVariable(
 	'__data.fields["contract_state_display"]',
 );
@@ -225,6 +231,22 @@ ${runtimeSignatureLabels}
 | keep service_name, contract_state_display, action
 [$__auto]))`;
 
+const runtimeRejectionLabels = `| json operation, error_code, rejection_reason
+| drop __error__, __error_details__
+${safeLabel("safe_operation", "operation", safeEventTypePattern)}
+${safeLabel("safe_error_code", "error_code", safeCodePattern)}
+${safeLabel("safe_rejection_reason", "rejection_reason", safeGenericTypeAsCodePattern)}
+| label_format operation_display=\`{{ if .safe_operation }}{{ .safe_operation }}{{ else }}—{{ end }}\`
+| label_format error_code_display=\`{{ if .safe_error_code }}{{ .safe_error_code }}{{ else }}—{{ end }}\`
+| label_format rejection_reason_display=\`{{ if .safe_rejection_reason }}{{ .safe_rejection_reason }}{{ else }}UNSPECIFIED{{ end }}\``;
+
+export const runtimeRejectionsQuery = `topk(50, sum by(service_name, operation_display, error_code_display, rejection_reason_display, action) (count_over_time(${runtimeSelector}
+${runtimeRejectionPipeline}
+${runtimeRejectionLabels}
+| label_format action=\`Undersøk\`
+| keep service_name, operation_display, error_code_display, rejection_reason_display, action
+[$__auto])))`;
+
 export const browserByTypeQuery = `topk(50, sum by(service_name, browser_type_display, action) (count_over_time(${browserSelector}
 ${browserTypePipeline}
 | label_format action=\`Undersøk\`
@@ -300,6 +322,18 @@ ${runtimeErrorPipeline}
 ${runtimeSignatureParser}
 ${runtimeSignatureLabels}
 | contract_state_display=\`${ROW_CONTRACT_GAP}\``);
+
+export const runtimeRejectionDataLink = () =>
+	lokiExploreDataLink(`${runtimeRowSelector}
+${runtimeRejectionPipeline}
+${runtimeRejectionLabels}
+| operation_display=\`${ROW_OPERATION}\`
+| error_code_display=\`${ROW_ERROR_CODE}\`
+| rejection_reason_display=\`${ROW_REJECTION_REASON}\``);
+
+export const runtimeRejectionScopeDataLink = (serviceRegex: string) =>
+	lokiExploreDataLink(`{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name=~"${serviceRegex}"}
+${runtimeRejectionPipeline}`);
 
 export const browserErrorGroupDataLink = () =>
 	lokiExploreDataLink(`{kind="exception", service_name="${ROW_SERVICE}"}
@@ -687,7 +721,8 @@ const primaryLayout = () => ({
 		items: [
 			layoutItem("panel-1", 0, 0, 24, 6),
 			layoutItem("panel-2", 0, 6, 24, 12),
-			layoutItem("panel-3", 0, 18, 24, 11),
+			layoutItem("panel-6", 0, 18, 24, 9),
+			layoutItem("panel-3", 0, 27, 24, 11),
 		],
 	},
 });
@@ -769,6 +804,36 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				},
 			}),
 			"panel-3": tracedErrorsPanel(),
+			"panel-6": tablePanel({
+				id: 6,
+				title: "API-avvisninger (WARN · topp 50)",
+				description:
+					"Avviste API-kall vises separat fra runtimefeil. Omfatter bare WARN med event_type=api_request_rejected, ikke alle advarsler. Gjentatte avvisninger kan skyldes klientfeil eller feilkonfigurasjon selv om serveren avviser korrekt. Viser logghendelser, ikke brukere eller feilrate. UNSPECIFIED betyr manglende eller ugyldig årsak. Tom tabell beviser ikke komplett telemetry. Se logger bevarer miljø, tjeneste, operasjon, kode, årsak og tidsrom.",
+				refId: "API-avvisninger",
+				expr: runtimeRejectionsQuery,
+				renameByName: {
+					service_name: "Tjeneste",
+					operation_display: "Operasjon",
+					error_code_display: "Kode",
+					rejection_reason_display: "Avvisningsgrunn",
+					action: "Handling",
+				},
+				indexByName: {
+					service_name: 0,
+					operation_display: 1,
+					error_code_display: 2,
+					rejection_reason_display: 3,
+					"Value #API-avvisninger": 4,
+					action: 5,
+				},
+				actionLink: dataLink("Se logger", runtimeRejectionDataLink()),
+				panelLinks: runtimePanelLinks(),
+				widths: {
+					service_name: 220,
+					operation_display: 220,
+					rejection_reason_display: 280,
+				},
+			}),
 			"panel-4": tablePanel({
 				id: 4,
 				title: "Loggmetadata som må forbedres",

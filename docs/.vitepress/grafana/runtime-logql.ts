@@ -14,3 +14,10 @@ export const forwardedBrowserLogFilter = `| x_isFrontend!="true"
 export const runtimeErrorPipeline = `${runtimeNoiseFilter}
 ${runtimeErrorLevelFilter}
 ${forwardedBrowserLogFilter}`;
+
+export const runtimeRejectionPipeline = `${runtimeNoiseFilter}
+| detected_level=~\`(?i)(warn|warning)\`
+${forwardedBrowserLogFilter}
+| json event_type
+| __error__=""
+| event_type="api_request_rejected"`;
