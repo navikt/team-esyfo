@@ -17,6 +17,7 @@ import {
 	runtimeErrorPipeline,
 	runtimeRejectionPipeline,
 } from "./runtime-logql.ts";
+import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
 
 export {
 	DEV_TEMPO_DATASOURCE_UID,
@@ -351,6 +352,22 @@ const runtimePanelLinks = () => [
 	),
 ];
 
+const runtimeServiceLinks = (service: string) => [
+	dataLink(
+		"Alle tjenestelogger",
+		runtimeLogsDataLink(service, RUNTIME_ENVIRONMENT_RAW),
+	),
+	dataLink(
+		"NAIS APM · tjenesten",
+		apmDataLink(service, RUNTIME_ENVIRONMENT_RAW),
+	),
+];
+
+const runtimeInvestigationLinks = (groupUrl: string) => [
+	dataLink("Logger for denne gruppen · Explore", groupUrl),
+	...runtimeServiceLinks(ROW_SERVICE),
+];
+
 const lokiQuery = (
 	refId: string,
 	expr: string,
@@ -487,7 +504,7 @@ const tablePanel = ({
 	expr,
 	renameByName,
 	indexByName,
-	actionLink,
+	actionLinks,
 	panelLinks = [],
 	widths = {},
 }: {
@@ -498,7 +515,7 @@ const tablePanel = ({
 	expr: string;
 	renameByName: Record<string, string>;
 	indexByName: Record<string, number>;
-	actionLink: Record<string, unknown>;
+	actionLinks: Array<Record<string, unknown>>;
 	panelLinks?: Array<Record<string, unknown>>;
 	widths?: Record<string, number>;
 }) => ({
@@ -529,10 +546,12 @@ const tablePanel = ({
 						{
 							matcher: { id: "byName", options: "action" },
 							properties: [
-								{ id: "links", value: [actionLink] },
+								{ id: "links", value: actionLinks },
 								{
 									id: "custom.cellOptions",
-									value: { type: "data-links" },
+									value: {
+										type: actionLinks.length > 1 ? "auto" : "data-links",
+									},
 								},
 								{ id: "custom.width", value: 120 },
 							],
@@ -681,7 +700,10 @@ const tracedErrorsPanel = () => ({
 						},
 						{
 							matcher: { id: "byName", options: "service_name" },
-							properties: [{ id: "custom.width", value: 245 }],
+							properties: [
+								{ id: "custom.width", value: 245 },
+								{ id: "links", value: runtimeServiceLinks(ROW_VALUE) },
+							],
 						},
 						{
 							matcher: { id: "byName", options: "error_code_display" },
@@ -774,7 +796,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				id: 2,
 				title: "Vanligste runtimefeil per nivå (topp 25)",
 				description:
-					"Prioriteringsvisning for valgt miljø og tjeneste, med inntil 25 grupper per error-, critical- og fatal-nivå slik at lavvolums critical/fatal ikke forsvinner bak vanlige error-hendelser. Feiltype, kode og operasjon er kodeeid metadata; rå message vises først i Explore. Handlingen åpner samme gruppe med nivå og scope bevart. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry.",
+					"Prioriteringsvisning for valgt miljø og tjeneste, med inntil 25 grupper per error-, critical- og fatal-nivå slik at lavvolums critical/fatal ikke forsvinner bak vanlige error-hendelser. Undersøk gir valget mellom logger for akkurat denne gruppen, alle tjenestelogger og tjenestens APM. Miljø og tidsrom bevares; bare gruppelenken beholder feiltype, kode, operasjon og nivå. Tom tabell betyr ingen treff, ikke bevist komplett telemetry.",
 				refId: "Runtimefeil etter type",
 				expr: runtimeByClassificationQuery,
 				renameByName: {
@@ -794,7 +816,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					"Value #Runtimefeil etter type": 5,
 					action: 6,
 				},
-				actionLink: dataLink("Se logger", runtimeErrorGroupDataLink()),
+				actionLinks: runtimeInvestigationLinks(runtimeErrorGroupDataLink()),
 				panelLinks: runtimePanelLinks(),
 				widths: {
 					error_level: 95,
@@ -826,7 +848,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					"Value #API-avvisninger": 4,
 					action: 5,
 				},
-				actionLink: dataLink("Se logger", runtimeRejectionDataLink()),
+				actionLinks: runtimeInvestigationLinks(runtimeRejectionDataLink()),
 				panelLinks: runtimePanelLinks(),
 				widths: {
 					service_name: 220,
@@ -852,7 +874,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					"Value #Runtime-kontraktsgap": 2,
 					action: 3,
 				},
-				actionLink: dataLink("Se logger", runtimeContractGapDataLink()),
+				actionLinks: runtimeInvestigationLinks(runtimeContractGapDataLink()),
 				panelLinks: runtimePanelLinks(),
 				widths: { contract_state_display: 170, service_name: 250 },
 			}),
@@ -874,7 +896,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					"Value #Browserfeil": 2,
 					action: 3,
 				},
-				actionLink: dataLink("Se logger", browserErrorGroupDataLink()),
+				actionLinks: [dataLink("Se logger", browserErrorGroupDataLink())],
 				panelLinks: [
 					dataLink(
 						"Browserkontrakt",

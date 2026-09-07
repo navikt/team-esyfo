@@ -58,6 +58,14 @@ Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende tot
 
 ## 4. Velg handling
 
+### Restarts: årsak før tiltak
+
+- **15m** viser nylig aktivitet; **24t** er historikk som også kan inkludere erstattede podder. Prometheus estimerer tellerøkningen, så verdiene er ikke en eksakt hendelseslogg.
+- **OOMKilled:** sammenhold containerens minnebruk og minnegrense. For JVM-apper er heap bare en del av minnet; se også native minne, tråder og buffere. Ikke øk grensen eller anta minnelekkasje uten å undersøke forløpet.
+- **Error:** åpne poddens logger rundt hendelsen. En ikke-null exit-status sier ikke alene om feilen skyldtes oppstart, en dependency, prosesskrasj eller en probe.
+- **Ukjent årsak:** manglende metrikk er ikke bevis på normal deploy. Siste avslutningsårsak på en nåværende pod kan være eldre enn tellevinduet. Historiske podlogger kan også være utilgjengelige.
+- Vanlig pod-utskifting eller skalering er ikke en containerrestart. Klare replikaer kan likevel falle kort under en utrulling; vurder grafen over tid og eventuell brukerimpact sammen.
+
 | Situasjon | Trygg første handling |
 |---|---|
 | Påvist impact og dårlig ready/desired | Finn rollout-/ressursårsak. Stopp videre utrulling ved behov og bruk dokumentert rollback hvis den finnes. |

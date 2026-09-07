@@ -15,7 +15,13 @@ Den primære, åpne delen har én rekkefølge:
 
 Avvisningspanelet omfatter bare `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak vises som `UNSPECIFIED`. **Se logger** bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
 
-Hovedtabellen har en egen handling som åpner samme feilgruppe i Grafana Explore. Miljø, tjeneste, feiltype, kode, operasjon og tidsrom følger med; operatøren starter derfor ikke på nytt i et uavgrenset loggsøk. Trace-tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace.
+I runtime-tabellene åpner **Undersøk** en meny:
+
+- **Logger for denne gruppen · Explore** bevarer miljø, tidsrom og eksakt gruppering. Spørringen er ferdig; du trenger ikke skrive LogQL. Explore beholdes fordi grupperingen også støtter eldre loggformater og utledede felt.
+- **Alle tjenestelogger** åpner den enklere Logs Drilldown-visningen i samme miljø og tidsrom. Denne utvider bevisst fra feilgruppen til tjenesten, slik at du kan lese sammenhengen.
+- **NAIS APM · tjenesten** viser trafikk, feil og tracing for tjenesten. Dette er ikke en lenke til ett bestemt feilforløp.
+
+I trace-tabellen åpner **Åpne trace** det konkrete sporet; tjenestecellen gir menyen til logger og APM. En trace-ID betyr ikke at sporet nødvendigvis er lagret eller fortsatt tilgjengelig. Tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace. Browserdiagnostikk beholdes separat fordi miljø og runtimeidentitet ikke er verifisert der.
 
 Den sammenfoldede raden **Datakvalitet og nettleserfeil** inneholder:
 
