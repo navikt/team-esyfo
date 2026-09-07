@@ -10,10 +10,11 @@ Dashboardet følger levering og bruk av tiltakspakke 1. Det er **produkttelemetr
 | --- | --- | --- |
 | Eksisterende backendtellere | Opprettede planer, deling med fastlege/Nav, bestillings- og avbestillingsoperasjoner, «plan trengs ikke» og fjerning av valget | Ingen segmentering på tiltak/kontroll eller påminnelsesvalg. Tallene gjelder hele valgt miljø, ikke bare piloten. |
 | Ny browsermåling i Dine sykmeldte | Tildelingsgruppe, levert påminnelsesvariant, kort i skjermbildet, bestillings-/avbestillingsforsøk og API-bekreftelse | Ikke alle AID-flater, personer, faktisk utsendte påminnelser eller historisk bruk før instrumenteringen er rullet ut. |
+| Ny browsermåling i oppfølgingsplan-frontend | Tildelingsgruppe, levert skjemavariant, skjemabeholder i skjermbildet og opprettelsesforsøk med bekreftet/feilet resultat | Ikke unike planer/personer, bekreftet varsling, deling med fastlege/Nav eller evalueringspåminnelsens ja/nei-valg. |
 
-Browsermålingen krever utrulling av instrumenteringen i Dine sykmeldte. Tomme paneler før dette er forventet. Også etter utrulling kan blokkering, nettverksfeil eller manglende instrumentering gi tomme paneler. **Ingen måledata er ikke det samme som null bruk.** Ingen syntetiske produktoperasjoner skal utføres i prod for å fylle dashboardet.
+Browsermålingene krever utrulling av instrumenteringen i hver app: [Dine sykmeldte #801](https://github.com/navikt/dinesykmeldte/pull/801) og [oppfølgingsplan-frontend #1039](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1039). Tomme paneler før dette er forventet. Også etter utrulling kan blokkering, nettverksfeil eller manglende instrumentering gi tomme paneler. **Ingen måledata er ikke det samme som null bruk.** Ingen syntetiske produktoperasjoner skal utføres i prod for å fylle dashboardet.
 
-## Hendelser og segmentering
+## Påminnelsen: hendelser og segmentering
 
 Den nye målingen bruker eksisterende NAIS APM/Faro, med hendelsesnavn `aid_paaminnelse`, domene `aid` og `schema_version=1`. Ingen ny telemetritjeneste eller ekstra Flaggskipet-oppslag er lagt til.
 
@@ -37,6 +38,25 @@ Tabellene grupperer på disse feltene og har kolonnefiltre. Gruppe og påminnels
 
 De nye hendelsesfeltene tillater bare de lukkede kategoriene over. Ukjente felter fjernes; ugyldige verdier forkastes. Ingen person-, virksomhets- eller planidentifikator, dato eller fritekst legges til. Eksisterende APM-håndtering av metadata og URL-er beholdes. Lokale identifikatorer brukt til å skille komponentkontekst forlater ikke komponenten gjennom denne målingen.
 
+## Planskjema: hendelser og segmentering
+
+Planseksjonen bruker `aid_oppfolgingsplan` fra `syfo-oppfolgingsplan-frontend`, med domene `aid`, `schema_version=1`, `tiltakspakke=OPPFOLGINGSPLAN_TILTAKSPAKKE_1` og `flate=ny_plan`. Den leser bare lukkede kategorier fra det eksisterende APM-formatet, ikke URL-er, sesjoner eller identifikatorer.
+
+| Felt | Betydning |
+| --- | --- |
+| `gruppe` | `tiltak`, `kontroll`, `utenfor_scope` eller `ukjent`. Én virksomhet per skjema; ingen `blandet`-kategori. |
+| `variant` | `aid` eller `standard`, slik skjemaet faktisk leveres. Tiltak kan få standard når funksjonsbryteren er av. Standard er derfor ikke synonymt med kontroll. |
+| `hendelse` / `utfall` | `beslutning` og `vist` har `tilgjengelig`. `opprett` har `forsok`, `bekreftet` eller `feilet`. |
+
+- **Tildelt gruppe → levert variant:** én beslutning per montering/lederkontekst. Rerender og stegbytte teller ikke som nye beslutninger.
+- **Faktiske visninger:** skjemabeholderen har kommet inn i skjermbildet. Det beviser ikke at hele skjemaet, alle AID-felt eller innholdet er lest.
+- **Planopprettelse:** forsøk og resultat vises separat per gruppe og variant. Ikke summer dem til antall planer. Bekreftet betyr at klienten mottok vellykket svar fra opprettelses-API-et, også når brukeren allerede har navigert bort. Det kan være en ny versjon av en plan, og er ikke bekreftet varsling. Feilet betyr manglende klientbekreftelse; backend kan likevel ha lagret planen. Utkast og ugyldig skjema teller ikke som opprettelsesforsøk.
+- **Trend:** hvert punkt teller bekreftelser siste 24 timer. Det er et rullerende døgn, ikke kalenderdøgn. Gruppe og variant har egne serier; standardskjema har stiplet linje. Ikke summer trendpunktene til periodetotaler.
+
+Bruk kolonnefiltrene for å se for eksempel bare tiltak med standardskjema. De endrer ikke andre paneler. Miljøvalget gjelder alle paneler: browserdata avgrenses på `app_environment=dev-gcp|prod-gcp`, mens backend bruker den valgte miljødatakilden. Tiltakspakke er foreløpig fast pakke 1, ikke en dropdown med uvirksomme valg.
+
+Planskjemaets **evalueringspåminnelse** er ikke instrumentert her. Påminnelsesvalget fra Dine sykmeldte gjelder påminnelsen om å **lage plan** og kan ikke brukes til å segmentere planopprettelser. Målingene har ingen personkobling og skal ikke settes sammen til en konverteringsprosent eller brukes som effektmål.
+
 ## Eksisterende tellere
 
 Prometheus-spørringene bruker `syfo_oppfolgingsplan_backend_<navn>_total`, avgrenset til `app="syfo-oppfolgingsplan-backend"` i valgt miljø:
@@ -56,13 +76,14 @@ Prometheus-spørringene bruker `syfo_oppfolgingsplan_backend_<navn>_total`, avgr
 1. Gjennomgå og rull ut appinstrumenteringen. Bekreft i dev at tiltak, kontroll, utenfor scope, manglende vurdering, bestilling, avbestilling og feil gir de forventede kategoriene.
 2. Publiser [dashboard-JSON](/grafana/team-esyfo-aid.json) til eksisterende UID `aufd2lm` i **Team Esyfo**. Eksporter gjeldende dashboard først for tilbakeføring. Ikke opprett en parallell kopi.
 3. Kontroller spørringene og feltnavnene mot Grafana. Etter apputrulling: bekreft de første reelle hendelsene før tallene brukes til produktbeslutninger. Mangel på trafikk er ikke i seg selv en feil.
+4. For planskjemaet: bekreft `event_data_*`-feltene og `app_environment` i dev, deretter tabeller og trend for de gyldige hendelse/utfall-parene over. Sjekk både dev/prod-filter, ukjent gruppe og tiltak med standardvariant. En tom, vellykket spørring er ikke bevis for hele hendelsesformatet. Dashboardkode og lokal Grafana-import alene verifiserer ikke appens ende-til-ende-levering.
 
-Kilden er `docs/.vitepress/grafana/aid-delivery-usage.ts`. Kjør `pnpm aid-dashboard:export`, `pnpm grafana-dashboard:test` og `pnpm grafana-dashboard:smoke` i `docs/`. Eksportkontrollen inngår i dokumentasjonsbygget.
+Kilden er `docs/.vitepress/grafana/aid-delivery-usage.ts`; planspørringene ligger i `aid-plan-queries.ts` ved siden av. Kjør `pnpm aid-dashboard:export`, `pnpm grafana-dashboard:test` og `pnpm grafana-dashboard:smoke` i `docs/`. Eksportkontrollen inngår i dokumentasjonsbygget.
 
 ## Neste prioriteringer
 
 1. Verifiser første målekjede og datadekning etter utrulling før flere hendelser legges til.
-2. Utvid med faktisk levering og planhandlinger i oppfølgingsplan-frontend: opprettelse, deling med sykmeldt, fastlege og Nav. Bruk eksisterende autoritativ gruppekontekst; manglende kontekst skal ikke fylles inn med gjetting eller ekstra Flaggskipet-kall bare for måling.
+2. Mål evalueringspåminnelsens ja/nei-valg ved innsending og bekreftet lagring. Hold det atskilt fra påminnelsen om å lage plan. Deretter vurderes øvrige AID-elementer og deling med fastlege/Nav, med eksplisitt kilde og måledefinisjon.
 3. Skill påminnelsestyper og følg bestilling til bekreftet utsending når en autoritativ kilde for utsendingsresultat er identifisert. Ikke kall en bestilling «sendt».
 
 Et felles bibliotek eller generell kontrakthåndheving vurderes først dersom flere konkrete målekjeder viser at det gir verdi. Første steg trenger verken datavarehus, personkobling eller nytt rammeverk.

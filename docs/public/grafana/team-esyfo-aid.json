@@ -19,7 +19,7 @@
         "spec": {
           "id": 1,
           "title": "AID · levering og bruk",
-          "description": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.\n\n**To datagrunnlag:** Backendtallene under gjelder hele valgt miljø. Gruppe, faktisk visning og påminnelsesvalg finnes foreløpig bare i den nye Dine sykmeldte-målingen. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard).",
+          "description": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.\n\n**Tre separate målinger:** Påminnelsen i Dine sykmeldte, arbeidsgivers planskjema og backendtall for hele valgt miljø. Gruppe og levert variant finnes i browsermålingene; påminnelsesvalg finnes bare for påminnelsen om å lage plan. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -47,7 +47,7 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.\n\n**To datagrunnlag:** Backendtallene under gjelder hele valgt miljø. Gruppe, faktisk visning og påminnelsesvalg finnes foreløpig bare i den nye Dine sykmeldte-målingen. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard)."
+                "content": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.\n\n**Tre separate målinger:** Påminnelsen i Dine sykmeldte, arbeidsgivers planskjema og backendtall for hele valgt miljø. Gruppe og levert variant finnes i browsermålingene; påminnelsesvalg finnes bare for påminnelsen om å lage plan. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard)."
               }
             }
           }
@@ -445,6 +445,24 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": " · standard$"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.lineStyle",
+                        "value": {
+                          "fill": "dash",
+                          "dash": [
+                            6,
+                            3
+                          ]
+                        }
+                      }
+                    ]
                   }
                 ]
               },
@@ -467,7 +485,7 @@
         "kind": "Panel",
         "spec": {
           "id": 19,
-          "title": "03 · Oppfølgingsplan og valg · hele miljøet",
+          "title": "04 · Oppfølgingsplan og valg · hele miljøet",
           "description": "Disse eksisterende backendtellerne er bevart. De kan **ikke** filtreres på tildelt gruppe eller påminnelsesvalg ennå. Trinnene er ikke én brukertrakt: deling kan gjelde en plan opprettet før valgt tidsrom. Nav-løsningen og LPS må ikke antas å ha samme dekning.",
           "links": [],
           "data": {
@@ -497,6 +515,434 @@
               "options": {
                 "mode": "markdown",
                 "content": "Disse eksisterende backendtellerne er bevart. De kan **ikke** filtreres på tildelt gruppe eller påminnelsesvalg ennå. Trinnene er ikke én brukertrakt: deling kan gjelde en plan opprettet før valgt tidsrom. Nav-løsningen og LPS må ikke antas å ha samme dekning."
+              }
+            }
+          }
+        }
+      },
+      "panel-21": {
+        "kind": "Panel",
+        "spec": {
+          "id": 21,
+          "title": "03 · Planskjema · levering og opprettelse",
+          "description": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr at klienten mottok vellykket svar fra opprettelses-API-et, ikke bekreftet varsling. Evalueringspåminnelsens ja/nei-valg måles ikke her.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr at klienten mottok vellykket svar fra opprettelses-API-et, ikke bekreftet varsling. Evalueringspåminnelsens ja/nei-valg måles ikke her."
+              }
+            }
+          }
+        }
+      },
+      "panel-22": {
+        "kind": "Panel",
+        "spec": {
+          "id": 22,
+          "title": "Planskjema · tildelt gruppe → levert variant",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Én beslutning per montering/lederkontekst, ikke per rerender eller stegbytte.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Planbeslutninger",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"beslutning\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Planbeslutninger"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "renameByName": {
+                        "gruppe": "Tildelt gruppe",
+                        "variant": "Levert variant",
+                        "hendelse": "Hendelse",
+                        "paaminnelsevalg": "Påminnelsesvalg",
+                        "utfall": "Utfall",
+                        "Value": "Hendelser",
+                        "Value #Planbeslutninger": "Hendelser"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "filterable": true
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "footer": {
+                  "show": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-23": {
+        "kind": "Panel",
+        "spec": {
+          "id": 23,
+          "title": "Planskjema · faktiske visninger",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Første viewport-visning av skjemabeholderen. Beviser ikke at innholdet er lest.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Planvisninger",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Planvisninger"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "renameByName": {
+                        "gruppe": "Tildelt gruppe",
+                        "variant": "Levert variant",
+                        "hendelse": "Hendelse",
+                        "paaminnelsevalg": "Påminnelsesvalg",
+                        "utfall": "Utfall",
+                        "Value": "Hendelser",
+                        "Value #Planvisninger": "Hendelser"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "filterable": true
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "footer": {
+                  "show": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-24": {
+        "kind": "Panel",
+        "spec": {
+          "id": 24,
+          "title": "Planopprettelse · forsøk, bekreftet og feilet",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Forsøk og resultat er separate hendelser, ikke tall som skal summeres til antall opprettelser. Bekreftet kan også gjelde en ny versjon av en plan. Feilet betyr manglende klientbekreftelse; planen kan likevel være lagret. Utkast og ugyldig skjema teller ikke som opprettelsesforsøk.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Planopprettelser",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum by (gruppe, variant, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Planopprettelser"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "renameByName": {
+                        "gruppe": "Tildelt gruppe",
+                        "variant": "Levert variant",
+                        "hendelse": "Hendelse",
+                        "paaminnelsevalg": "Påminnelsesvalg",
+                        "utfall": "Utfall",
+                        "Value": "Hendelser",
+                        "Value #Planopprettelser": "Hendelser"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "filterable": true
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "footer": {
+                  "show": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-25": {
+        "kind": "Panel",
+        "spec": {
+          "id": 25,
+          "title": "Bekreftede planopprettelser · rullerende døgn",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Hvert punkt teller hendelser siste 24 timer, ikke kalenderdøgn. Gruppe og variant vises separat. Standardskjema har stiplet linje. Ingen konverteringsprosent eller kausal effekt.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "{{gruppe}} · {{variant}}",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=\"bekreftet\"\n[1d]))",
+                        "editorMode": "code",
+                        "queryType": "range",
+                        "legendFormat": "{{gruppe}} · {{variant}}"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "drawStyle": "line",
+                    "lineWidth": 2,
+                    "fillOpacity": 8,
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "axisLabel": "Hendelser per rullerende døgn"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "^tiltak"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "blue"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "^kontroll"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "orange"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": " · standard$"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.lineStyle",
+                        "value": {
+                          "fill": "dash",
+                          "dash": [
+                            6,
+                            3
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
               }
             }
           }
@@ -639,6 +1085,24 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": " · standard$"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.lineStyle",
+                        "value": {
+                          "fill": "dash",
+                          "dash": [
+                            6,
+                            3
+                          ]
+                        }
+                      }
+                    ]
                   }
                 ]
               },
@@ -768,6 +1232,24 @@
                         "value": {
                           "mode": "fixed",
                           "fixedColor": "orange"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": " · standard$"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.lineStyle",
+                        "value": {
+                          "fill": "dash",
+                          "dash": [
+                            6,
+                            3
+                          ]
                         }
                       }
                     ]
@@ -903,6 +1385,24 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": " · standard$"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.lineStyle",
+                        "value": {
+                          "fill": "dash",
+                          "dash": [
+                            6,
+                            3
+                          ]
+                        }
+                      }
+                    ]
                   }
                 ]
               },
@@ -925,7 +1425,7 @@
         "kind": "Panel",
         "spec": {
           "id": 20,
-          "title": "04 · Leveringsgap og mislykkede handlinger",
+          "title": "05 · Påminnelsen · leveringsgap og mislykkede handlinger",
           "description": "Påminnelsen i Dine sykmeldte, tiltakspakke 1. Browserhendelser, ikke personer eller hele pilotpopulasjonen. Tildelt gruppe vises separat fra levert variant. Ingen treff er ikke dokumentasjon på null bruk. Ukjent tildeling kan skyldes feil, toggle av eller manglende vurdering.",
           "links": [],
           "data": {
@@ -1014,7 +1514,7 @@
         "spec": {
           "id": 13,
           "title": "Definisjoner og neste måletrinn",
-          "description": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Neste:** øvrige AID-flater, planhandlinger med autoritativ gruppekontekst, evalueringspåminnelse og bekreftet utsending. Ingen ekstra Flaggskipet-kall bare for telemetri.\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.",
+          "description": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Neste:** evalueringspåminnelsens valg, øvrige AID-flater og bekreftet utsending fra en autoritativ kilde.\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1042,7 +1542,7 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Neste:** øvrige AID-flater, planhandlinger med autoritativ gruppekontekst, evalueringspåminnelse og bekreftet utsending. Ingen ekstra Flaggskipet-kall bare for telemetri.\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær."
+                "content": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Neste:** evalueringspåminnelsens valg, øvrige AID-flater og bekreftet utsending fra en autoritativ kilde.\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær."
               }
             }
           }
@@ -1640,12 +2140,77 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
+                "name": "panel-21"
+              },
+              "height": 4,
+              "width": 24,
+              "x": 0,
+              "y": 25
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-22"
+              },
+              "height": 8,
+              "width": 12,
+              "x": 0,
+              "y": 29
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-23"
+              },
+              "height": 8,
+              "width": 12,
+              "x": 12,
+              "y": 29
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-24"
+              },
+              "height": 9,
+              "width": 12,
+              "x": 0,
+              "y": 37
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-25"
+              },
+              "height": 9,
+              "width": 12,
+              "x": 12,
+              "y": 37
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
                 "name": "panel-19"
               },
               "height": 3,
               "width": 24,
               "x": 0,
-              "y": 25
+              "y": 46
             }
           },
           {
@@ -1658,7 +2223,7 @@
               "height": 4,
               "width": 6,
               "x": 0,
-              "y": 28
+              "y": 49
             }
           },
           {
@@ -1671,7 +2236,7 @@
               "height": 4,
               "width": 6,
               "x": 6,
-              "y": 28
+              "y": 49
             }
           },
           {
@@ -1684,7 +2249,7 @@
               "height": 4,
               "width": 6,
               "x": 12,
-              "y": 28
+              "y": 49
             }
           },
           {
@@ -1697,7 +2262,7 @@
               "height": 4,
               "width": 6,
               "x": 18,
-              "y": 28
+              "y": 49
             }
           },
           {
@@ -1710,7 +2275,7 @@
               "height": 4,
               "width": 8,
               "x": 0,
-              "y": 32
+              "y": 53
             }
           },
           {
@@ -1723,7 +2288,7 @@
               "height": 4,
               "width": 8,
               "x": 8,
-              "y": 32
+              "y": 53
             }
           },
           {
@@ -1736,7 +2301,7 @@
               "height": 4,
               "width": 8,
               "x": 16,
-              "y": 32
+              "y": 53
             }
           },
           {
@@ -1749,7 +2314,7 @@
               "height": 8,
               "width": 24,
               "x": 0,
-              "y": 36
+              "y": 57
             }
           },
           {
@@ -1762,7 +2327,7 @@
               "height": 7,
               "width": 12,
               "x": 0,
-              "y": 44
+              "y": 65
             }
           },
           {
@@ -1775,7 +2340,7 @@
               "height": 7,
               "width": 12,
               "x": 12,
-              "y": 44
+              "y": 65
             }
           },
           {
@@ -1788,7 +2353,7 @@
               "height": 7,
               "width": 24,
               "x": 0,
-              "y": 51
+              "y": 72
             }
           },
           {
@@ -1798,10 +2363,10 @@
                 "kind": "ElementReference",
                 "name": "panel-13"
               },
-              "height": 7,
+              "height": 8,
               "width": 24,
               "x": 0,
-              "y": 58
+              "y": 79
             }
           }
         ]
