@@ -26,7 +26,7 @@ Første pakke er rettet mot oppfølgingsplanen tidlig i sykefraværet. Den best�
 
 Slik jobber vi:
 
-- **Alt lanseres kontinuerlig**, men er skrudd **av i produksjon** og **på i testmiljø og lokalt**. Da får vi integrert koden gradvis, uten en stor «big bang»-lansering.
+- **Tiltakspakke 1 er satt i produksjon.** Flaggskipet og funksjonsbrytere styrer hvem som får de enkelte endringene. Lansering betyr ikke at alle brukere får tiltakene.
 - **A/B-test mot kontrollgruppe**, randomisert på **underenhet** (arbeidsgiver).
 - **Pilot i Troms og Finnmark.**
 
@@ -74,3 +74,4 @@ Det kommer flere tiltakspakker etter denne — blant annet en tiltakspakke 2 for
 - [Funksjonelle endringer](./endringer) — hva vi bygger i Tiltakspakke 1, og status.
 - [Dulte-tiltak (nudgelab)](./dulte-tiltak) — adferdsgrepene som ligger til grunn.
 - [Måling](./maaling) — eksperimentelt design og effektmål.
+- [Dashboard: levering og bruk](./dashboard) — produkttelemetri i Grafana, datadekning og begrensninger.

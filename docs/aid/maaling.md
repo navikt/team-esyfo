@@ -70,6 +70,8 @@ Krevende å måle, og vi deler det i to spørsmål:
 
 ## Dashboard
 
+For løpende produktoppfølging bruker vi [AID – levering og bruk](./dashboard) i Grafana. Det viser hendelser og eksisterende backendtellere, ikke personer, sykefraværsforløp eller kausal effekt. Det er et annet datagrunnlag enn effektanalysen beskrevet på denne siden.
+
 Målet er at teamet får et **dashboard** (trolig i Metabase) som følger utviklingen løpende. Vi løfter fram de viktigste metrikkene, men gjør det mulig å se de andre også. Da kan teamet se på dataene, stille gode spørsmål, og teste dem videre. En data scientist eier oppbyggingen av dashboardet.
 
 ## Åpne avklaringer
