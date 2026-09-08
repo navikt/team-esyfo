@@ -2,6 +2,8 @@
 
 Målet er å forstå om tiltakspakken fører til flere og tidligere planhandlinger, bedre oppfølging og mindre behov for at Nav etterspør en plan. Dagens [Grafana-dashboard](./dashboard) svarer på levering og bruk. Det svarer ikke på effekt: browserhendelser er verken en komplett populasjon eller unike oppfølginger.
 
+[Kildekartleggingen fra 8. september 2026](./datakilder) viser eksisterende analysevei, gjenbrukbare tabeller og konkrete hull i beregninger og historikk. Den erstatter ikke avklaringene under, men gjør neste leveranse mer presis.
+
 **Direkte analyse av sykefraværslengde er ikke tillatt i dette arbeidet.** Vi innfører ikke analyse av tid til friskmelding, retur til arbeid eller sykefraværsgrad. Tidsfrister for planhandlinger krever en særskilt avklart, godkjent tidsreferanse; de gir ikke i seg selv tillatelse til å samle helseopplysninger eller koble data.
 
 ## Spørsmålene dashboardet skal hjelpe oss med

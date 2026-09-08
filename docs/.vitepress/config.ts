@@ -88,6 +88,7 @@ export default withMermaid(
 						{ text: "Måling", link: "/aid/maaling" },
 						{ text: "Dashboard: levering og bruk", link: "/aid/dashboard" },
 						{ text: "Resultatmåling: datakrav", link: "/aid/resultatmaaling" },
+						{ text: "Datakilder og gjenbruk", link: "/aid/datakilder" },
 					],
 				},
 				{
