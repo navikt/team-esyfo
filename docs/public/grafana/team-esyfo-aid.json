@@ -19,7 +19,7 @@
         "spec": {
           "id": 1,
           "title": "AID · levering og bruk",
-          "description": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.\n\n**Tre separate målinger:** Påminnelsen i Dine sykmeldte, arbeidsgivers planskjema og backendtall for hele valgt miljø. Gruppe og levert variant finnes i browsermålingene; påminnelsesvalg finnes bare for påminnelsen om å lage plan. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard).",
+          "description": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Direkte analyse av sykefraværets lengde eller grad er utenfor omfanget.\n\n**Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.\n\n**Det vi kan følge nå:** levering, bruk og API-resultat, som separate hendelsesmålinger — ikke en persontrakt. De to påminnelsestypene holdes atskilt. Browserpaneler uten data er **ikke** null bruk. [Definisjoner, utrullingsavhengigheter og neste måletrinn](https://navikt.github.io/team-esyfo/aid/dashboard).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -47,7 +47,7 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.\n\n**Tre separate målinger:** Påminnelsen i Dine sykmeldte, arbeidsgivers planskjema og backendtall for hele valgt miljø. Gruppe og levert variant finnes i browsermålingene; påminnelsesvalg finnes bare for påminnelsen om å lage plan. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard)."
+                "content": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Direkte analyse av sykefraværets lengde eller grad er utenfor omfanget.\n\n**Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.\n\n**Det vi kan følge nå:** levering, bruk og API-resultat, som separate hendelsesmålinger — ikke en persontrakt. De to påminnelsestypene holdes atskilt. Browserpaneler uten data er **ikke** null bruk. [Definisjoner, utrullingsavhengigheter og neste måletrinn](https://navikt.github.io/team-esyfo/aid/dashboard)."
               }
             }
           }
@@ -57,7 +57,7 @@
         "kind": "Panel",
         "spec": {
           "id": 14,
-          "title": "01 · Levering av påminnelsen · Dine sykmeldte",
+          "title": "01 · Kommer tilbudet om å lage plan fram? · Dine sykmeldte",
           "description": "**Tildeling ≠ visning.** Beslutninger teller én avklart vurdering per åpning/kontekst. «Vist» krever at kortet kommer inn i skjermbildet. Kontroll og utenfor scope får ikke tilbudet; manglende vurdering er ukjent, aldri kontroll.\n\nMålingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke alle arbeidsgivere, øvrige AID-elementer eller tidligere besøk.",
           "links": [],
           "data": {
@@ -140,6 +140,7 @@
                         "variant": "Levert variant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
                         "utfall": "Utfall",
                         "Value": "Hendelser",
                         "Value #Beslutninger": "Hendelser"
@@ -167,7 +168,38 @@
                     "filterable": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "showHeader": true,
@@ -228,6 +260,7 @@
                         "variant": "Levert variant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
                         "utfall": "Utfall",
                         "Value": "Hendelser",
                         "Value #Visninger": "Hendelser"
@@ -255,7 +288,38 @@
                     "filterable": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "showHeader": true,
@@ -272,7 +336,7 @@
         "kind": "Panel",
         "spec": {
           "id": 17,
-          "title": "02 · Bestilling og avbestilling · forsøk og bekreftelse",
+          "title": "02 · Bestiller brukerne påminnelse om å lage plan?",
           "description": "Påminnelsen i Dine sykmeldte, tiltakspakke 1. Browserhendelser, ikke personer eller hele pilotpopulasjonen. Tildelt gruppe vises separat fra levert variant. Ingen treff er ikke dokumentasjon på null bruk. Ukjent tildeling kan skyldes feil, toggle av eller manglende vurdering. Valget er status FØR handlingen. Bekreftet betyr gyldig svar med forventet status; det betyr ikke at påminnelsen er sendt. Ingen automatisk retry.",
           "links": [],
           "data": {
@@ -316,6 +380,7 @@
                         "variant": "Levert variant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
                         "utfall": "Utfall",
                         "Value": "Hendelser",
                         "Value #Handlinger": "Hendelser"
@@ -343,7 +408,38 @@
                     "filterable": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "showHeader": true,
@@ -569,8 +665,8 @@
         "kind": "Panel",
         "spec": {
           "id": 21,
-          "title": "03 · Planskjema · levering og opprettelse",
-          "description": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr at klienten mottok vellykket svar fra opprettelses-API-et, ikke bekreftet varsling. Evalueringspåminnelsens ja/nei-valg måles ikke her.",
+          "title": "03 · Leveres planskjemaet, og blir opprettelsen bekreftet?",
+          "description": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.\n\n**Evalueringspåminnelse:** bare aid-skjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -598,7 +694,7 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr at klienten mottok vellykket svar fra opprettelses-API-et, ikke bekreftet varsling. Evalueringspåminnelsens ja/nei-valg måles ikke her."
+                "content": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.\n\n**Evalueringspåminnelse:** bare aid-skjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei."
               }
             }
           }
@@ -628,7 +724,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"beslutning\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"beslutning\" | utfall=\"tilgjengelig\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Planbeslutninger"
@@ -652,6 +748,7 @@
                         "variant": "Levert variant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
                         "utfall": "Utfall",
                         "Value": "Hendelser",
                         "Value #Planbeslutninger": "Hendelser"
@@ -679,7 +776,38 @@
                     "filterable": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "showHeader": true,
@@ -716,7 +844,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Planvisninger"
@@ -740,6 +868,7 @@
                         "variant": "Levert variant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
                         "utfall": "Utfall",
                         "Value": "Hendelser",
                         "Value #Planvisninger": "Hendelser"
@@ -767,7 +896,38 @@
                     "filterable": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "showHeader": true,
@@ -804,7 +964,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, variant, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Planopprettelser"
@@ -828,6 +988,7 @@
                         "variant": "Levert variant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
                         "utfall": "Utfall",
                         "Value": "Hendelser",
                         "Value #Planopprettelser": "Hendelser"
@@ -855,7 +1016,38 @@
                     "filterable": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "showHeader": true,
@@ -892,7 +1084,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=\"bekreftet\"\n[1d]))",
+                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=\"bekreftet\"\n[1d]))",
                         "editorMode": "code",
                         "queryType": "range",
                         "legendFormat": "{{gruppe}} · {{variant}}"
@@ -1032,6 +1224,126 @@
                 "tooltip": {
                   "mode": "multi",
                   "sort": "desc"
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-26": {
+        "kind": "Panel",
+        "spec": {
+          "id": 26,
+          "title": "Evalueringspåminnelse · innsendt verdi per skjemavariant",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Gjelder evaluering av en plan, ikke påminnelsen om å lage plan. Bare aid-varianten tilbyr ja/nei-valget; nei i standard er ikke et aktivt avslag. Bruk kolonnefilteret Levert variant=aid for å se innsendte valg i tilbudt skjema. Forsøk og resultat må ikke summeres. Bekreftet gjelder opprettelses-API-et, ikke utsendt påminnelse eller utført evaluering. Ikke registrert er eldre/manglende felt, aldri nei. Krever utrulling av frontend #1041; ugyldig verdi er et kontraktsavvik.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Evalueringspåminnelse",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum by (gruppe, variant, evaluering_paaminnelse, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n| label_format evaluering_paaminnelse=`{{ if eq .event_data_evaluering_paaminnelse \"ja\" }}ja{{ else if eq .event_data_evaluering_paaminnelse \"nei\" }}nei{{ else if eq .event_data_evaluering_paaminnelse \"\" }}ikke_registrert{{ else }}ugyldig{{ end }}`\n| keep gruppe, variant, evaluering_paaminnelse, utfall\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Evalueringspåminnelse"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "renameByName": {
+                        "gruppe": "Tildelt gruppe",
+                        "variant": "Levert variant",
+                        "hendelse": "Hendelse",
+                        "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
+                        "utfall": "Utfall",
+                        "Value": "Hendelser",
+                        "Value #Evalueringspåminnelse": "Hendelser"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "filterable": true
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "footer": {
+                  "show": false
                 }
               }
             }
@@ -1694,6 +2006,7 @@
                         "variant": "Levert variant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
                         "utfall": "Utfall",
                         "Value": "Hendelser",
                         "Value #Gap og feil": "Hendelser"
@@ -1721,7 +2034,38 @@
                     "filterable": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "showHeader": true,
@@ -1739,7 +2083,7 @@
         "spec": {
           "id": 13,
           "title": "Definisjoner og neste måletrinn",
-          "description": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Neste:** evalueringspåminnelsens valg, øvrige AID-flater og bekreftet utsending fra en autoritativ kilde.\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.",
+          "description": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.\n- **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1767,7 +2111,7 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Neste:** evalueringspåminnelsens valg, øvrige AID-flater og bekreftet utsending fra en autoritativ kilde.\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær."
+                "content": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.\n- **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær."
               }
             }
           }
@@ -2289,7 +2633,7 @@
                 "kind": "ElementReference",
                 "name": "panel-1"
               },
-              "height": 4,
+              "height": 6,
               "width": 24,
               "x": 0,
               "y": 0
@@ -2305,7 +2649,7 @@
               "height": 4,
               "width": 24,
               "x": 0,
-              "y": 4
+              "y": 6
             }
           },
           {
@@ -2318,7 +2662,7 @@
               "height": 8,
               "width": 12,
               "x": 0,
-              "y": 8
+              "y": 10
             }
           },
           {
@@ -2331,7 +2675,7 @@
               "height": 8,
               "width": 12,
               "x": 12,
-              "y": 8
+              "y": 10
             }
           },
           {
@@ -2344,7 +2688,7 @@
               "height": 9,
               "width": 12,
               "x": 0,
-              "y": 16
+              "y": 18
             }
           },
           {
@@ -2357,7 +2701,7 @@
               "height": 9,
               "width": 12,
               "x": 12,
-              "y": 16
+              "y": 18
             }
           },
           {
@@ -2370,7 +2714,7 @@
               "height": 4,
               "width": 24,
               "x": 0,
-              "y": 25
+              "y": 27
             }
           },
           {
@@ -2383,7 +2727,7 @@
               "height": 8,
               "width": 12,
               "x": 0,
-              "y": 29
+              "y": 31
             }
           },
           {
@@ -2396,7 +2740,7 @@
               "height": 8,
               "width": 12,
               "x": 12,
-              "y": 29
+              "y": 31
             }
           },
           {
@@ -2409,7 +2753,7 @@
               "height": 9,
               "width": 12,
               "x": 0,
-              "y": 37
+              "y": 39
             }
           },
           {
@@ -2422,7 +2766,20 @@
               "height": 9,
               "width": 12,
               "x": 12,
-              "y": 37
+              "y": 39
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-26"
+              },
+              "height": 9,
+              "width": 24,
+              "x": 0,
+              "y": 48
             }
           },
           {
@@ -2435,7 +2792,7 @@
               "height": 3,
               "width": 24,
               "x": 0,
-              "y": 46
+              "y": 57
             }
           },
           {
@@ -2448,7 +2805,7 @@
               "height": 4,
               "width": 6,
               "x": 0,
-              "y": 49
+              "y": 60
             }
           },
           {
@@ -2461,7 +2818,7 @@
               "height": 4,
               "width": 6,
               "x": 6,
-              "y": 49
+              "y": 60
             }
           },
           {
@@ -2474,7 +2831,7 @@
               "height": 4,
               "width": 6,
               "x": 12,
-              "y": 49
+              "y": 60
             }
           },
           {
@@ -2487,7 +2844,7 @@
               "height": 4,
               "width": 6,
               "x": 18,
-              "y": 49
+              "y": 60
             }
           },
           {
@@ -2500,7 +2857,7 @@
               "height": 4,
               "width": 8,
               "x": 0,
-              "y": 53
+              "y": 64
             }
           },
           {
@@ -2513,7 +2870,7 @@
               "height": 4,
               "width": 8,
               "x": 8,
-              "y": 53
+              "y": 64
             }
           },
           {
@@ -2526,7 +2883,7 @@
               "height": 4,
               "width": 8,
               "x": 16,
-              "y": 53
+              "y": 64
             }
           },
           {
@@ -2539,7 +2896,7 @@
               "height": 8,
               "width": 24,
               "x": 0,
-              "y": 57
+              "y": 68
             }
           },
           {
@@ -2552,7 +2909,7 @@
               "height": 7,
               "width": 12,
               "x": 0,
-              "y": 65
+              "y": 76
             }
           },
           {
@@ -2565,7 +2922,7 @@
               "height": 7,
               "width": 12,
               "x": 12,
-              "y": 65
+              "y": 76
             }
           },
           {
@@ -2578,7 +2935,7 @@
               "height": 7,
               "width": 24,
               "x": 0,
-              "y": 72
+              "y": 83
             }
           },
           {
@@ -2588,10 +2945,10 @@
                 "kind": "ElementReference",
                 "name": "panel-13"
               },
-              "height": 8,
+              "height": 9,
               "width": 24,
               "x": 0,
-              "y": 79
+              "y": 90
             }
           }
         ]

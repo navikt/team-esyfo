@@ -26,6 +26,7 @@
 		"control-room:export": "node scripts/control-room.ts export",
 		"aid-dashboard:check": "node scripts/aid-dashboard.ts check",
 		"aid-dashboard:export": "node scripts/aid-dashboard.ts export",
+		"aid-dashboard:query-smoke": "node scripts/aid-plan-query-smoke.ts",
 		"grafana-dashboard:smoke": "node scripts/grafana-dashboard-smoke.ts",
 		"preview": "vitepress preview"
 	},

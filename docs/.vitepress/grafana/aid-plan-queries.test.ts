@@ -5,6 +5,7 @@ import {
 	aidPlanConfirmedTrendQuery,
 	aidPlanCreationsQuery,
 	aidPlanDecisionsQuery,
+	aidPlanEvaluationQuery,
 	aidPlanEventPipeline,
 	aidPlanViewsQuery,
 } from "./aid-plan-queries.ts";
@@ -15,6 +16,49 @@ const queries = [
 	aidPlanCreationsQuery,
 	aidPlanConfirmedTrendQuery,
 ];
+
+test("evaluation choice is additive, creation-only and does not turn missing data into no", () => {
+	assert.match(
+		aidPlanEvaluationQuery,
+		/^sum by \(gruppe, variant, evaluering_paaminnelse, utfall\)/,
+	);
+	assert.ok(
+		aidPlanEvaluationQuery.includes(
+			'| hendelse="opprett" | utfall=~"forsok|bekreftet|feilet"',
+		),
+	);
+	assert.ok(
+		aidPlanEvaluationQuery.includes(
+			'else if eq .event_data_evaluering_paaminnelse "" }}ikke_registrert',
+		),
+	);
+	assert.ok(aidPlanEvaluationQuery.includes("{{ else }}ugyldig{{ end }}"));
+	assert.match(
+		aidPlanEvaluationQuery,
+		/\| keep gruppe, variant, evaluering_paaminnelse, utfall/,
+	);
+	assert.doesNotMatch(
+		aidPlanEvaluationQuery,
+		/vector\(0\)|session_id|page_url|orgnummer/,
+	);
+	for (const query of queries) {
+		assert.doesNotMatch(query, /\| event_data_evaluering_paaminnelse[=!]\S/);
+		assert.match(query, /\| keep gruppe, variant, hendelse, utfall\n/);
+	}
+	const dashboard = buildAidDashboard();
+	const elements = dashboard.spec.elements as Record<string, unknown>;
+	const serialized = JSON.stringify(elements["panel-26"]);
+	assert.ok(
+		serialized.includes(JSON.stringify(aidPlanEvaluationQuery).slice(1, -1)),
+	);
+	for (const label of [
+		"Ikke registrert",
+		"Ugyldig verdi",
+		"Levert variant",
+		"Evalueringspåminnelse",
+	])
+		assert.ok(serialized.includes(label), label);
+});
 
 test("Grafana matchers preserve group colors and distinguish standard series", () => {
 	const panels = buildAidDashboard().spec.elements as Record<

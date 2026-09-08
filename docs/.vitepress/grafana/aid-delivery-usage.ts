@@ -2,6 +2,7 @@ import {
 	aidPlanConfirmedTrendQuery,
 	aidPlanCreationsQuery,
 	aidPlanDecisionsQuery,
+	aidPlanEvaluationQuery,
 	aidPlanViewsQuery,
 } from "./aid-plan-queries.ts";
 import {
@@ -122,6 +123,26 @@ const groupColors = [
 	["blandet", "yellow"],
 ] as const;
 
+const evaluationChoiceOverride = {
+	matcher: { id: "byName", options: "Evalueringspåminnelse" },
+	properties: [
+		{
+			id: "mappings",
+			value: [
+				{
+					type: "value",
+					options: {
+						ja: { text: "Ja" },
+						nei: { text: "Nei" },
+						ikke_registrert: { text: "Ikke registrert" },
+						ugyldig: { text: "Ugyldig verdi" },
+					},
+				},
+			],
+		},
+	],
+};
+
 const panel = (
 	id: number,
 	title: string,
@@ -155,6 +176,7 @@ const panel = (
 												variant: "Levert variant",
 												hendelse: "Hendelse",
 												paaminnelsevalg: "Påminnelsesvalg",
+												evaluering_paaminnelse: "Evalueringspåminnelse",
 												utfall: "Utfall",
 												Value: "Hendelser",
 												[`Value #${queries[0]?.spec.refId}`]: "Hendelser",
@@ -213,7 +235,9 @@ const panel = (
 										],
 									},
 								]
-							: [],
+							: type === "table"
+								? [evaluationChoiceOverride]
+								: [],
 				},
 				options:
 					type === "text"
@@ -263,13 +287,15 @@ export const buildAidDashboard = (): GrafanaDashboardResource => {
 		"panel-1": textPanel(
 			1,
 			"AID · levering og bruk",
-			`**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Ingen måling av sykefraværets lengde eller grad.
+			`**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Direkte analyse av sykefraværets lengde eller grad er utenfor omfanget.
 
-**Tre separate målinger:** Påminnelsen i Dine sykmeldte, arbeidsgivers planskjema og backendtall for hele valgt miljø. Gruppe og levert variant finnes i browsermålingene; påminnelsesvalg finnes bare for påminnelsen om å lage plan. Browserpaneler uten data er **ikke** null bruk. [Definisjoner og dekning](https://navikt.github.io/team-esyfo/aid/dashboard).`,
+**Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.
+
+**Det vi kan følge nå:** levering, bruk og API-resultat, som separate hendelsesmålinger — ikke en persontrakt. De to påminnelsestypene holdes atskilt. Browserpaneler uten data er **ikke** null bruk. [Definisjoner, utrullingsavhengigheter og neste måletrinn](https://navikt.github.io/team-esyfo/aid/dashboard).`,
 		),
 		"panel-14": textPanel(
 			14,
-			"01 · Levering av påminnelsen · Dine sykmeldte",
+			"01 · Kommer tilbudet om å lage plan fram? · Dine sykmeldte",
 			`**Tildeling ≠ visning.** Beslutninger teller én avklart vurdering per åpning/kontekst. «Vist» krever at kortet kommer inn i skjermbildet. Kontroll og utenfor scope får ikke tilbudet; manglende vurdering er ukjent, aldri kontroll.
 
 Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke alle arbeidsgivere, øvrige AID-elementer eller tidligere besøk.`,
@@ -290,7 +316,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-17": panel(
 			17,
-			"02 · Bestilling og avbestilling · forsøk og bekreftelse",
+			"02 · Bestiller brukerne påminnelse om å lage plan?",
 			`${browserDescription} Valget er status FØR handlingen. Bekreftet betyr gyldig svar med forventet status; det betyr ikke at påminnelsen er sendt. Ingen automatisk retry.`,
 			[query(aidActionsQuery, "loki", "Handlinger")],
 			"table",
@@ -316,10 +342,12 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-21": textPanel(
 			21,
-			"03 · Planskjema · levering og opprettelse",
+			"03 · Leveres planskjemaet, og blir opprettelsen bekreftet?",
 			`**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.
 
-«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr at klienten mottok vellykket svar fra opprettelses-API-et, ikke bekreftet varsling. Evalueringspåminnelsens ja/nei-valg måles ikke her.`,
+«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.
+
+**Evalueringspåminnelse:** bare aid-skjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei.`,
 		),
 		"panel-22": panel(
 			22,
@@ -355,6 +383,13 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 				),
 			],
 			"timeseries",
+		),
+		"panel-26": panel(
+			26,
+			"Evalueringspåminnelse · innsendt verdi per skjemavariant",
+			`${planDescription} Gjelder evaluering av en plan, ikke påminnelsen om å lage plan. Bare aid-varianten tilbyr ja/nei-valget; nei i standard er ikke et aktivt avslag. Bruk kolonnefilteret Levert variant=aid for å se innsendte valg i tilbudt skjema. Forsøk og resultat må ikke summeres. Bekreftet gjelder opprettelses-API-et, ikke utsendt påminnelse eller utført evaluering. Ikke registrert er eldre/manglende felt, aldri nei. Krever utrulling av frontend #1041; ugyldig verdi er et kontraktsavvik.`,
+			[query(aidPlanEvaluationQuery, "loki", "Evalueringspåminnelse")],
+			"table",
 		),
 		"panel-6": panel(
 			6,
@@ -402,7 +437,8 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 			`- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.
 - **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.
 - **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.
-- **Neste:** evalueringspåminnelsens valg, øvrige AID-flater og bekreftet utsending fra en autoritativ kilde.
+- **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.
+- **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).
 - **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).
 - Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.`,
 		),
@@ -436,30 +472,31 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 				kind: "GridLayout",
 				spec: {
 					items: [
-						layoutItem("panel-1", 0, 0, 24, 4),
-						layoutItem("panel-14", 0, 4, 24, 4),
-						layoutItem("panel-15", 0, 8, 12, 8),
-						layoutItem("panel-16", 12, 8, 12, 8),
-						layoutItem("panel-17", 0, 16, 12, 9),
-						layoutItem("panel-18", 12, 16, 12, 9),
-						layoutItem("panel-21", 0, 25, 24, 4),
-						layoutItem("panel-22", 0, 29, 12, 8),
-						layoutItem("panel-23", 12, 29, 12, 8),
-						layoutItem("panel-24", 0, 37, 12, 9),
-						layoutItem("panel-25", 12, 37, 12, 9),
-						layoutItem("panel-19", 0, 46, 24, 3),
-						layoutItem("panel-2", 0, 49, 6, 4),
-						layoutItem("panel-3", 6, 49, 6, 4),
-						layoutItem("panel-4", 12, 49, 6, 4),
-						layoutItem("panel-5", 18, 49, 6, 4),
-						layoutItem("panel-8", 0, 53, 8, 4),
-						layoutItem("panel-9", 8, 53, 8, 4),
-						layoutItem("panel-10", 16, 53, 8, 4),
-						layoutItem("panel-6", 0, 57, 24, 8),
-						layoutItem("panel-11", 0, 65, 12, 7),
-						layoutItem("panel-12", 12, 65, 12, 7),
-						layoutItem("panel-20", 0, 72, 24, 7),
-						layoutItem("panel-13", 0, 79, 24, 8),
+						layoutItem("panel-1", 0, 0, 24, 6),
+						layoutItem("panel-14", 0, 6, 24, 4),
+						layoutItem("panel-15", 0, 10, 12, 8),
+						layoutItem("panel-16", 12, 10, 12, 8),
+						layoutItem("panel-17", 0, 18, 12, 9),
+						layoutItem("panel-18", 12, 18, 12, 9),
+						layoutItem("panel-21", 0, 27, 24, 4),
+						layoutItem("panel-22", 0, 31, 12, 8),
+						layoutItem("panel-23", 12, 31, 12, 8),
+						layoutItem("panel-24", 0, 39, 12, 9),
+						layoutItem("panel-25", 12, 39, 12, 9),
+						layoutItem("panel-26", 0, 48, 24, 9),
+						layoutItem("panel-19", 0, 57, 24, 3),
+						layoutItem("panel-2", 0, 60, 6, 4),
+						layoutItem("panel-3", 6, 60, 6, 4),
+						layoutItem("panel-4", 12, 60, 6, 4),
+						layoutItem("panel-5", 18, 60, 6, 4),
+						layoutItem("panel-8", 0, 64, 8, 4),
+						layoutItem("panel-9", 8, 64, 8, 4),
+						layoutItem("panel-10", 16, 64, 8, 4),
+						layoutItem("panel-6", 0, 68, 24, 8),
+						layoutItem("panel-11", 0, 76, 12, 7),
+						layoutItem("panel-12", 12, 76, 12, 7),
+						layoutItem("panel-20", 0, 83, 24, 7),
+						layoutItem("panel-13", 0, 90, 24, 9),
 					],
 				},
 			},

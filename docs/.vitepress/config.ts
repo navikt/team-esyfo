@@ -87,6 +87,7 @@ export default withMermaid(
 						{ text: "Dulte-tiltak (nudgelab)", link: "/aid/dulte-tiltak" },
 						{ text: "Måling", link: "/aid/maaling" },
 						{ text: "Dashboard: levering og bruk", link: "/aid/dashboard" },
+						{ text: "Resultatmåling: datakrav", link: "/aid/resultatmaaling" },
 					],
 				},
 				{
