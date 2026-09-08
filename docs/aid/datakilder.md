@@ -31,7 +31,11 @@ Dette er kodeverifisering, ikke en kontroll av produksjonsdata, deployede revisj
 
 I planbackend er migreringen for alle tabeller og framtidige tabellprivilegier nylig utvidet i [#467](https://github.com/navikt/syfo-oppfolgingsplan-backend/pull/467). Flaggskipet og Budstikka har tilsvarende SQL for rollen `esyfo-analyse`; LPS har en eksisterende grant-migrering. Dette dokumenterer **tilsiktet teknisk tilgang**, ikke at migreringene er kjørt eller at ethvert nytt formål, felt, uttrekk eller dashboardpublikum er godkjent. Ingen credentials eller databaseforbindelser er brukt i kartleggingen. [Planbackend][grant-plan] · [Flaggskipet][grant-flagg] · [Budstikka][grant-bud] · [LPS][grant-lps]
 
-Anbefalingen er å utvide den eksisterende analyseveien med et avklart aggregat, ikke å koble Grafana direkte til rå operasjonelle tabeller. Gjenbruk forbindelsene, men velg nødvendige felt eksplisitt; eksisterende `SELECT *`, innhold, mottakeridentiteter og feilmeldinger er ikke en eksportkontrakt for boardet.
+Disse forbindelsene er del av det eksisterende analysearbeidet, ikke en
+forutsetning for det uavhengige Grafana-sporet. Grafana kobles ikke direkte til rå
+operasjonelle tabeller. Eksisterende `SELECT *`, innhold, mottakeridentiteter og
+feilmeldinger er ikke en eksportkontrakt for boardet; en eventuell senere
+resultatberegning må levere eksplisitt avklarte aggregater.
 
 ## Konkrete ting som må rettes eller avklares før resultatvisning
 
