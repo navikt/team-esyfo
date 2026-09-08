@@ -16,6 +16,28 @@ Browsermålingene krever utrulling av instrumenteringen i hver app: [Dine sykmel
 
 Boardet starter med resultatspørsmålet «får flere en plan, og skjer planhandlingene tidligere?», men viser ingen effektprosent før et godkjent kohortgrunnlag er på plass. Se [definisjoner og datakrav for resultatmåling](./resultatmaaling). Direkte analyse av sykefraværslengde er utenfor omfanget og ikke en senere dashboardleveranse.
 
+## Serverbekreftede planer
+
+En egen tabell er klargjort for `event_type=aid_plan_opprettet` fra serverdelen
+av plan-frontend ([#1042](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1042), stablet på #1041/#1039). Den viser vellykkede opprettelseskall per tildelt gruppe, levert
+skjemavariant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene, for eksempel
+`Tildelt gruppe=tiltak` og `Levert variant=aid`, for å se tilbudt ja/nei-valg.
+Standardvariantens `nei` er ikke et aktivt avslag.
+
+Målingen gjenbruker vurderingen som leverte skjemaet, og skrives når serveren
+mottar backendens bekreftelse. Den krever ikke nettleserens APM, nye eksterne
+oppslag eller `isyfo-analyse`. Runtime-loggenes cluster `dev`/`prod` kobles til
+dashboardets eksisterende miljøvalg `dev-gcp`/`prod-gcp`; namespace og tjeneste
+avgrenses eksplisitt. Videresendte nettleserlogger utelukkes.
+
+**Ikke summer server- og nettleserbekreftelser.** Begge kan observere samme
+opprettelse, og forskjellen er ikke en eksakt feilrate. Nye versjoner teller også;
+dette er verken første planer, unike personer eller utførte evalueringer.
+Serveren kan ha lagret en plan selv om API-svar eller loggleveranse mistes.
+Tabellen er tom frem til serverinstrumenteringen er rullet ut og ekte hendelser
+er kommet inn. Ingen historikk tilbakefylles og ingen direkte
+sykmeldingslengdeanalyse gjøres.
+
 ## Påminnelsen: hendelser og segmentering
 
 Den nye målingen bruker eksisterende NAIS APM/Faro, med hendelsesnavn `aid_paaminnelse`, domene `aid` og `schema_version=1`. Ingen ny telemetritjeneste eller ekstra Flaggskipet-oppslag er lagt til.

@@ -5,6 +5,7 @@ import {
 	aidPlanEvaluationQuery,
 	aidPlanViewsQuery,
 } from "./aid-plan-queries.ts";
+import { aidServerPlanCreationsQuery } from "./aid-server-plan-queries.ts";
 import {
 	GRAFANA_VERSION,
 	type GrafanaDashboardResource,
@@ -337,7 +338,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-19": textPanel(
 			19,
-			"04 · Oppfølgingsplan og valg · hele miljøet",
+			"05 · Oppfølgingsplan og valg · hele miljøet",
 			`Disse eksisterende backendtellerne er bevart. De kan **ikke** filtreres på tildelt gruppe eller påminnelsesvalg ennå. Trinnene er ikke én brukertrakt: deling kan gjelde en plan opprettet før valgt tidsrom. Nav-løsningen og LPS må ikke antas å ha samme dekning.`,
 		),
 		"panel-21": textPanel(
@@ -365,14 +366,14 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-24": panel(
 			24,
-			"Planopprettelse · forsøk, bekreftet og feilet",
+			"Nettleser · opprettelsesforsøk og resultat",
 			`${planDescription} Forsøk og resultat er separate hendelser, ikke tall som skal summeres til antall opprettelser. Bekreftet kan også gjelde en ny versjon av en plan. Feilet betyr manglende klientbekreftelse; planen kan likevel være lagret. Utkast og ugyldig skjema teller ikke som opprettelsesforsøk.`,
 			[query(aidPlanCreationsQuery, "loki", "Planopprettelser")],
 			"table",
 		),
 		"panel-25": panel(
 			25,
-			"Bekreftede planopprettelser · rullerende døgn",
+			"Nettleserbekreftelser · rullerende døgn",
 			`${planDescription} Hvert punkt teller hendelser siste 24 timer, ikke kalenderdøgn. Gruppe og variant vises separat. Standardskjema har stiplet linje. Ingen konverteringsprosent eller kausal effekt.`,
 			[
 				query(
@@ -426,9 +427,25 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-20": panel(
 			20,
-			"05 · Påminnelsen · leveringsgap og mislykkede handlinger",
+			"06 · Påminnelsen · leveringsgap og mislykkede handlinger",
 			browserDescription,
 			[query(aidFailuresQuery, "loki", "Gap og feil")],
+			"table",
+		),
+		"panel-27": textPanel(
+			27,
+			"04 · Hva bekrefter serveren?",
+			`**Bekreftede opprettelser gjennom planskjemaet**, fordelt på tildelt gruppe, levert variant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene i tabellen.
+
+Måles når serverdelen mottar backendens bekreftelse, uavhengig av nettleserens APM. Samme vurdering som leverte skjemaet brukes ved lagring.
+
+**Ikke summer med nettleserpanelene.** Nye planversjoner teller også. Standard/nei er ikke et aktivt avslag. Ingen data før appendringen er rullet ut; dette er ikke en fullstendig databasetelling eller effektanalyse.`,
+		),
+		"panel-28": panel(
+			28,
+			"Serverbekreftede planer · gruppe og evalueringspåminnelse",
+			"Serverlogg fra plan-frontend etter vellykket opprettelses-API. Kan måles selv om nettleseren forsvinner før svaret. Mistet API-svar eller logg kan gi undertelling. Ikke unike personer, første planer, varsler eller utførte evalueringer. Gjelder evalueringspåminnelse, ikke 4-ukerspåminnelse. Ukjent er aldri kontroll. Bare aid-varianten tilbyr ja/nei-valget. Data samles først fra utrulling; ingen historisk tilbakefylling.",
+			[query(aidServerPlanCreationsQuery, "loki", "Serverbekreftelser")],
 			"table",
 		),
 		"panel-13": textPanel(
@@ -436,7 +453,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 			"Definisjoner og neste måletrinn",
 			`- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.
 - **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.
-- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.
+- **Planopprettelse:** nettleser- og serverbekreftelser er to separate observasjoner av API-resultat, ikke bekreftet utsending. Ikke summer kildene eller forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.
 - **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.
 - **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).
 - **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).
@@ -484,19 +501,21 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 						layoutItem("panel-24", 0, 39, 12, 9),
 						layoutItem("panel-25", 12, 39, 12, 9),
 						layoutItem("panel-26", 0, 48, 24, 9),
-						layoutItem("panel-19", 0, 57, 24, 3),
-						layoutItem("panel-2", 0, 60, 6, 4),
-						layoutItem("panel-3", 6, 60, 6, 4),
-						layoutItem("panel-4", 12, 60, 6, 4),
-						layoutItem("panel-5", 18, 60, 6, 4),
-						layoutItem("panel-8", 0, 64, 8, 4),
-						layoutItem("panel-9", 8, 64, 8, 4),
-						layoutItem("panel-10", 16, 64, 8, 4),
-						layoutItem("panel-6", 0, 68, 24, 8),
-						layoutItem("panel-11", 0, 76, 12, 7),
-						layoutItem("panel-12", 12, 76, 12, 7),
-						layoutItem("panel-20", 0, 83, 24, 7),
-						layoutItem("panel-13", 0, 90, 24, 9),
+						layoutItem("panel-27", 0, 57, 10, 10),
+						layoutItem("panel-28", 10, 57, 14, 10),
+						layoutItem("panel-19", 0, 67, 24, 3),
+						layoutItem("panel-2", 0, 70, 6, 4),
+						layoutItem("panel-3", 6, 70, 6, 4),
+						layoutItem("panel-4", 12, 70, 6, 4),
+						layoutItem("panel-5", 18, 70, 6, 4),
+						layoutItem("panel-8", 0, 74, 8, 4),
+						layoutItem("panel-9", 8, 74, 8, 4),
+						layoutItem("panel-10", 16, 74, 8, 4),
+						layoutItem("panel-6", 0, 78, 24, 8),
+						layoutItem("panel-11", 0, 86, 12, 7),
+						layoutItem("panel-12", 12, 86, 12, 7),
+						layoutItem("panel-20", 0, 93, 24, 7),
+						layoutItem("panel-13", 0, 100, 24, 9),
 					],
 				},
 			},

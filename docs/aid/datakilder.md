@@ -76,12 +76,20 @@ Nav-mottakstid er ikke leverandørens opprettelsestid. Dessuten returnerer dagen
 
 ## Anbefalt neste leveranse og minste avklaringer
 
-**Start med kilde- og beregningsretting i eksisterende analysearbeid, ikke flere browserhendelser.** Før en PR som endrer analyseuttak/koblinger må analyseansvarlig bekrefte hvilke endringer som er innenfor dagens godkjente formål. Kartleggingen gir dette konkrete grunnlaget:
+**Grafana-sporet bygges uavhengig av `isyfo-analyse`.** Første leveranse er
+serverbekreftede planopprettelser med den eksisterende skjemavurderingen, som
+avgrensede kategorier i serverlogg. Se [serverbekreftede planer](./dashboard#serverbekreftede-planer).
+Dette krever ikke retting av analysejobber, nye databaseprivilegier eller
+personkobling i Grafana. Funnene om eksisterende analysearbeid over er
+kildekartlegging, ikke avhengigheter eller en bestilling om å endre det.
 
-1. **Analyseansvarlig:** bekreft siste vellykkede AID-/planjobb, hvilke SQL-uttrekk som brukes, og om de nye tabellprivilegiene er deployet. Kontroller skjema/tilgang uten å eksportere personrader hit. Dette er drift/verifikasjon, ikke en ny analyse.
+For en senere visning som faktisk sammenligner planresultater må vi fortsatt
+avklare følgende, uansett hvem som implementerer beregningen:
+
+1. **Kildeansvarlig:** bekreft hvilke operasjonelle handlinger og kilder den nye målingen skal dekke. Eksisterende analysejobber eller SQL-uttrekk skal ikke være en forutsetning for Grafana-sporet.
 2. **Produkt- og analyseansvarlig:** velg analyseenhet og første planhandling, virksomhetssikker kobling, nevner og pilotstart. En komplett nevner må ta med relevante oppfølginger uten plan/besøk, og være eksplisitt om virksomheter uten lagret tildeling.
 3. **Analyse-/personvernansvarlig:** avklar lovlig tidsreferanse, tillatte felt/segmenter, småtallsregler, lagringstid og hvem som kan se aggregatene. Eksisterende SQL eller teknisk SELECT-tilgang er ikke dokumentasjon på denne godkjenningen. Ingen direkte lengdeanalyse skal innføres.
-4. **Kildeansvarlige:** avstem påminnelseshistorikk, etterregistrert deling og LPS-bekreftelse. Hvis et godkjent historisk uttrekk allerede finnes, gjenbruk det; ellers dokumenter gapet før ny innsamling foreslås.
+4. **Kildeansvarlige:** avstem påminnelseshistorikk, etterregistrert deling og LPS-bekreftelse før disse brukes i resultatmåling. Ikke rekonstruer manglende historikk eller anta at nåstatus er historisk valg.
 5. **Dashboardansvarlig:** koble én godkjent aggregert resultatvisning til Grafana, med datadato, dekning, teller/nevner og metode. Inntil da fortsetter [levering og bruk](./dashboard) som separat produkttelemetri.
 
 Ingen endringer i apper, analysekode, privilegier, retensjon eller produksjonsdata er gjort som del av denne kartleggingen. `syfooppfolgingsplanservice` behandles som avviklet, ikke som en ny produksjonskilde; eldre uttrekk derfra er historiske og må ikke blandes inn som nåværende AID-dekning.

@@ -626,7 +626,7 @@
         "kind": "Panel",
         "spec": {
           "id": 19,
-          "title": "04 · Oppfølgingsplan og valg · hele miljøet",
+          "title": "05 · Oppfølgingsplan og valg · hele miljøet",
           "description": "Disse eksisterende backendtellerne er bevart. De kan **ikke** filtreres på tildelt gruppe eller påminnelsesvalg ennå. Trinnene er ikke én brukertrakt: deling kan gjelde en plan opprettet før valgt tidsrom. Nav-løsningen og LPS må ikke antas å ha samme dekning.",
           "links": [],
           "data": {
@@ -944,7 +944,7 @@
         "kind": "Panel",
         "spec": {
           "id": 24,
-          "title": "Planopprettelse · forsøk, bekreftet og feilet",
+          "title": "Nettleser · opprettelsesforsøk og resultat",
           "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Forsøk og resultat er separate hendelser, ikke tall som skal summeres til antall opprettelser. Bekreftet kan også gjelde en ny versjon av en plan. Feilet betyr manglende klientbekreftelse; planen kan likevel være lagret. Utkast og ugyldig skjema teller ikke som opprettelsesforsøk.",
           "links": [],
           "data": {
@@ -1064,7 +1064,7 @@
         "kind": "Panel",
         "spec": {
           "id": 25,
-          "title": "Bekreftede planopprettelser · rullerende døgn",
+          "title": "Nettleserbekreftelser · rullerende døgn",
           "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Hvert punkt teller hendelser siste 24 timer, ikke kalenderdøgn. Gruppe og variant vises separat. Standardskjema har stiplet linje. Ingen konverteringsprosent eller kausal effekt.",
           "links": [],
           "data": {
@@ -1962,7 +1962,7 @@
         "kind": "Panel",
         "spec": {
           "id": 20,
-          "title": "05 · Påminnelsen · leveringsgap og mislykkede handlinger",
+          "title": "06 · Påminnelsen · leveringsgap og mislykkede handlinger",
           "description": "Påminnelsen i Dine sykmeldte, tiltakspakke 1. Browserhendelser, ikke personer eller hele pilotpopulasjonen. Tildelt gruppe vises separat fra levert variant. Ingen treff er ikke dokumentasjon på null bruk. Ukjent tildeling kan skyldes feil, toggle av eller manglende vurdering.",
           "links": [],
           "data": {
@@ -2078,12 +2078,12 @@
           }
         }
       },
-      "panel-13": {
+      "panel-27": {
         "kind": "Panel",
         "spec": {
-          "id": 13,
-          "title": "Definisjoner og neste måletrinn",
-          "description": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.\n- **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.",
+          "id": 27,
+          "title": "04 · Hva bekrefter serveren?",
+          "description": "**Bekreftede opprettelser gjennom planskjemaet**, fordelt på tildelt gruppe, levert variant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene i tabellen.\n\nMåles når serverdelen mottar backendens bekreftelse, uavhengig av nettleserens APM. Samme vurdering som leverte skjemaet brukes ved lagring.\n\n**Ikke summer med nettleserpanelene.** Nye planversjoner teller også. Standard/nei er ikke et aktivt avslag. Ingen data før appendringen er rullet ut; dette er ikke en fullstendig databasetelling eller effektanalyse.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2111,7 +2111,166 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** klientbekreftet API-resultat, ikke bekreftet utsending. Ikke summer forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.\n- **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær."
+                "content": "**Bekreftede opprettelser gjennom planskjemaet**, fordelt på tildelt gruppe, levert variant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene i tabellen.\n\nMåles når serverdelen mottar backendens bekreftelse, uavhengig av nettleserens APM. Samme vurdering som leverte skjemaet brukes ved lagring.\n\n**Ikke summer med nettleserpanelene.** Nye planversjoner teller også. Standard/nei er ikke et aktivt avslag. Ingen data før appendringen er rullet ut; dette er ikke en fullstendig databasetelling eller effektanalyse."
+              }
+            }
+          }
+        }
+      },
+      "panel-28": {
+        "kind": "Panel",
+        "spec": {
+          "id": 28,
+          "title": "Serverbekreftede planer · gruppe og evalueringspåminnelse",
+          "description": "Serverlogg fra plan-frontend etter vellykket opprettelses-API. Kan måles selv om nettleseren forsvinner før svaret. Mistet API-svar eller logg kan gi undertelling. Ikke unike personer, første planer, varsler eller utførte evalueringer. Gjelder evalueringspåminnelse, ikke 4-ukerspåminnelse. Ukjent er aldri kontroll. Bare aid-varianten tilbyr ja/nei-valget. Data samles først fra utrulling; ingen historisk tilbakefylling.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Serverbekreftelser",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum by (gruppe, variant, evaluering_paaminnelse) (count_over_time(\n{service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"${env:text}\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| aid_variant=~\"aid|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, variant=aid_variant, evaluering_paaminnelse=aid_reminder\n| keep gruppe, variant, evaluering_paaminnelse\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Serverbekreftelser"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "renameByName": {
+                        "gruppe": "Tildelt gruppe",
+                        "variant": "Levert variant",
+                        "hendelse": "Hendelse",
+                        "paaminnelsevalg": "Påminnelsesvalg",
+                        "evaluering_paaminnelse": "Evalueringspåminnelse",
+                        "utfall": "Utfall",
+                        "Value": "Hendelser",
+                        "Value #Serverbekreftelser": "Hendelser"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "filterable": true
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Evalueringspåminnelse"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "ja": {
+                                "text": "Ja"
+                              },
+                              "nei": {
+                                "text": "Nei"
+                              },
+                              "ikke_registrert": {
+                                "text": "Ikke registrert"
+                              },
+                              "ugyldig": {
+                                "text": "Ugyldig verdi"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "footer": {
+                  "show": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-13": {
+        "kind": "Panel",
+        "spec": {
+          "id": 13,
+          "title": "Definisjoner og neste måletrinn",
+          "description": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** nettleser- og serverbekreftelser er to separate observasjoner av API-resultat, ikke bekreftet utsending. Ikke summer kildene eller forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.\n- **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen måledata",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "- **Påminnelsesvalg:** bestilt / ikke bestilt / ikke tilbudt / ukjent. Ikke tilbudt er ikke et nei. Status ved handling er ikke historikken til en person.\n- **Ingen konverteringsprosent:** visninger og handlinger er hendelser uten personkobling. Flere besøk, nettleserblokkering og operasjoner fra andre flater gjør at tallene ikke er én kohort.\n- **Planopprettelse:** nettleser- og serverbekreftelser er to separate observasjoner av API-resultat, ikke bekreftet utsending. Ikke summer kildene eller forsøk og resultat. Evalueringspåminnelsens ja/nei-valg er ikke påminnelsesvalget over.\n- **Evalueringspåminnelse:** innsendt ja/nei vises separat fra påminnelsen om å lage plan. «Ikke registrert» er ikke nei. Standardskjemaets nei er ikke et aktivt avslag.\n- **Neste:** verifiser apputrulling og datadekning, identifiser autoritativ utsendingsstatus og avklar godkjente aggregater for planhandlinger. [Måledefinisjoner og avklaringer](https://navikt.github.io/team-esyfo/aid/resultatmaaling).\n- **Teknisk feilsøking:** [NAIS APM](https://grafana.nav.cloud.nais.io/a/nais-apm-app/services) · [Feiloversikt](https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt).\n- Sammenligningene beskriver produktbruk, ikke isolert effekt av påminnelse eller effekt på sykefravær."
               }
             }
           }
@@ -2787,12 +2946,38 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
+                "name": "panel-27"
+              },
+              "height": 10,
+              "width": 10,
+              "x": 0,
+              "y": 57
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-28"
+              },
+              "height": 10,
+              "width": 14,
+              "x": 10,
+              "y": 57
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
                 "name": "panel-19"
               },
               "height": 3,
               "width": 24,
               "x": 0,
-              "y": 57
+              "y": 67
             }
           },
           {
@@ -2805,7 +2990,7 @@
               "height": 4,
               "width": 6,
               "x": 0,
-              "y": 60
+              "y": 70
             }
           },
           {
@@ -2818,7 +3003,7 @@
               "height": 4,
               "width": 6,
               "x": 6,
-              "y": 60
+              "y": 70
             }
           },
           {
@@ -2831,7 +3016,7 @@
               "height": 4,
               "width": 6,
               "x": 12,
-              "y": 60
+              "y": 70
             }
           },
           {
@@ -2844,7 +3029,7 @@
               "height": 4,
               "width": 6,
               "x": 18,
-              "y": 60
+              "y": 70
             }
           },
           {
@@ -2857,7 +3042,7 @@
               "height": 4,
               "width": 8,
               "x": 0,
-              "y": 64
+              "y": 74
             }
           },
           {
@@ -2870,7 +3055,7 @@
               "height": 4,
               "width": 8,
               "x": 8,
-              "y": 64
+              "y": 74
             }
           },
           {
@@ -2883,7 +3068,7 @@
               "height": 4,
               "width": 8,
               "x": 16,
-              "y": 64
+              "y": 74
             }
           },
           {
@@ -2896,7 +3081,7 @@
               "height": 8,
               "width": 24,
               "x": 0,
-              "y": 68
+              "y": 78
             }
           },
           {
@@ -2909,7 +3094,7 @@
               "height": 7,
               "width": 12,
               "x": 0,
-              "y": 76
+              "y": 86
             }
           },
           {
@@ -2922,7 +3107,7 @@
               "height": 7,
               "width": 12,
               "x": 12,
-              "y": 76
+              "y": 86
             }
           },
           {
@@ -2935,7 +3120,7 @@
               "height": 7,
               "width": 24,
               "x": 0,
-              "y": 83
+              "y": 93
             }
           },
           {
@@ -2948,7 +3133,7 @@
               "height": 9,
               "width": 24,
               "x": 0,
-              "y": 90
+              "y": 100
             }
           }
         ]

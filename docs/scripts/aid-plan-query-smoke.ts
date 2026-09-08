@@ -10,6 +10,7 @@ import {
 	aidPlanEvaluationQuery,
 	aidPlanViewsQuery,
 } from "../.vitepress/grafana/aid-plan-queries.ts";
+import { aidServerPlanCreationsQuery } from "../.vitepress/grafana/aid-server-plan-queries.ts";
 
 const exec = promisify(execFile);
 const container = `aid-plan-query-check-${process.pid}-${randomBytes(4).toString("hex")}`;
@@ -55,6 +56,55 @@ const fixtures: Record<string, string>[] = [
 ];
 
 type Series = { metric: Record<string, string>; value: [number, string] };
+const serverLabels = {
+	service_namespace: "team-esyfo",
+	service_name: "syfo-oppfolgingsplan-frontend",
+	k8s_cluster_name: "dev",
+};
+const serverEvent = {
+	event_type: "aid_plan_opprettet",
+	schema_version: "1",
+	tiltakspakke: "OPPFOLGINGSPLAN_TILTAKSPAKKE_1",
+	gruppe: "tiltak",
+	variant: "aid",
+	evaluering_paaminnelse: "ja",
+};
+const serverFixtures: {
+	labels?: Record<string, string>;
+	fields?: Record<string, unknown>;
+}[] = [
+	{},
+	{},
+	{ fields: { evaluering_paaminnelse: "nei" } },
+	{ fields: { variant: "standard", evaluering_paaminnelse: "nei" } },
+	{
+		fields: {
+			gruppe: "kontroll",
+			variant: "standard",
+			evaluering_paaminnelse: "nei",
+		},
+	},
+	{
+		fields: {
+			gruppe: "ukjent",
+			variant: "standard",
+			evaluering_paaminnelse: "nei",
+		},
+	},
+	{ labels: { k8s_cluster_name: "prod" } },
+	{ labels: { k8s_cluster_name: "other" } },
+	{ labels: { service_namespace: "other" } },
+	{ labels: { service_name: "other" } },
+	{ labels: { x_isFrontend: "true" } },
+	{ fields: { x_isFrontend: true } },
+	{ fields: { event_type: "other" } },
+	{ fields: { schema_version: "2" } },
+	{ fields: { tiltakspakke: "other" } },
+	{ fields: { gruppe: "other" } },
+	{ fields: { variant: "other" } },
+	{ fields: { evaluering_paaminnelse: "other" } },
+	{ fields: { evaluering_paaminnelse: null } },
+];
 const total = (rows: Series[]) =>
 	rows.reduce((sum, row) => sum + Number(row.value[1]), 0);
 let started = false;
@@ -115,6 +165,15 @@ try {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			streams: [
+				...serverFixtures.map(({ labels, fields }, index) => ({
+					stream: { ...serverLabels, ...labels },
+					values: [
+						[
+							String(BigInt(now - 1000) * 1000000n + BigInt(index)),
+							JSON.stringify({ ...serverEvent, ...fields }),
+						],
+					],
+				})),
 				{
 					stream: {
 						service_name: "syfo-oppfolgingsplan-frontend",
@@ -188,8 +247,34 @@ try {
 	assert.equal(total(await count(aidPlanViewsQuery)), 1);
 	assert.equal(total(await count(aidPlanEvaluationQuery, "prod-gcp")), 1);
 	assert.deepEqual(await count(aidPlanEvaluationQuery, "no-events"), []);
+	const serverRows = await count(aidServerPlanCreationsQuery);
+	assert.deepEqual(
+		serverRows
+			.map(({ metric, value }) => [
+				metric.gruppe,
+				metric.variant,
+				metric.evaluering_paaminnelse,
+				Number(value[1]),
+			])
+			.sort(),
+		[
+			["tiltak", "aid", "ja", 2],
+			["tiltak", "aid", "nei", 1],
+			["tiltak", "standard", "nei", 1],
+			["kontroll", "standard", "nei", 1],
+			["ukjent", "standard", "nei", 1],
+		].sort(),
+	);
+	assert.equal(total(await count(aidServerPlanCreationsQuery, "prod-gcp")), 1);
+	assert.deepEqual(await count(aidServerPlanCreationsQuery, "no-events"), []);
+	for (const row of serverRows)
+		assert.deepEqual(Object.keys(row.metric).sort(), [
+			"evaluering_paaminnelse",
+			"gruppe",
+			"variant",
+		]);
 	console.log(
-		"Loki 3.6.0: five plan queries return exact expected counts; legacy events, closed choice categories and producer/environment isolation verified.",
+		"Loki 3.6.0: browser and server plan queries return exact expected counts; legacy events, closed categories, forwarded-browser exclusion and producer/environment isolation verified.",
 	);
 } finally {
 	if (started) await exec("docker", ["rm", "--force", container]);
