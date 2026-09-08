@@ -28,7 +28,17 @@ const base = {
 	event_data_utfall: "bekreftet",
 };
 // Synthetic fixtures only. Missing/invalid choice still counts as a creation.
-const fixtures: Record<string, string>[] = [
+const fixtures: Record<string, string | undefined>[] = [
+	{
+		event_data_skjemavariant: "tiltak",
+		event_data_variant: undefined,
+		event_data_evaluering_paaminnelse: "ja",
+	},
+	{
+		event_data_skjemavariant: "standard",
+		event_data_evaluering_paaminnelse: "nei",
+	},
+	{ event_data_skjemavariant: "invalid" },
 	{},
 	{ event_data_evaluering_paaminnelse: "ja" },
 	{ event_data_evaluering_paaminnelse: "nei" },
@@ -73,6 +83,9 @@ const serverFixtures: {
 	labels?: Record<string, string>;
 	fields?: Record<string, unknown>;
 }[] = [
+	{ fields: { skjemavariant: "tiltak", variant: undefined } },
+	{ fields: { skjemavariant: "standard", evaluering_paaminnelse: "nei" } },
+	{ fields: { skjemavariant: "invalid" } },
 	{},
 	{},
 	{ fields: { evaluering_paaminnelse: "nei" } },
@@ -157,6 +170,7 @@ try {
 	const values = fixtures.map((fixture, index) => [
 		String(BigInt(now - 1000) * 1000000n + BigInt(index)),
 		Object.entries({ ...base, ...fixture })
+			.filter(([, value]) => value !== undefined)
 			.map(([key, value]) => `${key}=${JSON.stringify(value)}`)
 			.join(" "),
 	]);
@@ -217,20 +231,20 @@ try {
 		choices
 			.map(({ metric, value }) => [
 				metric.gruppe,
-				metric.variant,
+				metric.skjemavariant,
 				metric.evaluering_paaminnelse,
 				metric.utfall,
 				Number(value[1]),
 			])
 			.sort(),
 		[
-			["tiltak", "aid", "ikke_registrert", "bekreftet", 1],
-			["tiltak", "aid", "ja", "bekreftet", 1],
-			["tiltak", "aid", "nei", "bekreftet", 1],
-			["tiltak", "aid", "ugyldig", "bekreftet", 1],
-			["tiltak", "aid", "ja", "forsok", 1],
-			["tiltak", "aid", "nei", "feilet", 1],
-			["tiltak", "standard", "nei", "bekreftet", 1],
+			["tiltak", "tiltak", "ikke_registrert", "bekreftet", 1],
+			["tiltak", "tiltak", "ja", "bekreftet", 2],
+			["tiltak", "tiltak", "nei", "bekreftet", 1],
+			["tiltak", "tiltak", "ugyldig", "bekreftet", 1],
+			["tiltak", "tiltak", "ja", "forsok", 1],
+			["tiltak", "tiltak", "nei", "feilet", 1],
+			["tiltak", "standard", "nei", "bekreftet", 2],
 			["tiltak", "standard", "ja", "bekreftet", 1],
 			["kontroll", "standard", "ikke_registrert", "bekreftet", 1],
 			["ukjent", "standard", "ikke_registrert", "bekreftet", 1],
@@ -240,9 +254,9 @@ try {
 		JSON.stringify(choices),
 		/untrusted-fixture-value|event_data_|service_name/,
 	);
-	assert.equal(total(await count(aidPlanCreationsQuery)), 10);
+	assert.equal(total(await count(aidPlanCreationsQuery)), 12);
 	assert.equal(total(choices), total(await count(aidPlanCreationsQuery)));
-	assert.equal(total(await count(aidPlanConfirmedTrendQuery)), 8);
+	assert.equal(total(await count(aidPlanConfirmedTrendQuery)), 10);
 	assert.equal(total(await count(aidPlanDecisionsQuery)), 1);
 	assert.equal(total(await count(aidPlanViewsQuery)), 1);
 	assert.equal(total(await count(aidPlanEvaluationQuery, "prod-gcp")), 1);
@@ -252,15 +266,15 @@ try {
 		serverRows
 			.map(({ metric, value }) => [
 				metric.gruppe,
-				metric.variant,
+				metric.skjemavariant,
 				metric.evaluering_paaminnelse,
 				Number(value[1]),
 			])
 			.sort(),
 		[
-			["tiltak", "aid", "ja", 2],
-			["tiltak", "aid", "nei", 1],
-			["tiltak", "standard", "nei", 1],
+			["tiltak", "tiltak", "ja", 3],
+			["tiltak", "tiltak", "nei", 1],
+			["tiltak", "standard", "nei", 2],
 			["kontroll", "standard", "nei", 1],
 			["ukjent", "standard", "nei", 1],
 		].sort(),
@@ -271,7 +285,7 @@ try {
 		assert.deepEqual(Object.keys(row.metric).sort(), [
 			"evaluering_paaminnelse",
 			"gruppe",
-			"variant",
+			"skjemavariant",
 		]);
 	console.log(
 		"Loki 3.6.0: browser and server plan queries return exact expected counts; legacy events, closed categories, forwarded-browser exclusion and producer/environment isolation verified.",

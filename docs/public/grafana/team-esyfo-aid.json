@@ -138,6 +138,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -258,6 +259,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -378,6 +380,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -666,7 +669,7 @@
         "spec": {
           "id": 21,
           "title": "03 · Leveres planskjemaet, og blir opprettelsen bekreftet?",
-          "description": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.\n\n**Evalueringspåminnelse:** bare aid-skjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei.",
+          "description": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.\n\n**Evalueringspåminnelse:** bare tiltaksskjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -694,7 +697,7 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.\n\n**Evalueringspåminnelse:** bare aid-skjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei."
+                "content": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.\n\n**Evalueringspåminnelse:** bare tiltaksskjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei."
               }
             }
           }
@@ -704,8 +707,8 @@
         "kind": "Panel",
         "spec": {
           "id": 22,
-          "title": "Planskjema · tildelt gruppe → levert variant",
-          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Én beslutning per montering/lederkontekst, ikke per rerender eller stegbytte.",
+          "title": "Planskjema · tildelt gruppe → levert skjemavariant",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; tiltak/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Én beslutning per montering/lederkontekst, ikke per rerender eller stegbytte.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -724,7 +727,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"beslutning\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| hendelse=\"beslutning\" | utfall=\"tilgjengelig\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Planbeslutninger"
@@ -746,6 +749,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -825,7 +829,7 @@
         "spec": {
           "id": 23,
           "title": "Planskjema · faktiske visninger",
-          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Første viewport-visning av skjemabeholderen. Beviser ikke at innholdet er lest.",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; tiltak/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Første viewport-visning av skjemabeholderen. Beviser ikke at innholdet er lest.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -844,7 +848,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Planvisninger"
@@ -866,6 +870,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -945,7 +950,7 @@
         "spec": {
           "id": 24,
           "title": "Nettleser · opprettelsesforsøk og resultat",
-          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Forsøk og resultat er separate hendelser, ikke tall som skal summeres til antall opprettelser. Bekreftet kan også gjelde en ny versjon av en plan. Feilet betyr manglende klientbekreftelse; planen kan likevel være lagret. Utkast og ugyldig skjema teller ikke som opprettelsesforsøk.",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; tiltak/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Forsøk og resultat er separate hendelser, ikke tall som skal summeres til antall opprettelser. Bekreftet kan også gjelde en ny versjon av en plan. Feilet betyr manglende klientbekreftelse; planen kan likevel være lagret. Utkast og ugyldig skjema teller ikke som opprettelsesforsøk.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -964,7 +969,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Planopprettelser"
@@ -986,6 +991,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -1065,7 +1071,7 @@
         "spec": {
           "id": 25,
           "title": "Nettleserbekreftelser · rullerende døgn",
-          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Hvert punkt teller hendelser siste 24 timer, ikke kalenderdøgn. Gruppe og variant vises separat. Standardskjema har stiplet linje. Ingen konverteringsprosent eller kausal effekt.",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; tiltak/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Hvert punkt teller hendelser siste 24 timer, ikke kalenderdøgn. Gruppe og variant vises separat. Standardskjema har stiplet linje. Ingen konverteringsprosent eller kausal effekt.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1074,7 +1080,7 @@
                 {
                   "kind": "PanelQuery",
                   "spec": {
-                    "refId": "{{gruppe}} · {{variant}}",
+                    "refId": "{{gruppe}} · {{skjemavariant}}",
                     "hidden": false,
                     "query": {
                       "kind": "DataQuery",
@@ -1084,10 +1090,10 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=\"bekreftet\"\n[1d]))",
+                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| hendelse=\"opprett\" | utfall=\"bekreftet\"\n[1d]))",
                         "editorMode": "code",
                         "queryType": "range",
-                        "legendFormat": "{{gruppe}} · {{variant}}"
+                        "legendFormat": "{{gruppe}} · {{skjemavariant}}"
                       }
                     }
                   }
@@ -1235,7 +1241,7 @@
         "spec": {
           "id": 26,
           "title": "Evalueringspåminnelse · innsendt verdi per skjemavariant",
-          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Gjelder evaluering av en plan, ikke påminnelsen om å lage plan. Bare aid-varianten tilbyr ja/nei-valget; nei i standard er ikke et aktivt avslag. Bruk kolonnefilteret Levert variant=aid for å se innsendte valg i tilbudt skjema. Forsøk og resultat må ikke summeres. Bekreftet gjelder opprettelses-API-et, ikke utsendt påminnelse eller utført evaluering. Ikke registrert er eldre/manglende felt, aldri nei. Krever utrulling av frontend #1041; ugyldig verdi er et kontraktsavvik.",
+          "description": "Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; tiltak/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk. Gjelder evaluering av en plan, ikke påminnelsen om å lage plan. Bare tiltaksvarianten tilbyr ja/nei-valget; nei i standard er ikke et aktivt avslag. Bruk kolonnefilteret Levert skjemavariant=tiltak for å se innsendte valg i tilbudt skjema. Forsøk og resultat må ikke summeres. Bekreftet gjelder opprettelses-API-et, ikke utsendt påminnelse eller utført evaluering. Ikke registrert er eldre/manglende felt, aldri nei. Krever utrulling av frontend #1041; ugyldig verdi er et kontraktsavvik.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1254,7 +1260,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant, evaluering_paaminnelse, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| event_data_variant=~\"aid|standard\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, utfall=event_data_utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n| label_format evaluering_paaminnelse=`{{ if eq .event_data_evaluering_paaminnelse \"ja\" }}ja{{ else if eq .event_data_evaluering_paaminnelse \"nei\" }}nei{{ else if eq .event_data_evaluering_paaminnelse \"\" }}ikke_registrert{{ else }}ugyldig{{ end }}`\n| keep gruppe, variant, evaluering_paaminnelse, utfall\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant, evaluering_paaminnelse, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${env:text}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n| label_format evaluering_paaminnelse=`{{ if eq .event_data_evaluering_paaminnelse \"ja\" }}ja{{ else if eq .event_data_evaluering_paaminnelse \"nei\" }}nei{{ else if eq .event_data_evaluering_paaminnelse \"\" }}ikke_registrert{{ else }}ugyldig{{ end }}`\n| keep gruppe, skjemavariant, evaluering_paaminnelse, utfall\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Evalueringspåminnelse"
@@ -1276,6 +1282,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -2004,6 +2011,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",
@@ -2122,7 +2130,7 @@
         "spec": {
           "id": 28,
           "title": "Serverbekreftede planer · gruppe og evalueringspåminnelse",
-          "description": "Serverlogg fra plan-frontend etter vellykket opprettelses-API. Kan måles selv om nettleseren forsvinner før svaret. Mistet API-svar eller logg kan gi undertelling. Ikke unike personer, første planer, varsler eller utførte evalueringer. Gjelder evalueringspåminnelse, ikke 4-ukerspåminnelse. Ukjent er aldri kontroll. Bare aid-varianten tilbyr ja/nei-valget. Data samles først fra utrulling; ingen historisk tilbakefylling.",
+          "description": "Serverlogg fra plan-frontend etter vellykket opprettelses-API. Kan måles selv om nettleseren forsvinner før svaret. Mistet API-svar eller logg kan gi undertelling. Ikke unike personer, første planer, varsler eller utførte evalueringer. Gjelder evalueringspåminnelse, ikke 4-ukerspåminnelse. Ukjent er aldri kontroll. Bare tiltaksvarianten tilbyr ja/nei-valget. Data samles først fra utrulling; ingen historisk tilbakefylling.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2141,7 +2149,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant, evaluering_paaminnelse) (count_over_time(\n{service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"${env:text}\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| aid_variant=~\"aid|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, variant=aid_variant, evaluering_paaminnelse=aid_reminder\n| keep gruppe, variant, evaluering_paaminnelse\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant, evaluering_paaminnelse) (count_over_time(\n{service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"${env:text}\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Serverbekreftelser"
@@ -2163,6 +2171,7 @@
                       "renameByName": {
                         "gruppe": "Tildelt gruppe",
                         "variant": "Levert variant",
+                        "skjemavariant": "Levert skjemavariant",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Påminnelsesvalg",
                         "evaluering_paaminnelse": "Evalueringspåminnelse",

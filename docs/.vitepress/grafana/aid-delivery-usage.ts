@@ -175,6 +175,7 @@ const panel = (
 											renameByName: {
 												gruppe: "Tildelt gruppe",
 												variant: "Levert variant",
+												skjemavariant: "Levert skjemavariant",
 												hendelse: "Hendelse",
 												paaminnelsevalg: "Påminnelsesvalg",
 												evaluering_paaminnelse: "Evalueringspåminnelse",
@@ -281,7 +282,7 @@ const backendDescription =
 const browserDescription =
 	"Påminnelsen i Dine sykmeldte, tiltakspakke 1. Browserhendelser, ikke personer eller hele pilotpopulasjonen. Tildelt gruppe vises separat fra levert variant. Ingen treff er ikke dokumentasjon på null bruk. Ukjent tildeling kan skyldes feil, toggle av eller manglende vurdering.";
 const planDescription =
-	"Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; aid/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk.";
+	"Arbeidsgivers planskjema i syfo-oppfolgingsplan-frontend, tiltakspakke 1. Browserhendelser, ikke unike personer eller planer. Gruppe er tildelingen; tiltak/standard er levert skjemavariant. Tiltak kan få standard når funksjonsbryteren er av. Ukjent er aldri kontroll. Ingen måledata betyr ikke null bruk.";
 
 export const buildAidDashboard = (): GrafanaDashboardResource => {
 	const elements: Record<string, ReturnType<typeof panel>> = {
@@ -348,11 +349,11 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 
 «Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.
 
-**Evalueringspåminnelse:** bare aid-skjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei.`,
+**Evalueringspåminnelse:** bare tiltaksskjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei.`,
 		),
 		"panel-22": panel(
 			22,
-			"Planskjema · tildelt gruppe → levert variant",
+			"Planskjema · tildelt gruppe → levert skjemavariant",
 			`${planDescription} Én beslutning per montering/lederkontekst, ikke per rerender eller stegbytte.`,
 			[query(aidPlanDecisionsQuery, "loki", "Planbeslutninger")],
 			"table",
@@ -379,7 +380,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 				query(
 					aidPlanConfirmedTrendQuery,
 					"loki",
-					"{{gruppe}} · {{variant}}",
+					"{{gruppe}} · {{skjemavariant}}",
 					true,
 				),
 			],
@@ -388,7 +389,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		"panel-26": panel(
 			26,
 			"Evalueringspåminnelse · innsendt verdi per skjemavariant",
-			`${planDescription} Gjelder evaluering av en plan, ikke påminnelsen om å lage plan. Bare aid-varianten tilbyr ja/nei-valget; nei i standard er ikke et aktivt avslag. Bruk kolonnefilteret Levert variant=aid for å se innsendte valg i tilbudt skjema. Forsøk og resultat må ikke summeres. Bekreftet gjelder opprettelses-API-et, ikke utsendt påminnelse eller utført evaluering. Ikke registrert er eldre/manglende felt, aldri nei. Krever utrulling av frontend #1041; ugyldig verdi er et kontraktsavvik.`,
+			`${planDescription} Gjelder evaluering av en plan, ikke påminnelsen om å lage plan. Bare tiltaksvarianten tilbyr ja/nei-valget; nei i standard er ikke et aktivt avslag. Bruk kolonnefilteret Levert skjemavariant=tiltak for å se innsendte valg i tilbudt skjema. Forsøk og resultat må ikke summeres. Bekreftet gjelder opprettelses-API-et, ikke utsendt påminnelse eller utført evaluering. Ikke registrert er eldre/manglende felt, aldri nei. Krever utrulling av frontend #1041; ugyldig verdi er et kontraktsavvik.`,
 			[query(aidPlanEvaluationQuery, "loki", "Evalueringspåminnelse")],
 			"table",
 		),
@@ -444,7 +445,7 @@ Måles når serverdelen mottar backendens bekreftelse, uavhengig av nettleserens
 		"panel-28": panel(
 			28,
 			"Serverbekreftede planer · gruppe og evalueringspåminnelse",
-			"Serverlogg fra plan-frontend etter vellykket opprettelses-API. Kan måles selv om nettleseren forsvinner før svaret. Mistet API-svar eller logg kan gi undertelling. Ikke unike personer, første planer, varsler eller utførte evalueringer. Gjelder evalueringspåminnelse, ikke 4-ukerspåminnelse. Ukjent er aldri kontroll. Bare aid-varianten tilbyr ja/nei-valget. Data samles først fra utrulling; ingen historisk tilbakefylling.",
+			"Serverlogg fra plan-frontend etter vellykket opprettelses-API. Kan måles selv om nettleseren forsvinner før svaret. Mistet API-svar eller logg kan gi undertelling. Ikke unike personer, første planer, varsler eller utførte evalueringer. Gjelder evalueringspåminnelse, ikke 4-ukerspåminnelse. Ukjent er aldri kontroll. Bare tiltaksvarianten tilbyr ja/nei-valget. Data samles først fra utrulling; ingen historisk tilbakefylling.",
 			[query(aidServerPlanCreationsQuery, "loki", "Serverbekreftelser")],
 			"table",
 		),
