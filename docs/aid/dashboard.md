@@ -22,7 +22,7 @@ Boardet starter med resultatspørsmålet «får flere en plan, og skjer planhand
 En egen tabell er klargjort for `event_type=aid_plan_opprettet` fra serverdelen
 av plan-frontend ([#1042](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1042), stablet på #1041/#1039). Den viser vellykkede opprettelseskall per tildelt gruppe, levert
 skjemavariant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene, for eksempel
-`Tildelt gruppe=tiltak` og `Levert variant=aid`, for å se tilbudt ja/nei-valg.
+`Tildelt gruppe=tiltak` og `Levert skjemavariant=tiltak`, for å se tilbudt ja/nei-valg.
 Standardvariantens `nei` er ikke et aktivt avslag.
 
 Målingen gjenbruker vurderingen som leverte skjemaet, og skrives når serveren
@@ -65,12 +65,20 @@ De nye hendelsesfeltene tillater bare de lukkede kategoriene over. Ukjente felte
 
 ## Planskjema: hendelser og segmentering
 
+`skjemavariant=tiltak|standard` beskriver skjemaet, mens `gruppe` beskriver
+tildelingen. Begge grupper inngår i AID-forsøket; «AID» brukes derfor ikke som
+navn på én skjemavariant. Ved lesing av eldre versjon-1-hendelser oversetter
+dashboardet `variant=aid` til `skjemavariant=tiltak` og beholder `standard`.
+Hvis det nye feltet har en verdi, brukes det fremfor det gamle. Ugyldige kategorier
+utelukkes, og én hendelse telles ikke to ganger. Kompatibiliteten gjelder bare
+planmålingene, ikke påminnelsesmodulens separate variantkontrakt.
+
 Planseksjonen bruker `aid_oppfolgingsplan` fra `syfo-oppfolgingsplan-frontend`, med domene `aid`, `schema_version=1`, `tiltakspakke=OPPFOLGINGSPLAN_TILTAKSPAKKE_1` og `flate=ny_plan`. Den leser bare lukkede kategorier fra det eksisterende APM-formatet, ikke URL-er, sesjoner eller identifikatorer.
 
 | Felt | Betydning |
 | --- | --- |
 | `gruppe` | `tiltak`, `kontroll`, `utenfor_scope` eller `ukjent`. Én virksomhet per skjema; ingen `blandet`-kategori. |
-| `variant` | `aid` eller `standard`, slik skjemaet faktisk leveres. Tiltak kan få standard når funksjonsbryteren er av. Standard er derfor ikke synonymt med kontroll. |
+| `skjemavariant` | `tiltak` eller `standard`, slik skjemaet faktisk leveres. Tiltak kan få standard når funksjonsbryteren er av. Standard er derfor ikke synonymt med kontroll. |
 | `hendelse` / `utfall` | `beslutning` og `vist` har `tilgjengelig`. `opprett` har `forsok`, `bekreftet` eller `feilet`. |
 | `evaluering_paaminnelse` | Innsendt `ja` eller `nei`, bare ved `opprett`, tatt vare på før serverkallet og brukt på både forsøk og resultat. Additivt felt i versjon 1; eldre hendelser mangler det. |
 
@@ -83,9 +91,9 @@ Bruk kolonnefiltrene for å se for eksempel bare tiltak med standardskjema. De e
 
 ### Evalueringspåminnelse
 
-Egen tabell viser innsendt ja/nei per tildelt gruppe, levert variant og resultat. Bruk kolonnefiltrene `Levert variant=aid` og `Utfall=bekreftet` for å se valget ved klientbekreftet opprettelse i skjemaet som tilbyr valget. Det er ikke en separat bekreftelse fra varslingstjenesten eller bevis på utført evaluering.
+Egen tabell viser innsendt ja/nei per tildelt gruppe, levert variant og resultat. Bruk kolonnefiltrene `Levert skjemavariant=tiltak` og `Utfall=bekreftet` for å se valget ved klientbekreftet opprettelse i skjemaet som tilbyr valget. Det er ikke en separat bekreftelse fra varslingstjenesten eller bevis på utført evaluering.
 
-- Bare AID-varianten tilbyr ja/nei-valget. `nei` i standardvarianten er ikke et aktivt avslag. Innsendt verdi beholdes også der, fordi et gjenbrukt utkast kan inneholde et valg.
+- Bare tiltaksvarianten tilbyr ja/nei-valget. `nei` i standardvarianten er ikke et aktivt avslag. Innsendt verdi beholdes også der, fordi et gjenbrukt utkast kan inneholde et valg.
 - Eldre/manglende felt vises som **Ikke registrert**, aldri som nei. Ugyldige verdier samles under **Ugyldig verdi** uten å vise den opprinnelige verdien. Begge er datadekning/kontraktskvalitet, ikke brukerpreferanser.
 - Forsøk og resultat er separate hendelser, og skal ikke summeres. Eksisterende planpaneler teller fortsatt alle gyldige opprettelseshendelser uavhengig av det nye feltet.
 - Påminnelsesvalget fra Dine sykmeldte gjelder påminnelsen om å **lage plan** og kan ikke brukes til å segmentere planopprettelser. Målingene har ingen personkobling og skal ikke settes sammen til en konverteringsprosent eller brukes som effektmål.

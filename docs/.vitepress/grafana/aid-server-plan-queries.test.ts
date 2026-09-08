@@ -15,9 +15,9 @@ test("server confirmation isolates runtime logs and closed categories, not brows
 		'aid_schema="1"',
 		'aid_package="OPPFOLGINGSPLAN_TILTAKSPAKKE_1"',
 		'aid_group=~"tiltak|kontroll|utenfor_scope|ukjent"',
-		'aid_variant=~"aid|standard"',
+		'skjemavariant=~"tiltak|standard"',
 		'aid_reminder=~"ja|nei"',
-		"| keep gruppe, variant, evaluering_paaminnelse",
+		"| keep gruppe, skjemavariant, evaluering_paaminnelse",
 	])
 		assert.ok(aidServerPlanCreationsQuery.includes(expected), expected);
 	assert.doesNotMatch(

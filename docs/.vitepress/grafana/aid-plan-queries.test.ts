@@ -20,7 +20,7 @@ const queries = [
 test("evaluation choice is additive, creation-only and does not turn missing data into no", () => {
 	assert.match(
 		aidPlanEvaluationQuery,
-		/^sum by \(gruppe, variant, evaluering_paaminnelse, utfall\)/,
+		/^sum by \(gruppe, skjemavariant, evaluering_paaminnelse, utfall\)/,
 	);
 	assert.ok(
 		aidPlanEvaluationQuery.includes(
@@ -35,7 +35,7 @@ test("evaluation choice is additive, creation-only and does not turn missing dat
 	assert.ok(aidPlanEvaluationQuery.includes("{{ else }}ugyldig{{ end }}"));
 	assert.match(
 		aidPlanEvaluationQuery,
-		/\| keep gruppe, variant, evaluering_paaminnelse, utfall/,
+		/\| keep gruppe, skjemavariant, evaluering_paaminnelse, utfall/,
 	);
 	assert.doesNotMatch(
 		aidPlanEvaluationQuery,
@@ -43,7 +43,7 @@ test("evaluation choice is additive, creation-only and does not turn missing dat
 	);
 	for (const query of queries) {
 		assert.doesNotMatch(query, /\| event_data_evaluering_paaminnelse[=!]\S/);
-		assert.match(query, /\| keep gruppe, variant, hendelse, utfall\n/);
+		assert.match(query, /\| keep gruppe, skjemavariant, hendelse, utfall\n/);
 	}
 	const dashboard = buildAidDashboard();
 	const elements = dashboard.spec.elements as Record<string, unknown>;
@@ -54,7 +54,7 @@ test("evaluation choice is additive, creation-only and does not turn missing dat
 	for (const label of [
 		"Ikke registrert",
 		"Ugyldig verdi",
-		"Levert variant",
+		"Levert skjemavariant",
 		"Evalueringspåminnelse",
 	])
 		assert.ok(serialized.includes(label), label);
@@ -88,13 +88,13 @@ test("Grafana matchers preserve group colors and distinguish standard series", (
 			return new RegExp(matcher.options.slice(1, -1));
 		},
 	);
-	for (const name of ["tiltak", "tiltak · aid", "tiltak · standard"])
+	for (const name of ["tiltak", "tiltak · tiltak", "tiltak · standard"])
 		assert.ok(treatment.test(name), name);
 	for (const name of ["kontroll", "kontroll · standard"])
 		assert.ok(control.test(name), name);
 	for (const group of ["tiltak", "kontroll", "utenfor_scope", "ukjent"])
 		assert.ok(standard.test(`${group} · standard`), group);
-	assert.equal(standard.test("tiltak · aid"), false);
+	assert.equal(standard.test("tiltak · tiltak"), false);
 	assert.equal(treatment.test("kontroll · standard"), false);
 	assert.equal(control.test("tiltak · standard"), false);
 	assert.ok(outside.test("utenfor_scope · standard"));
@@ -116,7 +116,7 @@ test("Grafana matchers preserve group colors and distinguish standard series", (
 
 test("plan queries isolate the producer, environment and exact v1 event contract", () => {
 	for (const query of queries) {
-		assert.match(query, /^sum by \(gruppe, variant(?:, utfall)?\)/);
+		assert.match(query, /^sum by \(gruppe, skjemavariant(?:, utfall)?\)/);
 		assert.ok(
 			query.includes(
 				'{service_name="syfo-oppfolgingsplan-frontend", kind="event"}',
@@ -132,7 +132,7 @@ test("plan queries isolate the producer, environment and exact v1 event contract
 		])
 			assert.ok(query.includes(`| ${filter}`), filter);
 		assert.match(query, /app_environment="\$\{env:text\}"/);
-		assert.match(query, /\| keep gruppe, variant, hendelse, utfall/);
+		assert.match(query, /\| keep gruppe, skjemavariant, hendelse, utfall/);
 		assert.doesNotMatch(
 			query,
 			/aid_paaminnelse|paaminnelsevalg|session_id|person|orgnummer|page_url|vector\(0\)/,
@@ -145,9 +145,10 @@ test("unknown remains separate and standard does not imply control", () => {
 		aidPlanEventPipeline,
 		/event_data_gruppe=~"tiltak\|kontroll\|utenfor_scope\|ukjent"/,
 	);
-	assert.match(aidPlanEventPipeline, /event_data_variant=~"aid\|standard"/);
+	assert.match(aidPlanEventPipeline, /skjemavariant=~"tiltak\|standard"/);
 	assert.doesNotMatch(aidPlanEventPipeline, /blandet|skjult/);
-	for (const query of queries) assert.match(query, /sum by \(gruppe, variant/);
+	for (const query of queries)
+		assert.match(query, /sum by \(gruppe, skjemavariant/);
 });
 
 test("only valid event-outcome pairs count, with attempts separate from results", () => {
@@ -164,7 +165,10 @@ test("only valid event-outcome pairs count, with attempts separate from results"
 			'| hendelse="opprett" | utfall=~"forsok|bekreftet|feilet"',
 		),
 	);
-	assert.match(aidPlanCreationsQuery, /sum by \(gruppe, variant, utfall\)/);
+	assert.match(
+		aidPlanCreationsQuery,
+		/sum by \(gruppe, skjemavariant, utfall\)/,
+	);
 	assert.ok(
 		aidPlanConfirmedTrendQuery.includes(
 			'| hendelse="opprett" | utfall="bekreftet"',
@@ -220,6 +224,6 @@ test("new panels use their corresponding query and keep trend separate from tabl
 	}
 	assert.equal(
 		panels["panel-25"].spec.data.spec.queries[0].spec.query.spec.legendFormat,
-		"{{gruppe}} · {{variant}}",
+		"{{gruppe}} · {{skjemavariant}}",
 	);
 });
