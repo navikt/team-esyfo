@@ -11,10 +11,33 @@ Dashboardet følger levering og bruk av tiltakspakke 1. Det er **produkttelemetr
 | Eksisterende backendtellere | Opprettede planer, deling med fastlege/Nav, bestillings- og avbestillingsoperasjoner, «plan trengs ikke» og fjerning av valget | Ingen segmentering på tiltak/kontroll eller påminnelsesvalg. Tallene gjelder hele valgt miljø, ikke bare piloten. |
 | Ny browsermåling i Dine sykmeldte | Tildelingsgruppe, levert påminnelsesvariant, kort i skjermbildet, bestillings-/avbestillingsforsøk og API-bekreftelse | Ikke alle AID-flater, personer, faktisk utsendte påminnelser eller historisk bruk før instrumenteringen er rullet ut. |
 | Ny browsermåling i oppfølgingsplan-frontend | Tildelingsgruppe, levert skjemavariant, skjemabeholder i skjermbildet og opprettelsesforsøk med bekreftet/feilet resultat. Innsendt ja/nei til evalueringspåminnelse når tilleggsinstrumenteringen er utrullet. | Ikke unike planer/personer, bekreftet varsling, utført evaluering eller deling med fastlege/Nav. |
+| Ny servermåling i oppfølgingsplan-frontend (#1042) | API-bekreftede opprettelser gjennom planskjemaet, per tildelt gruppe, levert variant og innsendt evalueringspåminnelse. Uavhengig av nettleserens APM. | Ikke komplett databasefasit, unike planer/personer eller effektmål. Må ikke summeres med browserbekreftelser. Ingen historikk før utrulling. |
 
 Browsermålingene krever utrulling av instrumenteringen i hver app: [Dine sykmeldte #801](https://github.com/navikt/dinesykmeldte/pull/801), [oppfølgingsplan-frontend #1039](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1039) og tillegget for evalueringspåminnelse [#1041](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1041). Tomme paneler før dette er forventet. Også etter utrulling kan blokkering, nettverksfeil eller manglende instrumentering gi tomme paneler. **Ingen måledata er ikke det samme som null bruk.** Ingen syntetiske produktoperasjoner skal utføres i prod for å fylle dashboardet.
 
 Boardet starter med resultatspørsmålet «får flere en plan, og skjer planhandlingene tidligere?», men viser ingen effektprosent før et godkjent kohortgrunnlag er på plass. Se [definisjoner og datakrav for resultatmåling](./resultatmaaling). Direkte analyse av sykefraværslengde er utenfor omfanget og ikke en senere dashboardleveranse.
+
+## Serverbekreftede planer
+
+En egen tabell er klargjort for `event_type=aid_plan_opprettet` fra serverdelen
+av plan-frontend ([#1042](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1042), stablet på #1041/#1039). Den viser vellykkede opprettelseskall per tildelt gruppe, levert
+skjemavariant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene, for eksempel
+`Tildelt gruppe=tiltak` og `Levert variant=aid`, for å se tilbudt ja/nei-valg.
+Standardvariantens `nei` er ikke et aktivt avslag.
+
+Målingen gjenbruker vurderingen som leverte skjemaet, og skrives når serveren
+mottar backendens bekreftelse. Den krever ikke nettleserens APM, nye eksterne
+oppslag eller `isyfo-analyse`. Runtime-loggenes cluster `dev`/`prod` kobles til
+dashboardets eksisterende miljøvalg `dev-gcp`/`prod-gcp`; namespace og tjeneste
+avgrenses eksplisitt. Videresendte nettleserlogger utelukkes.
+
+**Ikke summer server- og nettleserbekreftelser.** Begge kan observere samme
+opprettelse, og forskjellen er ikke en eksakt feilrate. Nye versjoner teller også;
+dette er verken første planer, unike personer eller utførte evalueringer.
+Serveren kan ha lagret en plan selv om API-svar eller loggleveranse mistes.
+Tabellen er tom frem til serverinstrumenteringen er rullet ut og ekte hendelser
+er kommet inn. Ingen historikk tilbakefylles og ingen direkte
+sykmeldingslengdeanalyse gjøres.
 
 ## Påminnelsen: hendelser og segmentering
 
