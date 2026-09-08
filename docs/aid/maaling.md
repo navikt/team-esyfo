@@ -2,12 +2,20 @@
 
 Vi setter bare i gang tiltak vi kan **måle**, og vi bestemmer på forhånd hva som skal til for å beholde eller forkaste et grep. Denne siden beskriver hvordan vi måler effekten av Tiltakspakke 1 på et overordnet nivå.
 
+::: warning Avgrensning
+Direkte analyse av sykefraværslengde er ikke tillatt i dette arbeidet. Vi analyserer ikke tid til friskmelding, retur til arbeid eller sykefraværsgrad. Dette er ikke en senere leveranse i dashboardplanen. Planhandlinger er et eget analysebehov; datakilde, tidsreferanse og eventuelle koblinger må være avklart og godkjent før resultatmåling settes i drift.
+:::
+
+Se [resultatmåling: definisjoner og datakrav](./resultatmaaling) for hva som mangler før vi kan vise andeler og sammenligne gruppene.
+
 ## Eksperimentelt design
 
 Pakken testes som en **A/B-test** med to grupper:
 
 - **Kontrollgruppe** – følger dagens brukerreise.
 - **Tiltaksgruppe** – får brukerreisen med de nye dulte-tiltakene.
+
+Piloten fordeler virksomheter innenfor Troms og Finnmark mellom tiltak og kontroll. Virksomheter utenfor pilotområdet er **utenfor scope**, ikke kontrollgruppe. Tildelingen kommer fra Flaggskipet, ikke fra hvilket skjema brukeren så. Manglende vurdering er ukjent, aldri kontroll.
 
 Vi randomiserer på **arbeidsgivernivå** (underenhet, ikke overenhet). Da får hver arbeidsgiver de samme tiltakene. Det hindrer at grupper blandes («treatment diffusion»), og sikrer at alle som følger opp hos samme arbeidsgiver får samme opplevelse. Effekten evalueres derfor på arbeidsgivernivå.
 
@@ -30,20 +38,20 @@ En arbeidsgiver kan ha flere ledere. Oppfølgingen av en sykmeldt gjøres vanlig
 | AG-01 | Leder B | obs. 3, 4 |
 | AG-02 | Leder C | obs. 5, 6, 7 |
 
-Poenget er at målingene ikke er uavhengige: de som følger opp hos samme arbeidsgiver jobber under samme rutiner og kultur, så målingene deres ligner mer på hverandre. Hvis vi ignorerer dette, tror vi at vi har sikrere tall enn vi har, og risikerer å overdrive effekten. Derfor bruker vi en analysemetode (flernivåmodell) som tar høyde for at målingene er gruppert under ledere og arbeidsgivere.
+Poenget er at målingene ikke er uavhengige: de som følger opp hos samme arbeidsgiver jobber under samme rutiner og kultur, så målingene deres ligner mer på hverandre. Hvis vi ignorerer dette, kan vi overvurdere sikkerheten i resultatet. Analyseansvarlig må velge en metode som tar høyde for randomisering på virksomhetsnivå og det faktiske datagrunnlaget; en bestemt modell er ikke fastsatt her.
 
 ## Effektmål
 
 ### 1. Flere lager oppfølgingsplan innen uke 4 (hovedmål)
 
-Vi registrerer om lederen har laget en plan, og hvilken uke i sykefraværet det skjedde. «Å lage en plan» er egentlig en trapp med flere trinn:
+Ambisjonen er å undersøke planhandlinger innen en avtalt frist, ikke sykefraværets varighet. «Innen uke 4» krever en godkjent tidsreferanse og avklart analysegrunnlag; dagens browserhendelser gir ikke dette. Vi må skille mellom disse handlingene:
 
 1. Begynne på en plan (utkast)
 2. Dele planen med den sykmeldte (da låses den — «ferdigstilt»)
 3. **Dele planen med legen** (knyttet til 4-ukers-regelverket)
 4. Dele planen med Nav
 
-Deling med legen innen uke 4 er trolig det viktigste trinnet, men vi ønsker oversikt over hele trappa.
+Hvilken handling som er primærmålet må avklares før analysen. Deling med lege og Nav er separate utfall, ikke obligatoriske trinn som alle følger i samme rekkefølge. Gjentatt deling og nye planversjoner må ikke telles som nye oppfølginger. Vi skal ikke beregne en trakt ved å dividere dagens hendelsestellere.
 
 ### 2. Flere oppdaterer oppfølgingsplaner
 
@@ -61,18 +69,11 @@ Vi vil også forstå dem som velger å *ikke* lage en plan — var det et godt v
 
 Her anbefaler vi dashboard-visninger for å forstå hvordan ledere og sykmeldte velger, for eksempel: Hvor mange velger å motta varslinger? Når velger de det?
 
-### 6. Reduksjon i sykefravær
-
-Krevende å måle, og vi deler det i to spørsmål:
-
-- **Kommer sykmeldte raskere helt tilbake?** Antall uker fra sykmeldingen starter til personen jobber 100 %. Noen er ikke tilbake når forsøket avsluttes — da vet vi bare at det tok *minst* så lang tid (høyresensurering). Vi bruker forløpsanalyse som håndterer dette.
-- **Jobber sykmeldte mer underveis?** Vi følger arbeidsgraden uke for uke og sammenligner gruppene.
-
 ## Dashboard
 
 For løpende produktoppfølging bruker vi [AID – levering og bruk](./dashboard) i Grafana. Det viser hendelser og eksisterende backendtellere, ikke personer, sykefraværsforløp eller kausal effekt. Det er et annet datagrunnlag enn effektanalysen beskrevet på denne siden.
 
-Målet er at teamet får et **dashboard** (trolig i Metabase) som følger utviklingen løpende. Vi løfter fram de viktigste metrikkene, men gjør det mulig å se de andre også. Da kan teamet se på dataene, stille gode spørsmål, og teste dem videre. En data scientist eier oppbyggingen av dashboardet.
+Grafana viser levering og bruk nå. Resultatvisninger skal først få godkjente aggregater med tydelig datadekning, teller, nevner og usikkerhet. Analyseansvarlig må eie definisjonene og sammenligningsmetoden; visualiseringsverktøyet erstatter ikke dette.
 
 ## Åpne avklaringer
 
