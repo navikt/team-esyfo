@@ -709,13 +709,51 @@ describe("feiloversikt-dashboard", () => {
 		);
 	});
 
-	test("trace-lenken bruker dashboardets tidsrom uten å eksponere ID som tekst", () => {
+	test("trace-lenken åpner ett konkret spor i Explore med riktig miljø og tidsrom", () => {
 		const rowValue = `\${__value.raw}`;
 		const link = traceDataLink(rowValue);
-		assert.match(link, /from=\$\{__from\}/);
-		assert.match(link, /to=\$\{__to\}/);
-		assert.match(link, /traceId=\$\{__value\.raw\}/);
-		assert.match(link, /var-ds=\$\{tempo_datasource:raw\}/);
+		const url = new URL(link, "https://grafana.test");
+		assert.equal(url.pathname, "/explore");
+		assert.equal(url.searchParams.get("schemaVersion"), "1");
+		assert.equal(url.searchParams.get("orgId"), "1");
+		const tempoVariable = `\${tempo_datasource:raw}`;
+		const pane = JSON.parse(url.searchParams.get("panes") ?? "{}").A;
+		assert.deepEqual(pane, {
+			datasource: tempoVariable,
+			queries: [
+				{
+					refId: "A",
+					datasource: { type: "tempo", uid: tempoVariable },
+					queryType: "traceql",
+					query: rowValue,
+					filters: [],
+				},
+			],
+			range: { from: `\${__from}`, to: `\${__to}` },
+		});
+		for (const datasource of [
+			PROD_TEMPO_DATASOURCE_UID,
+			DEV_TEMPO_DATASOURCE_UID,
+		]) {
+			const materialized = link
+				.replaceAll(tempoVariable, datasource)
+				.replaceAll(rowValue, "abcdef0123456789abcdef0123456789")
+				.replaceAll(`\${__from}`, "1788934372774")
+				.replaceAll(`\${__to}`, "1788955972774");
+			const state = JSON.parse(
+				new URL(materialized, "https://grafana.test").searchParams.get(
+					"panes",
+				) ?? "{}",
+			).A;
+			assert.equal(state.datasource, datasource);
+			assert.equal(state.queries[0].datasource.uid, datasource);
+			assert.equal(state.queries[0].query, "abcdef0123456789abcdef0123456789");
+			assert.deepEqual(state.range, {
+				from: "1788934372774",
+				to: "1788955972774",
+			});
+			assert.ok(!materialized.includes("${"));
+		}
 		const tracePanel = JSON.stringify(panels()["panel-3"]);
 		assert.match(tracePanel, /"type":"data-links"/);
 		assert.match(tracePanel, /Åpne trace/);

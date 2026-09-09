@@ -21,7 +21,7 @@ I runtime-tabellene åpner **Undersøk** en meny:
 - **Alle tjenestelogger** åpner den enklere Logs Drilldown-visningen i samme miljø og tidsrom. Denne utvider bevisst fra feilgruppen til tjenesten, slik at du kan lese sammenhengen.
 - **Feil i APM** åpner tjenestens Issues-fane med riktig miljø og tidsrom. APM har egen gruppering og videre tracing; dette er ikke nødvendigvis samme feilgruppe som i tabellen.
 
-I trace-tabellen åpner **Åpne trace** det konkrete sporet; tjenestecellen gir menyen til logger og APM. En trace-ID betyr ikke at sporet nødvendigvis er lagret eller fortsatt tilgjengelig. Tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace.
+I trace-tabellen åpner **Åpne trace** det konkrete sporet direkte i Explore, med valgt Tempo-datakilde og tidsrom, uten et separat metrikksøk i Traces Drilldown. Tjenestecellen gir menyen til logger og APM. En trace-ID betyr ikke at sporet nødvendigvis er lagret eller fortsatt tilgjengelig. Tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace.
 
 I tillegg finnes:
 
