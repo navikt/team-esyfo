@@ -277,9 +277,6 @@ ${runtimeTraceLabels}
 | keep service_name, error_type_display, error_code_display, error_context, upstream_status_display, safe_trace_id
 | drop __error__, __error_details__`;
 
-export const traceDataLink = (traceId: string) =>
-	`/a/grafana-exploretraces-app/explore?from=${FROM}&to=${TO}&var-ds=${TEMPO_DATASOURCE_VARIABLE}&traceId=${traceId}`;
-
 const encodeExploreState = (value: unknown) => {
 	const variables: string[] = [];
 	const withTokens = JSON.stringify(value, (_key, child) => {
@@ -295,6 +292,26 @@ const encodeExploreState = (value: unknown) => {
 			encoded.replace(`__GRAFANA_VARIABLE_${index}__`, variable),
 		encodeURIComponent(withTokens),
 	);
+};
+
+export const traceDataLink = (traceId: string) => {
+	const panes = {
+		A: {
+			datasource: TEMPO_DATASOURCE_VARIABLE,
+			queries: [
+				{
+					refId: "A",
+					datasource: { type: "tempo", uid: TEMPO_DATASOURCE_VARIABLE },
+					// A raw trace ID in the TraceQL editor uses Tempo's direct trace lookup.
+					queryType: "traceql",
+					query: traceId,
+					filters: [],
+				},
+			],
+			range: { from: FROM, to: TO },
+		},
+	};
+	return `/explore?panes=${encodeExploreState(panes)}&schemaVersion=1&orgId=1`;
 };
 
 const lokiExploreDataLink = (expr: string) => {
