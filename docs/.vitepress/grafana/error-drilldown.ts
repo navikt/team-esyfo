@@ -219,7 +219,8 @@ const browserTypePipeline = `| logfmt type, app_namespace, app_environment
 | label_format browser_parse_error=\`{{ .__error__ }}\`
 | drop __error__, __error_details__
 | app_namespace="" or app_namespace="team-esyfo"
-| label_format browser_environment_display=\`{{ if and (eq .browser_parse_error "") (eq .app_namespace "team-esyfo") (or (eq .app_environment "prod-gcp") (eq .app_environment "dev-gcp")) }}{{ .app_environment }}{{ else }}ukjent{{ end }}\`
+| label_format browser_environment=\`{{ if and (eq .browser_parse_error "") (eq .app_namespace "team-esyfo") (or (eq .app_environment "prod-gcp") (eq .app_environment "dev-gcp")) }}{{ .app_environment }}{{ else }}ukjent{{ end }}\`
+| label_format browser_environment_display=\`{{ if eq .browser_environment "prod-gcp" }}Produksjon{{ else if eq .browser_environment "dev-gcp" }}Test{{ else }}Ukjent{{ end }}\`
 ${safeLabel("safe_browser_type", "type", safeBrowserTypePattern)}
 | label_format browser_type_display=\`{{ if .safe_browser_type }}{{ .safe_browser_type }}{{ else }}Annen / ikke oppgitt{{ end }}\``;
 
@@ -251,7 +252,7 @@ ${safeLabel("safe_error_code", "error_code", safeCodePattern)}
 ${safeLabel("safe_rejection_reason", "rejection_reason", safeGenericTypeAsCodePattern)}
 | label_format operation_display=\`{{ if .safe_operation }}{{ .safe_operation }}{{ else }}—{{ end }}\`
 | label_format error_code_display=\`{{ if .safe_error_code }}{{ .safe_error_code }}{{ else }}—{{ end }}\`
-| label_format rejection_reason_display=\`{{ if .safe_rejection_reason }}{{ .safe_rejection_reason }}{{ else }}UNSPECIFIED{{ end }}\``;
+| label_format rejection_reason_display=\`{{ if and .safe_rejection_reason (ne .safe_rejection_reason "UNSPECIFIED") }}{{ .safe_rejection_reason }}{{ else }}Årsak ikke oppgitt{{ end }}\``;
 
 export const runtimeRejectionsQuery = `topk(50, sum by(service_name, operation_display, error_code_display, rejection_reason_display, action) (count_over_time(${runtimeSelector}
 ${runtimeRejectionPipeline}
@@ -262,7 +263,7 @@ ${runtimeRejectionLabels}
 
 export const browserByTypeQuery = `topk(50, sum by(service_name, browser_environment_display, browser_type_display, action) (count_over_time(${browserSelector}
 ${browserTypePipeline}
-| browser_environment_display=~"${BROWSER_ENVIRONMENT_VARIABLE}"
+| browser_environment=~"${BROWSER_ENVIRONMENT_VARIABLE}"
 | label_format action=\`Undersøk\`
 | keep service_name, browser_environment_display, browser_type_display, action
 [$__auto])))`;
@@ -646,40 +647,6 @@ const tablePanel = ({
 						decimals: 0,
 					},
 					overrides: [
-						{
-							matcher: { id: "byName", options: "browser_environment_display" },
-							properties: [
-								{
-									id: "mappings",
-									value: [
-										{
-											type: "value",
-											options: {
-												"prod-gcp": { text: "Produksjon" },
-												"dev-gcp": { text: "Test" },
-												ukjent: { text: "Ukjent" },
-											},
-										},
-									],
-								},
-							],
-						},
-						{
-							matcher: { id: "byName", options: "rejection_reason_display" },
-							properties: [
-								{
-									id: "mappings",
-									value: [
-										{
-											type: "value",
-											options: {
-												UNSPECIFIED: { text: "Årsak ikke oppgitt" },
-											},
-										},
-									],
-								},
-							],
-						},
 						{
 							matcher: { id: "byName", options: "action" },
 							properties: [

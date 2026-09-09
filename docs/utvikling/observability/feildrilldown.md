@@ -13,7 +13,7 @@ Den primære, åpne delen har én rekkefølge:
 3. **Konkrete feilforløp · åpne trace** gir et utvalg fra de 100 nyeste trace-koblede feilene, med valgfri HTTP-status fra tjenesten som ble kalt.
 4. **Avviste API-kall · WARN** viser inntil 50 grupper separat fra ERROR. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
 
-Avvisningspanelet omfatter bare `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak vises som **Årsak ikke oppgitt**; den underliggende verdien er `UNSPECIFIED`. Gruppelinken bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
+Avvisningspanelet omfatter bare `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak får samme verdi, **Årsak ikke oppgitt**, i både grupperingen og loggsøket. Gruppelinken bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
 
 I runtime-tabellene åpner **Undersøk** en meny:
 
@@ -43,6 +43,8 @@ Panelbeskrivelser og lenker til kontrakt og runbook ligger i panelmenyene. Dashb
 Overgangstilstander står synlig i runtime-velgeren. Det gjør at `esyfovarsel` kan følges under migreringen til `syfo-budstikka`, og at `syfobrukertilgang` beholder nødvendig kontroll frem til utfasing er fullført.
 
 En aggregert kontroll 9. september 2026 bekreftet produksjonsmetadata for `aktivitetskrav-frontend`, `dialogmote-frontend`, `dinesykmeldte` og `syfo-oppfolgingsplan-frontend`. Samme vindu inneholdt også hendelser uten miljø, særlig fra `meroppfolging-frontend`. Derfor filtrerer vi ikke slike hendelser bort eller antar at de er fra produksjon. Nettleserens gruppelogglink bevarer både valgt feiltype og radens klassifiserte miljø.
+
+Grafanas radlenker bruker cellens formaterte verdi. Derfor lages **Produksjon**, **Test** og **Ukjent** i den felles LogQL-pipelinen, ikke som separate value mappings i panelet. Telling og loggsøk matcher dermed samme verdi. Miljøvelgeren filtrerer fortsatt på normalisert `prod-gcp`, `dev-gcp` og `ukjent`.
 
 ## Feiltype, kode og kontraktsgap
 
@@ -105,7 +107,7 @@ pnpm grafana-dashboard:smoke
 pnpm build
 ```
 
-Testene dekker panelhierarki, lokal variabelarv, separate allowlister, eksakte radlenker, klassifisering, browsermiljø og tracevalidering. Query-smoken kjører de faktiske queryene mot syntetiske Loki-hendelser, også uten JSON, uten miljø og med videresendte browserlogger. `grafana-dashboard:smoke` importerer ressursen i samme Grafana-versjon som produksjon og sammenligner ressurs, DTO, layout, `preload`, `editable` og `liveNow` semantisk. Se [designprinsippene](./dashboard-design).
+Testene dekker panelhierarki, lokal variabelarv, separate allowlister, eksakte radlenker, klassifisering, browsermiljø og tracevalidering. Query-smoken kjører de faktiske queryene mot syntetiske Loki-hendelser, også uten JSON, uten miljø og med videresendte browserlogger. Den følger dessuten hver aggregert feil-, avvisnings-, kontraktsgap- og nettleserrad til det genererte loggsøket og krever samme antall treff. En separat test hindrer at tekstendrende value mappings bryter radlenkene. Dette erstatter ikke en faktisk klikkontroll i Grafana. `grafana-dashboard:smoke` importerer ressursen i samme Grafana-versjon som produksjon og sammenligner ressurs, DTO, layout, `preload`, `editable` og `liveNow` semantisk. Se [designprinsippene](./dashboard-design).
 
 Publisering til produksjons-Grafana er foreløpig manuell. Den committede JSON-filen er fasit. Før overwrite skal gjeldende live-dashboard eksporteres som rollback-kopi. Importer deretter den genererte ressursen med samme UID og mappe, hent live-ressursen tilbake og sammenlign semantisk med artefakten.
 

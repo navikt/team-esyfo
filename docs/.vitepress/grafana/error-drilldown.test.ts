@@ -146,7 +146,10 @@ const decodedExplorePane = (url: string) => {
 		)
 		.replaceAll('${__data.fields["contract_state_display"]}', "Eldre typefelt")
 		.replaceAll('${__data.fields["browser_type_display"]}', "TypeError")
-		.replaceAll(`\${__data.fields["browser_environment_display"]}`, "prod-gcp");
+		.replaceAll(
+			`\${__data.fields["browser_environment_display"]}`,
+			"Produksjon",
+		);
 	const encoded = new URL(
 		materialized,
 		"https://grafana.test",
@@ -162,6 +165,33 @@ const decodedExplorePane = (url: string) => {
 };
 
 describe("feiloversikt-dashboard", () => {
+	test("lenkefiltre bruker samme verdi som tabellcellen uten ekstra value mapping", () => {
+		for (const [panelId, fieldName] of [
+			["panel-5", "browser_environment_display"],
+			["panel-6", "rejection_reason_display"],
+		]) {
+			const panel = panels()[panelId];
+			assert.ok(
+				(collectByKey(panel, "url") as string[]).some((url) =>
+					url.includes(`\${__data.fields["${fieldName}"]}`),
+				),
+			);
+			const overrides = collectByKey(panel, "overrides").flat() as Array<{
+				matcher: { id: string; options: string };
+				properties: Array<{ id: string }>;
+			}>;
+			assert.ok(
+				!overrides.some(
+					({ matcher, properties }) =>
+						matcher.id === "byName" &&
+						matcher.options === fieldName &&
+						properties.some(({ id }) => id === "mappings"),
+				),
+				`${fieldName}: Grafana interpolerer visningsverdien i lenken; oversettelsen må skje i den felles LogQL-pipelinen`,
+			);
+		}
+	});
+
 	test("viser WARN-avvisninger separat og åpent med årsak og logglenke", () => {
 		const panel = panels()["panel-6"];
 		assert.ok(panel, "Avvisningspanelet mangler");
@@ -181,6 +211,8 @@ describe("feiloversikt-dashboard", () => {
 			/k8s_cluster_name=~"\^\$\{runtime_environment:regex\}\$"/,
 		);
 		assert.match(query, /service_name=~"\$\{app:regex\}"/);
+		assert.match(query, /rejection_reason_display=.*else }}Årsak ikke oppgitt/);
+		assert.match(query, /ne \.safe_rejection_reason "UNSPECIFIED"/);
 		assert.ok(!query.includes("error|critical|fatal"));
 		assert.ok(!query.includes("[$__range]"));
 		const rows = (
@@ -614,7 +646,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(expr, /service_name="sample-service"/);
 		assert.ok(!expr.includes("k8s_cluster_name"));
 		assert.ok(!expr.includes("runtime_environment"));
-		assert.match(expr, /browser_environment_display=`prod-gcp`/);
+		assert.match(expr, /browser_environment_display=`Produksjon`/);
 		assert.match(
 			browserByTypeQuery,
 			/\| logfmt type, app_namespace, app_environment/,
@@ -630,7 +662,11 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(browserByTypeQuery, /else }}ukjent/);
 		assert.match(
 			browserByTypeQuery,
-			/browser_environment_display=~"\$\{browser_environment:raw\}"/,
+			/browser_environment_display=.*"prod-gcp" }}Produksjon.*"dev-gcp" }}Test.*else }}Ukjent/,
+		);
+		assert.match(
+			browserByTypeQuery,
+			/browser_environment=~"\$\{browser_environment:raw\}"/,
 		);
 		assert.match(
 			browserByTypeQuery,
