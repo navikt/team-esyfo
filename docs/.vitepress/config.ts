@@ -86,7 +86,7 @@ export default withMermaid(
 						{ text: "Funksjonelle endringer", link: "/aid/endringer" },
 						{ text: "Dulte-tiltak (nudgelab)", link: "/aid/dulte-tiltak" },
 						{ text: "Måling", link: "/aid/maaling" },
-						{ text: "Dashboard: levering og bruk", link: "/aid/dashboard" },
+						{ text: "Dashboard: om tallene", link: "/aid/dashboard" },
 						{ text: "Resultatmåling: datakrav", link: "/aid/resultatmaaling" },
 						{ text: "Datakilder og gjenbruk", link: "/aid/datakilder" },
 					],

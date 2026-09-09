@@ -41,8 +41,10 @@ export const aidPlanConfirmedTrendQuery = planCount(
 
 // Additive v1 field from frontend #1041. Old events must remain in the totals;
 // neither absent nor invalid values represent a submitted "nei".
-export const aidPlanEvaluationQuery = `sum by (gruppe, skjemavariant, evaluering_paaminnelse, utfall) (count_over_time(${planEventContext}
+export const aidPlanEvaluationEventPipeline = `${planEventContext}
 | hendelse="opprett" | utfall=~"forsok|bekreftet|feilet"
 | label_format evaluering_paaminnelse=\`{{ if eq .event_data_evaluering_paaminnelse "ja" }}ja{{ else if eq .event_data_evaluering_paaminnelse "nei" }}nei{{ else if eq .event_data_evaluering_paaminnelse "" }}ikke_registrert{{ else }}ugyldig{{ end }}\`
-| keep gruppe, skjemavariant, evaluering_paaminnelse, utfall
+| keep gruppe, skjemavariant, evaluering_paaminnelse, utfall`;
+
+export const aidPlanEvaluationQuery = `sum by (gruppe, skjemavariant, evaluering_paaminnelse, utfall) (count_over_time(${aidPlanEvaluationEventPipeline}
 [$__auto]))`;
