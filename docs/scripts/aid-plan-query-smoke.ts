@@ -11,6 +11,8 @@ import {
 	aidPlanViewsQuery,
 } from "../.vitepress/grafana/aid-plan-queries.ts";
 import { aidServerPlanCreationsQuery } from "../.vitepress/grafana/aid-server-plan-queries.ts";
+import { aidPlanEvaluationDetailsQuery, aidProductPlanCreationsQuery, aidProductPlanTrendQuery, aidProductEvaluationQuery, aidProductPlanViewsQuery } from "../.vitepress/grafana/aid-product-queries.ts";
+import { aidReminderViewsQuery, aidReminderOrdersQuery, aidReminderCancellationsQuery, buildAidDashboard } from "../.vitepress/grafana/aid-delivery-usage.ts";
 
 const exec = promisify(execFile);
 const container = `aid-plan-query-check-${process.pid}-${randomBytes(4).toString("hex")}`;
@@ -197,7 +199,18 @@ try {
 				},
 				{
 					stream: { service_name: "dinesykmeldte", kind: "event" },
-					values: [values[0]],
+					values: [values[0], ...[
+						{ event_data_hendelse: "vist", event_data_utfall: "tilgjengelig" },
+						{ event_data_hendelse: "bestill", event_data_utfall: "forsok" },
+						{ event_data_hendelse: "bestill", event_data_utfall: "bekreftet" },
+						{ event_data_hendelse: "avbestill", event_data_utfall: "bekreftet" },
+						{ event_data_hendelse: "bestill", event_data_utfall: "feilet" },
+						{ event_data_hendelse: "bestill", event_data_utfall: "bekreftet", event_data_gruppe: "utenfor_scope" },
+						{ event_data_hendelse: "bestill", event_data_utfall: "bekreftet", app_environment: "prod-gcp" },
+					].map((fixture, index) => [
+						String(BigInt(now - 900) * 1000000n + BigInt(index)),
+						Object.entries({ ...base, event_name: "aid_paaminnelse", event_data_flate: "dinesykmeldte", event_data_variant: "aid", event_data_paaminnelsevalg: "ikke_bestilt", ...fixture }).map(([key,value]) => `${key}=${JSON.stringify(value)}`).join(" "),
+					])],
 				},
 				{
 					stream: {
@@ -214,9 +227,12 @@ try {
 	const count = async (
 		query: string,
 		environment = "dev-gcp",
+		group = "tiltak|kontroll",
 	): Promise<Series[]> => {
 		const expr = query
 			.replaceAll("${env:text}", environment)
+			.replaceAll("${environment:raw}", environment)
+			.replaceAll("${plan_group:raw}", group)
 			.replaceAll("$__auto", "1h");
 		const response = await fetch(
 			`${url}/loki/api/v1/query?${new URLSearchParams({ query: expr, time: String(Date.now() / 1000) })}`,
@@ -255,6 +271,12 @@ try {
 		/untrusted-fixture-value|event_data_|service_name/,
 	);
 	assert.equal(total(await count(aidPlanCreationsQuery)), 12);
+	const details = await count(aidPlanEvaluationDetailsQuery);
+	assert.equal(total(details), 12);
+	assert.ok(details.filter(row => row.metric.skjemavariant === "standard").every(row => row.metric.evaluering_paaminnelse === "ikke_tilbudt"));
+	for (const choice of ["ikke_registrert", "ugyldig"]) {
+		assert.equal(total(details.filter(row => row.metric.skjemavariant === "tiltak" && row.metric.evaluering_paaminnelse === choice)), 1);
+	}
 	assert.equal(total(choices), total(await count(aidPlanCreationsQuery)));
 	assert.equal(total(await count(aidPlanConfirmedTrendQuery)), 10);
 	assert.equal(total(await count(aidPlanDecisionsQuery)), 1);
@@ -287,6 +309,24 @@ try {
 			"gruppe",
 			"skjemavariant",
 		]);
+	console.log(
+		"Product counts: group isolation, offered evaluation choices and confirmed reminder operations verified.",
+	);
+	assert.equal(total(await count(aidProductPlanCreationsQuery)), 7);
+	assert.equal(total(await count(aidProductPlanCreationsQuery, "dev-gcp", "tiltak")), 6);
+	assert.equal(total(await count(aidProductPlanCreationsQuery, "dev-gcp", "kontroll")), 1);
+	assert.equal(total(await count(aidProductPlanCreationsQuery, "dev-gcp", ".*")), 7);
+	assert.deepEqual(await count(aidProductPlanCreationsQuery, "dev-gcp", "utenfor_scope"), []);
+	assert.equal(total(await count(aidProductPlanTrendQuery)), 7);
+	assert.equal(total(await count(aidProductPlanViewsQuery)), 1);
+	assert.deepEqual((await count(aidProductEvaluationQuery)).map(row => [row.metric.evaluering_paaminnelse, Number(row.value[1])]).sort(), [["ja",3],["nei",1]]);
+	for (const query of [aidReminderViewsQuery, aidReminderOrdersQuery, aidReminderCancellationsQuery]) {
+		assert.equal(total(await count(query)), 1);
+		assert.deepEqual(await count(query, "no-events"), []);
+	}
+	for (const panel of Object.values(buildAidDashboard().spec.elements)) {
+		for (const query of panel.spec.data.spec.queries) await count(query.spec.query.spec.expr);
+	}
 	console.log(
 		"Loki 3.6.0: browser and server plan queries return exact expected counts; legacy events, closed categories, forwarded-browser exclusion and producer/environment isolation verified.",
 	);

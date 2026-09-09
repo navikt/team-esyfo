@@ -1,7 +1,6 @@
 // Server JSON logs are separate from Faro events. Runtime cluster labels use
 // dev/prod, while the existing dashboard datasource displays dev-gcp/prod-gcp.
-export const aidServerPlanCreationsQuery = `sum by (gruppe, skjemavariant, evaluering_paaminnelse) (count_over_time(
-{service_namespace="team-esyfo", service_name="syfo-oppfolgingsplan-frontend", k8s_cluster_name=~"dev|prod"}
+export const aidServerPlanEventPipeline = `{service_namespace="team-esyfo", service_name="syfo-oppfolgingsplan-frontend", k8s_cluster_name=~"dev|prod"}
 | label_format selected_environment=\`{{ .k8s_cluster_name }}-gcp\`
 | selected_environment="\${env:text}"
 | x_isFrontend!="true"
@@ -16,5 +15,8 @@ export const aidServerPlanCreationsQuery = `sum by (gruppe, skjemavariant, evalu
 | skjemavariant=~"tiltak|standard"
 | aid_reminder=~"ja|nei"
 | label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder
-| keep gruppe, skjemavariant, evaluering_paaminnelse
+| keep gruppe, skjemavariant, evaluering_paaminnelse`;
+
+export const aidServerPlanCreationsQuery = `sum by (gruppe, skjemavariant, evaluering_paaminnelse) (count_over_time(
+${aidServerPlanEventPipeline}
 [$__auto]))`;
