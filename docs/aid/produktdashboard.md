@@ -7,8 +7,9 @@ produktleder, designer og resten av teamet. Det skal hjelpe oss å velge hva vi
 bør undersøke videre. Det skal ikke presentere teknisk instrumentering som
 produktresultater, eller gi en automatisk dom over om pakken virker.
 
-Hovedvisningen avgrenses til forsøket. Planaktivitet og de to forskjellige
-påminnelsene får hver sin seksjon. En liten leveringskontroll er synlig, mens
+Hovedvisningen viser produksjonsdata og avgrenses til forsøket. Ferdigstilte
+oppfølgingsplaner og de to forskjellige påminnelsene får hver sin seksjon.
+En liten leveringskontroll er synlig, mens
 tekniske detaljer ligger sammenfoldet. Vi fjerner generelle backendtotaler og
 lange metodeforklaringer fra hovedflaten, ikke fra datainnsamlingen eller
 dokumentasjonen.
@@ -20,8 +21,9 @@ ikke dokumentasjon på at en bestemt versjon er publisert eller brukertestet.
 
 [AID-oppdraget](./index) handler om bedre oppfølging, ikke flere klikk i seg
 selv. Tiltakspakke 1 inneholder blant annet tidlig informasjon, påminnelse om å
-lage plan, behovsvurdering, et endret planskjema og støtte til den sykmeldtes
-medvirkning. [Endringsoversikten](./endringer) viser en bredere pakke enn det
+lage plan, behovsvurdering, AID-tilpasninger i utfyllingen av oppfølgingsplanen
+og støtte til den sykmeldtes medvirkning. [Endringsoversikten](./endringer)
+viser en bredere pakke enn det
 dagens målinger dekker.
 
 Teamet har fast AID-synk på tirsdager og setter av tirsdag og onsdag til
@@ -39,7 +41,7 @@ brukermålet, identifiser tegn på at det nås, og velg deretter konkrete målta
 Bruk og opplevd kvalitet er ulike sider av brukeropplevelsen. Et tilgjengelig
 måltall er derfor ikke automatisk et relevant produktmål. [1](https://research.google.com/pubs/archive/36299.pdf)
 
-For AID betyr dette at en registrert planopprettelse er et nærliggende
+For AID betyr dette at en ferdigstilt oppfølgingsplan er et nærliggende
 aktivitetstegn. Den forteller ikke alene om planen er relevant, om lederen og
 den ansatte har hatt en god samtale, eller om noen forsto teksten bedre.
 Dashboardet må være nyttig uten å påstå at disse spørsmålene er besvart.
@@ -61,49 +63,52 @@ viktig informasjon prioriteres og innholdet vurderes på nytt over tid.
 [3](https://service-manual.ons.gov.uk/data-visualisation/guidance/dashboards)
 
 Vårt designvalg er derfor å gjøre hovedanalysene riktig avgrenset fra starten.
-Brukeren skal ikke måtte filtrere bort standardskjemaets «nei» for å lese
-evalueringsvalget, eller vite at nasjonale backendtotaler gjelder noe annet
+Brukeren skal ikke måtte filtrere bort «nei» fra varianten uten
+AID-tilpasninger for å lese evalueringsvalget, eller vite at nasjonale
+backendtotaler gjelder noe annet
 enn forsøket. Færre forklaringer blir mulig fordi vi først rydder i innholdet.
 
-Introen begrenses til omtrent 30 ord, for eksempel:
-
-> Registrert bruk av tiltakspakke 1 i forsøket. Tallene viser handlinger, ikke
-> unike personer eller effekten av pakken. Planopprettelser inkluderer nye
-> versjoner. Ingen måledata er ikke det samme som null bruk.
-
-Én lenke til [om tallene](./dashboard) erstatter den lange seksjonen
-«Definisjoner og neste måletrinn». Viktige avgrensninger står fortsatt ved
-figuren de gjelder.
+Hovedflaten har ingen generell intro. Presise overskrifter forteller hva som
+telles, og panelinformasjonen forklarer nødvendige avgrensninger der de er
+relevante. Én lenke til [om tallene](./dashboard) erstatter den lange seksjonen
+«Definisjoner og neste måletrinn».
 
 ## 3. Hovedvisningene
 
-### Planer
+### Oppfølgingsplaner i forsøket
 
-Planseksjonen viser registrerte opprettelser i tiltaks- og kontrollgruppen.
-Den bruker én serverbasert kilde, som registrerer at opprettelseskallet har
-fått vellykket svar. Nettleserens bekreftelse vises ikke som et ekstra
+Planseksjonen viser ferdigstilte oppfølgingsplaner i tiltaks- og kontrollgruppen.
+Den bruker én serverbasert kilde, som registrerer vellykket svar når lederen
+har valgt «Ferdigstill og del med den ansatte». Backend har da lagret planen;
+målingen gjelder ikke utkast, arbeidstakerens godkjenning eller om et varsel
+er levert. Nettleserens bekreftelse vises ikke som et ekstra
 produktresultat. Begge kan gjelde samme handling.
 
-Det synlige navnet skal handle om planen, ikke om infrastrukturen. «Planer
-opprettet» må ledsages av «Registrerte opprettelser, inkludert nye versjoner».
-Det er ikke et mål på unike personer, første plan per oppfølging eller alle
-planer i en database. Dekningen er beskrevet i [målegrunnlaget](./dashboard).
+Det synlige navnet er «Ferdigstilte oppfølgingsplaner». Produktets «Oppdater
+planen» leder til samme ferdigstilling, enten lederen bruker innhold fra den
+forrige planen eller begynner med tom plan. Derfor forklarer panelinformasjonen
+at hver ferdigstilling teller, også senere oppdateringer. Målingen skiller ikke
+første plan fra oppdateringer og teller ikke unike ansatte eller alle planer
+i databasen. Dekningen er beskrevet i [målegrunnlaget](./dashboard).
 
 Seksjonen har tre forskjellige funksjoner:
 
-- **Antall:** registrerte opprettelser per gruppe i valgt tidsrom.
+- **Antall:** horisontale stolper med antall ferdigstillinger per gruppe i
+  valgt tidsrom.
 - **Utvikling:** trend fra samme kilde og med samme gruppeavgrensning.
-- **Levert skjema:** registrerte visninger fordelt på gruppe og faktisk
-  skjemavariant, slik at vi kan se om forsøksopplevelsen når fram.
+- **Utfyllingssiden:** registrerte visninger fordelt på gruppe og variant
+  med eller uten AID-tilpasninger, slik at vi kan se om forsøksopplevelsen
+  når fram.
 
-Visningen av skjemaet betyr at skjemabeholderen kom inn i skjermbildet. Den
-betyr ikke at alle felter eller tekster ble lest. Den brukes til
-leveringskontroll, ikke som nevner for en konverteringsprosent.
+En visning betyr at utfyllingssiden kom inn i skjermbildet. Det er ikke en
+visning av en ferdig plan, en unik leder eller dokumentasjon på at alle
+felter eller tekster ble lest. Visningene brukes til leveringskontroll, ikke
+som nevner for en konverteringsprosent.
 
-Et lokalt filter «Gruppe» gjelder bare planseksjonen. «Begge grupper» er
+Et lokalt filter «Forsøksgruppe» gjelder bare planseksjonen. «Begge grupper» er
 standard; alternativene er «Tiltaksgruppe» og «Kontrollgruppe». Tiltaksgruppen
-beholdes også når standardskjemaet ble levert. Tildeling og faktisk levert
-opplevelse må ikke blandes sammen.
+beholdes også når varianten uten AID-tilpasninger ble vist. Tildeling og
+faktisk levert opplevelse må ikke blandes sammen.
 
 Trendpunktene viser foreløpig **siste 24 timer ved hvert tidspunkt**, ikke
 kalenderdager. Dette må stå i tittelen eller tett på grafen. Punktene overlapper
@@ -115,34 +120,42 @@ Antallsforskjeller mellom gruppene er ikke et effektmål. Vi kjenner ikke en
 komplett nevner fra denne målingen. Ingen prosentvis forbedring, rangering av
 gruppene eller rød/grønn resultatdom legges oppå volumene.
 
-### Påminnelse om å evaluere planen
+### Valg av evalueringspåminnelse · tiltaksgruppen
 
-Denne seksjonen gjelder bare tiltaksgruppen med det nye planskjemaet, der
-valget faktisk tilbys. Den viser **med påminnelse** og **uten påminnelse** ved
-registrert, vellykket opprettelse.
+Denne seksjonen gjelder bare tiltaksgruppen som får AID-tilpasningene, der
+valget faktisk tilbys. Horisontale stolper viser antall ferdigstilte planer
+**med påminnelse** og **uten påminnelse**. Lederen må svare Ja eller Nei på om
+hen ønsker en e-postpåminnelse om neste møte for å evaluere planen. Påminnelsen
+planlegges tre dager før valgt evalueringsdato.
 
 Ordvalget er bevisst nøytralt. Et innsendt valg dokumenterer ikke motivasjon,
-og en verdi kan følge med fra et tidligere utkast. «Uten påminnelse» skal
-derfor ikke omskrives til «ønsker ikke», «avviser» eller «synes ikke det er
+og en verdi kan følge med fra et tidligere utkast eller den forrige planen.
+Et nytt utkast har ikke et forhåndsvalgt svar. «Uten påminnelse» skal
+likevel ikke omskrives til «ønsker ikke», «avviser» eller «synes ikke det er
 nyttig». Tilsvarende betyr «med» ikke at varselet er sendt eller at planen er
 evaluert.
 
-Standardvariantens `nei` er ikke et aktivt avslag. Den holdes utenfor
-fordelingen, sammen med kontrollgruppen og bruk utenfor forsøket. Manglende
+Varianten uten AID-tilpasninger tilbyr ikke spørsmålet. Dens `nei` er ikke
+et aktivt avslag og holdes utenfor fordelingen, sammen med kontrollgruppen
+og bruk utenfor forsøket. Manglende
 eller ugyldig verdi flyttes ikke inn i «uten». Slike hendelser undersøkes
-som datadekning, ikke brukerpreferanser. Innsendingstabellen i den tekniske
-kontrollseksjonen viser manglende og ugyldige evalueringsfelt. For vanlig
-skjema vises «Ikke tilbudt» framfor en verdi som kan forveksles med et avslag.
+som datadekning, ikke brukerpreferanser. Tabellen over ferdigstillingsforsøk
+i den tekniske kontrollseksjonen viser manglende og ugyldige evalueringsfelt.
+Ved utfylling uten AID-tilpasninger vises «Ikke tilbudt» framfor en verdi som kan
+forveksles med et avslag.
 
 Antall er tilstrekkelig nå. En eventuell senere andel må bruke registrerte
-opprettelser med tilbudt og kjent valg som nevner, og vise den nevneren.
-Andelen ville fortsatt gjelde opprettelser, inkludert nye versjoner, ikke
+ferdigstillinger med tilbudt og kjent valg som nevner, og vise den nevneren.
+Andelen ville fortsatt gjelde ferdigstillinger, inkludert oppdateringer, ikke
 andelen arbeidsgivere som ønsker påminnelse.
 
-### Påminnelse om å lage plan
+### Påminnelse før fireukersfristen · Dine sykmeldte · tiltaksgruppen
 
-Dette er et annet tilbud, i Dine sykmeldte. Seksjonen avgrenses tydelig til
-tiltaksgruppen og viser tre tall:
+Dette er et annet tilbud, på siden for én sykmelding i Dine sykmeldte.
+Nærmeste leder kan velge en e-postpåminnelse før fristen for å lage
+oppfølgingsplan. Påminnelsen planlegges 24 dager etter periodens start, ikke
+etter fire uker. Seksjonen avgrenses tydelig til tiltaksgruppen og viser tre
+tall:
 
 1. Registrerte visninger av tilbudet.
 2. Registrerte, vellykkede bestillinger.
@@ -164,9 +177,10 @@ feilforklaring eller en rød status.
 
 ## 4. Filtre som følger spørsmålet
 
-Periode og miljø gjelder hele dashboardet. Miljøvalgene får navnene
-«Produksjon» og «Test», med produksjon som standard. Et lokalt gruppefilter
-i planseksjonen skal ikke endre påminnelsesseksjonene: Disse måler tilbud
+Dashboardet viser bare produksjon og har ingen miljøvelger. Testdata skal
+ikke blandes inn i produktoversikten. Periode gjelder hele dashboardet. Et
+lokalt gruppefilter i planseksjonen skal ikke endre påminnelsesseksjonene:
+Disse måler tilbud
 som gjelder tiltaksgruppen.
 
 Grafana 13.1 beskriver variabler og filtre på seksjonsnivå, der panelene i en
@@ -177,7 +191,7 @@ planseksjonen. Funksjonen må verifiseres i den aktuelle Grafana-instansen.
 
 Vi innfører ikke et globalt «påminnelse»-filter. Evalueringsvalget finnes i
 planhendelsen; bestilling av påminnelse om å lage plan finnes i en annen
-målekjede. Dagens data kan ikke vise planopprettelser blant dem som tidligere
+målekjede. Dagens data kan ikke vise ferdigstilte planer blant dem som tidligere
 bestilte den andre påminnelsen. En felles dropdown ville love en analyse vi
 ikke har.
 
@@ -193,10 +207,11 @@ utenfor forsøket beholdes i en sammenfoldet teknisk seksjon. De er nyttige
 for å undersøke om feil gruppe får et tilbud, men skal ikke dominere
 produktoversikten.
 
-Teknisk kontroll omfatter alle grupper, ukjent tildeling, tilgjengeliggjort
-skjema og mislykkede handlinger. Innsendingstabellen viser også
-evalueringsfeltet: registrerte verdier, manglende eller ugyldige verdier,
-eller at valget ikke var tilbudt i vanlig skjema. Dette beholdes i samme
+«Teknisk kontroll» omfatter alle grupper, ukjent tildeling,
+utfylling med og uten AID-tilpasninger og mislykkede handlinger.
+Tabellen over ferdigstillingsforsøk viser også evalueringsfeltet: registrerte
+verdier, manglende eller ugyldige verdier, eller at valget ikke var tilbudt i
+varianten uten AID-tilpasninger. Dette beholdes i samme
 kontrollpanel, ikke som en ny hovedanalyse. Det finnes ikke en egen indikator
 for hvor ferske dataene er.
 
@@ -214,9 +229,9 @@ For dette dashboardet skal kvalitetstesten minst dekke:
 
 | Felt eller tilstand | Krav |
 | --- | --- |
-| Miljø | Produksjon og test blandes aldri. |
+| Miljø | Bare produksjonsdata inngår, uten miljøvelger. |
 | Gruppe | Ukjent og utenfor forsøket blir aldri kontroll. |
-| Skjemavariant | Tildelt gruppe og faktisk levert skjema kan leses hver for seg. |
+| Utfyllingsvariant | Tildelt gruppe og visning med eller uten AID-tilpasninger kan leses hver for seg. |
 | Evalueringsvalg | Manglende verdi blir aldri «uten påminnelse». |
 | Hendelse og resultat | Forsøk, bekreftelse og feil summeres ikke til ett resultat. |
 | Datakilde | Server- og nettleserobservasjoner telles ikke som separate planer. |
@@ -231,16 +246,16 @@ verifisert med reelle data, ikke som feil.
 ## 6. Nyttige analyser og ugyldige snarveier
 
 Dagens [datagrunnlag](./dashboard) støtter beskrivende spørsmål: hvor mye
-registrert aktivitet vi ser, hvilke tilbudte valg som følger opprettelsene,
+registrert aktivitet vi ser, hvilke tilbudte valg som følger ferdigstillingene,
 og hvilke leveringsmønstre som bør undersøkes. Det støtter ikke en komplett
 brukerreise eller planresultater per person.
 
 | Nyttig nå | Ikke støttet av samme tall |
 | --- | --- |
-| Registrerte planopprettelser per gruppe | Hvor stor andel av gruppen som får en plan |
-| Med/uten evalueringspåminnelse i tilbudt skjema | Hvorfor brukerne valgte slik, eller om de evaluerte |
-| Bestilling og avbestilling av påminnelse om å lage plan | Aktive bestillinger, utsendte eller leste varsler |
-| Registrerte skjemavisninger per gruppe og variant | Om innholdet er lest, forstått eller nyttig |
+| Ferdigstilte oppfølgingsplaner per gruppe | Hvor stor andel av gruppen som får en plan |
+| Med/uten evalueringspåminnelse når valget tilbys | Hvorfor brukerne valgte slik, eller om de evaluerte |
+| Bestilling og avbestilling av påminnelse før fireukersfristen | Aktive bestillinger, utsendte eller leste varsler |
+| Visninger av utfyllingssiden med og uten AID-tilpasninger | Om innholdet er lest, forstått eller nyttig |
 | Utvikling i registrert bruk | Kausal effekt av pakken eller én påminnelse |
 
 Microsoft skiller mellom stabile segmenter og segmenter som selv påvirkes
@@ -302,7 +317,7 @@ En kort akseptansetest gjennomføres uten innledende metodeforedrag:
 1. Finn planaktiviteten i forsøket og forklar hva som telles.
 2. Bytt gruppe i planseksjonen og si hvilke andre figurer som endrer seg.
 3. Forklar forskjellen på de to påminnelsene.
-4. Finn valget ved planopprettelse uten å tolke «uten» som motivasjon.
+4. Finn valget ved ferdigstilling uten å tolke «uten» som motivasjon.
 5. Forklar hva et tomt panel og en skjult påminnelse kan bety.
 6. Velg ett spørsmål teamet bør undersøke videre, og ett dashboardet ikke kan besvare.
 

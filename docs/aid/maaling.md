@@ -71,7 +71,7 @@ Her anbefaler vi dashboard-visninger for å forstå hvordan ledere og sykmeldte 
 
 ## Dashboard
 
-For løpende produktoppfølging bruker vi [AID – levering og bruk](./dashboard) i Grafana. Det viser hendelser og eksisterende backendtellere, ikke personer, sykefraværsforløp eller kausal effekt. Det er et annet datagrunnlag enn effektanalysen beskrevet på denne siden.
+For løpende produktoppfølging bruker vi [AID – bruk av tiltakspakke 1](./dashboard) i Grafana. Det viser registrerte ferdigstillinger av oppfølgingsplaner og valg av påminnelser i produksjon, ikke personer, sykefraværsforløp eller kausal effekt. Generelle backendtotaler inngår ikke, fordi de ikke kan avgrenses til forsøket. Det er et annet datagrunnlag enn effektanalysen beskrevet på denne siden.
 
 Grafana viser levering og bruk nå. Resultatvisninger skal først få godkjente aggregater med tydelig datadekning, teller, nevner og usikkerhet. Analyseansvarlig må eie definisjonene og sammenligningsmetoden; visualiseringsverktøyet erstatter ikke dette.
 
