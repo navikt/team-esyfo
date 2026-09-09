@@ -30,7 +30,7 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "Operatørflate for å finne hvilke runtimefeil som øker, hvor de skjer og hvilket trace eller loggsøk som gir neste steg. Browserdiagnostikk og kontraktsgap er sekundære fordi miljø og metadata ikke har samme kvalitet.",
+    "description": "Finn hvor feilene skjer, hva som feiler og veien videre til logger, APM og tracing. Feil i tjenestene og nettleseren har hvert sitt utvalg.",
     "editable": false,
     "elements": {
       "panel-1": {
@@ -53,7 +53,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum(count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=~\"^${runtime_environment:regex}$\", service_name=~\"${app:regex}\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| keep service_name\n[$__auto])) or on() vector(0)",
+                        "expr": "sum(rate({service_namespace=\"team-esyfo\", k8s_cluster_name=~\"^${runtime_environment:regex}$\", service_name=~\"${app:regex}\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| keep service_name\n[$__auto])) * 60",
                         "queryType": "range"
                       },
                       "version": "v0"
@@ -69,7 +69,7 @@
               "transformations": []
             }
           },
-          "description": "Volum av runtime-logghendelser på error, critical eller fatal i valgt miljø og tjenestescope. Hendelser, ikke unike feil eller incidents. En endring i nivå eller mønster er et signal til å prioritere tabellen under.",
+          "description": "Loggede ERROR-, CRITICAL- og FATAL-hendelser per minutt, gjennomsnitt innen hvert måleintervall. Flere logger kan gjelde samme feil. Tomt betyr ingen treff, ikke bekreftet frisk tjeneste.",
           "id": 1,
           "links": [
             {
@@ -83,7 +83,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Runtimefeil over tid",
+          "title": "Loggede feil per minutt",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -98,7 +98,7 @@
                     "axisBorderShow": false,
                     "axisCenteredZero": false,
                     "axisColorMode": "text",
-                    "axisLabel": "",
+                    "axisLabel": "Hendelser/min",
                     "axisPlacement": "auto",
                     "barAlignment": 0,
                     "barWidthFactor": 0.6,
@@ -117,7 +117,7 @@
                     "scaleDistribution": {
                       "type": "linear"
                     },
-                    "showPoints": "never",
+                    "showPoints": "always",
                     "spanNulls": false,
                     "stacking": {
                       "group": "A",
@@ -137,7 +137,8 @@
                       }
                     ]
                   },
-                  "unit": "short"
+                  "unit": "short",
+                  "min": 0
                 },
                 "overrides": []
               },
@@ -156,6 +157,129 @@
               }
             },
             "version": "13.1.2"
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "id": 7,
+          "title": "Hvor skjer feilene?",
+          "description": "Loggede feil i hele tidsrommet, fordelt på tjeneste. Klikk en stolpe for logger eller APM. Tjenester uten treff vises ikke; dette er ikke en helsestatus.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "group": "loki",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "sort_desc(sum by(service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=~\"^${runtime_environment:regex}$\", service_name=~\"${app:regex}\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| keep service_name\n[$__auto])))",
+                        "queryType": "instant"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Feil per tjeneste"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "rowsToFields",
+                  "spec": {
+                    "options": {
+                      "mappings": [
+                        {
+                          "fieldName": "service_name",
+                          "handlerKey": "field.name"
+                        },
+                        {
+                          "fieldName": "Value #Feil per tjeneste",
+                          "handlerKey": "field.value"
+                        },
+                        {
+                          "fieldName": "Time",
+                          "handlerKey": "__ignore"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "blue"
+                  },
+                  "decimals": 0,
+                  "displayName": "${__field.name}",
+                  "fieldMinMax": false,
+                  "min": 0,
+                  "noValue": "Ingen treff",
+                  "unit": "locale",
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "Alle tjenestelogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7C${runtime_environment:raw}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feil i APM",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.name}?environment=${runtime_environment:raw}&tab=issues&from=${__from}&to=${__to}"
+                    }
+                  ]
+                },
+                "overrides": []
+              },
+              "options": {
+                "displayMode": "basic",
+                "orientation": "horizontal",
+                "valueMode": "text",
+                "namePlacement": "left",
+                "showUnfilled": false,
+                "sizing": "manual",
+                "minVizHeight": 28,
+                "maxVizHeight": 40,
+                "minVizWidth": 8,
+                "text": {
+                  "titleSize": 13,
+                  "valueSize": 18
+                },
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                }
+              }
+            }
           }
         }
       },
@@ -223,7 +347,7 @@
               ]
             }
           },
-          "description": "Prioriteringsvisning for valgt miljø og tjeneste, med inntil 25 grupper per error-, critical- og fatal-nivå slik at lavvolums critical/fatal ikke forsvinner bak vanlige error-hendelser. Undersøk gir valget mellom logger for akkurat denne gruppen, alle tjenestelogger og tjenestens APM. Miljø og tidsrom bevares; bare gruppelenken beholder feiltype, kode, operasjon og nivå. Tom tabell betyr ingen treff, ikke bevist komplett telemetry.",
+          "description": "Loggede hendelser i hele tidsrommet, gruppert på tjeneste, feiltype, kode, operasjon og nivå. Inntil 25 grupper per ERROR-, CRITICAL- og FATAL-nivå. Undersøk gir logger for feilgruppen, tjenestelogger eller feil i APM. Bare gruppeloggen beholder den nøyaktige grupperingen.",
           "id": 2,
           "links": [
             {
@@ -237,7 +361,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Vanligste runtimefeil per nivå (topp 25)",
+          "title": "Hva feiler?",
           "vizConfig": {
             "group": "table",
             "kind": "VizConfig",
@@ -254,9 +378,58 @@
                     },
                     "inspect": false
                   },
-                  "noValue": "—"
+                  "noValue": "—",
+                  "decimals": 0
                 },
                 "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "browser_environment_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "prod-gcp": {
+                                "text": "Produksjon"
+                              },
+                              "dev-gcp": {
+                                "text": "Test"
+                              },
+                              "ukjent": {
+                                "text": "Ukjent"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "rejection_reason_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "UNSPECIFIED": {
+                                "text": "Årsak ikke oppgitt"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
                   {
                     "matcher": {
                       "id": "byName",
@@ -278,8 +451,8 @@
                           },
                           {
                             "targetBlank": true,
-                            "title": "NAIS APM · tjenesten",
-                            "url": "/a/nais-apm-app/services/team-esyfo/${__data.fields[\"service_name\"]}?environment=${runtime_environment:raw}&from=${__from:date:iso}&to=${__to:date:iso}"
+                            "title": "Feil i APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__data.fields[\"service_name\"]}?environment=${runtime_environment:raw}&tab=issues&from=${__from}&to=${__to}"
                           }
                         ]
                       },
@@ -327,7 +500,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 310
+                        "value": 230
                       }
                     ]
                   },
@@ -339,7 +512,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 230
+                        "value": 200
                       }
                     ]
                   },
@@ -488,7 +661,7 @@
               ]
             }
           },
-          "description": "Deduplisert utvalg fra de 100 nyeste trace-koblede runtimehendelsene. Valgfri HTTP-status fra kalt tjeneste er detaljkontekst og påvirker ikke feiltype eller kode. Trace-kolonnen åpner hele forløpet. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry. Rå melding, stack, URL og payload returneres ikke til tabellen.",
+          "description": "Utvalg fra de 100 nyeste loggede feilene med trace-ID. Identiske feil i samme trace er slått sammen. Åpne trace viser forløpet hvis sporet er lagret og fortsatt finnes. HTTP-status gjelder tjenesten som ble kalt.",
           "id": 3,
           "links": [
             {
@@ -502,7 +675,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Nyeste runtimefeil med trace (maks 100)",
+          "title": "Konkrete feilforløp · åpne trace",
           "vizConfig": {
             "group": "table",
             "kind": "VizConfig",
@@ -570,7 +743,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 245
+                        "value": 220
                       },
                       {
                         "id": "links",
@@ -582,8 +755,8 @@
                           },
                           {
                             "targetBlank": true,
-                            "title": "NAIS APM · tjenesten",
-                            "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=${runtime_environment:raw}&from=${__from:date:iso}&to=${__to:date:iso}"
+                            "title": "Feil i APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=${runtime_environment:raw}&tab=issues&from=${__from}&to=${__to}"
                           }
                         ]
                       }
@@ -597,7 +770,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 310
+                        "value": 240
                       }
                     ]
                   },
@@ -705,7 +878,7 @@
               ]
             }
           },
-          "description": "Avviste API-kall vises separat fra runtimefeil. Omfatter bare WARN med event_type=api_request_rejected, ikke alle advarsler. Gjentatte avvisninger kan skyldes klientfeil eller feilkonfigurasjon selv om serveren avviser korrekt. Viser logghendelser, ikke brukere eller feilrate. UNSPECIFIED betyr manglende eller ugyldig årsak. Tom tabell beviser ikke komplett telemetry. Se logger bevarer miljø, tjeneste, operasjon, kode, årsak og tidsrom.",
+          "description": "Inntil 50 grupper av WARN-hendelsen api_request_rejected, ikke alle advarsler eller HTTP 4xx. Gjentatte avvisninger kan vise klientfeil eller feilkonfigurasjon selv om serveren avviser riktig. Antallet er logghendelser, ikke brukere. Logger for feilgruppen bevarer også avvisningsgrunnen.",
           "id": 6,
           "links": [
             {
@@ -719,7 +892,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "API-avvisninger (WARN · topp 50)",
+          "title": "Avviste API-kall · WARN",
           "vizConfig": {
             "group": "table",
             "kind": "VizConfig",
@@ -736,9 +909,58 @@
                     },
                     "inspect": false
                   },
-                  "noValue": "—"
+                  "noValue": "—",
+                  "decimals": 0
                 },
                 "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "browser_environment_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "prod-gcp": {
+                                "text": "Produksjon"
+                              },
+                              "dev-gcp": {
+                                "text": "Test"
+                              },
+                              "ukjent": {
+                                "text": "Ukjent"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "rejection_reason_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "UNSPECIFIED": {
+                                "text": "Årsak ikke oppgitt"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
                   {
                     "matcher": {
                       "id": "byName",
@@ -760,8 +982,8 @@
                           },
                           {
                             "targetBlank": true,
-                            "title": "NAIS APM · tjenesten",
-                            "url": "/a/nais-apm-app/services/team-esyfo/${__data.fields[\"service_name\"]}?environment=${runtime_environment:raw}&from=${__from:date:iso}&to=${__to:date:iso}"
+                            "title": "Feil i APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__data.fields[\"service_name\"]}?environment=${runtime_environment:raw}&tab=issues&from=${__from}&to=${__to}"
                           }
                         ]
                       },
@@ -892,7 +1114,7 @@
                       "renameByName": {
                         "Value #Runtime-kontraktsgap": "Hendelser",
                         "action": "Handling",
-                        "contract_state_display": "Gap",
+                        "contract_state_display": "Hva mangler?",
                         "service_name": "Tjeneste"
                       }
                     }
@@ -901,7 +1123,7 @@
               ]
             }
           },
-          "description": "Viser bare hendelser som ikke bruker gyldig kanonisk event_type. Eldre typefelt betyr at dashboardet måtte bruke en migreringsfallback; avvist betyr feil format; Ikke oppgitt av appen betyr at ingen identitetskandidat ble sendt. Kode og operasjon er valgfri metadata og brukes ikke som erstatning for feilidentitet. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry.",
+          "description": "Feilene er med i oversikten, men mangler en gyldig event_type. Eldre typefelt er en fallback; avvist format er ubrukelig metadata; ikke oppgitt betyr at typefelt mangler. Kode og operasjon er valgfri metadata. Dette er forbedringsarbeid, ikke flere feil i tillegg til tabellen over.",
           "id": 4,
           "links": [
             {
@@ -915,7 +1137,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Loggmetadata som må forbedres",
+          "title": "Feil uten standardisert hendelsestype",
           "vizConfig": {
             "group": "table",
             "kind": "VizConfig",
@@ -932,9 +1154,58 @@
                     },
                     "inspect": false
                   },
-                  "noValue": "—"
+                  "noValue": "—",
+                  "decimals": 0
                 },
                 "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "browser_environment_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "prod-gcp": {
+                                "text": "Produksjon"
+                              },
+                              "dev-gcp": {
+                                "text": "Test"
+                              },
+                              "ukjent": {
+                                "text": "Ukjent"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "rejection_reason_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "UNSPECIFIED": {
+                                "text": "Årsak ikke oppgitt"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
                   {
                     "matcher": {
                       "id": "byName",
@@ -956,8 +1227,8 @@
                           },
                           {
                             "targetBlank": true,
-                            "title": "NAIS APM · tjenesten",
-                            "url": "/a/nais-apm-app/services/team-esyfo/${__data.fields[\"service_name\"]}?environment=${runtime_environment:raw}&from=${__from:date:iso}&to=${__to:date:iso}"
+                            "title": "Feil i APM",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__data.fields[\"service_name\"]}?environment=${runtime_environment:raw}&tab=issues&from=${__from}&to=${__to}"
                           }
                         ]
                       },
@@ -1047,7 +1318,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "topk(50, sum by(service_name, browser_type_display, action) (count_over_time({kind=\"exception\", service_name=~\"${browser_app:regex}\"}\n| logfmt type\n| drop __error__, __error_details__\n| label_format safe_browser_type=`{{ if and .type (not (regexReplaceAll \"^(Error|TypeError|RangeError|ReferenceError|SyntaxError|URIError|EvalError|AggregateError|AbortError|DOMException|NetworkError|SecurityError|NotFoundError|NotAllowedError|DataCloneError|InvalidStateError|QuotaExceededError|TimeoutError|UnknownError|UnhandledRejection)$\" .type \"\")) }}{{ .type }}{{ end }}`\n| label_format browser_type_display=`{{ if .safe_browser_type }}{{ .safe_browser_type }}{{ else }}Annen / ikke oppgitt{{ end }}`\n| label_format action=`Undersøk`\n| keep service_name, browser_type_display, action\n[$__auto])))",
+                        "expr": "topk(50, sum by(service_name, browser_environment_display, browser_type_display, action) (count_over_time({kind=\"exception\", service_name=~\"${browser_app:regex}\"}\n| logfmt type, app_namespace, app_environment\n| label_format browser_parse_error=`{{ .__error__ }}`\n| drop __error__, __error_details__\n| app_namespace=\"\" or app_namespace=\"team-esyfo\"\n| label_format browser_environment_display=`{{ if and (eq .browser_parse_error \"\") (eq .app_namespace \"team-esyfo\") (or (eq .app_environment \"prod-gcp\") (eq .app_environment \"dev-gcp\")) }}{{ .app_environment }}{{ else }}ukjent{{ end }}`\n| label_format safe_browser_type=`{{ if and .type (not (regexReplaceAll \"^(Error|TypeError|RangeError|ReferenceError|SyntaxError|URIError|EvalError|AggregateError|AbortError|DOMException|NetworkError|SecurityError|NotFoundError|NotAllowedError|DataCloneError|InvalidStateError|QuotaExceededError|TimeoutError|UnknownError|UnhandledRejection)$\" .type \"\")) }}{{ .type }}{{ end }}`\n| label_format browser_type_display=`{{ if .safe_browser_type }}{{ .safe_browser_type }}{{ else }}Annen / ikke oppgitt{{ end }}`\n| browser_environment_display=~\"${browser_environment:raw}\"\n| label_format action=`Undersøk`\n| keep service_name, browser_environment_display, browser_type_display, action\n[$__auto])))",
                         "queryType": "instant"
                       },
                       "version": "v0"
@@ -1069,13 +1340,15 @@
                       "includeByName": {},
                       "indexByName": {
                         "service_name": 0,
-                        "browser_type_display": 1,
-                        "Value #Browserfeil": 2,
-                        "action": 3
+                        "browser_environment_display": 1,
+                        "browser_type_display": 2,
+                        "Value #Browserfeil": 3,
+                        "action": 4
                       },
                       "renameByName": {
                         "Value #Browserfeil": "Hendelser",
                         "action": "Handling",
+                        "browser_environment_display": "Miljø",
                         "browser_type_display": "Feiltype",
                         "service_name": "Nettleserflate"
                       }
@@ -1085,7 +1358,7 @@
               ]
             }
           },
-          "description": "Sekundær Faro-diagnostikk for konfigurerte nettleserflater. Kjøremiljøet påvirker ikke dette panelet. Bare en lukket liste med kjente exception-typer vises; øvrige og ikke-parsebare hendelser samles som Annen / ikke oppgitt. Handlingen åpner nettleserlogger uten å påstå et kjøremiljø. Tom tabell betyr ingen treff i valgt scope; det beviser ikke komplett telemetry.",
+          "description": "Inntil 50 grupper fra nettleserens feillogg. Miljøet kommer fra appens metadata; manglende eller ukjent miljø beholdes som Ukjent. Andre eksplisitte namespaces er utelatt. Ukjent type samles som Annen / ikke oppgitt. Tallene er hendelser, ikke berørte brukere.",
           "id": 5,
           "links": [
             {
@@ -1094,7 +1367,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/browserkontrakt"
             }
           ],
-          "title": "Nettleserfeil (topp 50 · miljø ikke verifisert)",
+          "title": "Hva feiler i nettleseren?",
           "vizConfig": {
             "group": "table",
             "kind": "VizConfig",
@@ -1111,9 +1384,58 @@
                     },
                     "inspect": false
                   },
-                  "noValue": "—"
+                  "noValue": "—",
+                  "decimals": 0
                 },
                 "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "browser_environment_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "prod-gcp": {
+                                "text": "Produksjon"
+                              },
+                              "dev-gcp": {
+                                "text": "Test"
+                              },
+                              "ukjent": {
+                                "text": "Ukjent"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "rejection_reason_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "UNSPECIFIED": {
+                                "text": "Årsak ikke oppgitt"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
                   {
                     "matcher": {
                       "id": "byName",
@@ -1126,7 +1448,7 @@
                           {
                             "targetBlank": true,
                             "title": "Se logger",
-                            "url": "/explore?panes=%7B%22A%22%3A%7B%22datasource%22%3A%22PEA2100DC89AE9FE2%22%2C%22queries%22%3A%5B%7B%22datasource%22%3A%7B%22type%22%3A%22loki%22%2C%22uid%22%3A%22PEA2100DC89AE9FE2%22%7D%2C%22direction%22%3A%22backward%22%2C%22editorMode%22%3A%22code%22%2C%22expr%22%3A%22%7Bkind%3D%5C%22exception%5C%22%2C%20service_name%3D%5C%22${__data.fields[\"service_name\"]}%5C%22%7D%5Cn%7C%20logfmt%20type%5Cn%7C%20drop%20__error__%2C%20__error_details__%5Cn%7C%20label_format%20safe_browser_type%3D%60%7B%7B%20if%20and%20.type%20(not%20(regexReplaceAll%20%5C%22%5E(Error%7CTypeError%7CRangeError%7CReferenceError%7CSyntaxError%7CURIError%7CEvalError%7CAggregateError%7CAbortError%7CDOMException%7CNetworkError%7CSecurityError%7CNotFoundError%7CNotAllowedError%7CDataCloneError%7CInvalidStateError%7CQuotaExceededError%7CTimeoutError%7CUnknownError%7CUnhandledRejection)%24%5C%22%20.type%20%5C%22%5C%22))%20%7D%7D%7B%7B%20.type%20%7D%7D%7B%7B%20end%20%7D%7D%60%5Cn%7C%20label_format%20browser_type_display%3D%60%7B%7B%20if%20.safe_browser_type%20%7D%7D%7B%7B%20.safe_browser_type%20%7D%7D%7B%7B%20else%20%7D%7DAnnen%20%2F%20ikke%20oppgitt%7B%7B%20end%20%7D%7D%60%5Cn%7C%20browser_type_display%3D%60${__data.fields[\"browser_type_display\"]}%60%22%2C%22queryType%22%3A%22range%22%2C%22refId%22%3A%22A%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D&schemaVersion=1&orgId=1"
+                            "url": "/explore?panes=%7B%22A%22%3A%7B%22datasource%22%3A%22PEA2100DC89AE9FE2%22%2C%22queries%22%3A%5B%7B%22datasource%22%3A%7B%22type%22%3A%22loki%22%2C%22uid%22%3A%22PEA2100DC89AE9FE2%22%7D%2C%22direction%22%3A%22backward%22%2C%22editorMode%22%3A%22code%22%2C%22expr%22%3A%22%7Bkind%3D%5C%22exception%5C%22%2C%20service_name%3D%5C%22${__data.fields[\"service_name\"]}%5C%22%7D%5Cn%7C%20logfmt%20type%2C%20app_namespace%2C%20app_environment%5Cn%7C%20label_format%20browser_parse_error%3D%60%7B%7B%20.__error__%20%7D%7D%60%5Cn%7C%20drop%20__error__%2C%20__error_details__%5Cn%7C%20app_namespace%3D%5C%22%5C%22%20or%20app_namespace%3D%5C%22team-esyfo%5C%22%5Cn%7C%20label_format%20browser_environment_display%3D%60%7B%7B%20if%20and%20(eq%20.browser_parse_error%20%5C%22%5C%22)%20(eq%20.app_namespace%20%5C%22team-esyfo%5C%22)%20(or%20(eq%20.app_environment%20%5C%22prod-gcp%5C%22)%20(eq%20.app_environment%20%5C%22dev-gcp%5C%22))%20%7D%7D%7B%7B%20.app_environment%20%7D%7D%7B%7B%20else%20%7D%7Dukjent%7B%7B%20end%20%7D%7D%60%5Cn%7C%20label_format%20safe_browser_type%3D%60%7B%7B%20if%20and%20.type%20(not%20(regexReplaceAll%20%5C%22%5E(Error%7CTypeError%7CRangeError%7CReferenceError%7CSyntaxError%7CURIError%7CEvalError%7CAggregateError%7CAbortError%7CDOMException%7CNetworkError%7CSecurityError%7CNotFoundError%7CNotAllowedError%7CDataCloneError%7CInvalidStateError%7CQuotaExceededError%7CTimeoutError%7CUnknownError%7CUnhandledRejection)%24%5C%22%20.type%20%5C%22%5C%22))%20%7D%7D%7B%7B%20.type%20%7D%7D%7B%7B%20end%20%7D%7D%60%5Cn%7C%20label_format%20browser_type_display%3D%60%7B%7B%20if%20.safe_browser_type%20%7D%7D%7B%7B%20.safe_browser_type%20%7D%7D%7B%7B%20else%20%7D%7DAnnen%20%2F%20ikke%20oppgitt%7B%7B%20end%20%7D%7D%60%5Cn%7C%20browser_environment_display%3D%60${__data.fields[\"browser_environment_display\"]}%60%5Cn%7C%20browser_type_display%3D%60${__data.fields[\"browser_type_display\"]}%60%22%2C%22queryType%22%3A%22range%22%2C%22refId%22%3A%22A%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D&schemaVersion=1&orgId=1"
                           }
                         ]
                       },
@@ -1169,6 +1491,18 @@
                   {
                     "matcher": {
                       "id": "byName",
+                      "options": "browser_environment_display"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 130
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
                       "options": "service_name"
                     },
                     "properties": [
@@ -1205,73 +1539,194 @@
             "kind": "RowsLayoutRow",
             "spec": {
               "collapse": false,
-              "hideHeader": true,
+              "hideHeader": false,
+              "title": "Feil i tjenestene",
+              "variables": [
+                {
+                  "kind": "CustomVariable",
+                  "spec": {
+                    "allowCustomValue": false,
+                    "current": {
+                      "text": "prod-gcp",
+                      "value": "prod"
+                    },
+                    "description": "Miljø for feil i tjenestene, tracing og loggdata. Gjelder ikke nettleserfeil.",
+                    "hide": "dontHide",
+                    "includeAll": false,
+                    "label": "Miljø",
+                    "multi": false,
+                    "name": "runtime_environment",
+                    "options": [],
+                    "query": "prod-gcp : prod,dev-gcp : dev",
+                    "skipUrlSync": false,
+                    "valuesFormat": "csv"
+                  }
+                },
+                {
+                  "kind": "DatasourceVariable",
+                  "spec": {
+                    "allowCustomValue": false,
+                    "current": {
+                      "text": "prod-gcp-tempo",
+                      "value": "P8A28344D07741F8D"
+                    },
+                    "description": "Trace-datakilde for valgt miljø.",
+                    "hide": "hideVariable",
+                    "includeAll": false,
+                    "multi": false,
+                    "name": "tempo_datasource",
+                    "options": [],
+                    "pluginId": "tempo",
+                    "refresh": "onDashboardLoad",
+                    "regex": "/^${runtime_environment:raw}-gcp-tempo$/",
+                    "skipUrlSync": true
+                  }
+                },
+                {
+                  "kind": "CustomVariable",
+                  "spec": {
+                    "allValue": "^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$",
+                    "allowCustomValue": false,
+                    "current": {
+                      "text": "All",
+                      "value": [
+                        "$__all"
+                      ]
+                    },
+                    "description": "Tjenestene som undersøkes. Gjelder alle paneler i denne delen, også loggdata.",
+                    "hide": "dontHide",
+                    "includeAll": true,
+                    "label": "Tjeneste",
+                    "multi": true,
+                    "name": "app",
+                    "options": [],
+                    "query": "aktivitetskrav-backend : aktivitetskrav-backend,aktivitetskrav-frontend : aktivitetskrav-frontend,aktivitetskrav-microfrontend : aktivitetskrav-microfrontend,bro-frontend : bro-frontend,dialogmote-frontend : dialogmote-frontend,dialogmote-microfrontend : dialogmote-microfrontend,dinesykmeldte : dinesykmeldte,dinesykmeldte-backend : dinesykmeldte-backend,esyfo-narmesteleder : esyfo-narmesteleder,esyfovarsel [migrering] : esyfovarsel,flaggskipet : flaggskipet,lps-oppfolgingsplan-mottak : lps-oppfolgingsplan-mottak,lumi-api : lumi-api,lumi-dashboard : lumi-dashboard,meroppfolging-backend : meroppfolging-backend,meroppfolging-frontend : meroppfolging-frontend,meroppfolging-microfrontend : meroppfolging-microfrontend,narmesteleder-frontend : narmesteleder-frontend,syfo-budstikka : syfo-budstikka,syfo-dokumentporten : syfo-dokumentporten,syfo-oppfolgingsplan-backend : syfo-oppfolgingsplan-backend,syfo-oppfolgingsplan-frontend : syfo-oppfolgingsplan-frontend,syfobrukertilgang [utfasing] : syfobrukertilgang,syfomotebehov : syfomotebehov,syfooppdfgen : syfooppdfgen,sykepengedager-informasjon : sykepengedager-informasjon",
+                    "skipUrlSync": false,
+                    "valuesFormat": "csv"
+                  }
+                }
+              ],
               "layout": {
-                "kind": "GridLayout",
+                "kind": "RowsLayout",
                 "spec": {
-                  "items": [
+                  "rows": [
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1"
-                        },
-                        "height": 6,
-                        "width": 24,
-                        "x": 0,
-                        "y": 0
+                        "collapse": false,
+                        "hideHeader": true,
+                        "title": "Feilsøking",
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-1"
+                                  },
+                                  "height": 7,
+                                  "width": 14,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-7"
+                                  },
+                                  "height": 7,
+                                  "width": 10,
+                                  "x": 14,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-2"
+                                  },
+                                  "height": 10,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 7
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-3"
+                                  },
+                                  "height": 8,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 17
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-6"
+                                  },
+                                  "height": 7,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 25
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-2"
-                        },
-                        "height": 12,
-                        "width": 24,
-                        "x": 0,
-                        "y": 6
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-6"
-                        },
-                        "height": 9,
-                        "width": 24,
-                        "x": 0,
-                        "y": 18
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-3"
-                        },
-                        "height": 11,
-                        "width": 24,
-                        "x": 0,
-                        "y": 27
+                        "collapse": true,
+                        "hideHeader": false,
+                        "title": "Forbedre loggdata",
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-4"
+                                  },
+                                  "height": 7,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     }
                   ]
                 }
-              },
-              "title": "Operativ feilsøking"
+              }
             }
           },
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "collapse": true,
+              "collapse": false,
               "hideHeader": false,
               "layout": {
                 "kind": "GridLayout",
@@ -1282,32 +1737,39 @@
                       "spec": {
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-4"
+                          "name": "panel-5"
                         },
-                        "height": 10,
+                        "height": 8,
                         "width": 24,
                         "x": 0,
                         "y": 0
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-5"
-                        },
-                        "height": 10,
-                        "width": 24,
-                        "x": 0,
-                        "y": 10
                       }
                     }
                   ]
                 }
               },
-              "title": "Datakvalitet og nettleserfeil",
+              "title": "Nettleserfeil · eget utvalg",
               "variables": [
+                {
+                  "kind": "CustomVariable",
+                  "spec": {
+                    "allowCustomValue": false,
+                    "current": {
+                      "text": "Alle (også ukjent)",
+                      "value": "prod-gcp|dev-gcp|ukjent"
+                    },
+                    "description": "Miljø rapportert av nettleserappen. Ukjent betyr manglende eller ugyldig team- eller miljømetadata.",
+                    "hide": "dontHide",
+                    "includeAll": false,
+                    "label": "Nettlesermiljø",
+                    "multi": false,
+                    "name": "browser_environment",
+                    "options": [],
+                    "query": "Alle (også ukjent) : prod-gcp|dev-gcp|ukjent,Produksjon : prod-gcp,Test : dev-gcp,Ukjent : ukjent",
+                    "skipUrlSync": false,
+                    "valuesFormat": "csv"
+                  }
+                },
                 {
                   "kind": "CustomVariable",
                   "spec": {
@@ -1319,10 +1781,10 @@
                         "$__all"
                       ]
                     },
-                    "description": "Bare nettleserflater med konfigurert telemetry. Miljø er ikke verifisert og velgeren påvirker bare nettleserpanelet.",
+                    "description": "Bare nettleserflater med konfigurert telemetry. Påvirker bare nettleserpanelet.",
                     "hide": "dontHide",
                     "includeAll": true,
-                    "label": "Nettleserflate · miljø ukjent",
+                    "label": "Nettleserflate",
                     "multi": true,
                     "name": "browser_app",
                     "options": [],
@@ -1337,7 +1799,32 @@
         ]
       }
     },
-    "links": [],
+    "links": [
+      {
+        "title": "Kontrollrom",
+        "tooltip": "Fast oversikt over tjenester i produksjon",
+        "type": "link",
+        "url": "https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom",
+        "targetBlank": true,
+        "icon": "external link",
+        "tags": [],
+        "asDropdown": false,
+        "includeVars": false,
+        "keepTime": true
+      },
+      {
+        "title": "Om målingene",
+        "tooltip": "Datagrunnlag og tolkning av feiloversikten",
+        "type": "link",
+        "url": "https://navikt.github.io/team-esyfo/utvikling/observability/feildrilldown",
+        "targetBlank": true,
+        "icon": "external link",
+        "tags": [],
+        "asDropdown": false,
+        "includeVars": false,
+        "keepTime": false
+      }
+    ],
     "liveNow": false,
     "preload": false,
     "tags": [
@@ -1363,70 +1850,6 @@
       "timezone": "browser"
     },
     "title": "Team eSyfo – Feiloversikt",
-    "variables": [
-      {
-        "kind": "CustomVariable",
-        "spec": {
-          "allowCustomValue": false,
-          "current": {
-            "text": "prod-gcp",
-            "value": "prod"
-          },
-          "description": "Filtrerer runtimepanelene og runtime-lenker. Browserdiagnostikk har ikke verifisert miljø og påvirkes ikke.",
-          "hide": "dontHide",
-          "includeAll": false,
-          "label": "Kjøremiljø",
-          "multi": false,
-          "name": "runtime_environment",
-          "options": [],
-          "query": "prod-gcp : prod,dev-gcp : dev",
-          "skipUrlSync": false,
-          "valuesFormat": "csv"
-        }
-      },
-      {
-        "kind": "DatasourceVariable",
-        "spec": {
-          "allowCustomValue": false,
-          "current": {
-            "text": "prod-gcp-tempo",
-            "value": "P8A28344D07741F8D"
-          },
-          "description": "Skjult, avledet Tempo-datakilde for valgt kjøremiljø. Holder trace-lenker i samme dev/prod-scope som runtime-loggene.",
-          "hide": "hideVariable",
-          "includeAll": false,
-          "multi": false,
-          "name": "tempo_datasource",
-          "options": [],
-          "pluginId": "tempo",
-          "refresh": "onDashboardLoad",
-          "regex": "/^${runtime_environment:raw}-gcp-tempo$/",
-          "skipUrlSync": true
-        }
-      },
-      {
-        "kind": "CustomVariable",
-        "spec": {
-          "allValue": "^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$",
-          "allowCustomValue": false,
-          "current": {
-            "text": "All",
-            "value": [
-              "$__all"
-            ]
-          },
-          "description": "Eksakt runtime-scope fra inventaret. Velg én tjeneste når topp 25 per nivå ikke er komplett nok.",
-          "hide": "dontHide",
-          "includeAll": true,
-          "label": "Tjeneste",
-          "multi": true,
-          "name": "app",
-          "options": [],
-          "query": "aktivitetskrav-backend : aktivitetskrav-backend,aktivitetskrav-frontend : aktivitetskrav-frontend,aktivitetskrav-microfrontend : aktivitetskrav-microfrontend,bro-frontend : bro-frontend,dialogmote-frontend : dialogmote-frontend,dialogmote-microfrontend : dialogmote-microfrontend,dinesykmeldte : dinesykmeldte,dinesykmeldte-backend : dinesykmeldte-backend,esyfo-narmesteleder : esyfo-narmesteleder,esyfovarsel [migrering] : esyfovarsel,flaggskipet : flaggskipet,lps-oppfolgingsplan-mottak : lps-oppfolgingsplan-mottak,lumi-api : lumi-api,lumi-dashboard : lumi-dashboard,meroppfolging-backend : meroppfolging-backend,meroppfolging-frontend : meroppfolging-frontend,meroppfolging-microfrontend : meroppfolging-microfrontend,narmesteleder-frontend : narmesteleder-frontend,syfo-budstikka : syfo-budstikka,syfo-dokumentporten : syfo-dokumentporten,syfo-oppfolgingsplan-backend : syfo-oppfolgingsplan-backend,syfo-oppfolgingsplan-frontend : syfo-oppfolgingsplan-frontend,syfobrukertilgang [utfasing] : syfobrukertilgang,syfomotebehov : syfomotebehov,syfooppdfgen : syfooppdfgen,sykepengedager-informasjon : sykepengedager-informasjon",
-          "skipUrlSync": false,
-          "valuesFormat": "csv"
-        }
-      }
-    ]
+    "variables": []
   }
 }

@@ -28,6 +28,7 @@
 		"aid-dashboard:export": "node scripts/aid-dashboard.ts export",
 		"aid-dashboard:query-smoke": "node scripts/aid-plan-query-smoke.ts",
 		"grafana-dashboard:smoke": "node scripts/grafana-dashboard-smoke.ts",
+		"observability:query-smoke": "node scripts/observability-query-smoke.ts",
 		"preview": "vitepress preview"
 	},
 	"devDependencies": {

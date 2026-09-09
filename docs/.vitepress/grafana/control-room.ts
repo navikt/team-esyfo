@@ -1,22 +1,15 @@
 import {
-	BROWSER_RUNBOOK_URL,
 	BUDSTIKKA_RUNBOOK_URL,
-	browserCoverageMarkdown,
 	CONTROL_ROOM_GUIDE_URL,
 	controlRoomApplicationOptions,
+	controlRoomApplicationRegex,
 	controlRoomApplications,
-	controlRoomBrowserSurfaces,
-	controlRoomScopeOptions,
 	controlRoomServerApplications,
 	DESERIALIZATION_RUNBOOK_URL,
-	jobCoverageMarkdown,
 	lifecycleLabel,
 	MOTEBEHOV_RUNBOOK_URL,
 	PIPELINE_RUNBOOK_URL,
-	pagerReadinessMarkdown,
-	pipelineCoverageMarkdown,
 	RUNTIME_RUNBOOK_URL,
-	scopeMarkdown,
 } from "./control-room-scope.ts";
 import {
 	dataLink,
@@ -29,11 +22,12 @@ import {
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
 import { runtimeRejectionScopeDataLink } from "./error-drilldown.ts";
+import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
 import {
 	runtimeErrorPipeline,
 	runtimeRejectionPipeline,
 } from "./runtime-logql.ts";
-import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
+
 export { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
 
 export const CONTROL_ROOM_UID = "team-esyfo-kontrollrom";
@@ -41,7 +35,7 @@ export const CONTROL_ROOM_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
 
 const FROM = grafanaVariable("__from");
 const TO = grafanaVariable("__to");
-const SCOPE_VARIABLE = grafanaVariable("scope:raw");
+const FLEET_SERVICE_REGEX = controlRoomApplicationRegex;
 const SERVICE_VARIABLE = grafanaVariable("service:raw");
 const ROW_VALUE = grafanaVariable("__value.raw");
 const FIELD_SERVICE = grafanaVariable("__field.labels.service_name");
@@ -89,18 +83,8 @@ const serverExpectedApplicationVector = expectedApplicationVector(
 	controlRoomServerApplications,
 );
 
-const scopeMarker =
-	'label_replace(vector(1), "__control_room_scope", "selected", "", ".*")';
-
-const expectedScopeVector = (vector: string) =>
-	`(label_replace((${vector}), "__control_room_scope", "selected", "service_name", "${SCOPE_VARIABLE}")) and on(__control_room_scope) (${scopeMarker})`;
-
-export const expectedScopeVectorQuery = expectedScopeVector(
-	allExpectedApplicationVector,
-);
-export const expectedServerScopeVectorQuery = expectedScopeVector(
-	serverExpectedApplicationVector,
-);
+export const expectedScopeVectorQuery = allExpectedApplicationVector;
+export const expectedServerScopeVectorQuery = serverExpectedApplicationVector;
 
 const spanSelector = (serviceMatcher: string) =>
 	[
@@ -110,7 +94,9 @@ const spanSelector = (serviceMatcher: string) =>
 		'span_kind="SPAN_KIND_SERVER"',
 	].join(", ");
 
-const fleetSpanSelector = spanSelector(`service_name=~"${SCOPE_VARIABLE}"`);
+const fleetSpanSelector = spanSelector(
+	`service_name=~"${FLEET_SERVICE_REGEX}"`,
+);
 const selectedSpanSelector = spanSelector(`service_name="${SERVICE_VARIABLE}"`);
 const fleetErrorSpanSelector = `${fleetSpanSelector}, status_code="STATUS_CODE_ERROR"`;
 const selectedErrorSpanSelector = `${selectedSpanSelector}, status_code="STATUS_CODE_ERROR"`;
@@ -121,13 +107,13 @@ const kubeSelector = (serviceMatcher: string) =>
 	);
 
 const fleetKubeContainerSelector = kubeSelector(
-	`container=~"${SCOPE_VARIABLE}"`,
+	`container=~"${FLEET_SERVICE_REGEX}"`,
 );
 const selectedKubeContainerSelector = kubeSelector(
 	`container="${SERVICE_VARIABLE}"`,
 );
 const fleetKubeDeploymentSelector = kubeSelector(
-	`deployment=~"${SCOPE_VARIABLE}"`,
+	`deployment=~"${FLEET_SERVICE_REGEX}"`,
 );
 const selectedKubeDeploymentSelector = kubeSelector(
 	`deployment="${SERVICE_VARIABLE}"`,
@@ -144,11 +130,11 @@ export const p95LatencyQuery = `(histogram_quantile(0.95, sum by (le) (rate(${SP
 const fleetRequestsByService = `sum by (service_name) (increase(${SPAN_CALLS_METRIC}{${fleetSpanSelector}}[$__range]))`;
 const fleetOtelErrorsByService = `sum by (service_name) (increase(${SPAN_CALLS_METRIC}{${fleetErrorSpanSelector}}[$__range]))`;
 
-export const fleetServicesWithOtelErrorsQuery = `count((${fleetOtelErrorsByService}) > 0) or on() vector(0)`;
+export const fleetServicesWithOtelErrorsQuery = `count((${fleetOtelErrorsByService}) > 0) or on() (count(${fleetRequestsByService}) * 0)`;
 export const requestsByServiceQuery = fleetRequestsByService;
 export const otelErrorsByServiceQuery = `((${fleetOtelErrorsByService}) or on(service_name) ((${fleetRequestsByService}) * 0)) and on(service_name) ((${fleetRequestsByService}) > 0)`;
 
-const fleetRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name=~"${SCOPE_VARIABLE}"}`;
+const fleetRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name=~"${FLEET_SERVICE_REGEX}"}`;
 const selectedRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name="${SERVICE_VARIABLE}"}`;
 
 export const runtimeErrorCountQuery = `sum(count_over_time(${selectedRuntimeSelector}
@@ -168,11 +154,11 @@ ${runtimeRejectionPipeline}
 const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[24h])))`;
 export const restartsByServiceQuery = `sum by (service_name) (label_replace(${fleetRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
 export const restartCountQuery = `sum(max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[24h])))`;
-export const fleetServicesWithRestartsQuery = `count((${restartsByServiceQuery}) > 0) or on() vector(0)`;
+export const fleetServicesWithRestartsQuery = `count((${restartsByServiceQuery}) > 0) or on() (count(${restartsByServiceQuery}) * 0)`;
 
 const recentRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[15m])))`;
 export const recentRestartsByServiceQuery = `sum by (service_name) (label_replace(${recentRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
-export const fleetServicesWithRecentRestartsQuery = `count((${recentRestartsByServiceQuery}) > 0) or on() vector(0)`;
+export const fleetServicesWithRecentRestartsQuery = `count((${recentRestartsByServiceQuery}) > 0) or on() (count(${recentRestartsByServiceQuery}) * 0)`;
 const podRestartsQuery = (window: string) =>
 	`max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[${window}]))`;
 // Latest reason on current pods, not the cause of every restart in a window.
@@ -186,10 +172,8 @@ const fleetReady = readyByDeployment(fleetKubeDeploymentSelector);
 const fleetDesired = desiredByDeployment(fleetKubeDeploymentSelector);
 const selectedReady = readyByDeployment(selectedKubeDeploymentSelector);
 const selectedDesired = desiredByDeployment(selectedKubeDeploymentSelector);
-const fleetReadyWithFallback = `(${fleetReady} or on(deployment) (${fleetDesired} * 0))`;
-const selectedReadyWithFallback = `(${selectedReady} or on(deployment) (${selectedDesired} * 0))`;
-const guardedFleetReadyRatio = `(100 * ${fleetReadyWithFallback} / ${fleetDesired}) and on(deployment) (${fleetDesired} > 0)`;
-const guardedSelectedReadyRatio = `(100 * ${selectedReadyWithFallback} / ${selectedDesired}) and on(deployment) (${selectedDesired} > 0)`;
+const guardedFleetReadyRatio = `(100 * ${fleetReady} / ${fleetDesired}) and on(deployment) (${fleetDesired} > 0)`;
+const guardedSelectedReadyRatio = `(100 * ${selectedReady} / ${selectedDesired}) and on(deployment) (${selectedDesired} > 0)`;
 
 export const lowestReadyRatioQuery = `min(${guardedFleetReadyRatio})`;
 export const readyRatioByServiceQuery = `max by (service_name) (label_replace(${guardedFleetReadyRatio}, "service_name", "$1", "deployment", "(.*)"))`;
@@ -210,21 +194,7 @@ export const errorRatioByServiceQuery = `(100 * ((${selectedErrorRateByService} 
 export const p95ByServiceQuery = `(histogram_quantile(0.95, sum by (service_name, le) (rate(${SPAN_LATENCY_METRIC}{${selectedSpanSelector}}[$__rate_interval])))) and on(service_name) (${requestRateByServiceQuery} > 0)`;
 export const telemetryAgeByServiceQuery = `time() - max by (service_name) (timestamp(${SPAN_CALLS_METRIC}{${selectedSpanSelector}}))`;
 
-const configuredBrowserServices = [
-	...new Set(
-		controlRoomBrowserSurfaces
-			.filter(
-				({ currentImplementation }) =>
-					currentImplementation.state === "configured",
-			)
-			.map(({ browserIdentity }) => browserIdentity.serviceName),
-	),
-];
-const browserServiceRegex = `^(${configuredBrowserServices.join("|")})$`;
-const browserSelector = `{kind="exception", service_name=~"${browserServiceRegex}"}`;
-export const browserExceptionsByServiceQuery = `sum by (service_name) (count_over_time(${browserSelector} [$__auto]))`;
-
-export const jobFailureQuery = `max(max_over_time(${JOB_FAILED_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", job_name=~"esyfovarsel-job.*"}[$__range]))`;
+export const jobFailureQuery = `max(max_over_time(${JOB_FAILED_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", job_name=~"esyfovarsel-job.*", condition="true"}[$__range]))`;
 export const budstikkaLagQuery = `max by (topic) (${BUDSTIKKA_LAG_METRIC}{app="syfo-budstikka", namespace="team-esyfo", k8s_cluster_name="prod", topic="team-esyfo.budstikka.v1"})`;
 export const sykmeldingConsumerPollAgeByPodQuery = `max by (pod) (${KAFKA_CONSUMER_LAST_POLL_METRIC}{app="syfo-oppfolgingsplan-backend", namespace="team-esyfo", k8s_cluster_name="prod"})`;
 export const sykmeldingConsumerCommittedLagQuery = `max(${KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC}{namespace="nais-system", k8s_cluster_name="prod", group="syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2", topic="teamsykmelding.syfo-sendt-sykmelding"})`;
@@ -280,16 +250,16 @@ export const errorDashboardDataLink = (service: string) =>
 	`/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${FROM}&to=${TO}&var-runtime_environment=prod&var-app=${service}`;
 
 const serviceDataLinks = (service: string) => [
-	dataLink("NAIS APM", apmDataLink(service)),
-	dataLink("Avgrensede logger", runtimeLogsDataLink(service)),
+	dataLink("APM og tracing", apmDataLink(service)),
 	dataLink("Feiloversikt", errorDashboardDataLink(service)),
-	dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL),
+	dataLink("Logger", runtimeLogsDataLink(service)),
+	dataLink("Runbook", RUNTIME_RUNBOOK_URL),
 ];
 
-const pagerLinks = (service: string, runbook: string, issue: string) => [
+const diagnosticLinks = (service: string, runbook: string, issue: string) => [
 	...serviceDataLinks(service),
-	dataLink("Kandidatens runbook", runbook),
-	dataLink("Blokkerende oppgave", issue),
+	dataLink("Tjenestens runbook", runbook),
+	dataLink("Målegrunnlag", issue),
 ];
 
 type PanelQuery = Record<string, unknown>;
@@ -374,6 +344,7 @@ const statPanel = ({
 	decimals,
 	links = [],
 	mappings = [],
+	noValue = "Ukjent",
 }: {
 	id: number;
 	title: string;
@@ -385,6 +356,7 @@ const statPanel = ({
 	decimals?: number;
 	links?: PanelLink[];
 	mappings?: ValueMapping[];
+	noValue?: string;
 }) => ({
 	kind: "Panel",
 	spec: {
@@ -401,7 +373,7 @@ const statPanel = ({
 					defaults: {
 						...(decimals === undefined ? {} : { decimals }),
 						...(mappings.length === 0 ? {} : { mappings }),
-						noValue: "Ukjent",
+						noValue,
 						thresholds: { mode: "absolute", steps: thresholds },
 						unit,
 					},
@@ -409,7 +381,7 @@ const statPanel = ({
 				},
 				options: {
 					colorMode,
-					graphMode: "area",
+					graphMode: "none",
 					justifyMode: "center",
 					orientation: "auto",
 					percentChangeColorMode: "standard",
@@ -419,6 +391,7 @@ const statPanel = ({
 						values: false,
 					},
 					showPercentChange: false,
+					text: { valueSize: 32 },
 					textMode: "auto",
 					wideLayout: true,
 				},
@@ -437,6 +410,7 @@ const timeSeriesPanel = ({
 	thresholds,
 	links = [],
 	fieldLinks,
+	overrides = [],
 }: {
 	id: number;
 	title: string;
@@ -446,6 +420,7 @@ const timeSeriesPanel = ({
 	thresholds: Threshold[];
 	links?: PanelLink[];
 	fieldLinks?: PanelLink[];
+	overrides?: Array<Record<string, unknown>>;
 }) => ({
 	kind: "Panel",
 	spec: {
@@ -488,7 +463,7 @@ const timeSeriesPanel = ({
 						thresholds: { mode: "absolute", steps: thresholds },
 						unit,
 					},
-					overrides: [],
+					overrides,
 				},
 				options: {
 					legend: {
@@ -514,16 +489,12 @@ const mergeTableFrames = {
 const fleetTablePanel = () => {
 	const fields = {
 		service_name: "Tjeneste",
-		criticality: "Kritikalitet",
-		lifecycle: "Livssyklus",
-		role: "Rolle",
-		"Value #Telemetry": "SERVER-span",
-		"Value #Requests": "Requests",
-		"Value #OTel-feil": "OTel-feil",
-		"Value #Runtimefeil": "Runtimefeil 5m",
-		"Value #Nylige restarts": "Restarts 15m",
-		"Value #Restarts": "Restarts 24t",
+		"Value #Requests": "Kall i perioden",
+		"Value #OTel-feil": "Feilmarkerte kall",
+		"Value #Runtimefeil": "Loggfeil · 5 min",
+		"Value #Nylige restarts": "Omstarter · 15 min",
 		"Value #Klare replikaer": "Klare replikaer",
+		"Value #Telemetry": "HTTP-målinger",
 	};
 	const fieldOrder = Object.fromEntries(
 		Object.keys(fields).map((field, index) => [field, index]),
@@ -586,13 +557,6 @@ const fleetTablePanel = () => {
 						"table",
 					),
 					prometheusQuery(
-						"Restarts",
-						restartsByServiceQuery,
-						"instant",
-						"",
-						"table",
-					),
-					prometheusQuery(
 						"Klare replikaer",
 						readyRatioByServiceQuery,
 						"instant",
@@ -610,6 +574,9 @@ const fleetTablePanel = () => {
 								excludeByName: {
 									Time: true,
 									__control_room_scope: true,
+									criticality: true,
+									lifecycle: true,
+									role: true,
 									container: true,
 									deployment: true,
 								},
@@ -622,10 +589,10 @@ const fleetTablePanel = () => {
 				],
 			),
 			description:
-				"Inventaret leverer alltid forventede GCP-rader. SERVER-eligible profiler viser FERSK, STALE eller MANGLER; workerprofiler viser ANNEN KONTRAKT. Datasourcefeil feiler hele queryen.",
+				"Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall og feil i kall gjelder valgt tidsrom; loggfeil gjelder siste fem minutter og omstarter siste 15 minutter ved periodens slutt. HTTP-målinger viser seriesignal, ikke siste kall. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Datasourcefeil feiler hele queryen. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
 			id: 10,
 			links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
-			title: "01 · Avvik og telemetry · hele valgt scope",
+			title: "Tjenester i produksjon",
 			vizConfig: {
 				group: "table",
 				kind: "VizConfig",
@@ -642,23 +609,24 @@ const fleetTablePanel = () => {
 						},
 						overrides: [
 							{
-								matcher: { id: "byName", options: "service_name" },
+								matcher: { id: "byName", options: fields.service_name },
 								properties: [
 									{ id: "links", value: serviceDataLinks(ROW_VALUE) },
+									{ id: "custom.width", value: 290 },
 								],
 							},
 							{
-								matcher: { id: "byName", options: "Value #Telemetry" },
+								matcher: { id: "byName", options: fields["Value #Telemetry"] },
 								properties: [
 									{
 										id: "mappings",
 										value: [
 											{
 												options: {
-													"0": { color: "green", text: "FERSK" },
-													"1": { color: "yellow", text: "STALE" },
-													"2": { color: "yellow", text: "MANGLER" },
-													"3": { color: "blue", text: "ANNEN KONTRAKT" },
+													"0": { color: "blue", text: "Mottar data" },
+													"1": { color: "yellow", text: "Forsinket" },
+													"2": { color: "yellow", text: "Mangler" },
+													"3": { color: "text", text: "Bakgrunnstjeneste" },
 												},
 												type: "value",
 											},
@@ -671,7 +639,10 @@ const fleetTablePanel = () => {
 								],
 							},
 							...deviationFields.map(([field, steps]) => ({
-								matcher: { id: "byName", options: field },
+								matcher: {
+									id: "byName",
+									options: fields[field as keyof typeof fields],
+								},
 								properties: [
 									{ id: "thresholds", value: { mode: "absolute", steps } },
 									{
@@ -683,10 +654,22 @@ const fleetTablePanel = () => {
 							{
 								matcher: {
 									id: "byName",
-									options: "Value #Klare replikaer",
+									options: fields["Value #Klare replikaer"],
 								},
 								properties: [
 									{ id: "unit", value: "percent" },
+									{
+										id: "mappings",
+										value: [
+											{
+												type: "special",
+												options: {
+													match: "null",
+													result: { text: "—", color: "gray" },
+												},
+											},
+										],
+									},
 									{
 										id: "thresholds",
 										value: {
@@ -707,11 +690,10 @@ const fleetTablePanel = () => {
 						enablePagination: true,
 						showHeader: true,
 						sortBy: [
-							{ desc: true, displayName: "Runtimefeil 5m" },
+							{ desc: true, displayName: fields["Value #Runtimefeil"] },
 							{ desc: false, displayName: "Klare replikaer" },
-							{ desc: true, displayName: "OTel-feil" },
-							{ desc: true, displayName: "Restarts 15m" },
-							{ desc: true, displayName: "SERVER-span" },
+							{ desc: true, displayName: fields["Value #OTel-feil"] },
+							{ desc: true, displayName: fields["Value #Nylige restarts"] },
 						],
 					},
 				},
@@ -725,7 +707,7 @@ const podDiagnosticsPanel = () => ({
 	kind: "Panel",
 	spec: {
 		id: 36,
-		title: "Valgt tjeneste · podder og restart-årsak",
+		title: "Omstarter og siste avslutningsårsak",
 		description:
 			"Estimerte restarts i faste 15m- og 24t-vinduer, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
 		links: serviceDataLinks(SERVICE_VARIABLE),
@@ -773,9 +755,9 @@ const podDiagnosticsPanel = () => ({
 							},
 							renameByName: {
 								pod: "Pod",
-								"Value #Restarts 15m": "Restarts 15m",
-								"Value #Restarts 24t": "Restarts 24t",
-								reason: "Siste årsak · tidspunkt ukjent",
+								"Value #Restarts 15m": "Omstarter · 15 min",
+								"Value #Restarts 24t": "Omstarter · 24 timer",
+								reason: "Siste avslutningsårsak",
 							},
 						},
 					},
@@ -795,7 +777,7 @@ const podDiagnosticsPanel = () => ({
 					},
 					overrides: [
 						{
-							matcher: { id: "byName", options: "pod" },
+							matcher: { id: "byName", options: "Pod" },
 							properties: [
 								{
 									id: "links",
@@ -815,37 +797,11 @@ const podDiagnosticsPanel = () => ({
 					cellHeight: "sm",
 					enablePagination: true,
 					sortBy: [
-						{ displayName: "Restarts 15m", desc: true },
-						{ displayName: "Restarts 24t", desc: true },
+						{ displayName: "Omstarter · 15 min", desc: true },
+						{ displayName: "Omstarter · 24 timer", desc: true },
 					],
 				},
 			},
-		},
-	},
-});
-
-const textPanel = (
-	id: number,
-	title: string,
-	description: string,
-	content: string,
-	links: PanelLink[] = [],
-) => ({
-	kind: "Panel",
-	spec: {
-		data: queryGroup([]),
-		description,
-		id,
-		links,
-		title,
-		vizConfig: {
-			group: "text",
-			kind: "VizConfig",
-			spec: {
-				fieldConfig: { defaults: {}, overrides: [] },
-				options: { content, mode: "markdown" },
-			},
-			version: GRAFANA_VERSION,
 		},
 	},
 });
@@ -854,15 +810,14 @@ const deviationThresholds: Threshold[] = [
 	{ color: "gray", value: 0 },
 	{ color: "red", value: 1 },
 ];
+// Readiness is an instantaneous signal, not proof of an incident or its duration.
 const readyThresholds: Threshold[] = [
-	{ color: "red", value: 0 },
-	{ color: "yellow", value: 0.001 },
+	{ color: "yellow", value: 0 },
 	{ color: "green", value: 100 },
 ];
 const coverageThresholds: Threshold[] = [
 	{ color: "yellow", value: 0 },
-	{ color: "yellow", value: 99.999 },
-	{ color: "green", value: 100 },
+	{ color: "blue", value: 100 },
 ];
 const neutralThresholds: Threshold[] = [{ color: "blue", value: 0 }];
 const attentionThresholds: Threshold[] = [
@@ -870,7 +825,7 @@ const attentionThresholds: Threshold[] = [
 	{ color: "yellow", value: 1 },
 ];
 const pollAgeThresholds: Threshold[] = [
-	{ color: "green", value: 0 },
+	{ color: "blue", value: 0 },
 	{ color: "yellow", value: 60 },
 	{ color: "red", value: 300 },
 ];
@@ -879,7 +834,78 @@ const selectedService = "meroppfolging-backend";
 const selectedServiceText =
 	controlRoomApplicationOptions.find(({ value }) => value === selectedService)
 		?.text ?? selectedService;
-const defaultScope = controlRoomScopeOptions[0];
+const serviceVariable = {
+	kind: "CustomVariable",
+	spec: {
+		allowCustomValue: false,
+		current: { text: selectedServiceText, value: selectedService },
+		description:
+			"Velger tjeneste bare i denne raden. Oversikten over produksjonstjenester endres ikke.",
+		hide: "dontHide",
+		includeAll: false,
+		label: "Tjeneste",
+		multi: false,
+		name: "service",
+		options: [],
+		query: controlRoomApplicationOptions
+			.map(({ text, value }) => `${text} : ${value}`)
+			.join(","),
+		skipUrlSync: false,
+		valuesFormat: "csv",
+	},
+};
+const row = (
+	title: string,
+	items: ReturnType<typeof layoutItem>[],
+	collapse = true,
+	variables: (typeof serviceVariable)[] = [],
+) => ({
+	kind: "RowsLayoutRow",
+	spec: {
+		title,
+		collapse,
+		hideHeader: false,
+		layout: { kind: "GridLayout", spec: { items } },
+		...(variables.length ? { variables } : {}),
+	},
+});
+const dashboardLink = (title: string, url: string, keepTime = false) => ({
+	title,
+	tooltip: "",
+	type: "link",
+	url,
+	targetBlank: true,
+	icon: "external link",
+	tags: [],
+	asDropdown: false,
+	includeVars: false,
+	keepTime,
+});
+
+const dinesykmeldteOutcomeLabels = {
+	attempt: "Alle kall",
+	good: "Vellykkede svar",
+	http_4xx: "HTTP 4xx",
+	technical_failure: "Feilmarkerte svar",
+	unclassified: "Øvrig eller ukjent status",
+};
+const dinesykmeldteSeriesOverrides = (
+	outcomes: Array<keyof typeof dinesykmeldteOutcomeLabels>,
+) =>
+	[
+		["minesykmeldte", "Sykmeldte"],
+		["virksomheter", "Virksomheter"],
+	].flatMap(([operation, label]) =>
+		outcomes.map((outcome) => ({
+			matcher: { id: "byName", options: `${operation} · ${outcome}` },
+			properties: [
+				{
+					id: "displayName",
+					value: `${label} · ${dinesykmeldteOutcomeLabels[outcome]}`,
+				},
+			],
+		})),
+	);
 
 export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 	apiVersion: "dashboard.grafana.app/v2",
@@ -889,241 +915,132 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		name: CONTROL_ROOM_UID,
 	},
 	spec: {
-		annotations: [
-			{
-				kind: "AnnotationQuery",
-				spec: {
-					builtIn: true,
-					enable: true,
-					hide: true,
-					iconColor: "rgba(0, 211, 255, 1)",
-					name: "Annotations & Alerts",
-					query: {
-						datasource: { name: "-- Grafana --" },
-						group: "grafana",
-						kind: "DataQuery",
-						spec: {},
-						version: "v0",
-					},
-				},
-			},
-		],
+		annotations: [],
 		cursorSync: "Off",
 		description:
-			"Inventardrevet hendelsesinngang for Team eSyfos operative flåte. Skiller teknisk helse fra telemetrydekning og viser manglende brukerimpact-, SLO- og deploykontrakter som eksplisitte gap.",
+			"Produksjonsoversikt for Team eSyfo: observerte feil, omstarter, replikaer og måledata. Finn tjenesten og gå videre til APM, tracing, feilgrupper eller logger.",
 		editable: true,
 		elements: {
-			"panel-1": textPanel(
-				1,
-				"Start med avvikene",
-				"Kontrollrommet viser teknisk helse og telemetrydekning separat. Fullt scope og begreper ligger i dokumentasjonen.",
-				scopeMarkdown(),
-				[dataLink("Kontrollrom-dokumentasjon", CONTROL_ROOM_GUIDE_URL)],
-			),
 			"panel-2": statPanel({
 				id: 2,
-				title: "OTel-feil · tjenester",
+				title: "Feilmarkerte kall · tjenester",
 				description:
-					"Antall tjenester med minst én inbound SERVER-span markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-status, ikke automatisk HTTP 5xx eller bevist brukerimpact. 0 er nøytralt og må leses sammen med dekning.",
+					"Antall tjenester med minst én inbound SERVER-span markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
 				query: prometheusQuery(
-					"Tjenester med OTel-feil",
+					"Tjenester med feil i kall",
 					fleetServicesWithOtelErrorsQuery,
 					"instant",
 				),
 				unit: "short",
 				thresholds: deviationThresholds,
 				decimals: 0,
-				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
+				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-32": statPanel({
 				id: 32,
-				title: "Runtimefeil 5m · tjenester",
+				title: "Tjenester med loggfeil · 5 min",
 				description:
-					"Antall tjenester med minst én påvist error-, critical- eller fatal-klassifisert runtime-logglinje siste fem minutter. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. No data er ukjent; panelet konstruerer ikke null uten positiv loggevidens.",
+					"Antall tjenester med error-, critical- eller fatal-klassifiserte runtime-logger siste fem minutter ved periodens slutt. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
 				query: lokiQuery(
-					"Tjenester med runtimefeil",
+					"Tjenester med loggfeil",
 					fleetServicesWithRuntimeErrorsQuery,
 				),
 				unit: "short",
 				thresholds: deviationThresholds,
 				decimals: 0,
-				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
-			}),
-			"panel-3": statPanel({
-				id: 3,
-				title: "Tjenester uten SERVER-spanserie",
-				description:
-					"Antall inventarforankrede, SERVER-eligible GCP-tjenester uten spanserie siste 30 minutter. Workerprofiler er ikke i nevneren. Dette er et dekningsgap, ikke automatisk appfeil.",
-				query: prometheusQuery(
-					"Tjenester uten telemetry",
-					missingTelemetryQuery,
-					"instant",
-				),
-				unit: "short",
-				thresholds: attentionThresholds,
-				decimals: 0,
-				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
-			}),
-			"panel-35": statPanel({
-				id: 35,
-				title: "API-avvisninger 5m · tjenester",
-				description:
-					"Antall tjenester i valgt område med WARN-hendelsen api_request_rejected siste fem minutter. Bare tjenester som produserer denne hendelsen er dekket; ikke alle WARN eller HTTP 4xx. Avvisning er ikke automatisk driftsfeil, men kan avsløre feil i klient eller konfigurasjon. No data er ukjent. Logglenken bevarer området og valgt tidsrom; velg siste fem minutter for samme tellevindu. Feiloversikt har egen årsakstabell.",
-				query: lokiQuery(
-					"Tjenester med API-avvisninger",
-					fleetServicesWithApiRejectionsQuery,
-				),
-				unit: "short",
-				thresholds: [
-					{ color: "text", value: 0 },
-					{ color: "yellow", value: 1 },
-				],
-				decimals: 0,
-				links: [
-					dataLink(
-						"Se avvisninger i valgt område",
-						runtimeRejectionScopeDataLink(SCOPE_VARIABLE),
-					),
-				],
+				noValue: "Ingen treff",
+				links: [dataLink("Feiloversikt", errorDashboardDataLink("$__all"))],
 			}),
 			"panel-4": statPanel({
 				id: 4,
-				title: "Restarts 15m · antall tjenester",
+				title: "Tjenester med omstarter · 15 min",
 				description:
-					"Antall tjenester med observerte containerrestarts siste 15 minutter, ikke antall restarts. Gult betyr undersøk, ikke påvist nedetid. Normal oppretting og fjerning av podder teller ikke. Flåtematrisen viser også nøytral 24-timers historikk. Begge vinduer er faste.",
+					"Antall tjenester med observerte containerrestarts siste 15 minutter ved periodens slutt, ikke antall restarts. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
 				query: prometheusQuery(
-					"Tjenester med restarts",
+					"Tjenester med omstarter",
 					fleetServicesWithRecentRestartsQuery,
 					"instant",
 				),
 				unit: "short",
 				thresholds: attentionThresholds,
 				decimals: 0,
-				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
+				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-5": statPanel({
 				id: 5,
-				title: "Klare replikaer nå · laveste %",
+				title: "Klare replikaer · laveste andel",
 				description:
-					"Øyeblikksbilde av laveste klare/ønskede replikaandel. Kan falle kort ved deploy eller skalering; ikke alene en incident. desired=0 filtreres bort. Sjekk utviklingen for valgt tjeneste før konklusjon.",
+					"Laveste observerte klare/ønskede replikaandel ved periodens slutt. Gult kan skyldes et kort fall ved deploy eller skalering; se utviklingen for tjenesten før du konkluderer. Manglende målinger og desired=0 gir ikke null eller grønt.",
 				query: prometheusQuery(
-					"Laveste ready",
+					"Laveste andel klare replikaer",
 					lowestReadyRatioQuery,
 					"instant",
 				),
 				unit: "percent",
 				thresholds: readyThresholds,
-				decimals: 1,
-				links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
-			}),
-			"panel-6": statPanel({
-				id: 6,
-				title: "HTTP-dekning",
-				description:
-					"Andel forventede, SERVER-eligible runtime-identiteter i valgt scope med aktuell spanserie. Workerprofiler har annen signal-/span-kontrakt. Dette beviser seriescrape, ikke brukertrafikk eller komplett tracing.",
-				query: prometheusQuery(
-					"Spanserie-dekning",
-					telemetryCoverageQuery,
-					"instant",
-				),
-				unit: "percent",
-				thresholds: coverageThresholds,
 				decimals: 0,
-			}),
-			"panel-7": statPanel({
-				id: 7,
-				title: "Kube-dekning",
-				description:
-					"Andel forventede runtime-identiteter i valgt scope med desired-replica-serie. Manglende mapping er et telemetry-/identitetsgap.",
-				query: prometheusQuery(
-					"Kube-dekning",
-					deploymentCoverageQuery,
-					"instant",
-				),
-				unit: "percent",
-				thresholds: coverageThresholds,
-				decimals: 0,
-			}),
-			"panel-8": textPanel(
-				8,
-				"Kjente gap · SLO og deploy",
-				"SLO er ikke definert. Siste deploy er ukjent fordi pod-alder og deployment-created ikke er deployidentitet.",
-				"**SLO:** `IKKE DEFINERT` · **Siste deploy:** `UKJENT`. Dette er dekningsgap, ikke grønt.",
-				[
-					dataLink("Kontrollrom-dokumentasjon", CONTROL_ROOM_GUIDE_URL),
-					dataLink(
-						"Dine sykmeldte SLO #729",
-						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
-					),
-					dataLink(
-						"Meroppfølging SLO #422",
-						"https://github.com/navikt/meroppfolging-backend/issues/422",
-					),
-				],
-			),
-			"panel-30": timeSeriesPanel({
-				id: 30,
-				title: "10 · Dine sykmeldte · forsøk og 2xx",
-				description:
-					"Fast produksjonsscope for inbound SERVER-spans på GET /api/minesykmeldte og GET /api/virksomheter. attempt viser all observert trafikk; good er 2xx uten OTel-feilstatus. Bare rute-/labelkontrakten og 200/STATUS_CODE_UNSET er live-verifisert. Uten attempt er trafikken ukjent eller null. Dette er diagnostikk, ikke en vedtatt SLI eller SLO.",
-				query: prometheusQuery(
-					"Forsøk og 2xx",
-					dinesykmeldteTrafficRateQuery,
-					"range",
-					"{{operation}} · {{outcome}}",
-				),
-				unit: "reqps",
-				thresholds: neutralThresholds,
-				links: [
-					...serviceDataLinks("dinesykmeldte-backend"),
-					dataLink(
-						"Implementeringsoppgave #729",
-						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
-					),
-				],
-				fieldLinks: [
-					...serviceDataLinks("dinesykmeldte-backend"),
-					dataLink(
-						"Implementeringsoppgave #729",
-						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
-					),
-				],
-			}),
-			"panel-31": timeSeriesPanel({
-				id: 31,
-				title: "Dine sykmeldte · avvikende HTTP-utfall",
-				description:
-					"Fast produksjonsscope for de samme to GET-rutene. http_4xx er 4xx uten OTel-feilstatus, men er ikke kalt forventet: Texas-pluginen kan også maskere tekniske introspeksjonsfeil som 401. technical_failure er 5xx eller OTel-feilstatus; unclassified dekker blant annet 3xx, 1xx og manglende HTTP-status uten OTel-feil. Manglende serier syntetiseres ikke til null. Skillet mellom forventede og tekniske 4xx krever et bounded appsignal i #729.",
-				query: prometheusQuery(
-					"Avvikende HTTP-utfall",
-					dinesykmeldteDeviationRateQuery,
-					"range",
-					"{{operation}} · {{outcome}}",
-				),
-				unit: "reqps",
-				thresholds: neutralThresholds,
-				links: [
-					...serviceDataLinks("dinesykmeldte-backend"),
-					dataLink(
-						"Implementeringsoppgave #729",
-						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
-					),
-				],
-				fieldLinks: [
-					...serviceDataLinks("dinesykmeldte-backend"),
-					dataLink(
-						"Implementeringsoppgave #729",
-						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
-					),
-				],
+				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-10": fleetTablePanel(),
-			"panel-36": podDiagnosticsPanel(),
+			"panel-12": timeSeriesPanel({
+				id: 12,
+				title: "Kall per sekund",
+				description:
+					"Inbound SERVER-spans for valgt tjeneste. Bakgrunnstjenester vurderes med kø- og jobbsignaler, ikke HTTP-målinger.",
+				query: prometheusQuery(
+					"Kall per sekund",
+					requestRateByServiceQuery,
+					"range",
+					"{{service_name}}",
+				),
+				unit: "reqps",
+				thresholds: neutralThresholds,
+			}),
+			"panel-13": timeSeriesPanel({
+				id: 13,
+				title: "Andel feilmarkerte kall",
+				description:
+					"Andel inbound SERVER-spans med OTel-feilstatus STATUS_CODE_ERROR. Null vises bare med observert trafikk. Ingen trafikk eller manglende måling gir Ukjent; dette er ikke en vedtatt SLO-grense.",
+				query: prometheusQuery(
+					"Andel kall med feil",
+					errorRatioByServiceQuery,
+					"range",
+					"{{service_name}}",
+				),
+				unit: "percent",
+				thresholds: neutralThresholds,
+			}),
+			"panel-14": timeSeriesPanel({
+				id: 14,
+				title: "Svartid · 95-persentil",
+				description:
+					"95 prosent av observerte inbound SERVER-spans er raskere enn denne tiden. Gjelder bare valgt tjeneste, ikke hele flåten. Manglende trafikk gir Ukjent. Ingen generell SLO-grense.",
+				query: prometheusQuery(
+					"Svartid P95",
+					p95ByServiceQuery,
+					"range",
+					"{{service_name}}",
+				),
+				unit: "s",
+				thresholds: neutralThresholds,
+			}),
+			"panel-15": statPanel({
+				id: 15,
+				title: "Loggfeil i perioden",
+				description:
+					"Error-, critical- eller fatal-klassifiserte runtime-logger for valgt tjeneste og tidsrom. Browservideresendte logger er ekskludert. Ingen treff er ikke bevis på feilfri drift eller komplett logging. Åpne Feiloversikt for feilgrupper.",
+				query: lokiQuery("Loggfeil", runtimeErrorCountQuery),
+				unit: "short",
+				thresholds: deviationThresholds,
+				decimals: 0,
+				noValue: "Ingen treff",
+				links: serviceDataLinks(SERVICE_VARIABLE),
+			}),
 			"panel-37": timeSeriesPanel({
 				id: 37,
-				title: "Valgt tjeneste · klare replikaer over tid",
+				title: "Klare replikaer over tid",
 				description:
-					"Klar/ønsket replikaandel i valgt tidsrom. Et kort fall kan skyldes deploy eller skalering; vedvarende mangel krever undersøkelse. Dette er ikke deployidentitet eller en vedtatt alarmgrense. desired=0 og manglende serie blir ikke grønt.",
+					"Andel klare av ønskede replikaer. Et kort fall kan skyldes deploy eller skalering; vedvarende mangel krever undersøkelse. Ikke en incident- eller deploydetektor. desired=0 og manglende målinger blir ikke null eller grønt.",
 				query: prometheusQuery(
 					"Klare replikaer",
 					selectedReadyRatioQuery,
@@ -1135,131 +1052,14 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				links: serviceDataLinks(SERVICE_VARIABLE),
 				fieldLinks: serviceDataLinks(SERVICE_VARIABLE),
 			}),
-			"panel-12": timeSeriesPanel({
-				id: 12,
-				title: "02 · Valgt tjeneste · request-rate",
-				description: "Inbound SERVER-spans per sekund for én valgt tjeneste.",
-				query: prometheusQuery(
-					"Request-rate",
-					requestRateByServiceQuery,
-					"range",
-					"{{service_name}}",
-				),
-				unit: "reqps",
-				thresholds: neutralThresholds,
-			}),
-			"panel-13": timeSeriesPanel({
-				id: 13,
-				title: "Valgt tjeneste · OTel-feilratio",
-				description:
-					"Andel inbound SERVER-spans med STATUS_CODE_ERROR. Null finnes bare med observert requestserie; ingen trafikk gir Ukjent. Ikke en vedtatt SLO-grense.",
-				query: prometheusQuery(
-					"OTel-feilratio",
-					errorRatioByServiceQuery,
-					"range",
-					"{{service_name}}",
-				),
-				unit: "percent",
-				thresholds: deviationThresholds,
-			}),
-			"panel-14": timeSeriesPanel({
-				id: 14,
-				title: "Valgt tjeneste · P95",
-				description:
-					"P95 for inbound SERVER-spans på én valgt tjeneste. Ingen flåtemiks og ingen SLO-farge.",
-				query: prometheusQuery(
-					"P95",
-					p95ByServiceQuery,
-					"range",
-					"{{service_name}}",
-				),
-				unit: "s",
-				thresholds: neutralThresholds,
-			}),
-			"panel-15": statPanel({
-				id: 15,
-				title: "Valgt tjeneste · runtimefeil",
-				description:
-					"Positivt klassifiserte error|critical|fatal-logger for valgt runtime. Browservideresendte logger er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. No data er ukjent, ikke null; panelet gjør ingen ekstra full-loggskann for å konstruere en kunstig null.",
-				query: lokiQuery("Runtimefeil", runtimeErrorCountQuery),
-				unit: "short",
-				thresholds: deviationThresholds,
-				decimals: 0,
-				links: serviceDataLinks(SERVICE_VARIABLE),
-			}),
-			"panel-16": statPanel({
-				id: 16,
-				title: "Valgt tjeneste · restarthistorikk 24t",
-				description:
-					"Historiske containerrestarts siste 24 timer, også fra podder som er erstattet. Ikke nåværende helsestatus. Prometheus estimerer tellerøkningen. Se poddiagnostikken for nylige restarts og sist registrerte årsak.",
-				query: prometheusQuery("Restarts", restartCountQuery, "instant"),
-				unit: "short",
-				thresholds: neutralThresholds,
-				decimals: 0,
-				links: serviceDataLinks(SERVICE_VARIABLE),
-			}),
-			"panel-17": statPanel({
-				id: 17,
-				title: "Valgt tjeneste · ready/desired",
-				description:
-					"Klar/ønsket replikaandel for valgt deployment. desired=0 og manglende serie gir Ukjent.",
-				query: prometheusQuery("Ready", selectedReadyRatioQuery, "instant"),
-				unit: "percent",
-				thresholds: readyThresholds,
-				decimals: 1,
-				links: serviceDataLinks(SERVICE_VARIABLE),
-			}),
-			"panel-18": textPanel(
-				18,
-				"20 · Browser",
-				"Kun Faro kind=exception er live-verifisert. Miljølabel, numerisk sampling, page loads, sessions og CWV er ukjent; en session skal aldri omtales som en unik bruker.",
-				browserCoverageMarkdown(),
-				[
-					dataLink("Browser-runbook", BROWSER_RUNBOOK_URL),
-					dataLink(
-						"Browserkontrakt #206",
-						"https://github.com/navikt/team-esyfo/issues/206",
-					),
-				],
-			),
-			"panel-20": timeSeriesPanel({
-				id: 20,
-				title: "Browser-unntak · diagnostikk",
-				description:
-					"Exception-hendelser per service i queryvinduet. Miljø kan ikke verifisert skilles; ikke les dette som prod-status. Ikke page loads, sessions eller unike brukere.",
-				query: lokiQuery(
-					"Browser-unntak per service",
-					browserExceptionsByServiceQuery,
-					"range",
-				),
-				unit: "short",
-				thresholds: deviationThresholds,
-				links: [dataLink("Browser-runbook", BROWSER_RUNBOOK_URL)],
-				fieldLinks: [
-					dataLink("Browser-runbook", BROWSER_RUNBOOK_URL),
-					dataLink("Feiloversikt", errorDashboardDataLink(FIELD_SERVICE)),
-				],
-			}),
-			"panel-21": textPanel(
-				21,
-				"30 · Pipelines",
-				"Kontraktstatus, ikke samlet produksjonshelse. Første tekniske slice viser sykmelding-consumerens poll-alder og committed lag. Expected run, eldste ventende arbeid, terminalt utfall og øvrige pipelinekontrakter avklares i #212. syfo-budstikka er målprosessor, esyfovarsel er migrerende legacy-prosessor, og Airflow er utenfor scope.",
-				pipelineCoverageMarkdown(),
-				[
-					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
-					dataLink(
-						"Pipelinekontrakter #212",
-						"https://github.com/navikt/team-esyfo/issues/212",
-					),
-				],
-			),
+			"panel-36": podDiagnosticsPanel(),
 			"panel-33": statPanel({
 				id: 33,
-				title: "Sykmelding-consumer · poll-alder per pod",
+				title: "Innlesing av sykmeldinger · tid siden poll",
 				description:
-					"Sekunder siden siste poll()-kall per eksporterte produksjonspod. IKKE POLLET er Kafka-verdien -1 før første poll. Grønt er under 60 sekunder, gult 60–300 og rødt minst 300. Dette viser consumer-loopens tekniske fremdrift, ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
+					"Sekunder siden Kafka-klientens siste poll()-kall per pod i syfo-oppfolgingsplan-backend. Under 60 sekunder er nøytralt, 60–300 gult og minst 300 rødt. IKKE POLLET er verdien -1 før første poll, ikke bevis på feil under oppstart. Signalet beviser ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
 				query: prometheusQuery(
-					"Poll-alder",
+					"Tid siden poll",
 					sykmeldingConsumerPollAgeByPodQuery,
 					"instant",
 					"{{pod}}",
@@ -1269,22 +1069,22 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				decimals: 0,
 				mappings: [
 					{
-						options: { "-1": { color: "red", text: "IKKE POLLET" } },
+						options: { "-1": { color: "yellow", text: "Ikke pollet" } },
 						type: "value",
 					},
 				],
 				links: [
 					...serviceDataLinks("syfo-oppfolgingsplan-backend"),
-					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
+					dataLink("Køer og jobber", PIPELINE_RUNBOOK_URL),
 				],
 			}),
 			"panel-34": statPanel({
 				id: 34,
-				title: "Sykmelding-consumer · committed lag",
+				title: "Innlesing av sykmeldinger · meldinger bak",
 				description:
-					"Committed consumer-group-lag for sykmeldingstopicen. Null betyr ingen observert backlog ved siste scrape, ikke bevist korrekt eller ende-til-ende-levert behandling. Positiv lag kan være kortvarig; No data er Ukjent.",
+					"Committed consumer-group-lag for sykmeldingstopicen til syfo-oppfolgingsplan-backend. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. No data er Ukjent.",
 				query: prometheusQuery(
-					"Committed lag",
+					"Meldinger bak",
 					sykmeldingConsumerCommittedLagQuery,
 					"instant",
 				),
@@ -1293,58 +1093,28 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				decimals: 0,
 				links: [
 					...serviceDataLinks("syfo-oppfolgingsplan-backend"),
-					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
+					dataLink("Køer og jobber", PIPELINE_RUNBOOK_URL),
 				],
 			}),
-			"panel-22": textPanel(
-				22,
-				"32 · Planlagt jobb",
-				"kube_job_failed viser bare observert terminalt Kubernetes-utfall. Siste start, siste suksess, varighet og expected-run-evaluering mangler en verifisert adapter.",
-				jobCoverageMarkdown(),
-				[dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL)],
-			),
-			"panel-23": statPanel({
-				id: 23,
-				title: "Kube-feil · planlagt jobb",
-				description:
-					"Maks observert kube_job_failed i valgt tidsrom. No data betyr ingen bevist job resource i vinduet, ikke suksess.",
-				query: prometheusQuery("Job failure", jobFailureQuery, "instant"),
-				unit: "short",
-				thresholds: deviationThresholds,
-				decimals: 0,
-				links: [
-					dataLink("Pipeline-/jobbrunbook", PIPELINE_RUNBOOK_URL),
-					dataLink(
-						"Legacy guardrail #1094",
-						"https://github.com/navikt/esyfovarsel/issues/1094",
-					),
-				],
-			}),
-			"panel-24": textPanel(
-				24,
-				"40 · Pagerkandidater",
-				"Dashboardpaneler og runbooks aktiverer ikke pager. Aktivering krever 14–28 dagers shadow-evidens, second-person-verifikasjon og eksplisitt beslutning i #217.",
-				pagerReadinessMarkdown(),
-			),
 			"panel-25": timeSeriesPanel({
 				id: 25,
-				title: "Budstikka · consumer-lag · diagnostikk",
+				title: "Budstikka · meldinger bak",
 				description:
-					"Nåværende lag-metrikk. Lag > 0 er køtilstand, ikke bevist alvorlig konsekvens. Panelet er eksplisitt ikke det endelige pagersignalet.",
+					"Kafka-consumerens observerte lag. Viser transportbacklog, ikke Budstikkas interne leveringskø eller at mottakeren har fått varselet. Kortvarig lag er ikke alene en driftsfeil.",
 				query: prometheusQuery(
-					"Budstikka lag",
+					"Meldinger bak",
 					budstikkaLagQuery,
 					"range",
 					"{{topic}}",
 				),
 				unit: "short",
 				thresholds: neutralThresholds,
-				links: pagerLinks(
+				links: diagnosticLinks(
 					"syfo-budstikka",
 					BUDSTIKKA_RUNBOOK_URL,
 					"https://github.com/navikt/team-esyfo/issues/219",
 				),
-				fieldLinks: pagerLinks(
+				fieldLinks: diagnosticLinks(
 					"syfo-budstikka",
 					BUDSTIKKA_RUNBOOK_URL,
 					"https://github.com/navikt/team-esyfo/issues/219",
@@ -1354,94 +1124,236 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				id: 26,
 				title: "Oppfølgingsplan · deserialiseringsfeil",
 				description:
-					"Rate fra eksisterende legacy-teller. Signalet skiller foreløpig ikke terminalt avviste records fra retryforsøk; bruk det kun som diagnostikk fram til #449 er deployet og queryen er byttet.",
+					"Observerte deserialiseringsfeil per sekund. Legacy-telleren skiller ikke terminalt avviste meldinger fra gjentatte forsøk. Bruk runbooken før restart eller ny behandling; ikke les dette som antall tapte meldinger.",
 				query: prometheusQuery(
-					"Deserialiseringsrate",
+					"Deserialiseringsfeil",
 					deserializationRateQuery,
 					"range",
 					"observerte deserialiseringsfeil",
 				),
 				unit: "ops",
-				thresholds: [
-					{ color: "gray", value: 0 },
-					{ color: "red", value: 0.1 },
-				],
-				links: pagerLinks(
+				thresholds: neutralThresholds,
+				links: diagnosticLinks(
 					"syfo-oppfolgingsplan-backend",
 					DESERIALIZATION_RUNBOOK_URL,
 					"https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449",
 				),
-				fieldLinks: pagerLinks(
+				fieldLinks: diagnosticLinks(
 					"syfo-oppfolgingsplan-backend",
 					DESERIALIZATION_RUNBOOK_URL,
 					"https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449",
 				),
 			}),
+			"panel-23": statPanel({
+				id: 23,
+				title: "Varslingsjobb · registrert feilet kjøring",
+				description:
+					"Viser om esyfovarsel-job hadde Kubernetes-tilstanden Failed=True i valgt tidsrom. 0 betyr ingen true-tilstand i observerte serier, ikke bevist vellykket eller forventet kjøring. Manglende Job-metrikk gir Ukjent.",
+				query: prometheusQuery("Feilet kjøring", jobFailureQuery, "instant"),
+				unit: "short",
+				thresholds: deviationThresholds,
+				decimals: 0,
+				mappings: [
+					{
+						type: "value",
+						options: {
+							"0": { color: "gray", text: "Ingen observert" },
+							"1": { color: "red", text: "Feilet kjøring" },
+						},
+					},
+				],
+				links: [dataLink("Køer og jobber", PIPELINE_RUNBOOK_URL)],
+			}),
+			"panel-30": timeSeriesPanel({
+				id: 30,
+				title: "Dine sykmeldte · kall og vellykkede svar",
+				description:
+					"Produksjonstrafikk på GET /api/minesykmeldte og GET /api/virksomheter. attempt viser alle observerte kall; good er 2xx uten OTel-feilstatus. Ingen trafikk er ikke bevist feil. Dette er diagnostikk, ikke en vedtatt SLI eller SLO.",
+				query: prometheusQuery(
+					"Kall og vellykkede svar",
+					dinesykmeldteTrafficRateQuery,
+					"range",
+					"{{operation}} · {{outcome}}",
+				),
+				unit: "reqps",
+				thresholds: neutralThresholds,
+				links: serviceDataLinks("dinesykmeldte-backend"),
+				fieldLinks: serviceDataLinks("dinesykmeldte-backend"),
+				overrides: dinesykmeldteSeriesOverrides(["attempt", "good"]),
+			}),
+			"panel-31": timeSeriesPanel({
+				id: 31,
+				title: "Dine sykmeldte · avvikende svar",
+				description:
+					"De samme to rutene: http_4xx er ikke kalt forventet, fordi tekniske introspeksjonsfeil kan maskeres som 401. technical_failure er 5xx eller OTel-feilstatus; unclassified dekker øvrige svar og manglende HTTP-status. Manglende serier blir ikke null.",
+				query: prometheusQuery(
+					"Avvikende svar",
+					dinesykmeldteDeviationRateQuery,
+					"range",
+					"{{operation}} · {{outcome}}",
+				),
+				unit: "reqps",
+				thresholds: neutralThresholds,
+				links: [
+					...serviceDataLinks("dinesykmeldte-backend"),
+					dataLink(
+						"HTTP-utfall",
+						"https://github.com/navikt/dinesykmeldte-backend/issues/729",
+					),
+				],
+				fieldLinks: serviceDataLinks("dinesykmeldte-backend"),
+				overrides: dinesykmeldteSeriesOverrides([
+					"http_4xx",
+					"technical_failure",
+					"unclassified",
+				]),
+			}),
 			"panel-27": timeSeriesPanel({
 				id: 27,
-				title: "syfomotebehov · available/desired",
+				title: "Møtebehov · tilgjengelige replikaer",
 				description:
-					"Alertnær tilgjengelighetsdiagnostikk med available-replikaer, namespace, cluster, desired-guard og eksplisitt no-data. Les sammen med valgt tjenestes ready/desired- og RED-paneler; endelig pager tuning skjer i #753.",
+					"Available/desired for syfomotebehov. Available har Kubernetes' krav om minimumstid klar og er ikke det samme som ready. Et kort fall kan skyldes utrulling. desired=0 og manglende måling blir ikke null eller grønt.",
 				query: prometheusQuery(
-					"Motebehov available",
+					"Tilgjengelige replikaer",
 					motebehovAvailableRatioQuery,
 					"range",
 					"{{deployment}}",
 				),
 				unit: "percent",
 				thresholds: readyThresholds,
-				links: pagerLinks(
+				links: diagnosticLinks(
 					"syfomotebehov",
 					MOTEBEHOV_RUNBOOK_URL,
 					"https://github.com/navikt/syfomotebehov/issues/753",
 				),
-				fieldLinks: pagerLinks(
-					"syfomotebehov",
-					MOTEBEHOV_RUNBOOK_URL,
-					"https://github.com/navikt/syfomotebehov/issues/753",
+				fieldLinks: serviceDataLinks("syfomotebehov"),
+			}),
+			"panel-3": statPanel({
+				id: 3,
+				title: "Tjenester uten HTTP-målinger",
+				description:
+					"Forventede HTTP-tjenester uten SERVER-spanserie siste 30 minutter. Bakgrunnstjenester er utelatt. Dette er et målegap, ikke automatisk appfeil.",
+				query: prometheusQuery(
+					"Tjenester uten HTTP-målinger",
+					missingTelemetryQuery,
+					"instant",
 				),
+				unit: "short",
+				thresholds: attentionThresholds,
+				decimals: 0,
+				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
+			}),
+			"panel-6": statPanel({
+				id: 6,
+				title: "HTTP-målinger · dekning",
+				description:
+					"Andel forventede HTTP-tjenester med aktuell SERVER-spanserie. Måler tilstedeværende serier, ikke trafikk eller komplett tracing. Bakgrunnstjenester er utelatt.",
+				query: prometheusQuery(
+					"HTTP-dekning",
+					telemetryCoverageQuery,
+					"instant",
+				),
+				unit: "percent",
+				thresholds: coverageThresholds,
+				decimals: 0,
+			}),
+			"panel-7": statPanel({
+				id: 7,
+				title: "Kubernetes-målinger · dekning",
+				description:
+					"Andel forventede tjenester med metrikk for ønskede replikaer. Beviser identitetsmapping og akkurat denne serien, ikke at alle Kubernetes-målinger er tilgjengelige.",
+				query: prometheusQuery(
+					"Kubernetes-dekning",
+					deploymentCoverageQuery,
+					"instant",
+				),
+				unit: "percent",
+				thresholds: coverageThresholds,
+				decimals: 0,
+			}),
+			"panel-35": statPanel({
+				id: 35,
+				title: "Tjenester med API-avvisninger · 5 min",
+				description:
+					"WARN-hendelsen api_request_rejected siste fem minutter ved periodens slutt. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
+				query: lokiQuery(
+					"Tjenester med API-avvisninger",
+					fleetServicesWithApiRejectionsQuery,
+				),
+				unit: "short",
+				thresholds: attentionThresholds,
+				decimals: 0,
+				noValue: "Ingen treff",
+				links: [
+					dataLink("Feiloversikt", errorDashboardDataLink("$__all")),
+					dataLink(
+						"Avgrensede avvisningslogger",
+						runtimeRejectionScopeDataLink(FLEET_SERVICE_REGEX),
+					),
+				],
 			}),
 		},
 		layout: {
-			kind: "GridLayout",
+			kind: "RowsLayout",
 			spec: {
-				items: [
-					layoutItem("panel-1", 0, 0, 24, 3),
-					layoutItem("panel-2", 0, 3, 6, 4),
-					layoutItem("panel-32", 6, 3, 6, 4),
-					layoutItem("panel-35", 12, 3, 6, 4),
-					layoutItem("panel-4", 18, 3, 6, 4),
-					layoutItem("panel-5", 0, 7, 12, 4),
-					layoutItem("panel-3", 12, 7, 12, 4),
-					layoutItem("panel-10", 0, 11, 24, 16),
-					layoutItem("panel-6", 0, 27, 12, 4),
-					layoutItem("panel-7", 12, 27, 12, 4),
-					layoutItem("panel-8", 0, 31, 24, 3),
-					layoutItem("panel-12", 0, 34, 8, 9),
-					layoutItem("panel-13", 8, 34, 8, 9),
-					layoutItem("panel-14", 16, 34, 8, 9),
-					layoutItem("panel-15", 0, 43, 8, 6),
-					layoutItem("panel-16", 8, 43, 8, 6),
-					layoutItem("panel-17", 16, 43, 8, 6),
-					layoutItem("panel-36", 0, 49, 16, 8),
-					layoutItem("panel-37", 16, 49, 8, 8),
-					layoutItem("panel-30", 0, 57, 8, 8),
-					layoutItem("panel-31", 8, 57, 16, 8),
-					layoutItem("panel-18", 0, 65, 6, 6),
-					layoutItem("panel-20", 6, 65, 18, 6),
-					layoutItem("panel-21", 0, 71, 6, 4),
-					layoutItem("panel-33", 6, 71, 12, 4),
-					layoutItem("panel-34", 18, 71, 6, 4),
-					layoutItem("panel-22", 0, 75, 16, 5),
-					layoutItem("panel-23", 16, 75, 8, 5),
-					layoutItem("panel-24", 0, 80, 24, 3),
-					layoutItem("panel-25", 0, 83, 8, 10),
-					layoutItem("panel-26", 8, 83, 8, 10),
-					layoutItem("panel-27", 16, 83, 8, 10),
+				rows: [
+					row(
+						"Produksjon · oversikt",
+						[
+							layoutItem("panel-2", 0, 0, 5, 4),
+							layoutItem("panel-32", 5, 0, 5, 4),
+							layoutItem("panel-35", 10, 0, 5, 4),
+							layoutItem("panel-4", 15, 0, 5, 4),
+							layoutItem("panel-5", 20, 0, 4, 4),
+							layoutItem("panel-10", 0, 4, 24, 14),
+						],
+						false,
+					),
+					row(
+						"Undersøk en tjeneste",
+						[
+							layoutItem("panel-12", 0, 0, 8, 7),
+							layoutItem("panel-13", 8, 0, 8, 7),
+							layoutItem("panel-14", 16, 0, 8, 7),
+							layoutItem("panel-15", 0, 7, 6, 6),
+							layoutItem("panel-37", 6, 7, 18, 6),
+							layoutItem("panel-36", 0, 13, 24, 8),
+						],
+						true,
+						[serviceVariable],
+					),
+					row("Køer og jobber · produksjon", [
+						layoutItem("panel-33", 0, 0, 12, 5),
+						layoutItem("panel-34", 12, 0, 6, 5),
+						layoutItem("panel-23", 18, 0, 6, 5),
+						layoutItem("panel-25", 0, 5, 12, 7),
+						layoutItem("panel-26", 12, 5, 12, 7),
+					]),
+					row("Utvalgte tjenester · produksjon", [
+						layoutItem("panel-30", 0, 0, 12, 7),
+						layoutItem("panel-31", 12, 0, 12, 7),
+						layoutItem("panel-27", 0, 7, 24, 6),
+					]),
+					row("Måledata · produksjon", [
+						layoutItem("panel-3", 0, 0, 8, 4),
+						layoutItem("panel-6", 8, 0, 8, 4),
+						layoutItem("panel-7", 16, 0, 8, 4),
+					]),
 				],
 			},
 		},
-		links: [],
+		links: [
+			dashboardLink(
+				"Feiloversikt",
+				"https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt?var-runtime_environment=prod",
+				true,
+			),
+			dashboardLink(
+				"Runbooks",
+				"https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/",
+			),
+			dashboardLink("Om målingene", CONTROL_ROOM_GUIDE_URL),
+		],
 		liveNow: false,
 		preload: false,
 		tags: ["team-esyfo", "control-room", "observability", "managed-as-code"],
@@ -1454,49 +1366,8 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			to: "now",
 			timezone: "browser",
 		},
-		title: "Team eSyfo – Kontrollrom",
-		variables: [
-			{
-				kind: "CustomVariable",
-				spec: {
-					allowCustomValue: false,
-					current: { text: defaultScope.text, value: defaultScope.value },
-					description:
-						"Filtrerer bare toppkort og flåtematrisen. Faste seksjoner og detaljpaneler endres ikke.",
-					hide: "dontHide",
-					includeAll: false,
-					label: "Operativt område",
-					multi: false,
-					name: "scope",
-					options: [],
-					query: controlRoomScopeOptions
-						.map(({ text, value }) => `${text} : ${value}`)
-						.join(","),
-					skipUrlSync: false,
-					valuesFormat: "csv",
-				},
-			},
-			{
-				kind: "CustomVariable",
-				spec: {
-					allowCustomValue: false,
-					current: { text: selectedServiceText, value: selectedService },
-					description:
-						"Velger én tjeneste for detaljpaneler og lenker, uavhengig av operativt område.",
-					hide: "dontHide",
-					includeAll: false,
-					label: "Detaljtjeneste",
-					multi: false,
-					name: "service",
-					options: [],
-					query: controlRoomApplicationOptions
-						.map(({ text, value }) => `${text} : ${value}`)
-						.join(","),
-					skipUrlSync: false,
-					valuesFormat: "csv",
-				},
-			},
-		],
+		title: "Team eSyfo · Kontrollrom",
+		variables: [],
 	},
 });
 
