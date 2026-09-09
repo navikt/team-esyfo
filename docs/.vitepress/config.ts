@@ -96,7 +96,7 @@ export default withMermaid(
 					collapsed: false,
 					items: [
 						{ text: "Oversikt", link: "/verktoy/" },
-						{ text: "Hovmester", link: "/verktoy/hovmester" },
+						{ text: "Grillmester", link: "/verktoy/grillmester" },
 						{ text: "CI/CD", link: "/verktoy/ci-cd" },
 						{ text: "Flaggskipet", link: "/verktoy/flaggskipet" },
 					],
@@ -106,6 +106,7 @@ export default withMermaid(
 					collapsed: false,
 					items: [
 						{ text: "Oversikt", link: "/utvikling/" },
+						{ text: "Teamarbeid og tavla", link: "/utvikling/teamarbeid" },
 						{
 							text: "Observability",
 							collapsed: false,
