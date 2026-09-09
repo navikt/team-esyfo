@@ -1,6 +1,6 @@
 # Operative Kafka-kontrakter
 
-Dette er det kildeverifiserte utkastet til [#212](https://github.com/navikt/team-esyfo/issues/212). Det skiller mellom hva dagens kode kan bevise og hva teamet fortsatt må beslutte. Alle operative topic-kontrakter står fortsatt som `proposed`, og Kontrollrommet viser derfor `IKKE EVALUERT`.
+Dette er det kildeverifiserte utkastet til [#212](https://github.com/navikt/team-esyfo/issues/212). Det skiller mellom hva dagens kode kan bevise og hva teamet fortsatt må beslutte. Alle operative topic-kontrakter står fortsatt som `proposed`. Kontrollrommet viser enkelte diagnostiske signaler under tjenesten de tilhører, ikke en evaluert pipelinehelse.
 
 Airflow er bare ført som ekstern leser. Team eSyfo eier ikke driften eller sluttutfallet der. Consumer-lag brukes som diagnostikk, aldri som eneste pagergrunnlag.
 

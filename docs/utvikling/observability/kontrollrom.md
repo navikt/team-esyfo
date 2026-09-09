@@ -6,9 +6,9 @@
 
 ## Slik bruker vi det
 
-1. Se toppkortene og **Tjenester i produksjon**. Tabellen beholder forventede tjenester selv når måledata mangler. Klikk tjenesten for logger, APM, Feiloversikt og runbook.
-2. Åpne **Undersøk en tjeneste** for trafikk, feilmarkerte kall, svartid, replikaer og omstarter. Tjenestevelgeren gjelder bare denne raden.
-3. Åpne de egne radene for meldingsbehandling, jobber eller utvalgte tjenester når avviket peker dit. Måledekning finnes i egen sammenfoldet rad. WARN-avvisninger vises separat i den åpne oversikten.
+1. Start i **Oversikt**, som er standardfanen. Tabellen **Tjenester i produksjon** beholder forventede tjenester selv når måledata mangler. Bruk **Undersøk tjenesten** fra tabellen for å åpne riktig tjeneste direkte.
+2. Fanen **Undersøk en tjeneste** har en lokal tjenestevelger og lenker til logger, APM, Feiloversikt og runbook. Valget endrer ikke produksjonsoversikten. Replikaer, omstarter og logger vises for valgt tjeneste; HTTP-grafer vises bare for tjenester med HTTP-målinger som del av kontrakten.
+3. Følg tjenestens egne signaler når de finnes: meldingsbehandling for Oppfølgingsplan og Budstikka, varslingsjobben for esyfovarsel og rutespesifikke svar for Dine sykmeldte. Målegap står ved tjenesten i oversikten, ikke i en egen statusrad.
 
 Det er ingen globale område- eller tjenestefiltre. Oversikten gjelder alltid hele produksjonsflåten. Tidsrommet er felles; paneler merket **5 min**, **15 min** eller **24 t** bruker det oppgitte vinduet bakover fra slutten av valgt tidsrom.
 
@@ -20,7 +20,7 @@ Det er ingen globale område- eller tjenestefiltre. Oversikten gjelder alltid he
 | Loggfeil · 5 min | Logghendelser med `error`, `critical` eller `fatal`, uavhengig av HTTP-sporene. |
 | Omstarter · 15 min | Toppkortet teller tjenester med omstarter; tabellen viser estimerte omstarter per tjeneste. Gult er et undersøkelsessignal, ikke en nedetidsalarm. |
 | Klare replikaer | Klare i forhold til ønskede replikaer. Et øyeblikksbilde, ikke målt tilgjengelighet. |
-| Måledata | Om forventede HTTP-måleserier er oppdatert, forsinket eller mangler. Ikke tidspunktet for siste kall. |
+| HTTP-målinger | Om forventede HTTP-måleserier er oppdatert, forsinket eller mangler. Ikke tidspunktet for siste kall. |
 
 **Ingen treff** i et loggpanel betyr at søket ikke returnerte kvalifiserende hendelser. Det beviser ikke at alle tjenester har komplett logging. Manglende Kubernetes-målinger er ukjent, ikke 0 % klare replikaer. En faktisk målt null med ønskede replikaer større enn null er derimot 0 %. Tjenester med ønsket antall null inngår ikke i prosentberegningen.
 
@@ -54,19 +54,21 @@ HTTP-måledata klassifiseres slik:
 - **Mangler:** ingen serie siste 30 minutter for en forventet HTTP-tjeneste.
 - **Bakgrunnstjeneste:** worker uten inbound SERVER-kontrakt.
 
-### Meldingsbehandling og jobber
+### Tjenestens egne signaler
 
-Poll-alder viser sekunder siden Kafka-klienten kalte `poll()`. Consumer-lag viser meldinger bak i transporten. Ingen av dem beviser alene riktig behandling, ende-til-ende-leveranse eller brukerimpact.
+Dette er utvalgte, verifiserte diagnostiske signaler for valgt tjeneste, ikke en fullstendig oversikt over teamets køer og jobber:
 
-Oppfølgingsplans deserialiseringssignal skiller ennå ikke terminal forkasting fra retryforsøk. Kubernetes-jobbpanelet viser bare `kube_job_failed{condition="true"}` i valgt tidsrom; `false` og `unknown` er ikke feil. Et tomt resultat beviser ikke en vellykket eller punktlig jobbkjøring.
+- **syfo-oppfolgingsplan-backend:** tid siden Kafka-klientens siste `poll()` per pod, samlet committed lag for gruppen `syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2` på `teamsykmelding.syfo-sendt-sykmelding`, og deserialiseringsfeil. Lag fra dupliserte eksportørserier summeres ikke. Deserialiseringssignalet skiller ennå ikke terminal forkasting fra retryforsøk.
+- **syfo-budstikka:** største observerte partisjonslag på `team-esyfo.budstikka.v1`. Dette er ikke samlet lag, intern leveringskø eller antall varsler brukeren mangler.
+- **esyfovarsel:** Kubernetes-feilstatus for den separate jobben `esyfovarsel-job`, som starter interne jobber via `POST /job/trigger`. Målingen gjelder jobbressursen, ikke alle arbeidsoppgavene i esyfovarsel.
+
+Poll og Kafka-lag beviser ikke alene riktig behandling, ende-til-ende-leveranse eller brukerimpact. Jobbpanelet viser bare `kube_job_failed{condition="true"}` i valgt tidsrom; `false` og `unknown` er ikke feil. Et tomt resultat beviser ikke en vellykket eller punktlig kjøring.
 
 Se [Kafka-kontraktene](./kafka-kontrakter), [pipelines og jobber](./runbooks/pipelines-og-jobber) og [deserialiseringsrunbook](./runbooks/oppfolgingsplan-deserialisering) for kontrakter og trygg videre undersøkelse.
 
-### Utvalgte tjenester
+For **dinesykmeldte-backend** avgrenser rutepanelene `GET /api/minesykmeldte` og `GET /api/virksomheter`. 2xx uten OTel-feilstatus telles som vellykkede svar. 4xx uten OTel-feilstatus vises separat og nøytralt; 5xx eller OTel-feilstatus er teknisk feilmarkert. Texas kan maskere tekniske introspeksjonsfeil som 401, så 4xx omtales ikke generelt som forventet. Se [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729).
 
-Dine sykmeldte-panelene avgrenser `GET /api/minesykmeldte` og `GET /api/virksomheter`. 2xx uten OTel-feilstatus telles som vellykkede svar. 4xx uten OTel-feilstatus vises separat og nøytralt; 5xx eller OTel-feilstatus er teknisk feilmarkert. Texas kan maskere tekniske introspeksjonsfeil som 401, så 4xx omtales ikke generelt som forventet. Se [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729).
-
-Møtebehovs tilgjengelige replikaer er diagnostikk sammen med trafikk og feil, ikke en selvstendig SLO. Se [egen runbook](./runbooks/syfomotebehov-tilgjengelighet).
+For **syfomotebehov** vises også tilgjengelige replikaer (`available`), som krever at podden har vært klar lenge nok etter Kubernetes' regler. Det er ikke det samme som `ready` eller en selvstendig SLO. Se [egen runbook](./runbooks/syfomotebehov-tilgjengelighet).
 
 ## Begrensninger og videre arbeid
 
@@ -95,7 +97,7 @@ pnpm build
 
 Query-smoken kjører syntetiske hendelser i lokal Loki og måleserier gjennom Prometheus' `promtool`. Den dekker blant annet ekte null, manglende replikaer, skalering til null, jobbens tre condition-verdier og skillet mellom ERROR og WARN. Grafana-smoken importerer de eksakte artefaktene i samme Grafana-versjon som produksjon og sammenligner både lagret ressurs og UI-DTO. Begge krever lokal Docker; de skriver ikke produksjonsdata.
 
-Rendring og lenker må også prøves i Grafana: hele flåten, en backend/frontend/worker, normal utrulling, reelle omstarter, manglende målinger og ett konkret feilforløp. Kontroller at lokalt tjenestevalg ikke endrer produksjonsoversikten. Se [designprinsippene](./dashboard-design).
+Rendring og lenker må også prøves i Grafana: hele flåten, en backend/frontend/worker, normal utrulling, reelle omstarter, manglende målinger og ett konkret feilforløp. Kontroller at tjenestelenken åpner riktig detaljvisning, at en worker ikke får tomme HTTP-grafer, og at ingen tjeneste får en annen tjenestes særpaneler. Lokalt tjenestevalg skal ikke endre produksjonsoversikten. Se [designprinsippene](./dashboard-design).
 
 Ved publisering: eksporter live-dashboardet som rollback-kopi, importer artefakten med samme UID `team-esyfo-kontrollrom` i **Team Esyfo** (`K-1b-N_4k`), og eksporter på nytt for semantisk sammenligning. Ikke overskriv uavklarte live-endringer. Standard er én time og to minutters oppdatering; flåte-Loki leser bare fem minutter.
 

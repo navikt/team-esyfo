@@ -58,7 +58,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Feilmarkerte kall · tjenester",
+          "title": "Feilmarkerte kall",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -80,7 +80,7 @@
                       }
                     ]
                   },
-                  "unit": "short"
+                  "unit": "suffix: tjenester"
                 },
                 "overrides": []
               },
@@ -151,7 +151,7 @@
               "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=$__all"
             }
           ],
-          "title": "Tjenester med loggfeil · 5 min",
+          "title": "Loggfeil · 5 min",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -173,7 +173,7 @@
                       }
                     ]
                   },
-                  "unit": "short"
+                  "unit": "suffix: tjenester"
                 },
                 "overrides": []
               },
@@ -247,7 +247,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Tjenester med omstarter · 15 min",
+          "title": "Omstarter · 15 min",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -269,7 +269,7 @@
                       }
                     ]
                   },
-                  "unit": "short"
+                  "unit": "suffix: tjenester"
                 },
                 "overrides": []
               },
@@ -343,7 +343,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Klare replikaer · laveste andel",
+          "title": "Klare replikaer · lavest",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -635,6 +635,11 @@
                         "id": "links",
                         "value": [
                           {
+                            "targetBlank": false,
+                            "title": "Undersøk tjenesten",
+                            "url": "/d/team-esyfo-kontrollrom?orgId=1&from=${__from}&to=${__to}&dtab=Unders%C3%B8k-en-tjeneste&var-service=${__value.raw}"
+                          },
+                          {
                             "targetBlank": true,
                             "title": "APM og tracing",
                             "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=prod&tab=overview&from=${__from}&to=${__to}"
@@ -907,7 +912,7 @@
               "transformations": []
             }
           },
-          "description": "Inbound SERVER-spans for valgt tjeneste. Bakgrunnstjenester vurderes med kø- og jobbsignaler, ikke HTTP-målinger.",
+          "description": "Inbound SERVER-spans for valgt tjeneste. Bakgrunnstjenester vurderes med kø- og jobbsignaler, ikke HTTP-målinger. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 12,
           "links": [],
           "title": "Kall per sekund",
@@ -1046,7 +1051,7 @@
               "transformations": []
             }
           },
-          "description": "Andel inbound SERVER-spans med OTel-feilstatus STATUS_CODE_ERROR. Null vises bare med observert trafikk. Ingen trafikk eller manglende måling gir Ukjent; dette er ikke en vedtatt SLO-grense.",
+          "description": "Andel inbound SERVER-spans med OTel-feilstatus STATUS_CODE_ERROR. Null vises bare med observert trafikk. Ingen trafikk eller manglende måling gir Ukjent; dette er ikke en vedtatt SLO-grense. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 13,
           "links": [],
           "title": "Andel feilmarkerte kall",
@@ -1065,6 +1070,8 @@
                     "axisColorMode": "text",
                     "axisLabel": "",
                     "axisPlacement": "auto",
+                    "axisSoftMin": 0,
+                    "axisSoftMax": 100,
                     "barAlignment": 0,
                     "barWidthFactor": 0.6,
                     "drawStyle": "line",
@@ -1185,7 +1192,7 @@
               "transformations": []
             }
           },
-          "description": "95 prosent av observerte inbound SERVER-spans er raskere enn denne tiden. Gjelder bare valgt tjeneste, ikke hele flåten. Manglende trafikk gir Ukjent. Ingen generell SLO-grense.",
+          "description": "95 prosent av observerte inbound SERVER-spans er raskere enn denne tiden. Gjelder bare valgt tjeneste, ikke hele flåten. Manglende trafikk gir Ukjent. Ingen generell SLO-grense. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 14,
           "links": [],
           "title": "Svartid · 95-persentil",
@@ -1432,7 +1439,7 @@
               "transformations": []
             }
           },
-          "description": "Andel klare av ønskede replikaer. Et kort fall kan skyldes deploy eller skalering; vedvarende mangel krever undersøkelse. Ikke en incident- eller deploydetektor. desired=0 og manglende målinger blir ikke null eller grønt.",
+          "description": "Andel klare av ønskede replikaer. Et kort fall kan skyldes deploy eller skalering; vedvarende mangel krever undersøkelse. Ikke en incident- eller deploydetektor. desired=0 og manglende målinger blir ikke null eller grønt. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 37,
           "links": [
             {
@@ -1472,6 +1479,8 @@
                     "axisColorMode": "text",
                     "axisLabel": "",
                     "axisPlacement": "auto",
+                    "axisSoftMin": 0,
+                    "axisSoftMax": 100,
                     "barAlignment": 0,
                     "barWidthFactor": 0.6,
                     "drawStyle": "line",
@@ -1826,7 +1835,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
             }
           ],
-          "title": "Innlesing av sykmeldinger · tid siden poll",
+          "title": "Kafka-klienter · tid siden poll",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -1928,7 +1937,7 @@
               "transformations": []
             }
           },
-          "description": "Committed consumer-group-lag for sykmeldingstopicen til syfo-oppfolgingsplan-backend. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. No data er Ukjent.",
+          "description": "Samlet committed lag for consumer group syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2 på teamsykmelding.syfo-sendt-sykmelding. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. Manglende måling er Ukjent.",
           "id": 34,
           "links": [
             {
@@ -1957,7 +1966,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
             }
           ],
-          "title": "Innlesing av sykmeldinger · meldinger bak",
+          "title": "Sykmeldinger · samlet Kafka-lag",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2040,7 +2049,7 @@
               "transformations": []
             }
           },
-          "description": "Kafka-consumerens observerte lag. Viser transportbacklog, ikke Budstikkas interne leveringskø eller at mottakeren har fått varselet. Kortvarig lag er ikke alene en driftsfeil.",
+          "description": "Største observerte lag for en partisjon på team-esyfo.budstikka.v1, på tvers av Kafka-klienter. Ikke summen av meldinger bak, Budstikkas interne leveringskø eller bevis på at mottakeren har fått varselet. Kortvarig lag er ikke alene en driftsfeil. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 25,
           "links": [
             {
@@ -2074,7 +2083,7 @@
               "url": "https://github.com/navikt/team-esyfo/issues/219"
             }
           ],
-          "title": "Budstikka · meldinger bak",
+          "title": "budstikka.v1 · største partisjonslag",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2220,7 +2229,7 @@
               "transformations": []
             }
           },
-          "description": "Observerte deserialiseringsfeil per sekund. Legacy-telleren skiller ikke terminalt avviste meldinger fra gjentatte forsøk. Bruk runbooken før restart eller ny behandling; ikke les dette som antall tapte meldinger.",
+          "description": "Observerte deserialiseringsfeil per sekund. Legacy-telleren skiller ikke terminalt avviste meldinger fra gjentatte forsøk. Bruk runbooken før restart eller ny behandling; ikke les dette som antall tapte meldinger. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 26,
           "links": [
             {
@@ -2254,7 +2263,7 @@
               "url": "https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449"
             }
           ],
-          "title": "Oppfølgingsplan · deserialiseringsfeil",
+          "title": "Sykmeldinger · deserialiseringsfeil",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2400,16 +2409,21 @@
               "transformations": []
             }
           },
-          "description": "Viser om esyfovarsel-job hadde Kubernetes-tilstanden Failed=True i valgt tidsrom. 0 betyr ingen true-tilstand i observerte serier, ikke bevist vellykket eller forventet kjøring. Manglende Job-metrikk gir Ukjent.",
+          "description": "Den separate jobben esyfovarsel-job starter behandling i esyfovarsel. Viser om jobben hadde Kubernetes-tilstanden Failed=True i valgt tidsrom. 0 betyr ingen true-tilstand i observerte serier, ikke bevist vellykket eller forventet kjøring. Manglende Job-metrikk gir Ukjent.",
           "id": 23,
           "links": [
+            {
+              "targetBlank": true,
+              "title": "Jobbens logger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/esyfovarsel-job/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cesyfovarsel-job&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
             {
               "targetBlank": true,
               "title": "Køer og jobber",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
             }
           ],
-          "title": "Varslingsjobb · registrert feilet kjøring",
+          "title": "esyfovarsel-job · feilet kjøring",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2511,7 +2525,7 @@
               "transformations": []
             }
           },
-          "description": "Produksjonstrafikk på GET /api/minesykmeldte og GET /api/virksomheter. attempt viser alle observerte kall; good er 2xx uten OTel-feilstatus. Ingen trafikk er ikke bevist feil. Dette er diagnostikk, ikke en vedtatt SLI eller SLO.",
+          "description": "Produksjonstrafikk på GET /api/minesykmeldte og GET /api/virksomheter. attempt viser alle observerte kall; good er 2xx uten OTel-feilstatus. Ingen trafikk er ikke bevist feil. Dette er diagnostikk, ikke en vedtatt SLI eller SLO. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 30,
           "links": [
             {
@@ -2720,7 +2734,7 @@
               "transformations": []
             }
           },
-          "description": "De samme to rutene: http_4xx er ikke kalt forventet, fordi tekniske introspeksjonsfeil kan maskeres som 401. technical_failure er 5xx eller OTel-feilstatus; unclassified dekker øvrige svar og manglende HTTP-status. Manglende serier blir ikke null.",
+          "description": "De samme to rutene: http_4xx er ikke kalt forventet, fordi tekniske introspeksjonsfeil kan maskeres som 401. technical_failure er 5xx eller OTel-feilstatus; unclassified dekker øvrige svar og manglende HTTP-status. Manglende serier blir ikke null. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 31,
           "links": [
             {
@@ -2958,7 +2972,7 @@
               "transformations": []
             }
           },
-          "description": "Available/desired for syfomotebehov. Available har Kubernetes' krav om minimumstid klar og er ikke det samme som ready. Et kort fall kan skyldes utrulling. desired=0 og manglende måling blir ikke null eller grønt.",
+          "description": "Available/desired for syfomotebehov. Available har Kubernetes' krav om minimumstid klar og er ikke det samme som ready. Et kort fall kan skyldes utrulling. desired=0 og manglende måling blir ikke null eller grønt. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 27,
           "links": [
             {
@@ -3008,6 +3022,8 @@
                     "axisColorMode": "text",
                     "axisLabel": "",
                     "axisPlacement": "auto",
+                    "axisSoftMin": 0,
+                    "axisSoftMax": 100,
                     "barAlignment": 0,
                     "barWidthFactor": 0.6,
                     "drawStyle": "line",
@@ -3096,282 +3112,6 @@
           }
         }
       },
-      "panel-3": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "PA58DA793C7250F1B"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "count((label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"bro-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"esyfo-narmesteleder\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"flaggskipet\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lps-oppfolgingsplan-mottak\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-api\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-dashboard\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"narmesteleder-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-dokumentporten\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-frontend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfobrukertilgang\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Utfasing\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfomotebehov\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfooppdfgen\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"sykepengedager-informasjon\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\")) unless on(service_name) (max by (service_name) (max_over_time(timestamp(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\"})[30m:])))) or on() vector(0)",
-                        "instant": true,
-                        "interval": "",
-                        "legendFormat": "",
-                        "range": false
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "Tjenester uten HTTP-målinger"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Forventede HTTP-tjenester uten SERVER-spanserie siste 30 minutter. Bakgrunnstjenester er utelatt. Dette er et målegap, ikke automatisk appfeil.",
-          "id": 3,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "Tjenester uten HTTP-målinger",
-          "vizConfig": {
-            "group": "stat",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "decimals": 0,
-                  "noValue": "Ukjent",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "gray",
-                        "value": 0
-                      },
-                      {
-                        "color": "yellow",
-                        "value": 1
-                      }
-                    ]
-                  },
-                  "unit": "short"
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "percentChangeColorMode": "standard",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showPercentChange": false,
-                "text": {
-                  "valueSize": 32
-                },
-                "textMode": "auto",
-                "wideLayout": true
-              }
-            },
-            "version": "13.1.2"
-          }
-        }
-      },
-      "panel-6": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "PA58DA793C7250F1B"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "100 * ((count((max by (service_name) (timestamp(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\"}))) and on(service_name) (label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"bro-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"esyfo-narmesteleder\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"flaggskipet\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lps-oppfolgingsplan-mottak\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-api\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-dashboard\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"narmesteleder-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-dokumentporten\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-frontend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfobrukertilgang\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Utfasing\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfomotebehov\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfooppdfgen\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"sykepengedager-informasjon\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\"))) or on() vector(0)) / count(label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"bro-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"esyfo-narmesteleder\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"flaggskipet\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lps-oppfolgingsplan-mottak\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-api\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-dashboard\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"narmesteleder-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-dokumentporten\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-frontend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfobrukertilgang\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Utfasing\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfomotebehov\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfooppdfgen\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"sykepengedager-informasjon\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\")))",
-                        "instant": true,
-                        "interval": "",
-                        "legendFormat": "",
-                        "range": false
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "HTTP-dekning"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Andel forventede HTTP-tjenester med aktuell SERVER-spanserie. Måler tilstedeværende serier, ikke trafikk eller komplett tracing. Bakgrunnstjenester er utelatt.",
-          "id": 6,
-          "links": [],
-          "title": "HTTP-målinger · dekning",
-          "vizConfig": {
-            "group": "stat",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "decimals": 0,
-                  "noValue": "Ukjent",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "yellow",
-                        "value": 0
-                      },
-                      {
-                        "color": "blue",
-                        "value": 100
-                      }
-                    ]
-                  },
-                  "unit": "percent"
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "percentChangeColorMode": "standard",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showPercentChange": false,
-                "text": {
-                  "valueSize": 32
-                },
-                "textMode": "auto",
-                "wideLayout": true
-              }
-            },
-            "version": "13.1.2"
-          }
-        }
-      },
-      "panel-7": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "PA58DA793C7250F1B"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "100 * ((count((label_replace(max by (deployment) (kube_deployment_spec_replicas{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", deployment=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}), \"service_name\", \"$1\", \"deployment\", \"(.*)\")) and on(service_name) (label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"bro-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"esyfo-narmesteleder\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"esyfovarsel\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Migrerer\", \"\", \".*\"), \"role\", \"worker\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"flaggskipet\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lps-oppfolgingsplan-mottak\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-api\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-dashboard\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"narmesteleder-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-budstikka\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"worker\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-dokumentporten\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-frontend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfobrukertilgang\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Utfasing\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfomotebehov\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfooppdfgen\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"sykepengedager-informasjon\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\"))) or on() vector(0)) / count(label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"aktivitetskrav-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"bro-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dialogmote-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"dinesykmeldte-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"esyfo-narmesteleder\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"esyfovarsel\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Migrerer\", \"\", \".*\"), \"role\", \"worker\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"flaggskipet\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lps-oppfolgingsplan-mottak\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-api\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"lumi-dashboard\", \"\", \".*\"), \"criticality\", \"support\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"internal-tool\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-backend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"meroppfolging-microfrontend\", \"\", \".*\"), \"criticality\", \"standard\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"microfrontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"narmesteleder-frontend\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-budstikka\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"worker\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-dokumentporten\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-backend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfo-oppfolgingsplan-frontend\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"frontend-server\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfobrukertilgang\", \"\", \".*\"), \"criticality\", \"critical\", \"\", \".*\"), \"lifecycle\", \"Utfasing\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfomotebehov\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"syfooppdfgen\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\") or label_replace(label_replace(label_replace(label_replace(vector(1), \"service_name\", \"sykepengedager-informasjon\", \"\", \".*\"), \"criticality\", \"high\", \"\", \".*\"), \"lifecycle\", \"Aktiv\", \"\", \".*\"), \"role\", \"backend-api\", \"\", \".*\")))",
-                        "instant": true,
-                        "interval": "",
-                        "legendFormat": "",
-                        "range": false
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "Kubernetes-dekning"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Andel forventede tjenester med metrikk for ønskede replikaer. Beviser identitetsmapping og akkurat denne serien, ikke at alle Kubernetes-målinger er tilgjengelige.",
-          "id": 7,
-          "links": [],
-          "title": "Kubernetes-målinger · dekning",
-          "vizConfig": {
-            "group": "stat",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "decimals": 0,
-                  "noValue": "Ukjent",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "yellow",
-                        "value": 0
-                      },
-                      {
-                        "color": "blue",
-                        "value": 100
-                      }
-                    ]
-                  },
-                  "unit": "percent"
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "percentChangeColorMode": "standard",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showPercentChange": false,
-                "text": {
-                  "valueSize": 32
-                },
-                "textMode": "auto",
-                "wideLayout": true
-              }
-            },
-            "version": "13.1.2"
-          }
-        }
-      },
       "panel-35": {
         "kind": "Panel",
         "spec": {
@@ -3419,7 +3159,7 @@
               "url": "/explore?panes=%7B%22A%22%3A%7B%22datasource%22%3A%22PEA2100DC89AE9FE2%22%2C%22queries%22%3A%5B%7B%22datasource%22%3A%7B%22type%22%3A%22loki%22%2C%22uid%22%3A%22PEA2100DC89AE9FE2%22%7D%2C%22direction%22%3A%22backward%22%2C%22editorMode%22%3A%22code%22%2C%22expr%22%3A%22%7Bservice_namespace%3D%5C%22team-esyfo%5C%22%2C%20k8s_cluster_name%3D%5C%22prod%5C%22%2C%20service_name%3D~%5C%22%5E(aktivitetskrav-backend%7Caktivitetskrav-frontend%7Caktivitetskrav-microfrontend%7Cbro-frontend%7Cdialogmote-frontend%7Cdialogmote-microfrontend%7Cdinesykmeldte%7Cdinesykmeldte-backend%7Cesyfo-narmesteleder%7Cesyfovarsel%7Cflaggskipet%7Clps-oppfolgingsplan-mottak%7Clumi-api%7Clumi-dashboard%7Cmeroppfolging-backend%7Cmeroppfolging-frontend%7Cmeroppfolging-microfrontend%7Cnarmesteleder-frontend%7Csyfo-budstikka%7Csyfo-dokumentporten%7Csyfo-oppfolgingsplan-backend%7Csyfo-oppfolgingsplan-frontend%7Csyfobrukertilgang%7Csyfomotebehov%7Csyfooppdfgen%7Csykepengedager-informasjon)%24%5C%22%7D%5Cn%7C%20k8s_container_name%20!~%20%60secure-logs-fluentbit%7Ccloudsql-proxy%7Cwonderwall%7Celector%60%5Cn%7C%20detected_level%3D~%60(%3Fi)(warn%7Cwarning)%60%5Cn%7C%20x_isFrontend!%3D%5C%22true%5C%22%5Cn%7C%20json%20forwarded_browser%3D%5C%22x_isFrontend%5C%22%5Cn%7C%20forwarded_browser!%3D%5C%22true%5C%22%5Cn%7C%20drop%20forwarded_browser%2C%20__error__%2C%20__error_details__%5Cn%7C%20json%20event_type%5Cn%7C%20__error__%3D%5C%22%5C%22%5Cn%7C%20event_type%3D%5C%22api_request_rejected%5C%22%22%2C%22queryType%22%3A%22range%22%2C%22refId%22%3A%22A%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D&schemaVersion=1&orgId=1"
             }
           ],
-          "title": "Tjenester med API-avvisninger · 5 min",
+          "title": "API-avvisninger · 5 min",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -3441,7 +3181,7 @@
                       }
                     ]
                   },
-                  "unit": "short"
+                  "unit": "suffix: tjenester"
                 },
                 "overrides": []
               },
@@ -3472,15 +3212,13 @@
       }
     },
     "layout": {
-      "kind": "RowsLayout",
+      "kind": "TabsLayout",
       "spec": {
-        "rows": [
+        "tabs": [
           {
-            "kind": "RowsLayoutRow",
+            "kind": "TabsLayoutTab",
             "spec": {
-              "title": "Produksjon · oversikt",
-              "collapse": false,
-              "hideHeader": false,
+              "title": "Oversikt",
               "layout": {
                 "kind": "GridLayout",
                 "spec": {
@@ -3493,7 +3231,7 @@
                           "name": "panel-2"
                         },
                         "height": 4,
-                        "width": 5,
+                        "width": 4,
                         "x": 0,
                         "y": 0
                       }
@@ -3507,7 +3245,7 @@
                         },
                         "height": 4,
                         "width": 5,
-                        "x": 5,
+                        "x": 4,
                         "y": 0
                       }
                     },
@@ -3520,7 +3258,7 @@
                         },
                         "height": 4,
                         "width": 5,
-                        "x": 10,
+                        "x": 9,
                         "y": 0
                       }
                     },
@@ -3533,7 +3271,7 @@
                         },
                         "height": 4,
                         "width": 5,
-                        "x": 15,
+                        "x": 14,
                         "y": 0
                       }
                     },
@@ -3545,8 +3283,8 @@
                           "name": "panel-5"
                         },
                         "height": 4,
-                        "width": 4,
-                        "x": 20,
+                        "width": 5,
+                        "x": 19,
                         "y": 0
                       }
                     },
@@ -3569,96 +3307,9 @@
             }
           },
           {
-            "kind": "RowsLayoutRow",
+            "kind": "TabsLayoutTab",
             "spec": {
               "title": "Undersøk en tjeneste",
-              "collapse": true,
-              "hideHeader": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-12"
-                        },
-                        "height": 7,
-                        "width": 8,
-                        "x": 0,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-13"
-                        },
-                        "height": 7,
-                        "width": 8,
-                        "x": 8,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-14"
-                        },
-                        "height": 7,
-                        "width": 8,
-                        "x": 16,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-15"
-                        },
-                        "height": 6,
-                        "width": 6,
-                        "x": 0,
-                        "y": 7
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-37"
-                        },
-                        "height": 6,
-                        "width": 18,
-                        "x": 6,
-                        "y": 7
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-36"
-                        },
-                        "height": 8,
-                        "width": 24,
-                        "x": 0,
-                        "y": 13
-                      }
-                    }
-                  ]
-                }
-              },
               "variables": [
                 {
                   "kind": "CustomVariable",
@@ -3668,7 +3319,7 @@
                       "text": "meroppfolging-backend",
                       "value": "meroppfolging-backend"
                     },
-                    "description": "Velger tjeneste bare i denne raden. Oversikten over produksjonstjenester endres ikke.",
+                    "description": "Velger tjeneste bare i denne fanen. Oversikten over produksjonstjenester endres ikke.",
                     "hide": "dontHide",
                     "includeAll": false,
                     "label": "Tjeneste",
@@ -3680,190 +3331,413 @@
                     "valuesFormat": "csv"
                   }
                 }
-              ]
-            }
-          },
-          {
-            "kind": "RowsLayoutRow",
-            "spec": {
-              "title": "Køer og jobber · produksjon",
-              "collapse": true,
-              "hideHeader": false,
+              ],
               "layout": {
-                "kind": "GridLayout",
+                "kind": "RowsLayout",
                 "spec": {
-                  "items": [
+                  "rows": [
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-33"
+                        "title": "HTTP",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-12"
+                                  },
+                                  "height": 7,
+                                  "width": 8,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-13"
+                                  },
+                                  "height": 7,
+                                  "width": 8,
+                                  "x": 8,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-14"
+                                  },
+                                  "height": 7,
+                                  "width": 8,
+                                  "x": 16,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
                         },
-                        "height": 5,
-                        "width": 12,
-                        "x": 0,
-                        "y": 0
+                        "conditionalRendering": {
+                          "kind": "ConditionalRenderingGroup",
+                          "spec": {
+                            "visibility": "show",
+                            "condition": "and",
+                            "items": [
+                              {
+                                "kind": "ConditionalRenderingVariable",
+                                "spec": {
+                                  "variable": "service",
+                                  "operator": "matches",
+                                  "value": "^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$"
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-34"
-                        },
-                        "height": 5,
-                        "width": 6,
-                        "x": 12,
-                        "y": 0
+                        "title": "Runtime",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-15"
+                                  },
+                                  "height": 6,
+                                  "width": 6,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-37"
+                                  },
+                                  "height": 6,
+                                  "width": 18,
+                                  "x": 6,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-23"
+                        "title": "Sykmeldinger",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-33"
+                                  },
+                                  "height": 5,
+                                  "width": 12,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-34"
+                                  },
+                                  "height": 5,
+                                  "width": 12,
+                                  "x": 12,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-26"
+                                  },
+                                  "height": 7,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 5
+                                }
+                              }
+                            ]
+                          }
                         },
-                        "height": 5,
-                        "width": 6,
-                        "x": 18,
-                        "y": 0
+                        "conditionalRendering": {
+                          "kind": "ConditionalRenderingGroup",
+                          "spec": {
+                            "visibility": "show",
+                            "condition": "and",
+                            "items": [
+                              {
+                                "kind": "ConditionalRenderingVariable",
+                                "spec": {
+                                  "variable": "service",
+                                  "operator": "equals",
+                                  "value": "syfo-oppfolgingsplan-backend"
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-25"
+                        "title": "Budstikka",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-25"
+                                  },
+                                  "height": 7,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
                         },
-                        "height": 7,
-                        "width": 12,
-                        "x": 0,
-                        "y": 5
+                        "conditionalRendering": {
+                          "kind": "ConditionalRenderingGroup",
+                          "spec": {
+                            "visibility": "show",
+                            "condition": "and",
+                            "items": [
+                              {
+                                "kind": "ConditionalRenderingVariable",
+                                "spec": {
+                                  "variable": "service",
+                                  "operator": "equals",
+                                  "value": "syfo-budstikka"
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-26"
+                        "title": "Varslingsjobb",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-23"
+                                  },
+                                  "height": 4,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
                         },
-                        "height": 7,
-                        "width": 12,
-                        "x": 12,
-                        "y": 5
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          {
-            "kind": "RowsLayoutRow",
-            "spec": {
-              "title": "Utvalgte tjenester · produksjon",
-              "collapse": true,
-              "hideHeader": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-30"
-                        },
-                        "height": 7,
-                        "width": 12,
-                        "x": 0,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-31"
-                        },
-                        "height": 7,
-                        "width": 12,
-                        "x": 12,
-                        "y": 0
+                        "conditionalRendering": {
+                          "kind": "ConditionalRenderingGroup",
+                          "spec": {
+                            "visibility": "show",
+                            "condition": "and",
+                            "items": [
+                              {
+                                "kind": "ConditionalRenderingVariable",
+                                "spec": {
+                                  "variable": "service",
+                                  "operator": "equals",
+                                  "value": "esyfovarsel"
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-27"
+                        "title": "Dine sykmeldte",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-30"
+                                  },
+                                  "height": 7,
+                                  "width": 12,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-31"
+                                  },
+                                  "height": 7,
+                                  "width": 12,
+                                  "x": 12,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
                         },
-                        "height": 6,
-                        "width": 24,
-                        "x": 0,
-                        "y": 7
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          {
-            "kind": "RowsLayoutRow",
-            "spec": {
-              "title": "Måledata · produksjon",
-              "collapse": true,
-              "hideHeader": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-3"
-                        },
-                        "height": 4,
-                        "width": 8,
-                        "x": 0,
-                        "y": 0
+                        "conditionalRendering": {
+                          "kind": "ConditionalRenderingGroup",
+                          "spec": {
+                            "visibility": "show",
+                            "condition": "and",
+                            "items": [
+                              {
+                                "kind": "ConditionalRenderingVariable",
+                                "spec": {
+                                  "variable": "service",
+                                  "operator": "equals",
+                                  "value": "dinesykmeldte-backend"
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-6"
+                        "title": "Møtebehov",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-27"
+                                  },
+                                  "height": 6,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
                         },
-                        "height": 4,
-                        "width": 8,
-                        "x": 8,
-                        "y": 0
+                        "conditionalRendering": {
+                          "kind": "ConditionalRenderingGroup",
+                          "spec": {
+                            "visibility": "show",
+                            "condition": "and",
+                            "items": [
+                              {
+                                "kind": "ConditionalRenderingVariable",
+                                "spec": {
+                                  "variable": "service",
+                                  "operator": "equals",
+                                  "value": "syfomotebehov"
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     {
-                      "kind": "GridLayoutItem",
+                      "kind": "RowsLayoutRow",
                       "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-7"
-                        },
-                        "height": 4,
-                        "width": 8,
-                        "x": 16,
-                        "y": 0
+                        "title": "Podder",
+                        "collapse": false,
+                        "hideHeader": true,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-36"
+                                  },
+                                  "height": 6,
+                                  "width": 24,
+                                  "x": 0,
+                                  "y": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
                       }
                     }
                   ]

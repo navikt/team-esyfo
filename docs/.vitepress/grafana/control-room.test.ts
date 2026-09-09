@@ -13,7 +13,6 @@ import {
 	CONTROL_ROOM_UID,
 	DESERIALIZATION_ERROR_METRIC,
 	DESIRED_REPLICAS_METRIC,
-	deploymentCoverageQuery,
 	deserializationRateQuery,
 	dinesykmeldteDeviationRateQuery,
 	dinesykmeldteOutcomeRateQuery,
@@ -34,7 +33,6 @@ import {
 	KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC,
 	KAFKA_CONSUMER_LAST_POLL_METRIC,
 	lowestReadyRatioQuery,
-	missingTelemetryQuery,
 	motebehovAvailableRatioQuery,
 	otelErrorsByServiceQuery,
 	p95ByServiceQuery,
@@ -52,14 +50,15 @@ import {
 	runtimeErrorCountQuery,
 	runtimeErrorsByServiceQuery,
 	runtimeLogsDataLink,
+	SERVICE_TAB_TITLE,
 	SPAN_CALLS_METRIC,
 	SPAN_LATENCY_METRIC,
 	selectedReadyRatioQuery,
 	serializeControlRoomDashboard,
+	serviceInvestigationDataLink,
 	sykmeldingConsumerCommittedLagQuery,
 	sykmeldingConsumerPollAgeByPodQuery,
 	telemetryAgeByServiceQuery,
-	telemetryCoverageQuery,
 	telemetryStateByServiceQuery,
 } from "./control-room.ts";
 import {
@@ -121,6 +120,25 @@ type Row = {
 		hideHeader: boolean;
 		layout: { kind: string; spec: { items: Item[] } };
 		variables?: Variable[];
+		conditionalRendering?: {
+			kind: string;
+			spec: {
+				visibility: string;
+				condition: string;
+				items: Array<{
+					kind: string;
+					spec: { variable: string; operator: string; value: string };
+				}>;
+			};
+		};
+	};
+};
+type Tab = {
+	kind: string;
+	spec: {
+		title: string;
+		variables?: Variable[];
+		layout: { kind: string; spec: { items?: Item[]; rows?: Row[] } };
 	};
 };
 type Panel = {
@@ -154,13 +172,23 @@ type Panel = {
 };
 const panels = () =>
 	buildControlRoomDashboard().spec.elements as Record<string, Panel>;
-const rows = () =>
+const tabs = () =>
 	(
 		buildControlRoomDashboard().spec.layout as {
 			kind: string;
-			spec: { rows: Row[] };
+			spec: { tabs: Tab[] };
 		}
-	).spec.rows;
+	).spec.tabs;
+const detailRows = () => {
+	const rows = tabs()[1].spec.layout.spec.rows;
+	assert.ok(rows);
+	return rows;
+};
+const overviewItems = () => {
+	const items = tabs()[0].spec.layout.spec.items;
+	assert.ok(items);
+	return items;
+};
 const selectedQueries = [
 	requestCountQuery,
 	httpErrorCountQuery,
@@ -185,9 +213,6 @@ const fleetQueries = [
 	restartsByServiceQuery,
 	readyRatioByServiceQuery,
 	telemetryStateByServiceQuery,
-	telemetryCoverageQuery,
-	deploymentCoverageQuery,
-	missingTelemetryQuery,
 	lowestReadyRatioQuery,
 ];
 
@@ -268,17 +293,15 @@ test("holder alle aktive produksjonstjenester synlige uten avviklede FSS-ressurs
 	}
 });
 
-test("har ingen globale filtre og avgrenser tjenestevelgeren til detaljraden", () => {
+test("har ingen globale filtre og avgrenser tjenestevelgeren til detaljfanen", () => {
 	const dashboard = buildControlRoomDashboard();
 	assert.deepEqual(dashboard.spec.variables, []);
 	assert.ok(
 		!serializeControlRoomDashboard().includes(grafanaVariable("scope:raw")),
 	);
-	const rowList = rows();
-	const detail = rowList.find(
-		({ spec }) => spec.title === "Undersøk en tjeneste",
-	);
-	assert.ok(detail);
+	const [overview, detail] = tabs();
+	assert.equal(overview.spec.variables, undefined);
+	assert.equal(detail.spec.title, SERVICE_TAB_TITLE);
 	assert.equal(detail.spec.variables?.length, 1);
 	const variable = detail.spec.variables?.[0];
 	assert.equal(variable?.spec.name, "service");
@@ -299,19 +322,26 @@ test("har ingen globale filtre og avgrenser tjenestevelgeren til detaljraden", (
 				option.text === variable?.spec.current.text,
 		),
 	);
-	for (const row of rowList) {
-		if (row !== detail) assert.equal(row.spec.variables, undefined);
-		const rowItems: Item[] = row.spec.layout.spec.items;
-		for (const item of rowItems) {
-			const panel: Panel = panels()[item.spec.element.name];
-			const panelExpressions: string[] = expressions(panel);
-			for (const expression of panelExpressions) {
-				assert.equal(
-					expression.includes(grafanaVariable("service:raw")),
-					row === detail,
-					panel.spec.title,
-				);
-			}
+	assert.equal(
+		objects(dashboard).filter(({ kind }) => kind === "CustomVariable").length,
+		1,
+	);
+	for (const item of overviewItems())
+		assert.ok(
+			expressions(panels()[item.spec.element.name]).every(
+				(q) => !q.includes(grafanaVariable("service:raw")),
+			),
+		);
+	for (const row of detailRows()) {
+		assert.equal(row.spec.variables, undefined);
+		const condition = row.spec.conditionalRendering?.spec.items[0].spec;
+		for (const item of row.spec.layout.spec.items) {
+			if (condition?.operator === "equals") continue;
+			assert.ok(
+				expressions(panels()[item.spec.element.name]).every((q) =>
+					q.includes(grafanaVariable("service:raw")),
+				),
+			);
 		}
 	}
 	for (const expression of selectedQueries)
@@ -323,24 +353,27 @@ test("har ingen globale filtre og avgrenser tjenestevelgeren til detaljraden", (
 });
 
 test("viser fem oversiktskort inkludert WARN og tjenestetabellen som standard", () => {
-	const rowList = rows();
-	assert.deepEqual(
-		rowList.map(({ spec }) => spec.title),
-		[
-			"Produksjon · oversikt",
-			"Undersøk en tjeneste",
-			"Køer og jobber · produksjon",
-			"Utvalgte tjenester · produksjon",
-			"Måledata · produksjon",
-		],
+	assert.equal(
+		(buildControlRoomDashboard().spec.layout as { kind: string }).kind,
+		"TabsLayout",
 	);
-	assert.equal(rowList[0].spec.collapse, false);
-	assert.ok(rowList.slice(1).every(({ spec }) => spec.collapse));
 	assert.deepEqual(
-		rowList[0].spec.layout.spec.items.map(({ spec }) => spec.element.name),
+		tabs().map(({ spec }) => spec.title),
+		["Oversikt", SERVICE_TAB_TITLE],
+	);
+	assert.deepEqual(
+		overviewItems().map(({ spec }) => spec.element.name),
 		["panel-2", "panel-32", "panel-35", "panel-4", "panel-5", "panel-10"],
 	);
-	assert.equal(rowList[0].spec.layout.spec.items[5].spec.y, 4);
+	assert.equal(overviewItems()[5].spec.y, 4);
+	for (const id of ["panel-2", "panel-32", "panel-35", "panel-4"]) {
+		assert.equal(
+			panels()[id].spec.vizConfig.spec.fieldConfig.defaults.unit,
+			"suffix: tjenester",
+		);
+	}
+	for (const id of ["panel-3", "panel-6", "panel-7"])
+		assert.equal(panels()[id], undefined);
 	assert.ok(
 		Object.values(panels()).every(
 			({ spec }) => spec.vizConfig.group !== "text",
@@ -355,6 +388,82 @@ test("viser fem oversiktskort inkludert WARN og tjenestetabellen som standard", 
 		'kind=\\"exception',
 	])
 		assert.ok(!serialized.includes(text));
+});
+
+test("viser HTTP etter inventarkontrakt og særdiagnostikk bare for riktig eier", () => {
+	const ownerPanels: Record<string, string[]> = {
+		"syfo-oppfolgingsplan-backend": ["panel-33", "panel-34", "panel-26"],
+		"syfo-budstikka": ["panel-25"],
+		esyfovarsel: ["panel-23"],
+		"dinesykmeldte-backend": ["panel-30", "panel-31"],
+		syfomotebehov: ["panel-27"],
+	};
+	for (const { runtime } of controlRoomApplications) {
+		const visible: string[] = [];
+		for (const row of detailRows()) {
+			assert.equal(row.spec.collapse, false);
+			assert.equal(row.spec.hideHeader, true);
+			const condition = row.spec.conditionalRendering;
+			if (condition) {
+				assert.equal(condition.kind, "ConditionalRenderingGroup");
+				assert.equal(condition.spec.visibility, "show");
+				assert.equal(condition.spec.condition, "and");
+				assert.equal(condition.spec.items.length, 1);
+				const rule = condition.spec.items[0];
+				assert.equal(rule.kind, "ConditionalRenderingVariable");
+				assert.equal(rule.spec.variable, "service");
+				assert.ok(["equals", "matches"].includes(rule.spec.operator));
+				const matches =
+					rule.spec.operator === "equals"
+						? runtime.name === rule.spec.value
+						: new RegExp(rule.spec.value).test(runtime.name);
+				if (!matches) continue;
+			}
+			visible.push(
+				...row.spec.layout.spec.items.map(({ spec }) => spec.element.name),
+			);
+		}
+		const expectsHttp = controlRoomServerApplications.some(
+			(app) => app.runtime.name === runtime.name,
+		);
+		assert.deepEqual(
+			visible.sort(),
+			[
+				"panel-15",
+				"panel-37",
+				"panel-36",
+				...(expectsHttp ? ["panel-12", "panel-13", "panel-14"] : []),
+				...(ownerPanels[runtime.name] ?? []),
+			].sort(),
+			runtime.name,
+		);
+	}
+});
+
+test("åpner riktig detaljfane fra tjenestetabellen med samme tidsrom", () => {
+	const url = new URL(
+		serviceInvestigationDataLink("flaggskipet"),
+		"https://grafana.test",
+	);
+	assert.equal(url.pathname, `/d/${CONTROL_ROOM_UID}`);
+	assert.equal(url.searchParams.get("dtab"), "Undersøk-en-tjeneste");
+	assert.equal(url.searchParams.get("var-service"), "flaggskipet");
+	assert.equal(url.searchParams.get("from"), grafanaVariable("__from"));
+	assert.equal(url.searchParams.get("to"), grafanaVariable("__to"));
+	const serviceField = panels()[
+		"panel-10"
+	].spec.vizConfig.spec.fieldConfig.overrides.find(
+		({ matcher }) => matcher.options === "Tjeneste",
+	);
+	const links = objects(serviceField).filter(
+		({ url }) => typeof url === "string",
+	);
+	assert.equal(links[0].title, "Undersøk tjenesten");
+	assert.equal(links[0].targetBlank, false);
+	assert.equal(
+		links[0].url,
+		serviceInvestigationDataLink(grafanaVariable("__value.raw")),
+	);
 });
 
 test("slanker tabellen uten å fjerne målegap eller lenker", () => {
@@ -785,16 +894,21 @@ test("holder browser utenfor produksjonskontrollrommet og persondata utenfor res
 	assert.ok(serialized.includes('"from": "now-1h"'));
 });
 
-test("har unik, deterministisk radlayout uten overlapp eller foreldreløse paneler", () => {
+test("har unik, deterministisk fanelayout uten overlapp eller foreldreløse paneler", () => {
 	const panelMap = panels();
-	assert.equal(Object.keys(panelMap).length, 23);
+	assert.equal(Object.keys(panelMap).length, 20);
 	const ids = Object.values(panelMap).map(({ spec }) => spec.id);
 	assert.equal(new Set(ids).size, ids.length);
 	const names: string[] = [];
-	for (const row of rows()) {
+	for (const row of detailRows()) {
 		assert.equal(row.kind, "RowsLayoutRow");
 		assert.equal(row.spec.layout.kind, "GridLayout");
-		const items = row.spec.layout.spec.items;
+	}
+	const grids = [
+		overviewItems(),
+		...detailRows().map((row) => row.spec.layout.spec.items),
+	];
+	for (const items of grids) {
 		for (let i = 0; i < items.length; i++) {
 			const a = items[i].spec;
 			names.push(a.element.name);

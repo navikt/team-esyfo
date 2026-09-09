@@ -9,8 +9,8 @@ Teamet trenger rask orientering og en kort vei til bevis, ikke enda et system fo
 
 ## Valgene vi bygger på
 
-1. **Oversikt før detalj.** Vis de få signalene som peker mot neste handling først. Tjenestedetaljer og målekvalitet kan åpnes ved behov; WARN-avvisninger og nettleserfeil har tydelige, egne innganger.
-2. **Filtre må oppføre seg som de ser ut.** Kontrollrommet har en fast produksjonsoversikt. Lokale velgere står inne i delen de påvirker. Runtime og nettleserstrømmer får ikke late som de har samme miljøkontrakt.
+1. **Oversikt før detalj.** Vis de få signalene som peker mot neste handling først. Målegap står ved tjenesten, mens detaljer åpnes ved behov; WARN-avvisninger og nettleserfeil har tydelige, egne innganger.
+2. **Filtre må oppføre seg som de ser ut.** Kontrollrommet åpner med en fast produksjonsoversikt. Tjenestevelgeren står i detaljfanen og påvirker bare den. Tjenestedetaljene følger tjenestens signaler: workers får ikke tomme HTTP-grafer, og særpaneler vises bare hos eieren. Runtime og nettleserstrømmer får ikke late som de har samme miljøkontrakt.
 3. **Farger skal bety noe.** En omstart eller kort kapasitetsreduksjon er et undersøkelsessignal, ikke automatisk en hendelse med brukerimpact. Ukjente målinger skal verken bli rødt null eller grønn friskmelding.
 4. **Grafikk skal svare på et spørsmål.** Tidsserier viser når noe endret seg. Horisontale stolper viser hvilke tjenester som bidrar mest. Tabeller beholder feiltype, kode og operasjon der eksakt identitet er nødvendig for feilsøking.
 5. **Presist språk uten kontraktstøy.** Vi teller logghendelser, ikke incidents eller brukere. OTel-feilstatus er feilmarkerte kall, ikke automatisk HTTP 5xx. Korte paneltitler og skjult panelinfo erstatter forklaringsvegger.
