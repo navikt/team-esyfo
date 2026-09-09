@@ -231,12 +231,10 @@ try {
 	const count = async (
 		query: string,
 		environment = "dev-gcp",
-		group = "tiltak|kontroll",
 	): Promise<Series[]> => {
 		const expr = query
 			.replaceAll("${env:text}", environment)
 			.replaceAll("${environment:raw}", environment)
-			.replaceAll("${plan_group:raw}", group)
 			.replaceAll("$__auto", "1h");
 		const response = await fetch(
 			`${url}/loki/api/v1/query?${new URLSearchParams({ query: expr, time: String(Date.now() / 1000) })}`,
@@ -316,11 +314,12 @@ try {
 	console.log(
 		"Product counts: group isolation, offered evaluation choices and confirmed reminder operations verified.",
 	);
-	assert.equal(total(await count(aidProductPlanCreationsQuery)), 7);
-	assert.equal(total(await count(aidProductPlanCreationsQuery, "dev-gcp", "tiltak")), 6);
-	assert.equal(total(await count(aidProductPlanCreationsQuery, "dev-gcp", "kontroll")), 1);
-	assert.equal(total(await count(aidProductPlanCreationsQuery, "dev-gcp", ".*")), 7);
-	assert.deepEqual(await count(aidProductPlanCreationsQuery, "dev-gcp", "utenfor_scope"), []);
+	assert.deepEqual(
+		(await count(aidProductPlanCreationsQuery))
+			.map(row => [row.metric.gruppe, Number(row.value[1])])
+			.sort(),
+		[["kontroll", 1], ["tiltak", 6]],
+	);
 	assert.equal(total(await count(aidProductPlanTrendQuery)), 7);
 	assert.equal(total(await count(aidProductPlanViewsQuery)), 1);
 	assert.deepEqual((await count(aidProductEvaluationQuery)).map(row => [row.metric.evaluering_paaminnelse, Number(row.value[1])]).sort(), [["ja",3],["nei",1]]);

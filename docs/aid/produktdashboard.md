@@ -105,8 +105,7 @@ visning av en ferdig plan, en unik leder eller dokumentasjon på at alle
 felter eller tekster ble lest. Visningene brukes til leveringskontroll, ikke
 som nevner for en konverteringsprosent.
 
-Et lokalt filter «Forsøksgruppe» gjelder bare planseksjonen. «Begge grupper» er
-standard; alternativene er «Tiltaksgruppe» og «Kontrollgruppe». Tiltaksgruppen
+Begge forsøksgrupper vises alltid sammen, uten en gruppevelger. Tiltaksgruppen
 beholdes også når varianten uten AID-tilpasninger ble vist. Tildeling og
 faktisk levert opplevelse må ikke blandes sammen.
 
@@ -175,19 +174,21 @@ ikke kunne vurderes. **Skjult er ikke automatisk feil.** Tilbudet kan være
 skjult i en legitim tilstand; årsaken må undersøkes før det gis en
 feilforklaring eller en rød status.
 
-## 4. Filtre som følger spørsmålet
+## 4. Fast sammenligning og ett felles tidsrom
 
-Dashboardet viser bare produksjon og har ingen miljøvelger. Testdata skal
-ikke blandes inn i produktoversikten. Periode gjelder hele dashboardet. Et
-lokalt gruppefilter i planseksjonen skal ikke endre påminnelsesseksjonene:
-Disse måler tilbud
-som gjelder tiltaksgruppen.
+Dashboardet viser bare produksjon og har ingen miljø- eller gruppevelger.
+Testdata skal ikke blandes inn i produktoversikten. Periode er det eneste
+felles valget og gjelder hele dashboardet. Planseksjonen viser alltid både
+tiltak og kontroll; påminnelsesseksjonene måler tilbud som bare gjelder
+tiltaksgruppen. Avgrensningen står i seksjonstitlene.
 
-Grafana 13.1 beskriver variabler og filtre på seksjonsnivå, der panelene i en
-rad eller fane har sitt eget avgrensede filteromfang. Felles tidsrom kan
-fortsatt beholdes. Dette gir et naturlig mønster for gruppevalget i
-planseksjonen. Funksjonen må verifiseres i den aktuelle Grafana-instansen.
+Grafana 13.1 støtter variabler og filtre på seksjonsnivå.
 [4](https://grafana.com/docs/grafana/v13.1/visualizations/dashboards/build-dashboards/create-dashboard/dashboard-groupings/)
+Et slikt gruppefilter ble prøvd, men opplevdes som et valg for hele
+dashboardet selv om påminnelsestallene ikke endret seg. Fast sammenligning er
+enklere: brukeren trenger ikke kjenne filterets tekniske omfang. Variabelen er
+fjernet fra både oppsett og spørringer, ikke bare skjult. Gamle miljø- og
+gruppeparametere i delte lenker skal heller ikke endre avgrensningen.
 
 Vi innfører ikke et globalt «påminnelse»-filter. Evalueringsvalget finnes i
 planhendelsen; bestilling av påminnelse om å lage plan finnes i en annen
@@ -230,7 +231,7 @@ For dette dashboardet skal kvalitetstesten minst dekke:
 | Felt eller tilstand | Krav |
 | --- | --- |
 | Miljø | Bare produksjonsdata inngår, uten miljøvelger. |
-| Gruppe | Ukjent og utenfor forsøket blir aldri kontroll. |
+| Gruppe | Begge forsøksgrupper vises fast i planseksjonen. Ukjent og utenfor forsøket blir aldri kontroll. |
 | Utfyllingsvariant | Tildelt gruppe og visning med eller uten AID-tilpasninger kan leses hver for seg. |
 | Evalueringsvalg | Manglende verdi blir aldri «uten påminnelse». |
 | Hendelse og resultat | Forsøk, bekreftelse og feil summeres ikke til ett resultat. |
@@ -315,7 +316,7 @@ visningstesting erstatter ikke en faktisk test med produktleder og designer.
 En kort akseptansetest gjennomføres uten innledende metodeforedrag:
 
 1. Finn planaktiviteten i forsøket og forklar hva som telles.
-2. Bytt gruppe i planseksjonen og si hvilke andre figurer som endrer seg.
+2. Finn tallene for tiltak og kontroll, og si hvilke seksjoner som bare gjelder tiltaksgruppen.
 3. Forklar forskjellen på de to påminnelsene.
 4. Finn valget ved ferdigstilling uten å tolke «uten» som motivasjon.
 5. Forklar hva et tomt panel og en skjult påminnelse kan bety.
@@ -328,7 +329,7 @@ trenger forklaringer for å unngå sentrale feiltolkninger.
 ## 9. Videre arbeid etter verdi
 
 **Først: få den avgrensede oversikten til å fungere godt.** Verifiser
-gruppeavgrensning, filtrering, tallgrunnlag og tomme tilstander, og prøv den
+gruppeavgrensning, periodevalg, tallgrunnlag og tomme tilstander, og prøv den
 i ukessynken. Forbedre dagsinndeling dersom rullerende døgn gjør samtalen
 vanskelig. Behold bare figurer som faktisk brukes.
 

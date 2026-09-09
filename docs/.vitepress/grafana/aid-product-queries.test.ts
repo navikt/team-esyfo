@@ -24,10 +24,10 @@ const planQueries = [
 	aidProductPlanViewsQuery,
 ];
 
-test("product plan queries keep a closed pilot boundary beside the local group filter", () => {
+test("product plan queries always compare both pilot groups without a URL-controlled filter", () => {
 	for (const query of planQueries) {
 		assert.ok(query.includes('| gruppe=~"tiltak|kontroll"'));
-		assert.ok(query.includes(`| gruppe=~"\${plan_group:raw}"`));
+		assert.doesNotMatch(query, /plan_group/);
 		assert.ok(query.includes('| skjemavariant=~"tiltak|standard"'));
 		assert.doesNotMatch(query, /\| skjemavariant="tiltak"/);
 		assert.doesNotMatch(query, /\| gruppe="kontroll"/);
