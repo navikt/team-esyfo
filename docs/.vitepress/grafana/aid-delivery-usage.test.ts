@@ -185,7 +185,7 @@ test("trend is one source with explicit overlapping window and no zero fill", ()
 test("empty stat cards stay quiet and the evaluation table has room for both choices", () => {
 	for (const id of [31, 32, 33]) {
 		assert.equal(
-			elements()[`panel-${id}`].spec.vizConfig.spec.options.textSize?.value,
+			elements()[`panel-${id}`].spec.vizConfig.spec.options.text?.valueSize,
 			32,
 		);
 	}

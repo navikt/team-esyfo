@@ -1173,8 +1173,8 @@
                 "colorMode": "none",
                 "graphMode": "none",
                 "textMode": "auto",
-                "textSize": {
-                  "value": 32
+                "text": {
+                  "valueSize": 32
                 },
                 "reduceOptions": {
                   "calcs": [
@@ -1246,8 +1246,8 @@
                 "colorMode": "none",
                 "graphMode": "none",
                 "textMode": "auto",
-                "textSize": {
-                  "value": 32
+                "text": {
+                  "valueSize": 32
                 },
                 "reduceOptions": {
                   "calcs": [
@@ -1319,8 +1319,8 @@
                 "colorMode": "none",
                 "graphMode": "none",
                 "textMode": "auto",
-                "textSize": {
-                  "value": 32
+                "text": {
+                  "valueSize": 32
                 },
                 "reduceOptions": {
                   "calcs": [
