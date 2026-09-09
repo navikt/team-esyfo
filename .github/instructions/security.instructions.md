@@ -1,40 +1,18 @@
 ---
-description: "Nav-sikkerhetsstandarder — NAIS accessPolicy, hemmeligheter, PII, nettverkspolicyer"
+description: "Security boundaries for team-esyfo"
 applyTo: "**"
 ---
 
-# Sikkerhet — Nav
+# Repository security boundaries
 
-Referanse: [sikkerhet.nav.no](https://sikkerhet.nav.no)
+Documentation and notebook outputs may be published. Keep real personal data, tokens and internal payloads out of committed examples and generated output.
 
-## NAIS-plattformen
-
-- Autentisering og hemmeligheter håndteres av NAIS — sjekk manifestet
-- Dependabot og Trivy for sårbarhetsskanning
-- Chainguard/Distroless base images
-
-## Nettverkspolicyer
-
-Default-deny. Alle tilganger må deklareres eksplisitt:
-
-```yaml
-accessPolicy:
-  inbound:
-    rules:
-      - application: calling-app
-        namespace: team-calling
-  outbound:
-    rules:
-      - application: target-app
-        namespace: team-target
-    external:
-      - host: api.example.com
-```
-
-## Boundaries
-
-- Parameteriserte spørringer — aldri string-interpolasjon i SQL
-- Valider input ved systemgrenser
-- Aldri logg PII (fødselsnummer, tokens, personnavn)
-- Aldri commit hemmeligheter
-- Eksplisitt `accessPolicy` i NAIS-manifest
+- Never commit secrets or log tokens, headers, personal identifiers or complete
+  request/response payloads.
+- Validate external input at the existing system boundary. Keep token exchange
+  and credentials out of browser code.
+- Preserve explicit access policies and least privilege. Resolve material
+  changes to authentication, exposed data or permissions before implementing.
+- For SQL-bearing code or examples, use parameterized queries.
+- Synthetic fixtures must remain synthetic; do not copy production data to
+  tests, screenshots, prompts or documentation.

@@ -1,22 +1,14 @@
 ---
-description: "Nav-spesifikke Kotlin-standarder — Gradle Version Catalog, Flyway, logging, metrikker"
-applyTo: "**/*.kt"
+description: "Kotlin notebook boundaries for team-esyfo"
+applyTo: "notebooks/**/*.{kts,ipynb}"
 ---
 
-# Kotlin — Nav-spesifikke standarder
+# Kotlin notebooks
 
-- Avhengigheter via Gradle Version Catalog — sjekk `libs.versions.toml`
-- Database: Flyway for migreringer, parameteriserte spørringer (aldri string-interpolasjon i SQL)
-- Logging: Sjekk eksisterende loggemønster i repoet (`KotlinLogging`, `kv()`-felter, MDC)
-- Metrikker: Micrometer / Prometheus
-- Autentiseringstesting: MockOAuth2Server
-
-## Framework-spesifikke skills
-
-Bruk riktig skill basert på rammeverket i dette repoet:
-- **Spring Boot**: **Invoker `/kotlin-spring`** for `@ProtectedWithClaims`, NAIS-miljøvariabler, Testcontainers
-- **Ktor**: **Invoker `/kotlin-ktor`** for JWT-claims, Koin DI, CallLogging MDC
-
-## Bevar eksisterende struktur
-
-Bevar eksisterende kodestruktur. Endre kun det oppgaven eksplisitt krever. Hvis diffen blir uforholdsmessig stor sammenlignet med oppgavens omfang, stopp og forklar før du fortsetter — ikke refaktorer på siden.
+Kotlin analysis lives under `notebooks/`; `notebooks/build.gradle.kts` and
+`notebooks/settings.gradle.kts` define its dependencies. The notebook build is
+`.github/workflows/build-notebooks.yaml` (`./gradlew build --no-daemon` from
+`notebooks/`). This repository does not own a Spring or Ktor service.
+Keep examples and notebook outputs free of personal data and credentials.
+Do not introduce database migrations or service-runtime conventions into
+analysis notebooks merely because application repositories use them.

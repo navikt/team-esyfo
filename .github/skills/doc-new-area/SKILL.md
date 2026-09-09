@@ -1,6 +1,6 @@
 ---
 name: doc-new-area
-description: "Scaffolding av dokumentasjon for nytt fagområde i Team eSyfo sin VitePress-wiki — oppretter områdeside med brukerreise, teknisk underside og registrerer i areas.ts. Brukes via /doc-new-area når et nytt fagområde skal dokumenteres."
+description: "Scaffolding av dokumentasjon for nytt fagområde i Team eSyfo sin VitePress-wiki — oppretter områdeside med brukerreise, teknisk underside og registrerer i areas.ts. Bruk når et nytt fagområde i wikien trenger en brukerreise, teknisk side og registrering i områdelisten."
 ---
 
 # Scaffolde nytt fagområde
@@ -9,7 +9,8 @@ Opprett dokumentasjon for et nytt fagområde i Team eSyfo sin wiki.
 
 ## Kravinnhenting
 
-Spør brukeren om følgende før du starter:
+Les eksisterende områdesider og oppdraget først. Avklar bare manglende felt
+som ikke kan finnes i repoet, ett spørsmål om gangen:
 
 | Felt | Beskrivelse | Eksempel |
 |------|-------------|---------|
@@ -173,7 +174,8 @@ Plasser det nye området sortert etter fase-rekkefølge (early → mid → late 
 
 ### 4. Språkvask
 
-Bruk `/klarsprak` på all tekst i begge filer. Sikre:
+Bruk `klarsprak` hvis den er tilgjengelig i den aktive skilloversikten;
+navnet er ikke en filsti eller shellkommando. Uansett skal teksten ha:
 
 - Aktiv setningsbygning
 - Kort og presist — unngå fylltekst

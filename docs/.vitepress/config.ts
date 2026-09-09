@@ -96,7 +96,7 @@ export default withMermaid(
 					collapsed: false,
 					items: [
 						{ text: "Oversikt", link: "/verktoy/" },
-						{ text: "Hovmester", link: "/verktoy/hovmester" },
+						{ text: "Grillmester", link: "/verktoy/grillmester" },
 						{ text: "CI/CD", link: "/verktoy/ci-cd" },
 						{ text: "Flaggskipet", link: "/verktoy/flaggskipet" },
 					],
