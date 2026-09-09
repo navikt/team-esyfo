@@ -17,9 +17,13 @@ import {
 } from "../.vitepress/grafana/control-room.ts";
 import {
 	browserByTypeQuery,
+	browserErrorGroupDataLink,
 	runtimeByClassificationQuery,
 	runtimeByServiceQuery,
+	runtimeContractGapDataLink,
 	runtimeContractGapQuery,
+	runtimeErrorGroupDataLink,
+	runtimeRejectionDataLink,
 	runtimeRejectionsQuery,
 	runtimeTrendQuery,
 	tracedRuntimeErrorsQuery,
@@ -106,6 +110,17 @@ const fixtures: Fixture[] = [
 			event_type: "api_request_rejected",
 			rejection_reason: "invalid reason",
 		},
+	},
+	{
+		labels: { detected_level: "warn" },
+		fields: {
+			event_type: "api_request_rejected",
+			rejection_reason: "UNSPECIFIED",
+		},
+	},
+	{
+		labels: { detected_level: "warn" },
+		fields: { event_type: "api_request_rejected" },
 	},
 	// Unrelated levels, forwarded browser logs, sidecars and other scopes stay out.
 	{ labels: { detected_level: "info" } },
@@ -202,6 +217,43 @@ async function checkLogQueries(url: string) {
 		assert.equal(response.status, 200, body);
 		return JSON.parse(body).data.result;
 	};
+	// Link fields have no text-changing Grafana mappings. Their query labels are
+	// therefore the same strings that a person sees and follows in the table.
+	const checkRowLinks = async (rows: Vector[], link: string) => {
+		for (const { metric, value } of rows) {
+			const materialized = link
+				.replace(/\$\{__data\.fields\["([^"]+)"\]\}/g, (_match, field) => {
+					assert.equal(
+						typeof metric[field],
+						"string",
+						`Missing link field ${field}`,
+					);
+					return encodeURIComponent(metric[field]);
+				})
+				.replaceAll("${runtime_environment:regex}", "prod")
+				.replaceAll("${__from}", String(now - 3600000))
+				.replaceAll("${__to}", String(now));
+			assert.ok(
+				!materialized.includes("${"),
+				"All row-link variables are resolved",
+			);
+			const state = JSON.parse(
+				new URL(materialized, "https://grafana.example.test").searchParams.get(
+					"panes",
+				) ?? "{}",
+			).A;
+			assert.deepEqual(state.range, {
+				from: String(now - 3600000),
+				to: String(now),
+			});
+			const logs: Stream[] = await request(state.queries[0].expr, service, true);
+			assert.equal(
+				logs.reduce((count, { values }) => count + values.length, 0),
+				Number(value[1]),
+				`The log link must find every counted event for ${JSON.stringify(metric)}`,
+			);
+		}
+	};
 	const errors: Vector[] = await request(runtimeByClassificationQuery);
 	assert.equal(
 		total(errors),
@@ -241,7 +293,10 @@ async function checkLogQueries(url: string) {
 		JSON.stringify(errors),
 		/invalid event type|invalid code|invalid operation|Synthetic message/,
 	);
-	assert.equal(total(await request(runtimeContractGapQuery)), 5);
+	await checkRowLinks(errors, runtimeErrorGroupDataLink());
+	const contractGaps: Vector[] = await request(runtimeContractGapQuery);
+	assert.equal(total(contractGaps), 5);
+	await checkRowLinks(contractGaps, runtimeContractGapDataLink());
 	assert.equal(total(await request(runtimeByServiceQuery)), 8);
 	assert.ok(
 		Math.abs(total(await request(runtimeTrendQuery)) - 8 / 60) < 1e-9,
@@ -251,13 +306,14 @@ async function checkLogQueries(url: string) {
 	const rejections: Vector[] = await request(runtimeRejectionsQuery);
 	assert.equal(
 		total(rejections),
-		2,
+		4,
 		"Only structured WARN/Warning API rejections count",
 	);
 	assert.deepEqual(
 		rejections.map(({ metric }) => metric.rejection_reason_display).sort(),
-		["INVALID_INPUT", "UNSPECIFIED"],
+		["INVALID_INPUT", "Årsak ikke oppgitt"],
 	);
+	await checkRowLinks(rejections, runtimeRejectionDataLink());
 	const traces: Stream[] = await request(
 		tracedRuntimeErrorsQuery,
 		service,
@@ -305,7 +361,17 @@ async function checkLogQueries(url: string) {
 	assert.equal(total(await browser("prod-gcp")), 2);
 	assert.equal(total(await browser("dev-gcp")), 1);
 	assert.equal(total(await browser("ukjent")), 4);
-	assert.equal(total(await browser("prod-gcp|dev-gcp|ukjent")), 7);
+	const browserRows = await browser("prod-gcp|dev-gcp|ukjent");
+	assert.equal(total(browserRows), 7);
+	assert.deepEqual(
+		[
+			...new Set(
+				browserRows.map(({ metric }) => metric.browser_environment_display),
+			),
+		].sort(),
+		["Produksjon", "Test", "Ukjent"],
+	);
+	await checkRowLinks(browserRows, browserErrorGroupDataLink());
 	assert.ok(
 		(await browser("prod-gcp")).some(
 			({ metric }) => metric.browser_type_display === "Annen / ikke oppgitt",
@@ -313,7 +379,7 @@ async function checkLogQueries(url: string) {
 	);
 	assert.deepEqual(await browser("absent-environment"), []);
 	console.log(
-		"Loki: levels, signatures, exclusions, rejections, traces, browser environments and empty results passed",
+		"Loki: levels, signatures, exclusions, rejections, traces, browser environments, row-to-log parity and empty results passed",
 	);
 }
 
