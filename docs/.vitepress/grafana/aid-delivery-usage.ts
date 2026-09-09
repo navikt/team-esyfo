@@ -246,7 +246,7 @@ const panel = (
 									colorMode: "none",
 									graphMode: "none",
 									textMode: "auto",
-									textSize: { value: 32 },
+									text: { valueSize: 32 },
 									reduceOptions: {
 										calcs: ["lastNotNull"],
 										fields: "",
