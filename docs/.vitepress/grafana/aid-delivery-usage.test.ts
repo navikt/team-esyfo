@@ -22,6 +22,29 @@ test("preserves the existing dashboard UID and Team Esyfo folder", () => {
 	assert.equal(serializeAidDashboard(), serializeAidDashboard());
 });
 
+test("prioritizes server confirmation and explains empty results and local filters", () => {
+	const { spec } = JSON.parse(serializeAidDashboard());
+	const firstPanels = spec.layout.spec.items
+		.slice(0, 3)
+		.map(
+			(item: { spec: { element: { name: string } } }) => item.spec.element.name,
+		);
+	assert.deepEqual(firstPanels, ["panel-1", "panel-27", "panel-28"]);
+	const intro = spec.elements["panel-1"].spec.vizConfig.spec.options.content;
+	assert.match(intro, /Tomt panel uten queryfeil/);
+	assert.match(intro, /ikke\*\* null bruk/);
+	assert.match(intro, /Kolonnefiltrene gjelder bare tabellen/);
+	assert.match(intro, /Server- og nettleserbekreftelser må ikke summeres/);
+});
+
+test("names reminder operations independently of evaluation reminders", () => {
+	const { elements } = JSON.parse(serializeAidDashboard()).spec;
+	assert.match(elements["panel-17"].spec.title, /valg før handling/);
+	assert.match(elements["panel-11"].spec.title, /Påminnelse om å lage plan/);
+	assert.match(elements["panel-11"].spec.description, /rullerende døgn/);
+	assert.match(elements["panel-26"].spec.title, /Evalueringspåminnelse/);
+});
+
 test("keeps existing backend counters and does not pretend they are arm segmented", () => {
 	const text = serializeAidDashboard();
 	for (const [metric] of backendMetrics) {

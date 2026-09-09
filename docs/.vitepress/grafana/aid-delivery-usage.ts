@@ -293,11 +293,11 @@ export const buildAidDashboard = (): GrafanaDashboardResource => {
 
 **Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.
 
-**Det vi kan følge nå:** levering, bruk og API-resultat, som separate hendelsesmålinger — ikke en persontrakt. De to påminnelsestypene holdes atskilt. Browserpaneler uten data er **ikke** null bruk. [Definisjoner, utrullingsavhengigheter og neste måletrinn](https://navikt.github.io/team-esyfo/aid/dashboard).`,
+**Les tallene:** Tomt panel uten queryfeil betyr ingen treff i valgt miljø og tidsrom, **ikke** null bruk. Kolonnefiltrene gjelder bare tabellen du filtrerer; miljø og tidsrom gjelder hele dashboardet. Server- og nettleserbekreftelser må ikke summeres. [Måledefinisjoner og datadekning](https://navikt.github.io/team-esyfo/aid/dashboard).`,
 		),
 		"panel-14": textPanel(
 			14,
-			"01 · Kommer tilbudet om å lage plan fram? · Dine sykmeldte",
+			"02 · Kommer tilbudet om å lage plan fram? · Dine sykmeldte",
 			`**Tildeling ≠ visning.** Beslutninger teller én avklart vurdering per åpning/kontekst. «Vist» krever at kortet kommer inn i skjermbildet. Kontroll og utenfor scope får ikke tilbudet; manglende vurdering er ukjent, aldri kontroll.
 
 Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke alle arbeidsgivere, øvrige AID-elementer eller tidligere besøk.`,
@@ -318,7 +318,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-17": panel(
 			17,
-			"02 · Bestiller brukerne påminnelse om å lage plan?",
+			"03 · Påminnelse om å lage plan · handlinger og valg før handling",
 			`${browserDescription} Valget er status FØR handlingen. Bekreftet betyr gyldig svar med forventet status; det betyr ikke at påminnelsen er sendt. Ingen automatisk retry.`,
 			[query(aidActionsQuery, "loki", "Handlinger")],
 			"table",
@@ -344,7 +344,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-21": textPanel(
 			21,
-			"03 · Leveres planskjemaet, og blir opprettelsen bekreftet?",
+			"04 · Leveres planskjemaet, og blir opprettelsen bekreftet?",
 			`**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.
 
 «Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.
@@ -406,8 +406,8 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-11": panel(
 			11,
-			"Påminnelsesoperasjoner · rullerende døgn",
-			backendDescription,
+			"Påminnelse om å lage plan · bestillinger og avbestillinger",
+			`${backendDescription} Hvert punkt viser et rullerende døgn. Gjelder påminnelsen om å lage plan, ikke evalueringspåminnelse.`,
 			backendMetrics
 				.slice(3, 5)
 				.map(([metric, title]) =>
@@ -435,7 +435,7 @@ Målingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke
 		),
 		"panel-27": textPanel(
 			27,
-			"04 · Hva bekrefter serveren?",
+			"01 · Blir planopprettelsen bekreftet?",
 			`**Bekreftede opprettelser gjennom planskjemaet**, fordelt på tildelt gruppe, levert variant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene i tabellen.
 
 Måles når serverdelen mottar backendens bekreftelse, uavhengig av nettleserens APM. Samme vurdering som leverte skjemaet brukes ved lagring.
@@ -491,19 +491,19 @@ Måles når serverdelen mottar backendens bekreftelse, uavhengig av nettleserens
 				spec: {
 					items: [
 						layoutItem("panel-1", 0, 0, 24, 6),
-						layoutItem("panel-14", 0, 6, 24, 4),
-						layoutItem("panel-15", 0, 10, 12, 8),
-						layoutItem("panel-16", 12, 10, 12, 8),
-						layoutItem("panel-17", 0, 18, 12, 9),
-						layoutItem("panel-18", 12, 18, 12, 9),
-						layoutItem("panel-21", 0, 27, 24, 4),
-						layoutItem("panel-22", 0, 31, 12, 8),
-						layoutItem("panel-23", 12, 31, 12, 8),
-						layoutItem("panel-24", 0, 39, 12, 9),
-						layoutItem("panel-25", 12, 39, 12, 9),
-						layoutItem("panel-26", 0, 48, 24, 9),
-						layoutItem("panel-27", 0, 57, 10, 10),
-						layoutItem("panel-28", 10, 57, 14, 10),
+						layoutItem("panel-27", 0, 6, 10, 10),
+						layoutItem("panel-28", 10, 6, 14, 10),
+						layoutItem("panel-14", 0, 16, 24, 4),
+						layoutItem("panel-15", 0, 20, 12, 8),
+						layoutItem("panel-16", 12, 20, 12, 8),
+						layoutItem("panel-17", 0, 28, 12, 9),
+						layoutItem("panel-18", 12, 28, 12, 9),
+						layoutItem("panel-21", 0, 37, 24, 4),
+						layoutItem("panel-22", 0, 41, 12, 8),
+						layoutItem("panel-23", 12, 41, 12, 8),
+						layoutItem("panel-24", 0, 49, 12, 9),
+						layoutItem("panel-25", 12, 49, 12, 9),
+						layoutItem("panel-26", 0, 58, 24, 9),
 						layoutItem("panel-19", 0, 67, 24, 3),
 						layoutItem("panel-2", 0, 70, 6, 4),
 						layoutItem("panel-3", 6, 70, 6, 4),

@@ -19,7 +19,7 @@
         "spec": {
           "id": 1,
           "title": "AID · levering og bruk",
-          "description": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Direkte analyse av sykefraværets lengde eller grad er utenfor omfanget.\n\n**Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.\n\n**Det vi kan følge nå:** levering, bruk og API-resultat, som separate hendelsesmålinger — ikke en persontrakt. De to påminnelsestypene holdes atskilt. Browserpaneler uten data er **ikke** null bruk. [Definisjoner, utrullingsavhengigheter og neste måletrinn](https://navikt.github.io/team-esyfo/aid/dashboard).",
+          "description": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Direkte analyse av sykefraværets lengde eller grad er utenfor omfanget.\n\n**Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.\n\n**Les tallene:** Tomt panel uten queryfeil betyr ingen treff i valgt miljø og tidsrom, **ikke** null bruk. Kolonnefiltrene gjelder bare tabellen du filtrerer; miljø og tidsrom gjelder hele dashboardet. Server- og nettleserbekreftelser må ikke summeres. [Måledefinisjoner og datadekning](https://navikt.github.io/team-esyfo/aid/dashboard).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -47,7 +47,7 @@
               },
               "options": {
                 "mode": "markdown",
-                "content": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Direkte analyse av sykefraværets lengde eller grad er utenfor omfanget.\n\n**Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.\n\n**Det vi kan følge nå:** levering, bruk og API-resultat, som separate hendelsesmålinger — ikke en persontrakt. De to påminnelsestypene holdes atskilt. Browserpaneler uten data er **ikke** null bruk. [Definisjoner, utrullingsavhengigheter og neste måletrinn](https://navikt.github.io/team-esyfo/aid/dashboard)."
+                "content": "**Tiltakspakke 1 · produkttelemetri, ikke effektanalyse.** Hendelser, ikke personer. Direkte analyse av sykefraværets lengde eller grad er utenfor omfanget.\n\n**Får flere en plan, og skjer planhandlingene tidligere?** Det kan dette datagrunnlaget ikke svare på ennå. Vi mangler et avklart, godkjent kohortgrunnlag med teller, nevner og oppfølgingstid. Ingen effektprosent eller automatisk konklusjon vises.\n\n**Les tallene:** Tomt panel uten queryfeil betyr ingen treff i valgt miljø og tidsrom, **ikke** null bruk. Kolonnefiltrene gjelder bare tabellen du filtrerer; miljø og tidsrom gjelder hele dashboardet. Server- og nettleserbekreftelser må ikke summeres. [Måledefinisjoner og datadekning](https://navikt.github.io/team-esyfo/aid/dashboard)."
               }
             }
           }
@@ -57,7 +57,7 @@
         "kind": "Panel",
         "spec": {
           "id": 14,
-          "title": "01 · Kommer tilbudet om å lage plan fram? · Dine sykmeldte",
+          "title": "02 · Kommer tilbudet om å lage plan fram? · Dine sykmeldte",
           "description": "**Tildeling ≠ visning.** Beslutninger teller én avklart vurdering per åpning/kontekst. «Vist» krever at kortet kommer inn i skjermbildet. Kontroll og utenfor scope får ikke tilbudet; manglende vurdering er ukjent, aldri kontroll.\n\nMålingen samles først etter at instrumenteringen er rullet ut. Den dekker ikke alle arbeidsgivere, øvrige AID-elementer eller tidligere besøk.",
           "links": [],
           "data": {
@@ -338,7 +338,7 @@
         "kind": "Panel",
         "spec": {
           "id": 17,
-          "title": "02 · Bestiller brukerne påminnelse om å lage plan?",
+          "title": "03 · Påminnelse om å lage plan · handlinger og valg før handling",
           "description": "Påminnelsen i Dine sykmeldte, tiltakspakke 1. Browserhendelser, ikke personer eller hele pilotpopulasjonen. Tildelt gruppe vises separat fra levert variant. Ingen treff er ikke dokumentasjon på null bruk. Ukjent tildeling kan skyldes feil, toggle av eller manglende vurdering. Valget er status FØR handlingen. Bekreftet betyr gyldig svar med forventet status; det betyr ikke at påminnelsen er sendt. Ingen automatisk retry.",
           "links": [],
           "data": {
@@ -668,7 +668,7 @@
         "kind": "Panel",
         "spec": {
           "id": 21,
-          "title": "03 · Leveres planskjemaet, og blir opprettelsen bekreftet?",
+          "title": "04 · Leveres planskjemaet, og blir opprettelsen bekreftet?",
           "description": "**Tildelt gruppe ≠ levert skjemavariant.** Sammenlign tiltak, kontroll, utenfor scope og ukjent i tabellene. Kolonnefiltrene gjelder bare den enkelte tabellen; miljøvalget gjelder hele dashboardet.\n\n«Vist» betyr at skjemabeholderen kom inn i skjermbildet, ikke at alle AID-feltene er sett. «Bekreftet» betyr vellykket svar fra opprettelses-API-et, ikke varsling eller nødvendigvis første plan.\n\n**Evalueringspåminnelse:** bare tiltaksskjema tilbyr ja/nei-valget. Standardvariantens nei er ikke et aktivt avslag. «Ikke registrert» er manglende felt, aldri nei.",
           "links": [],
           "data": {
@@ -1579,8 +1579,8 @@
         "kind": "Panel",
         "spec": {
           "id": 11,
-          "title": "Påminnelsesoperasjoner · rullerende døgn",
-          "description": "Hele valgt miljø, ikke bare AID eller pilotområdet. Hendelser/vellykkede API-operasjoner, ikke unike personer. Ingen gruppe- eller påminnelsesvalgsegmentering. Increase er et estimat mellom scrape-tidspunkter.",
+          "title": "Påminnelse om å lage plan · bestillinger og avbestillinger",
+          "description": "Hele valgt miljø, ikke bare AID eller pilotområdet. Hendelser/vellykkede API-operasjoner, ikke unike personer. Ingen gruppe- eller påminnelsesvalgsegmentering. Increase er et estimat mellom scrape-tidspunkter. Hvert punkt viser et rullerende døgn. Gjelder påminnelsen om å lage plan, ikke evalueringspåminnelse.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2090,7 +2090,7 @@
         "kind": "Panel",
         "spec": {
           "id": 27,
-          "title": "04 · Hva bekrefter serveren?",
+          "title": "01 · Blir planopprettelsen bekreftet?",
           "description": "**Bekreftede opprettelser gjennom planskjemaet**, fordelt på tildelt gruppe, levert variant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene i tabellen.\n\nMåles når serverdelen mottar backendens bekreftelse, uavhengig av nettleserens APM. Samme vurdering som leverte skjemaet brukes ved lagring.\n\n**Ikke summer med nettleserpanelene.** Nye planversjoner teller også. Standard/nei er ikke et aktivt avslag. Ingen data før appendringen er rullet ut; dette er ikke en fullstendig databasetelling eller effektanalyse.",
           "links": [],
           "data": {
@@ -2812,155 +2812,12 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-14"
-              },
-              "height": 4,
-              "width": 24,
-              "x": 0,
-              "y": 6
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-15"
-              },
-              "height": 8,
-              "width": 12,
-              "x": 0,
-              "y": 10
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-16"
-              },
-              "height": 8,
-              "width": 12,
-              "x": 12,
-              "y": 10
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-17"
-              },
-              "height": 9,
-              "width": 12,
-              "x": 0,
-              "y": 18
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-18"
-              },
-              "height": 9,
-              "width": 12,
-              "x": 12,
-              "y": 18
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-21"
-              },
-              "height": 4,
-              "width": 24,
-              "x": 0,
-              "y": 27
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-22"
-              },
-              "height": 8,
-              "width": 12,
-              "x": 0,
-              "y": 31
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-23"
-              },
-              "height": 8,
-              "width": 12,
-              "x": 12,
-              "y": 31
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-24"
-              },
-              "height": 9,
-              "width": 12,
-              "x": 0,
-              "y": 39
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-25"
-              },
-              "height": 9,
-              "width": 12,
-              "x": 12,
-              "y": 39
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-26"
-              },
-              "height": 9,
-              "width": 24,
-              "x": 0,
-              "y": 48
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
                 "name": "panel-27"
               },
               "height": 10,
               "width": 10,
               "x": 0,
-              "y": 57
+              "y": 6
             }
           },
           {
@@ -2973,7 +2830,150 @@
               "height": 10,
               "width": 14,
               "x": 10,
-              "y": 57
+              "y": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-14"
+              },
+              "height": 4,
+              "width": 24,
+              "x": 0,
+              "y": 16
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-15"
+              },
+              "height": 8,
+              "width": 12,
+              "x": 0,
+              "y": 20
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-16"
+              },
+              "height": 8,
+              "width": 12,
+              "x": 12,
+              "y": 20
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-17"
+              },
+              "height": 9,
+              "width": 12,
+              "x": 0,
+              "y": 28
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-18"
+              },
+              "height": 9,
+              "width": 12,
+              "x": 12,
+              "y": 28
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-21"
+              },
+              "height": 4,
+              "width": 24,
+              "x": 0,
+              "y": 37
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-22"
+              },
+              "height": 8,
+              "width": 12,
+              "x": 0,
+              "y": 41
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-23"
+              },
+              "height": 8,
+              "width": 12,
+              "x": 12,
+              "y": 41
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-24"
+              },
+              "height": 9,
+              "width": 12,
+              "x": 0,
+              "y": 49
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-25"
+              },
+              "height": 9,
+              "width": 12,
+              "x": 12,
+              "y": 49
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-26"
+              },
+              "height": 9,
+              "width": 24,
+              "x": 0,
+              "y": 58
             }
           },
           {
