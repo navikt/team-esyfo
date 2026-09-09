@@ -20,7 +20,7 @@ Boardet starter med resultatspørsmålet «får flere en plan, og skjer planhand
 ## Serverbekreftede planer
 
 En egen tabell er klargjort for `event_type=aid_plan_opprettet` fra serverdelen
-av plan-frontend ([#1042](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1042), stablet på #1041/#1039). Den viser vellykkede opprettelseskall per tildelt gruppe, levert
+av plan-frontend ([#1042](https://github.com/navikt/syfo-oppfolgingsplan-frontend/pull/1042)). Den viser vellykkede opprettelseskall per tildelt gruppe, levert
 skjemavariant og innsendt evalueringspåminnelse. Bruk kolonnefiltrene, for eksempel
 `Tildelt gruppe=tiltak` og `Levert skjemavariant=tiltak`, for å se tilbudt ja/nei-valg.
 Standardvariantens `nei` er ikke et aktivt avslag.
@@ -113,6 +113,21 @@ Prometheus-spørringene bruker `syfo_oppfolgingsplan_backend_<navn>_total`, avgr
 `increase` estimerer endringen mellom scrape-tidspunkter. Deling kan gjelde planer opprettet før valgt tidsrom. Flere operasjoner kan gjelde samme plan. Tellerne og browserhendelsene er derfor ikke én brukertrakt, og dashboardet beregner ingen konverteringsprosent fra dem. LPS har annen dekning og må ikke antas inkludert i disse API-tellerne.
 
 ## Utrulling og kontroll
+
+Serverbekreftelsene vises først, før nettlesermålingene for levering og bruk.
+Dette prioriterer bekreftet opprettelse uten å slå sammen datakildene. Den korte
+leseguiden øverst forklarer forskjellen på tomme resultater og null bruk, samt
+at kolonnefiltre bare gjelder den enkelte tabellen. Klikk **filterikonet** ved
+kolonnenavnet for å velge for eksempel `tiltak`; klikk på selve kolonnenavnet
+sorterer tabellen. Påminnelseshandlingene viser status før handlingen, mens
+visningstabellen viser status da kortet ble vist.
+
+Et vellykket app-deploy eller en tom, vellykket spørring beviser ikke at alle
+hendelser kommer frem. Verifiser hver målekjede separat: påminnelsesbeslutning,
+visning, bestilling/avbestilling, skjemalevering, nettleserbekreftelse og
+serverbekreftelse. Marker kategorier uten observerte hendelser som **ikke
+verifisert med reelle data**, ikke som feil eller null. Forskjeller mellom
+server- og nettlesertall kan også skyldes ulike utrullingstidspunkt.
 
 1. Gjennomgå og rull ut appinstrumenteringen. Bekreft i dev at tiltak, kontroll, utenfor scope, manglende vurdering, bestilling, avbestilling og feil gir de forventede kategoriene.
 2. Publiser [dashboard-JSON](/grafana/team-esyfo-aid.json) til eksisterende UID `aufd2lm` i **Team Esyfo**. Eksporter gjeldende dashboard først for tilbakeføring. Ikke opprett en parallell kopi.
