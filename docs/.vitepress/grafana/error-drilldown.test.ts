@@ -21,6 +21,7 @@ import {
 	PROD_TEMPO_DATASOURCE_UID,
 	RECENT_RUNTIME_EVENT_LIMIT,
 	runtimeByClassificationQuery,
+	runtimeByServiceQuery,
 	runtimeContractGapDataLink,
 	runtimeContractGapQuery,
 	runtimeEnvironmentOptions,
@@ -80,6 +81,27 @@ const scopedVariableSpecs = () => {
 	);
 };
 
+type Layout = {
+	kind: string;
+	spec: {
+		rows?: Array<{
+			spec: {
+				title: string;
+				collapse: boolean;
+				hideHeader: boolean;
+				layout: Layout;
+				variables?: Array<{ spec: Record<string, unknown> }>;
+			};
+		}>;
+		items?: Array<{
+			spec: { element: { name: string }; x: number; y: number; width: number };
+		}>;
+	};
+};
+
+const dashboardRows = () =>
+	(buildErrorDashboard().spec.layout as Layout).spec.rows ?? [];
+
 const fullMatch = (pattern: string, value?: string) =>
 	value !== undefined && new RegExp(pattern).test(value);
 
@@ -123,7 +145,8 @@ const decodedExplorePane = (url: string) => {
 			"TOO_MANY_ORGNUMRE",
 		)
 		.replaceAll('${__data.fields["contract_state_display"]}', "Eldre typefelt")
-		.replaceAll('${__data.fields["browser_type_display"]}', "TypeError");
+		.replaceAll('${__data.fields["browser_type_display"]}', "TypeError")
+		.replaceAll(`\${__data.fields["browser_environment_display"]}`, "prod-gcp");
 	const encoded = new URL(
 		materialized,
 		"https://grafana.test",
@@ -239,13 +262,19 @@ describe("feiloversikt-dashboard", () => {
 		]);
 		const variables = variableSpecs();
 		const scopedVariables = scopedVariableSpecs();
-		assert.equal(variables.length, 3);
-		assert.equal(scopedVariables.length, 1);
-		const environment = variables.find(
+		assert.equal(
+			variables.length,
+			0,
+			"Ingen lokale utvalg skal fremstå som globale",
+		);
+		assert.equal(scopedVariables.length, 5);
+		const environment = scopedVariables.find(
 			({ name }) => name === "runtime_environment",
 		);
-		const runtime = variables.find(({ name }) => name === "app");
-		const tempo = variables.find(({ name }) => name === "tempo_datasource");
+		const runtime = scopedVariables.find(({ name }) => name === "app");
+		const tempo = scopedVariables.find(
+			({ name }) => name === "tempo_datasource",
+		);
 		const browser = scopedVariables.find(({ name }) => name === "browser_app");
 		assert.deepEqual(environment?.current, {
 			text: "prod-gcp",
@@ -253,7 +282,7 @@ describe("feiloversikt-dashboard", () => {
 		});
 		assert.equal(environment?.includeAll, false);
 		assert.equal(environment?.multi, false);
-		assert.equal(environment?.label, "Kjøremiljø");
+		assert.equal(environment?.label, "Miljø");
 		assert.equal(runtime?.label, "Tjeneste");
 		assert.deepEqual(tempo?.current, {
 			text: "prod-gcp-tempo",
@@ -264,59 +293,63 @@ describe("feiloversikt-dashboard", () => {
 		assert.equal(tempo?.refresh, "onDashboardLoad");
 		assert.equal(tempo?.regex, "/^${runtime_environment:raw}-gcp-tempo$/");
 		assert.equal(tempo?.skipUrlSync, true);
-		assert.equal(browser?.label, "Nettleserflate · miljø ukjent");
+		assert.equal(browser?.label, "Nettleserflate");
 		assert.equal(browser?.allValue, dashboardBrowserRegex);
-		assert.match(String(browser?.description), /Miljø er ikke verifisert/);
+		const browserEnvironment = scopedVariables.find(
+			({ name }) => name === "browser_environment",
+		);
+		assert.equal(browserEnvironment?.includeAll, false);
+		assert.deepEqual(browserEnvironment?.current, {
+			text: "Alle (også ukjent)",
+			value: "prod-gcp|dev-gcp|ukjent",
+		});
 	});
 
-	test("prioriterer trend, feilgrupper og trace i en fullbredde primær rad", () => {
-		const dashboard = buildErrorDashboard();
-		const layout = dashboard.spec.layout as {
-			kind: string;
-			spec: {
-				rows: Array<{
-					kind: string;
-					spec: {
-						collapse: boolean;
-						layout: {
-							spec: {
-								items: Array<{
-									spec: {
-										element: { name: string };
-										width: number;
-									};
-								}>;
-							};
-						};
-					};
-				}>;
-			};
-		};
-		assert.equal(layout.kind, "RowsLayout");
-		assert.equal(layout.spec.rows.length, 2);
-		assert.equal(layout.spec.rows[0]?.spec.collapse, false);
-		assert.equal(layout.spec.rows[1]?.spec.collapse, true);
+	test("samler runtime med lokale filtre og arvet scope, men skiller nettleserfeil", () => {
+		const rows = dashboardRows();
+		assert.equal(rows.length, 2);
+		const runtime = rows[0].spec;
+		const browser = rows[1].spec;
+		assert.equal(runtime.title, "Feil i tjenestene");
+		assert.equal(runtime.collapse, false);
+		assert.equal(runtime.hideHeader, false);
 		assert.deepEqual(
-			layout.spec.rows[0]?.spec.layout.spec.items.map(
-				({ spec }) => spec.element.name,
-			),
-			["panel-1", "panel-2", "panel-6", "panel-3"],
+			runtime.variables?.map(({ spec }) => spec.name),
+			["runtime_environment", "tempo_datasource", "app"],
 		);
-		assert.ok(
-			layout.spec.rows[0]?.spec.layout.spec.items.every(
-				({ spec }) => spec.width === 24,
-			),
+		const nested = runtime.layout.spec.rows ?? [];
+		assert.equal(nested.length, 2);
+		const main = nested[0].spec;
+		const metadata = nested[1].spec;
+		assert.equal(main.collapse, false);
+		assert.equal(metadata.collapse, true);
+		assert.equal(metadata.title, "Forbedre loggdata");
+		assert.deepEqual(collectByKey(metadata.layout, "name"), ["panel-4"]);
+		assert.deepEqual(
+			main.layout.spec.items?.map(({ spec }) => spec.element.name),
+			["panel-1", "panel-7", "panel-2", "panel-3", "panel-6"],
 		);
-		assert.equal(Object.keys(panels()).length, 6);
+		assert.deepEqual(
+			main.layout.spec.items?.slice(0, 2).map(({ spec }) => spec.width),
+			[14, 10],
+		);
+		assert.equal(browser.collapse, false);
+		assert.deepEqual(collectByKey(browser.layout, "name"), ["panel-5"]);
+		assert.deepEqual(
+			browser.variables?.map(({ spec }) => spec.name),
+			["browser_environment", "browser_app"],
+		);
+		assert.equal(Object.keys(panels()).length, 7);
 		assert.ok(!serializeErrorDashboard().includes('"group": "stat"'));
 		assert.ok(!serializeErrorDashboard().includes('"group": "text"'));
 	});
 
-	test("bruker seks avgrensede Loki-queryer med minst ett minutts refresh", () => {
+	test("bruker sju avgrensede Loki-queryer med minst ett minutts refresh", () => {
 		for (const query of [
 			runtimeTrendQuery,
 			runtimeByClassificationQuery,
 			runtimeContractGapQuery,
+			runtimeByServiceQuery,
 		]) {
 			assert.match(query, /service_namespace="team-esyfo"/);
 			assert.match(
@@ -356,12 +389,12 @@ describe("feiloversikt-dashboard", () => {
 		assert.ok(!serialized.includes('"10s"'));
 		assert.match(serialized, /"maxDataPoints": 240/);
 		assert.match(serialized, /"interval": "1m"/);
-		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 6);
+		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 7);
 	});
 
 	test("viser en operativ hovedtabell med eksplisitt handling", () => {
 		const main = JSON.stringify(panels()["panel-2"]);
-		assert.match(main, /Vanligste runtimefeil per nivå \(topp 25\)/);
+		assert.match(main, /Hva feiler\?/);
 		assert.match(main, /"error_level":"Nivå"/);
 		assert.match(main, /"service_name":"Tjeneste"/);
 		assert.match(main, /"error_type_display":"Feiltype"/);
@@ -372,6 +405,71 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(main, /Logger for denne gruppen/);
 		assert.ok(!main.includes("Feilgruppe"));
 		assert.ok(!main.includes("Logghendelser"));
+	});
+
+	test("viser stabil rate per minutt og eksakte tjenestetall uten kunstige nuller", () => {
+		assert.match(runtimeTrendQuery, /^sum\(rate\(/);
+		assert.match(runtimeTrendQuery, /\[\$__auto\]\)\) \* 60$/);
+		assert.ok(!runtimeTrendQuery.includes("vector(0)"));
+		const trend = JSON.stringify(panels()["panel-1"]);
+		assert.match(
+			trend,
+			/"showPoints":"always"/,
+			"Isolerte feilhendelser må være synlige selv uten linje mellom datapunkter",
+		);
+		assert.match(trend, /"pointSize":4/);
+		assert.match(trend, /"spanNulls":false/);
+		assert.match(
+			runtimeByServiceQuery,
+			/^sort_desc\(sum by\(service_name\) \(count_over_time\(/,
+		);
+		assert.ok(
+			!runtimeByServiceQuery.includes("topk"),
+			"Alle tjenester med treff skal kunne undersøkes",
+		);
+		const chart = JSON.stringify(panels()["panel-7"]);
+		assert.match(chart, /"group":"bargauge"/);
+		assert.match(chart, /"group":"rowsToFields"/);
+		assert.match(chart, /"fieldName":"service_name","handlerKey":"field.name"/);
+		assert.match(
+			chart,
+			/"fieldName":"Value #Feil per tjeneste","handlerKey":"field.value"/,
+		);
+		assert.match(chart, /"fieldName":"Time","handlerKey":"__ignore"/);
+		assert.match(chart, /"orientation":"horizontal"/);
+		assert.match(chart, /"decimals":0/);
+		assert.match(chart, /"fieldMinMax":false/);
+		assert.match(chart, /services\/team-esyfo\/\$\{__field.name\}/);
+		assert.match(chart, /tab=issues/);
+	});
+
+	test("gir tydelig vei tilbake til kontrollrommet og forklaringen av målingene", () => {
+		const links = buildErrorDashboard().spec.links as Array<
+			Record<string, unknown>
+		>;
+		assert.deepEqual(
+			links.map(({ title }) => title),
+			["Kontrollrom", "Om målingene"],
+		);
+		assert.equal(
+			links[0].url,
+			"https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom",
+		);
+		assert.equal(links[0].keepTime, true);
+		assert.equal(
+			links[0].includeVars,
+			false,
+			"Nettleser- og dev-utvalg skal ikke sendes til produksjonskontrollrommet",
+		);
+		assert.equal(
+			links[1].url,
+			"https://navikt.github.io/team-esyfo/utvikling/observability/feildrilldown",
+		);
+		assert.ok(
+			links.every(
+				({ type, asDropdown }) => type === "link" && asDropdown === false,
+			),
+		);
 	});
 
 	test("feilgruppe-handlingen bevarer miljø, tjeneste, type, kode og tid", () => {
@@ -427,7 +525,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.ok(!runtimeContractGapQuery.includes("code_only"));
 		assert.ok(!runtimeContractGapQuery.includes("context_only"));
 		const gapPanel = JSON.stringify(panels()["panel-4"]);
-		assert.match(gapPanel, /Loggmetadata som må forbedres/);
+		assert.match(gapPanel, /Feil uten standardisert hendelsestype/);
 		assert.match(gapPanel, /Kode og operasjon er valgfri metadata/);
 		assert.match(gapPanel, /Logger for denne gruppen/);
 		assert.match(
@@ -486,7 +584,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(runtimeByClassificationQuery, /else if \.safe_status/);
 	});
 
-	test("browserfeltet har en lukket typeallowlist og ingen runtime-påstand", () => {
+	test("browserfeltet har lukket typeallowlist og eget eksplisitt miljø", () => {
 		for (const valid of [
 			"Error",
 			"TypeError",
@@ -507,7 +605,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(browserByTypeQuery, /\| drop __error__, __error_details__/);
 		assert.ok(!browserByTypeQuery.includes('| __error__=""'));
 		const panel = JSON.stringify(panels()["panel-5"]);
-		assert.match(panel, /Nettleserfeil \(topp 50 · miljø ikke verifisert\)/);
+		assert.match(panel, /Hva feiler i nettleseren\?/);
 		assert.ok(!panel.includes("NAIS APM"));
 		assert.ok(!panel.includes("runtime_environment"));
 		const expr =
@@ -516,11 +614,34 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(expr, /service_name="sample-service"/);
 		assert.ok(!expr.includes("k8s_cluster_name"));
 		assert.ok(!expr.includes("runtime_environment"));
+		assert.match(expr, /browser_environment_display=`prod-gcp`/);
+		assert.match(
+			browserByTypeQuery,
+			/\| logfmt type, app_namespace, app_environment/,
+		);
+		assert.match(
+			browserByTypeQuery,
+			/app_namespace="" or app_namespace="team-esyfo"/,
+		);
+		assert.match(browserByTypeQuery, /eq \.browser_parse_error ""/);
+		assert.match(browserByTypeQuery, /eq \.app_namespace "team-esyfo"/);
+		assert.match(browserByTypeQuery, /eq \.app_environment "prod-gcp"/);
+		assert.match(browserByTypeQuery, /eq \.app_environment "dev-gcp"/);
+		assert.match(browserByTypeQuery, /else }}ukjent/);
+		assert.match(
+			browserByTypeQuery,
+			/browser_environment_display=~"\$\{browser_environment:raw\}"/,
+		);
+		assert.match(
+			browserByTypeQuery,
+			/sum by\(service_name, browser_environment_display, browser_type_display, action\)/,
+		);
+		assert.match(panel, /"browser_environment_display":"Miljø"/);
 	});
 
 	test("tracepanelet har sju arbeidskolonner og dedupliserer identiske feil", () => {
 		const trace = JSON.stringify(panels()["panel-3"]);
-		assert.match(trace, /Nyeste runtimefeil med trace \(maks 100\)/);
+		assert.match(trace, /Konkrete feilforløp · åpne trace/);
 		assert.equal(RECENT_RUNTIME_EVENT_LIMIT, 100);
 		assert.match(trace, /"group":"extractFields"/);
 		assert.match(trace, /"group":"groupBy"/);
@@ -623,16 +744,17 @@ test("runtime-rader tilbyr både presist loggsøk, enkel loggvisning og APM", ()
 	>;
 	for (const id of ["panel-2", "panel-4", "panel-6"]) {
 		const serialized = JSON.stringify(elements[id]);
-		assert.match(serialized, /NAIS APM/);
+		assert.match(serialized, /Feil i APM/);
 		assert.match(serialized, /Alle tjenestelogger/);
 		assert.match(serialized, /environment=\$\{runtime_environment:raw\}/);
 		assert.match(
 			serialized,
 			/k8s_cluster_name%7C%3D%7C\$\{runtime_environment:raw\}/,
 		);
-		assert.match(serialized, /from=\$\{__from:date:iso\}/);
+		assert.match(serialized, /from=\$\{__from\}/);
+		assert.match(serialized, /tab=issues/);
 		assert.match(serialized, /\/explore\?panes=/);
 	}
-	assert.match(JSON.stringify(elements["panel-3"]), /NAIS APM/);
-	assert.ok(!JSON.stringify(elements["panel-5"]).includes("NAIS APM"));
+	assert.match(JSON.stringify(elements["panel-3"]), /Feil i APM/);
+	assert.ok(!JSON.stringify(elements["panel-5"]).includes("Feil i APM"));
 });

@@ -1,105 +1,86 @@
 # Kontrollrom
 
-::: tip Operativ inngang
-[Åpne Team eSyfo – Kontrollrom i Grafana](https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom/team-esyfo-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m)
-:::
+[Åpne Team eSyfo – Kontrollrom](https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom)
 
-Kontrollrommet er den felles hendelsesinngangen for Team eSyfos operative flåte. Det starter med forventede ressurser fra runtimeinventaret og fyller inn bevist telemetry. En app kan derfor ikke forsvinne fra oversikten bare fordi signalet mangler.
+**Hvor bør vi undersøke nå?** Kontrollrommet gir en fast oversikt over teamets tjenester i produksjon. [Feiloversikt](./feildrilldown) er neste steg når du vil finne en feilgruppe, lese logger eller åpne et konkret trace.
 
-Leveransen er coverage-first: det vi kan måle korrekt vises live; det vi ikke kan bevise står som `UKJENT`, `IKKE DEFINERT`, `IKKE EVALUERT` eller `BLOCKED`. [#211](https://github.com/navikt/team-esyfo/issues/211) forblir åpen til browser-, pipeline-, SLO- og deploykontraktene faktisk er levert.
+## Slik bruker vi det
 
-## Firetrinns hendelsesløype
+1. Se toppkortene og **Tjenester i produksjon**. Tabellen beholder forventede tjenester selv når måledata mangler. Klikk tjenesten for logger, APM, Feiloversikt og runbook.
+2. Åpne **Undersøk en tjeneste** for trafikk, feilmarkerte kall, svartid, replikaer og omstarter. Tjenestevelgeren gjelder bare denne raden.
+3. Åpne de egne radene for meldingsbehandling, jobber eller utvalgte tjenester når avviket peker dit. Måledekning finnes i egen sammenfoldet rad. WARN-avvisninger vises separat i den åpne oversikten.
 
-1. **Handle nå:** Se etter OTel-feilstatus, runtimefeil, restarts og lav ready/desired. Les alltid span- og kube-dekning ved siden av.
-2. **Finn raden:** Flåtematrisen viser forventet tjeneste, kritikalitet, livssyklus, telemetry og observerte avvik. Manglende signal vises som gult dekningsgap/ukjent, ikke som påvist appfeil; raden forsvinner ikke.
-3. **Avgrens én tjeneste:** Velg runtime i `Detaljtjeneste`. Request-rate, OTel-feilratio og P95 gjelder da bare denne identiteten, ikke en uleselig miks av hele flåten.
-4. **Følg runbook og drilldown:** Hver runtime og pagerkandidat lenker til APM, avgrensede logger, Feiloversikt og relevant runbook.
+Det er ingen globale område- eller tjenestefiltre. Oversikten gjelder alltid hele produksjonsflåten. Tidsrommet er felles; paneler merket **5 min**, **15 min** eller **24 t** bruker det oppgitte vinduet bakover fra slutten av valgt tidsrom.
 
-`Operativt område` filtrerer bare oversiktskortene og flåtematrisen. `Detaljtjeneste` styrer bare detaljpanelene og er uavhengig av området. Faste seksjoner har sitt eget scope og endres ikke av valgene.
+## Hva tallene betyr
 
-**API-avvisninger 5m · tjenester** viser separat hvor mange tjenester i valgt område som har logget WARN med `event_type=api_request_rejected` siste fem minutter. Det gule signalet er ikke automatisk driftsfeil: gjentatte avvisninger kan skyldes feil input, klientintegrasjon eller tokenkonfigurasjon. Det omfatter bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. No data er ukjent, ikke bevist null. Lenken åpner avgrensede avvisningslogger i Explore med samme område og valgt tidsrom; velg siste fem minutter der for å matche indikatorens faste tellevindu. Feiloversikt har i tillegg en egen tabell med avvisningsgrunner.
-
-## Tilstandsord
-
-| Dimensjon | Tillatte tolkninger |
+| Signal | Tolkning |
 |---|---|
-| Brukerimpact | `PÅVIST`, `INGEN PÅVIST IMPACT`, `UKJENT` |
-| Teknisk helse | `OK`, `DEGRADERT`, `FEILET`, `UKJENT` |
-| Telemetry | `FERSK`, `STALE`, `MANGLER`, datasourcefeil |
-| Trafikk | `AKTIV`, forventet nulltrafikk, uventet nulltrafikk, `UKJENT` |
-| Kontrakt | `VERIFISERT`, `IKKE DEFINERT`, `IKKE EVALUERT`, `BLOCKED` |
+| Feilmarkerte kall | Inngående SERVER-spans med OTel `STATUS_CODE_ERROR`. Ikke automatisk HTTP 5xx eller påvist brukerimpact. |
+| Loggfeil · 5 min | Logghendelser med `error`, `critical` eller `fatal`, uavhengig av HTTP-sporene. |
+| Omstarter · 15 min | Toppkortet teller tjenester med omstarter; tabellen viser estimerte omstarter per tjeneste. Gult er et undersøkelsessignal, ikke en nedetidsalarm. |
+| Klare replikaer | Klare i forhold til ønskede replikaer. Et øyeblikksbilde, ikke målt tilgjengelighet. |
+| Måledata | Om forventede HTTP-måleserier er oppdatert, forsinket eller mangler. Ikke tidspunktet for siste kall. |
 
-Kontrollrommet lager ikke én samlet grønn status. Den tidligere `sykepengedager-informasjon`-hendelsen demonstrerte hvorfor: HTTP-sporene kunne vise ingen påvist synkron impact samtidig som runtimefeil og restarts viste reell teknisk degradering.
+**Ingen treff** i et loggpanel betyr at søket ikke returnerte kvalifiserende hendelser. Det beviser ikke at alle tjenester har komplett logging. Manglende Kubernetes-målinger er ukjent, ikke 0 % klare replikaer. En faktisk målt null med ønskede replikaer større enn null er derimot 0 %. Tjenester med ønsket antall null inngår ikke i prosentberegningen.
 
-## Hva dashboardet dekker
+Datasource- og spørringsfeil skal vises som feil, aldri som frisk tjeneste. Det finnes ingen samlet grønn helsescore.
 
-### Runtime
+### Omstarter og utrulling
 
-- Scope velges som hele flåten eller ett av ni kuraterte operative områder.
-- Runtimeinventaret per 28. august 2026 gir 26 forventede GCP-appkomponenter i den generiske flåten.
-- De tre avviklede `syfooppfolgingsplanservice`-komponentene i FSS er ikke generiske flåterader eller del av dekningsnevneren. Hvis de fortsatt observeres etter tjenestestoppen, vises de som runtime-drift som følges i [#208](https://github.com/navikt/team-esyfo/issues/208).
-- RED bruker `traces_spanmetrics_calls_total` og `traces_spanmetrics_latency_bucket`, avgrenset til `service_namespace=team-esyfo`, `k8s_cluster_name=prod` og `span_kind=SPAN_KIND_SERVER` for de 24 profilene med HTTP/SERVER-kontrakt.
-- `esyfovarsel` og `syfo-budstikka` er workers. De står som `ANNEN KONTRAKT` i SERVER-kolonnen og inngår ikke i SERVER-dekningsnevneren; deres operative kontroll ligger i pipeline-/jobbsignalene.
-- OTel `STATUS_CODE_ERROR` omtales som spanstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact.
-- De to Dine sykmeldte-panelene avgrenser `GET /api/minesykmeldte` og `GET /api/virksomheter`. Rute-/labelkontrakten og 200/`STATUS_CODE_UNSET` er live-verifisert mot NAIS APM-spanmetrikker. 2xx uten OTel-feilstatus er `good`; 4xx uten OTel-feilstatus vises nøytralt som `http_4xx`, mens 5xx eller OTel-feilstatus er `technical_failure`. Texas kan maskere tekniske introspeksjonsfeil som 401, så 4xx kalles ikke forventet før et bounded appsignal skiller årsakene i [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729).
-- Kube-signaler dedupliseres og `desired=0` filtreres bort.
-- Restart-kortet teller **tjenester med restarts siste 15 minutter**, ikke antall restarts. Gult betyr at signalet bør undersøkes, ikke påvist nedetid. Flåtematrisen viser både 15 minutter og nøytral 24-timers historikk; vinduene er faste uavhengig av tidsvelgeren. Normal oppretting/fjerning av podder ved deploy eller skalering øker ikke containerens restart-teller.
-- Poddiagnostikken for valgt tjeneste viser restarts og **sist registrerte avslutningsårsak på nåværende podder**. Den knytter ikke én årsak til alle historiske restarts. Tidspunkt for avslutningen er ikke tilgjengelig i dagens metrikkgrunnlag. `OOMKilled` viser minnedrap; `Error` krever videre undersøkelse. Erstattede podder kan ha restarthistorikk uten tilgjengelig årsak. Klikk podnavnet for avgrensede logger i valgt tidsrom.
-- Klare/ønskede replikaer er et øyeblikksbilde, ikke en deployalarm. Grafen for valgt tjeneste skiller korte fall ved deploy/skalering fra vedvarende mangel. Ingen deployhendelser undertrykkes automatisk.
-- Flåtematrisen teller bare positivt klassifiserte `detected_level=error|critical|fatal` siste fem minutter. Browserlogger videresendt via `next-logger` med `x_isFrontend=true` er ekskludert fra runtimekategorien; browser-exceptions måles separat i Faro der det er konfigurert. Matrisen gjør ikke en ekstra full-loggskann for å konstruere null; `No data` er ukjent. Valgt tjeneste kan undersøkes over dashboardets valgte tidsrom.
+Vanlig oppretting, fjerning eller erstatning av podder ved deploy og skalering øker ikke containerens restart-teller. Derfor undertrykker vi ikke alle avvik rundt deploy. Korte fall i antall klare replikaer kan likevel være normale; se tidsserien og eventuell brukerimpact før du konkluderer.
 
-Telemetrykolonnen er inventarforankret:
+Podtabellen viser omstarter siste 15 minutter og 24 timer, samt **siste registrerte avslutningsårsak på nåværende podder**. Årsaken gjelder ikke nødvendigvis alle omstarter i vinduet. Erstattede podder kan ha restarthistorikk uten tilgjengelig årsak, og dagens metrikkgrunnlag gir ikke avslutningstidspunkt.
 
-- `FERSK`: aktuell SERVER-spanserie finnes for en SERVER-eligible profil. Det måler scrape-/seriesignal, ikke siste request.
-- `STALE`: serien er sett siste 30 minutter, men er ikke aktuell.
-- `MANGLER`: ingen serie siste 30 minutter for en SERVER-eligible profil.
-- `ANNEN KONTRAKT`: workerprofil som ikke skal vurderes med inbound SERVER-spans.
-- En datasourcefeil feiler queryen og blir aldri mappet til `MANGLER` eller grønt.
+- `OOMKilled`: sammenhold minnebruk og minnegrense før tiltak.
+- `Error`: åpne poddens logger rundt hendelsen; årsaken kan ikke leses av exit-status alene.
+- Manglende årsak: ikke bevis på normal deploy.
 
-### Browser
+Prometheus `increase()` estimerer tellerøkning. Verdiene er ikke en eksakt hendelseslogg. Se [HTTP-/runtime-runbook](./runbooks/http-runtime).
 
-Kontrollrommet viser en kompakt browserstatus og en diagnostisk exception-graf. Det detaljerte [runtimeinventaret](./runtimeinventar) viser de 11 browserflatene, kildekodekonfigurasjon, browseridentitet, side-ID, privacygap og høy-impact issue. Bare Faro `kind=exception` er live-verifisert i denne leveransen. Miljødimensjonen er ikke verifisert, så exception-grafen har ukjent miljøscope og må ikke omtales som produksjonsstatus. [#206](https://github.com/navikt/team-esyfo/issues/206) definerer browserkontrakten; page loads, sessions og CWV p75 står eksplisitt ukjent til den enkelte flaten har bevist identitet, miljø, numerisk samplingrate og queryschema i sin rollout.
+## Avgrensning og datagrunnlag
 
-En sampled exception, page load eller session skal aldri omtales som en unik bruker. Verdier med ulik samplingrate skal ikke summeres.
+Produksjonsflåten genereres fra [runtimeinventaret](./runtimeinventar): 26 operative GCP-appkomponenter, hvorav 24 har HTTP/SERVER-profil. Avviklet `syfooppfolgingsplanservice` i FSS er ikke med. `esyfovarsel` og `syfo-budstikka` er workers og skal ikke vurderes med HTTP-måledekning.
 
-### Pipelines og jobber
+- HTTP-målinger: `traces_spanmetrics_calls_total` og `traces_spanmetrics_latency_bucket`, avgrenset til `service_namespace=team-esyfo`, `k8s_cluster_name=prod` og `span_kind=SPAN_KIND_SERVER`.
+- Kubernetes: produksjon i `team-esyfo`, deduplisert per deployment eller pod/container. Manglende teller eller nevner syntetiseres ikke til en målt verdi.
+- Runtime-logger: positivt filter på Loki `detected_level=error|critical|fatal`. Browserlogger videresendt med `x_isFrontend=true` utelates både som metadata og JSON-felt. Ikke-JSON runtimefeil beholdes.
+- Nettleserfeil: egen del av [Feiloversikt](./feildrilldown), ikke en del av kontrollrommets produksjonsstatus.
 
-Kontrollrommet viser fortsatt samlet pipelinehelse som `IKKE EVALUERT`, ikke som et feilresultat. Som første avgrensede tekniske slice viser det nå poll-alder per pod og committed consumer-group-lag for sykmeldingstopicen inn til `syfo-oppfolgingsplan-backend`. Poll-alder viser sekunder siden Kafka-klienten kalte `poll()`; committed lag viser observert transportbacklog. Begge er diagnostikk, ikke alene bevis på korrekt behandling, ende-til-ende-leveranse eller brukerimpact. `No data` er `UKJENT`.
+HTTP-måledata klassifiseres slik:
 
-Sju pipelinegrupper og ti team-topics er kartlagt i [runtimeinventaret](./runtimeinventar), mens [Kafka-kontraktene](./kafka-kontrakter) skiller bevist nåtilstand fra åpne beslutninger. Operativ helse kan først evalueres når [#212](https://github.com/navikt/team-esyfo/issues/212) har godkjent frister, nulltrafikk, progresjon og terminale utfall.
+- **Mottar data:** aktuell SERVER-serie finnes. Det beviser måleserie, ikke trafikk.
+- **Forsinket:** sett siste 30 minutter, men ikke aktuell.
+- **Mangler:** ingen serie siste 30 minutter for en forventet HTTP-tjeneste.
+- **Bakgrunnstjeneste:** worker uten inbound SERVER-kontrakt.
 
-Varslingsreisen viser `syfo-budstikka` som målprosessor og `esyfovarsel` som migrerende legacy-prosessor. Airflow er ekstern sekundærkonsument og er utenfor scope. `esyfovarsel-job` får kun et tidsavgrenset Kubernetes failure-guardrail; `No data` betyr ikke suksess.
+### Meldingsbehandling og jobber
 
-### Pager readiness
+Poll-alder viser sekunder siden Kafka-klienten kalte `poll()`. Consumer-lag viser meldinger bak i transporten. Ingen av dem beviser alene riktig behandling, ende-til-ende-leveranse eller brukerimpact.
 
-De tre kandidatene fra [#210](https://github.com/navikt/team-esyfo/issues/210) har egne diagnostikkpaneler og runbooklenker:
+Oppfølgingsplans deserialiseringssignal skiller ennå ikke terminal forkasting fra retryforsøk. Kubernetes-jobbpanelet viser bare `kube_job_failed{condition="true"}` i valgt tidsrom; `false` og `unknown` er ikke feil. Et tomt resultat beviser ikke en vellykket eller punktlig jobbkjøring.
 
-- Budstikka-lag er kun transportdiagnostikk. Produsentens outbox og Budstikkas egne inbox-/delivery-køer vurderes separat i [#212](https://github.com/navikt/team-esyfo/issues/212) og rulles ut via [#219](https://github.com/navikt/team-esyfo/issues/219).
-- Oppfølgingsplan har et verifisert legacy-signal for observerte deserialiseringsfeil. Signalet skiller ennå ikke terminal forkasting fra retryforsøk; dette og recovery/reconciliation avklares i [syfo-oppfolgingsplan-backend#449](https://github.com/navikt/syfo-oppfolgingsplan-backend/issues/449).
-- `syfomotebehov` har guarded ready/desired sammen med single-service RED; tuning og konsekvens avklares i [syfomotebehov#753](https://github.com/navikt/syfomotebehov/issues/753).
+Se [Kafka-kontraktene](./kafka-kontrakter), [pipelines og jobber](./runbooks/pipelines-og-jobber) og [deserialiseringsrunbook](./runbooks/oppfolgingsplan-deserialisering) for kontrakter og trygg videre undersøkelse.
 
-Alle tre står `BLOCKED`. Dashboard og runbook aktiverer ikke pager; aktivering krever observasjonsperiode, shadow-evidens, second-person-verifikasjon og eksplisitt beslutning i [#217](https://github.com/navikt/team-esyfo/issues/217).
+### Utvalgte tjenester
 
-## Kjente gap
+Dine sykmeldte-panelene avgrenser `GET /api/minesykmeldte` og `GET /api/virksomheter`. 2xx uten OTel-feilstatus telles som vellykkede svar. 4xx uten OTel-feilstatus vises separat og nøytralt; 5xx eller OTel-feilstatus er teknisk feilmarkert. Texas kan maskere tekniske introspeksjonsfeil som 401, så 4xx omtales ikke generelt som forventet. Se [dinesykmeldte-backend#729](https://github.com/navikt/dinesykmeldte-backend/issues/729).
 
-- SLO-burn er `IKKE DEFINERT`; alert-policy er ikke en SLO-kontrakt.
-- Siste deploy er `UKJENT`; pod-alder og `kube_deployment_created` brukes ikke som deploybevis.
-- Browser page loads/sessions/CWV venter på live-evidens fra utrullingen per flate.
-- Topic-/pipelineutfall venter på #212 og deretter konkrete adaptere.
-- Legacy-jobben mangler siste start, siste suksess og forventet-run-evaluering.
+Møtebehovs tilgjengelige replikaer er diagnostikk sammen med trafikk og feil, ikke en selvstendig SLO. Se [egen runbook](./runbooks/syfomotebehov-tilgjengelighet).
 
-## Runbooks
+## Begrensninger og videre arbeid
 
-- [Runbookoversikt](./runbooks/)
-- [HTTP og runtime](./runbooks/http-runtime)
-- [Browser](./runbooks/browser)
-- [Pipelines og jobber](./runbooks/pipelines-og-jobber)
-- [syfomotebehov tilgjengelighet](./runbooks/syfomotebehov-tilgjengelighet)
-- [Oppfølgingsplan deserialiseringsfeil](./runbooks/oppfolgingsplan-deserialisering)
+Prosjektstatus er dokumentert her, ikke i store tekstpaneler på driftsflaten:
 
-## For vedlikeholdere
+- SLO-er og burn-rate er ikke etablert av dette dashboardet.
+- Siste deploy-SHA og deploytid må undersøkes i NAIS Console/GitHub. Pod-alder brukes ikke som deploybevis.
+- Pipelineutfall, terminal behandling og nulltrafikk krever eide kontrakter i [#212](https://github.com/navikt/team-esyfo/issues/212).
+- Legacy-jobben mangler siste start, siste suksess og evaluering av forventede kjøringer.
+- Dashboardet aktiverer ingen pager. Observasjon, uavhengig verifikasjon og eksplisitt beslutning følges i [#217](https://github.com/navikt/team-esyfo/issues/217).
 
-Builderen ligger i `.vitepress/grafana/control-room.ts`, mens inventarscope og generert operatørtekst ligger i `.vitepress/grafana/control-room-scope.ts`. Den reviewbare [Grafana-ressursen](/grafana/team-esyfo-kontrollrom.json) genereres deterministisk.
+## Vedlikehold og verifikasjon
+
+Builder: `.vitepress/grafana/control-room.ts`. Inventarscope: `.vitepress/grafana/control-room-scope.ts`. Den genererte [Grafana-ressursen](/grafana/team-esyfo-kontrollrom.json) er publiseringsartefakten.
 
 Kjør fra `docs/`:
 
@@ -107,34 +88,20 @@ Kjør fra `docs/`:
 pnpm control-room:test
 pnpm control-room:export
 pnpm control-room:check
+node scripts/observability-query-smoke.ts
 pnpm grafana-dashboard:smoke
 pnpm build
 ```
 
-`grafana-dashboard:smoke` krever Docker og eksponerer Grafana kun på
-`127.0.0.1`. Den starter
-en midlertidig Grafana med samme versjon som dashboardbyggeren, importerer den
-eksakte Kontrollrom- og Feiloversikt-artefakten gjennom v2-API-et og
-sammenligner både lagret ressurs og UI-ens DTO semantisk. Containeren og
-engangspassordet fjernes etter testen.
-Smoken kjører ikke datasource-queryene og rendrer ikke panelene; dette må fortsatt
-verifiseres i Grafana som beskrevet under. Kommandoen kjører også som et eget steg
-i dokumentasjonsbygget i CI.
+Query-smoken kjører syntetiske hendelser i lokal Loki og måleserier gjennom Prometheus' `promtool`. Den dekker blant annet ekte null, manglende replikaer, skalering til null, jobbens tre condition-verdier og skillet mellom ERROR og WARN. Grafana-smoken importerer de eksakte artefaktene i samme Grafana-versjon som produksjon og sammenligner både lagret ressurs og UI-DTO. Begge krever lokal Docker; de skriver ikke produksjonsdata.
 
-Før publisering skal artefakten importeres med UID `team-esyfo-kontrollrom` i Team eSyfo-mappen `K-1b-N_4k`. Velg Team Esyfo eksplisitt også ved overwrite. Verifiser minst:
+Rendring og lenker må også prøves i Grafana: hele flåten, en backend/frontend/worker, normal utrulling, reelle omstarter, manglende målinger og ett konkret feilforløp. Kontroller at lokalt tjenestevalg ikke endrer produksjonsoversikten. Se [designprinsippene](./dashboard-design).
 
-- hele flåten og ett kuratert operativt område,
-- en valgt backend, frontend og worker,
-- påvist runtimefeil uten OTel-feil,
-- nulltrafikk, `STALE`, `MANGLER` og datasourcefeil,
-- de tre pagerpanelene og alle runbook-/drilldownlenker,
-- at browser, pipeline, SLO og deploy fortsatt står ukjent når kontrakten mangler.
-
-Standardvisningen er én time med to minutters refresh. Bruk Grafana Query Inspector før overwrite til å kontrollere queryfeil, svartid og skannede bytes. Flåte-Loki leser bare et fast femminuttersvindu; øk tidsrom eller refreshfrekvens bevisst under drilldown, ikke som permanent default.
+Ved publisering: eksporter live-dashboardet som rollback-kopi, importer artefakten med samme UID `team-esyfo-kontrollrom` i **Team Esyfo** (`K-1b-N_4k`), og eksporter på nytt for semantisk sammenligning. Ikke overskriv uavklarte live-endringer. Standard er én time og to minutters oppdatering; flåte-Loki leser bare fem minutter.
 
 ## Referanser
 
-- [NAIS APMs RED-queryer](https://github.com/nais/grafana-apm-app/blob/0bade9b7cd886489955439a32f8c820a080a0b99/src/pages/buildServiceScene.ts#L119-L170)
-- [NAIS APMs metrikk- og labelkontrakt](https://github.com/nais/grafana-apm-app/blob/0bade9b7cd886489955439a32f8c820a080a0b99/pkg/plugin/otelconfig/otelconfig.go#L338-L380)
-- [NAIS span metrics](https://github.com/nais/doc/blob/003a79811b2131b35263c68992d049809a5c4c77/docs/observability/tracing/reference/span-metrics.md)
-- [kube-state-metrics: deployment metrics](https://github.com/kubernetes/kube-state-metrics/blob/9295108daad18a00840069be20e0ec3970cb89e6/docs/metrics/workload/deployment-metrics.md)
+- [NAIS APMs RED-queryer og span-målinger](https://github.com/nais/grafana-apm-app/blob/0bade9b7cd886489955439a32f8c820a080a0b99/src/pages/buildServiceScene.ts#L119-L170)
+- [Kubernetes: Pod lifecycle](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/)
+- [Prometheus: increase](https://prometheus.io/docs/prometheus/latest/querying/functions/#increase)
+- [kube-state-metrics: Job condition-målinger](https://github.com/kubernetes/kube-state-metrics/blob/v2.17.0/internal/store/job.go#L278-L299)

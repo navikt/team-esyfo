@@ -5,14 +5,11 @@ Bruk denne for apper som vises i Kontrollrommets flåtematrise eller detaljpanel
 ## 1. Bekreft scope og evidens
 
 1. Åpne [Kontrollrom](https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom/team-esyfo-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m).
-2. Velg relevant **Operativt område**, tidsrom og deretter én **Detaljtjeneste**.
-   - `Operativt område` styrer bare oversiktskortene og flåtematrisen.
-   - `Detaljtjeneste` styrer bare detaljpanelene.
-   - Browser-, pipeline-, jobb- og pagerseksjonene har fast scope og følger ingen av variablene.
-3. Les telemetrykolonnen først:
-   - `FERSK`: aktuell SERVER-spanserie finnes. Det beviser seriescrape, ikke trafikk.
-   - `STALE`: serien er sett siste 30 minutter, men er ikke aktuell.
-   - `MANGLER`: ingen SERVER-spanserie siste 30 minutter.
+2. Se **Tjenester i produksjon** for hele flåten. Åpne **Undersøk en tjeneste** og velg tjeneste lokalt der. Tidsrommet er felles; velgeren påvirker ikke de andre radene.
+3. Les kolonnen **HTTP-målinger** først:
+   - `Mottar data`: aktuell SERVER-spanserie finnes. Det beviser måleserie, ikke trafikk.
+   - `Forsinket`: serien er sett siste 30 minutter, men er ikke aktuell.
+   - `Mangler`: ingen SERVER-spanserie siste 30 minutter.
    - Panel-/datasourcefeil: queryen kunne ikke evalueres; ikke tolk dette som `MANGLER`.
 4. Kontroller at runtime-identiteten stemmer mellom inventar, deployment/container og APM `service_name`. Et mappinggap er et observabilityproblem, ikke en appfeil.
 
@@ -53,7 +50,7 @@ Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende tot
 
 1. Se runtimefeil, restarts og ready/desired uavhengig av HTTP-panelene.
 2. Åpne Feiloversikt og det avgrensede loggsøket fra tjenesteraden.
-3. Grupper på stabilt teknisk felt, for eksempel logger eller exception-type. Ikke bruk rå melding, payload eller URL som issue-fingerprint.
+3. Bruk stabil hendelsestype, feilkode og operasjon i Feiloversikt. Åpne **Feil i APM** for plattformens egen gruppering og traces. Ikke bruk rå payload eller dynamisk URL som egne grupperingsnøkler.
 4. Kontroller nylige endringer i NAIS Console/GitHub. Kontrollrommet viser foreløpig ikke verifisert deploy-SHA eller deploytid; pod-alder er ikke deploybevis.
 
 ## 4. Velg handling
@@ -87,6 +84,6 @@ Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende tot
 Kjør som tabletop eller i dev med en ufarlig testtjeneste:
 
 1. Bruk et tidsrom med kjent trafikk og bekreft APM-/logg-/Feiloversikt-lenkene.
-2. Bruk et tidsrom eller en tjeneste uten SERVER-serie og bekreft at den står som `STALE`/`MANGLER`, ikke grønn.
+2. Bruk et tidsrom eller en tjeneste uten SERVER-serie og bekreft at den står som `Forsinket`/`Mangler`, ikke grønn.
 3. Bruk en kjent runtimefeil uten OTel-feil og bekreft at sannhetene ikke kollapses.
 4. Avbryt testen hvis den krever produksjonsfeil, ekte payload eller personidentifikator.
