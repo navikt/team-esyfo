@@ -106,6 +106,7 @@ export default withMermaid(
 					collapsed: false,
 					items: [
 						{ text: "Oversikt", link: "/utvikling/" },
+						{ text: "Teamarbeid og tavla", link: "/utvikling/teamarbeid" },
 						{
 							text: "Observability",
 							collapsed: false,

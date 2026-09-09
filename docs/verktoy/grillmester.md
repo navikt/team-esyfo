@@ -1,56 +1,26 @@
 # Grillmester og nav-pilot
 
-Grillmester gir felles agentroller og skills for avklaring, design,
-implementering og review. Nav-pilot velger og starter agentpakken. Teamets
-repoer beholder egne instruksjoner, domenekilder og arbeidsflyter.
-
-Kilder: [Grillmester](https://github.com/navikt/grillmester) og
-[nav-pilot](https://github.com/navikt/copilot). Følg den gjeldende
+Nav-pilot starter Grillmester-pakken med felles agentroller og skills. Følg
 [installasjonsveiledningen](https://github.com/navikt/grillmester/blob/main/docs/installation.md)
-for en publisert pakke som er kompatibel med klienten. Denne siden fastsetter
-ikke en release eller et lokalt installasjonsoppsett.
+for gjeldende pakke og klient. Velg roller og korte skill-ID-er fra klientens
+aktive oversikt.
 
-## Velg inngang
+Grillmester hjelper med avklaringer og gjennomføring, Barista med avgrenset
+repoarbeid, Designer med design og Doctor Who med produkt- og teamarbeid.
+Grillmester velger dokumentert grilling for sammenhengende avklaringer og
+Wayfinder når avhengige spørsmål trenger et varig kart på tvers av økter.
 
-- **Grillmester** avklarer uklare mål og valg, samler designbeslutninger og
-  koordinerer implementering og verifikasjon.
-- **Barista** passer for tydelig avgrenset repoarbeid med avklart retning.
-- **Designer** utforsker brukerflyt og visuelle konsepter med Aksel og
-  tilgjengelig Figma-støtte. Rollen leverer design, ikke produktkode.
-- **Doctor Who** hjelper med produktarbeid, mål, prioritering og workshops.
-  Bruk den lokale `team-kontekst`-skillen for Team eSyfos faktiske kilder.
+## Et lite lokalt oppsett
 
-Kokk, Grill-inspektør og Researcher brukes internt av agentteamet. Velg roller
-og skills fra klientens aktive oversikt; ikke gjett prefiks eller importer
-runtime-ID-er fra gamle repo-filer.
+Hvert repo beholder en kort `.github/copilot-instructions.md` med egne
+kommandoer og fallgruver. `AGENTS.md` peker på den samme fila. Felles metode og
+agentroller ligger i pakken; det er ingen filsynk, egen oppsettskontroll eller
+påkrevd branch-sjekk for agentoppsettet.
 
-## Hva eies hvor
+I teamrepoet finnes to lokale skills: `team-kontekst` finner tavle- og fagkilder,
+og `doc-new-area` registrerer nye wikiområder. Vanlig teamkunnskap ligger i
+wikien, blant annet [Teamarbeid og tavla](../utvikling/teamarbeid.md).
 
-Grillmester distribueres som en **Tier 2-agentpakke**: klienten starter en
-ferdig plugin-payload. Agentpakken synkroniserer ikke agenter, skills,
-instruksjoner eller templates inn i hvert apprepo.
-
-Repoene eier build-/testkommandoer, domenebegreper, risikoregler,
-path-instruksjoner og issue-/PR-maler. I fellesrepoet beholder vi de lokale
-skillsene `team-kontekst` og `doc-new-area`. Felles metode skal vedlikeholdes i
-Grillmester, mens fakta om teamet og appene vedlikeholdes i sine repoer.
-
-## Grilling og større avklaringer
-
-Grillmester skal undersøke fakta og utfordre uklare antakelser fra start.
-Dokumentert grilling passer når en samtale skal avklare begreper og varige
-valg. Wayfinder organiserer flere avhengige, uløste spørsmål når en enkel
-checkpoint ikke holder oversikten på tvers av økter; den bruker grilling,
-research eller prototyper innenfor hvert spørsmål.
-
-Metodevalg er agentens ansvar. Brukeren avklarer reelle produkt- og designvalg;
-en spec eller oppdeling i implementeringsissues lages når det er ønsket og
-nyttig, uten en automatisk kjede av dokumenter.
-
-## Ved manglende eller feil skill
-
-Kontroller aktiv pakkeversjon, full/fokusert profil og skillens synlige kilde.
-Repo- eller brukerkopier med samme ID kan skygge for pluginen. Bruk `doctor`
-hvis den finnes i den aktive oversikten, og ta vare på den eksakte feilen.
-Gamle synkede komponenter skal fjernes med gjennomgang av lokale tilpasninger;
-ikke start en ny filsynk for å reparere oppsettet.
+Ved en manglende skill: kontroller aktiv pakke/profil og skillens synlige kilde.
+En lokal kopi med samme ID kan skygge for pakken. Fjern gamle kopier etter å
+ha vurdert lokale tilpasninger, og last klientens katalog på nytt.
