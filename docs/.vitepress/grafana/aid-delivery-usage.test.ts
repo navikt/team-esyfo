@@ -182,6 +182,18 @@ test("trend is one source with explicit overlapping window and no zero fill", ()
 	}
 });
 
+test("empty stat cards stay quiet and the evaluation table has room for both choices", () => {
+	for (const id of [31, 32, 33]) {
+		assert.equal(
+			elements()[`panel-${id}`].spec.vizConfig.spec.options.textSize?.value,
+			32,
+		);
+	}
+	const evaluation = rows()[2].spec.layout.spec.items[0].spec;
+	assert.equal(evaluation.element.name, "panel-30");
+	assert.ok(evaluation.height >= 5);
+});
+
 test("every panel is laid out once without overlap within a row", () => {
 	const names: string[] = [];
 	for (const row of rows()) {

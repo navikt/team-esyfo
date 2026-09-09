@@ -246,6 +246,7 @@ const panel = (
 									colorMode: "none",
 									graphMode: "none",
 									textMode: "auto",
+									textSize: { value: 32 },
 									reduceOptions: {
 										calcs: ["lastNotNull"],
 										fields: "",
@@ -447,7 +448,7 @@ export const buildAidDashboard = () => {
 						),
 						row(
 							"Påminnelse om å evaluere planen · tiltaksgruppen med nytt skjema",
-							[layoutItem("panel-30", 0, 0, 24, 4)],
+							[layoutItem("panel-30", 0, 0, 24, 5)],
 						),
 						row("Påminnelse om å lage plan · tiltaksgruppen", [
 							layoutItem("panel-31", 0, 0, 8, 4),
