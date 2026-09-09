@@ -7,14 +7,14 @@ oppfølgingsplaner, påminnelsesvalg og om tilbudene kommer fram. Det viser hand
 personer eller effekten av pakken. Designvalg og videre prioriteringer er
 beskrevet i [AID som produktdashboard](./produktdashboard).
 
-## Innhold og filtre
+## Innhold og tidsrom
 
 Oppsettet har 12 paneler: åtte datapaneler i produktoversikten og fire tekniske
 paneler i en sammenfoldet kontrollseksjon.
 
 | Seksjon | Innhold | Avgrensning |
 | --- | --- | --- |
-| Oppfølgingsplaner i forsøket | Ferdigstillinger, trend og visninger av utfyllingssiden | Tiltak og kontroll; lokalt gruppefilter |
+| Oppfølgingsplaner i forsøket | Ferdigstillinger, trend og visninger av utfyllingssiden | Tiltak og kontroll vises sammen |
 | Valg av evalueringspåminnelse | Ferdigstilte planer med og uten valgt påminnelse | Tiltaksgruppen med AID-tilpasninger |
 | Påminnelse før fireukersfristen | Tilbud vist, påminnelse slått på eller av, og tilgjengelighet | Tiltaksgruppen i Dine sykmeldte |
 | Teknisk kontroll | Tilgjengelighet, tildeling og resultater fra appene | Alle grupper, inkludert utenfor forsøket og ukjent |
@@ -25,16 +25,18 @@ avgrenses på appmiljø og serverlogger på tilsvarende runtime-cluster. Begge l
 fra Loki, med eksplisitt avgrensning på tjeneste og namespace. Teknisk testing
 kan fortsatt gjøres med miljøparametriske spørringer og lokale testdata.
 
-**«Forsøksgruppe» gjelder bare planseksjonen.** Variabelen `plan_group` viser
-begge forsøksgrupper som standard. Valget endrer ikke påminnelsesseksjonene
-eller den tekniske kontrollen. Kolonnefiltrene i tabellene gjelder bare den
-enkelte tabellen; filterikonet filtrerer, mens kolonnenavnet sorterer.
+**Tidsrom er det eneste felles valget.** Planseksjonen viser alltid begge
+forsøksgrupper, slik at tiltak og kontroll kan leses sammen. Påminnelsene
+gjelder bare tiltaksgruppen, som angitt i seksjonstitlene. Det finnes ingen
+gruppevelger. Kolonnefiltrene i tabellene gjelder bare den enkelte tabellen;
+filterikonet filtrerer, mens kolonnenavnet sorterer.
 
 Pakke 1 er fast. Det finnes ikke et globalt påminnelsesfilter: valgene gjelder
 to forskjellige tilbud og kan ikke kobles til én brukerreise med dagens data.
 
-Dashboardets UID er uendret. Gamle `var-env`- og `var-environment`-lenker
-endrer ikke lenger miljøet; også disse viser produksjon.
+Dashboardets UID er uendret. Gamle `var-env`-, `var-environment`- og
+`var-plan_group`-lenker endrer ikke avgrensningen: dashboardet viser alltid
+produksjon og begge forsøksgrupper i planseksjonen.
 
 ## Hvorfor er det lite historikk?
 
@@ -170,7 +172,8 @@ Kilden er `docs/.vitepress/grafana/aid-delivery-usage.ts`. Kjør
 kontrollerer telling og avgrensning med syntetiske data i lokal Loki.
 
 Ved publisering: eksporter gjeldende dashboard for tilbakeføring, og oppdater
-eksisterende UID `aufd2lm` i **Team Esyfo**. Kontroller produksjonsavgrensning, lokalt
-gruppefilter, tomme resultater og reelle kategorier i publisert visning.
+eksisterende UID `aufd2lm` i **Team Esyfo**. Kontroller produksjonsavgrensning,
+fast visning av begge forsøksgrupper, tomme resultater og reelle kategorier i
+publisert visning. Gamle miljø- og gruppeparametere i URL-en skal ikke endre tallene.
 Sammenlign eksporten med kildekoden. Brukertesten med produktleder og designer
 i [beslutningsnotatet](./produktdashboard) er en separat kontroll.

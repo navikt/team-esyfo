@@ -342,7 +342,6 @@ const row = (
 	title: string,
 	items: ReturnType<typeof layoutItem>[],
 	collapse = false,
-	variables: (typeof planGroupVariable)[] = [],
 ) => ({
 	kind: "RowsLayoutRow",
 	spec: {
@@ -350,28 +349,8 @@ const row = (
 		collapse,
 		hideHeader: !title,
 		layout: grid(items),
-		...(variables.length ? { variables } : {}),
 	},
 });
-const planGroupVariable = {
-	kind: "CustomVariable",
-	spec: {
-		name: "plan_group",
-		label: "Forsøksgruppe",
-		description:
-			"Gjelder bare denne delen. Begge forsøksgrupper vises som standard.",
-		query:
-			"Begge grupper : tiltak|kontroll,Tiltaksgruppen : tiltak,Kontrollgruppen : kontroll",
-		current: { text: "Begge grupper", value: "tiltak|kontroll" },
-		options: [],
-		multi: false,
-		includeAll: false,
-		hide: "dontHide",
-		skipUrlSync: false,
-		allowCustomValue: false,
-		valuesFormat: "csv",
-	},
-};
 
 const planDescription =
 	"Antall ferdigstillinger i valgt tidsrom. Oppdaterte planer som ferdigstilles på nytt, teller også; dette er ikke antall unike planer eller personer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk oppfølgingsplanen uten AID-tilpasninger. Målingen startet 9. september 2026 kl. 09.28 i produksjon.";
@@ -489,16 +468,11 @@ export const buildAidDashboard = () => {
 				kind: "RowsLayout",
 				spec: {
 					rows: [
-						row(
-							"Oppfølgingsplaner i forsøket",
-							[
-								layoutItem("panel-28", 0, 0, 8, 7),
-								layoutItem("panel-29", 8, 0, 16, 7),
-								layoutItem("panel-23", 0, 7, 24, 4),
-							],
-							false,
-							[planGroupVariable],
-						),
+						row("Oppfølgingsplaner i forsøket", [
+							layoutItem("panel-28", 0, 0, 8, 7),
+							layoutItem("panel-29", 8, 0, 16, 7),
+							layoutItem("panel-23", 0, 7, 24, 4),
+						]),
 						row("Valg av evalueringspåminnelse · tiltaksgruppen", [
 							layoutItem("panel-30", 0, 0, 24, 5),
 						]),

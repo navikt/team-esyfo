@@ -38,7 +38,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"prod-gcp\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| keep gruppe\n[$__auto]))",
+                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"prod-gcp\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| keep gruppe\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "{{gruppe}}"
@@ -187,7 +187,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"prod-gcp\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| keep gruppe\n[1d]))",
+                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"prod-gcp\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| keep gruppe\n[1d]))",
                         "editorMode": "code",
                         "queryType": "range",
                         "legendFormat": "{{gruppe}}"
@@ -320,7 +320,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n| keep gruppe, skjemavariant\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| gruppe=~\"tiltak|kontroll\"\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n| keep gruppe, skjemavariant\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Visninger"
@@ -2580,29 +2580,7 @@
                     }
                   ]
                 }
-              },
-              "variables": [
-                {
-                  "kind": "CustomVariable",
-                  "spec": {
-                    "name": "plan_group",
-                    "label": "Forsøksgruppe",
-                    "description": "Gjelder bare denne delen. Begge forsøksgrupper vises som standard.",
-                    "query": "Begge grupper : tiltak|kontroll,Tiltaksgruppen : tiltak,Kontrollgruppen : kontroll",
-                    "current": {
-                      "text": "Begge grupper",
-                      "value": "tiltak|kontroll"
-                    },
-                    "options": [],
-                    "multi": false,
-                    "includeAll": false,
-                    "hide": "dontHide",
-                    "skipUrlSync": false,
-                    "allowCustomValue": false,
-                    "valuesFormat": "csv"
-                  }
-                }
-              ]
+              }
             }
           },
           {

@@ -85,34 +85,22 @@ test("starts with product data and keeps method explanations in panel informatio
 	);
 });
 
-test("production is fixed and the only selector belongs to the plan section", () => {
+test("production and group scope are fixed with no global or row-local selectors", () => {
 	const d = dashboard();
 	assert.deepEqual(d.spec.variables, []);
 	assert.match(d.spec.description, /^Produksjon:/);
 	assert.doesNotMatch(
 		serializeAidDashboard(),
-		/\$\{(?:environment|env):|dev-gcp/,
-	);
-	assert.equal(rowWithPanel(28).spec.variables?.[0].spec.name, "plan_group");
-	assert.equal(
-		rowWithPanel(28).spec.variables?.[0].spec.label,
-		"Forsøksgruppe",
-	);
-	assert.equal(
-		rowWithPanel(28).spec.variables?.[0].spec.current.value,
-		"tiltak|kontroll",
+		/\$\{(?:environment|env):|dev-gcp|plan_group|CustomVariable/,
 	);
 	for (const row of rows()) {
+		assert.equal("variables" in row.spec, false);
 		for (const item of row.spec.layout.spec.items) {
 			const p = elements()[item.spec.element.name].spec;
 			for (const q of p.data.spec.queries) {
 				assert.match(q.spec.query.spec.expr, /prod-gcp/);
 				assert.doesNotMatch(q.spec.query.spec.expr, /\$\{env:text\}/);
 				assert.equal(q.spec.query.group, "loki");
-				assert.equal(
-					q.spec.query.spec.expr.includes(`\${plan_group:raw}`),
-					row.spec.variables?.[0].spec.name === "plan_group",
-				);
 			}
 		}
 	}
