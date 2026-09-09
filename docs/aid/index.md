@@ -74,4 +74,4 @@ Det kommer flere tiltakspakker etter denne — blant annet en tiltakspakke 2 for
 - [Funksjonelle endringer](./endringer) — hva vi bygger i Tiltakspakke 1, og status.
 - [Dulte-tiltak (nudgelab)](./dulte-tiltak) — adferdsgrepene som ligger til grunn.
 - [Måling](./maaling) — eksperimentelt design og effektmål.
-- [Dashboard: levering og bruk](./dashboard) — produkttelemetri i Grafana, datadekning og begrensninger.
+- [AID-dashboard: oppfølgingsplaner og påminnelser](./dashboard) — produksjonsdata om ferdigstilte planer, valg av evalueringspåminnelse og påminnelse før fireukersfristen i Dine sykmeldte.

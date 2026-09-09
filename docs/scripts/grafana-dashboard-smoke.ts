@@ -370,7 +370,7 @@ try {
 			new Set(expected.layoutElementNames).size,
 			expected.elementNames.length,
 		);
-		assert.ok(expected.variables.length > 0);
+		// Dashboards may use only row-local variables; the full layout is compared below.
 		assert.ok(expected.queries.length > 0);
 		assert.ok(expected.datasources.length > 0);
 		assert.deepEqual(semanticContract(resource), expected);

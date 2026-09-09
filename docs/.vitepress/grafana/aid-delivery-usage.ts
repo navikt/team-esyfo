@@ -6,11 +6,7 @@ import {
 	aidProductPlanTrendQuery,
 	aidProductPlanViewsQuery,
 } from "./aid-product-queries.ts";
-import {
-	aidCount,
-	aidDecisionsQuery,
-	aidFailuresQuery,
-} from "./aid-reminder-queries.ts";
+import { aidCount, aidFailuresQuery } from "./aid-reminder-queries.ts";
 import {
 	GRAFANA_VERSION,
 	type GrafanaDashboardResource,
@@ -39,6 +35,10 @@ export const aidReminderAvailabilityQuery = aidCount(
 	'| gruppe="tiltak" | hendelse="beslutning"',
 	"utfall",
 );
+export const aidReminderAvailabilityByGroupQuery = aidCount(
+	'| hendelse="beslutning"',
+	"gruppe, utfall",
+);
 const query = (expr: string, group: "loki", legend: string, range = false) => ({
 	kind: "PanelQuery",
 	spec: {
@@ -52,7 +52,7 @@ const query = (expr: string, group: "loki", legend: string, range = false) => ({
 				name: LOKI_DATASOURCE_UID,
 			},
 			spec: {
-				expr: expr.replaceAll(`\${env:text}`, `\${environment:raw}`),
+				expr: expr.replaceAll(`\${env:text}`, "prod-gcp"),
 				editorMode: "code",
 				queryType: range ? "range" : "instant",
 				legendFormat: legend,
@@ -67,6 +67,23 @@ const groupColors = [
 	["tiltak", "blue", "Tiltaksgruppen"],
 	["kontroll", "orange", "Kontrollgruppen"],
 ] as const;
+const barCategories = {
+	gruppe: groupColors,
+	evaluering_paaminnelse: [
+		["ja", "blue", "Påminnelse valgt"],
+		["nei", "gray", "Påminnelse ikke valgt"],
+	],
+} as const;
+const seriesOverrides = (
+	series: readonly (readonly [string, string, string])[],
+) =>
+	series.map(([value, color, name]) => ({
+		matcher: { id: "byRegexp", options: `/^${value}(?:$|\\s|\\{)/` },
+		properties: [
+			{ id: "displayName", value: name },
+			{ id: "color", value: { mode: "fixed", fixedColor: color } },
+		],
+	}));
 
 const evaluationChoiceOverride = {
 	matcher: { id: "byName", options: "Påminnelse om evaluering" },
@@ -77,8 +94,8 @@ const evaluationChoiceOverride = {
 				{
 					type: "value",
 					options: {
-						ja: { text: "Med påminnelse" },
-						nei: { text: "Uten påminnelse" },
+						ja: { text: "Påminnelse valgt" },
+						nei: { text: "Påminnelse ikke valgt" },
 						ikke_tilbudt: { text: "Valget ble ikke tilbudt" },
 						ikke_registrert: { text: "Ikke registrert" },
 						ugyldig: { text: "Ugyldig verdi" },
@@ -113,24 +130,27 @@ const tableLabels = [
 		ukjent: "Gruppe mangler",
 		blandet: "Flere ulike grupper",
 	}),
-	valueLabels("Skjema", { tiltak: "Nytt skjema", standard: "Vanlig skjema" }),
+	valueLabels("Oppfølgingsplan", {
+		tiltak: "Med AID-tilpasninger",
+		standard: "Uten AID-tilpasninger",
+	}),
 	valueLabels("Tilbud", { aid: "Tilgjengelig", skjult: "Ikke tilgjengelig" }),
 	valueLabels("Resultat", {
 		tilgjengelig: "Tilgjengelig",
 		skjult: "Ikke tilgjengelig",
-		vurdering_mangler: "Gruppe mangler",
+		vurdering_mangler: "Vurdering mangler",
 		status_feilet: "Status kunne ikke hentes",
 		forsok: "Forsøk",
-		bekreftet: "Bekreftet",
-		feilet: "Mangler bekreftelse",
+		bekreftet: "Vellykket svar",
+		feilet: "Feil eller manglende svar",
 		ikke_bekreftet: "Uventet svar",
 	}),
 	valueLabels("Hendelse", {
 		beslutning: "Tilgjengelighet vurdert",
 		vist: "Vist",
-		bestill: "Bestilling",
-		avbestill: "Avbestilling",
-		opprett: "Opprettelse",
+		bestill: "Slå på påminnelse",
+		avbestill: "Slå av påminnelse",
+		opprett: "Ferdigstilling",
 	}),
 	valueLabels("Bestilling ved visning", {
 		bestilt: "Aktiv bestilling",
@@ -145,8 +165,8 @@ const panel = (
 	title: string,
 	description: string,
 	queries: Query[],
-	type: "stat" | "timeseries" | "table" | "text",
-	content?: string,
+	type: "stat" | "timeseries" | "table" | "bargauge",
+	barCategory: keyof typeof barCategories = "gruppe",
 ) => ({
 	kind: "Panel",
 	spec: {
@@ -160,30 +180,50 @@ const panel = (
 				queries,
 				queryOptions: {},
 				transformations:
-					type === "table"
+					type === "bargauge"
 						? [
 								{
 									kind: "Transformation",
-									group: "organize",
+									group: "rowsToFields",
 									spec: {
 										options: {
-											excludeByName: { Time: true },
-											renameByName: {
-												gruppe: "Gruppe",
-												variant: "Tilbud",
-												skjemavariant: "Skjema",
-												hendelse: "Hendelse",
-												paaminnelsevalg: "Bestilling ved visning",
-												evaluering_paaminnelse: "Påminnelse om evaluering",
-												utfall: "Resultat",
-												Value: "Registreringer",
-												[`Value #${queries[0]?.spec.refId}`]: "Registreringer",
-											},
+											mappings: [
+												{ fieldName: barCategory, handlerKey: "field.name" },
+												{
+													fieldName: `Value #${queries[0]?.spec.refId}`,
+													handlerKey: "field.value",
+												},
+												{ fieldName: "Time", handlerKey: "__ignore" },
+											],
 										},
 									},
 								},
 							]
-						: [],
+						: type === "table"
+							? [
+									{
+										kind: "Transformation",
+										group: "organize",
+										spec: {
+											options: {
+												excludeByName: { Time: true },
+												renameByName: {
+													gruppe: "Gruppe",
+													variant: "Tilbud",
+													skjemavariant: "Oppfølgingsplan",
+													hendelse: "Hendelse",
+													paaminnelsevalg: "Bestilling ved visning",
+													evaluering_paaminnelse: "Påminnelse om evaluering",
+													utfall: "Resultat",
+													Value: id === 24 ? "Hendelser" : "Registreringer",
+													[`Value #${queries[0]?.spec.refId}`]:
+														id === 24 ? "Hendelser" : "Registreringer",
+												},
+											},
+										},
+									},
+								]
+							: [],
 			},
 		},
 		vizConfig: {
@@ -197,6 +237,13 @@ const panel = (
 						unit: type === "timeseries" ? "short" : "locale",
 						decimals: 0,
 						color: { mode: "palette-classic" },
+						...(type === "bargauge"
+							? {
+									min: 0,
+									fieldMinMax: false,
+									displayName: `\${__field.name}`,
+								}
+							: {}),
 						...(type === "table" ? { custom: { filterable: true } } : {}),
 						...(type === "timeseries"
 							? {
@@ -206,7 +253,7 @@ const panel = (
 										fillOpacity: 8,
 										showPoints: "never",
 										spanNulls: false,
-										axisLabel: "Registreringer siste 24 timer",
+										axisLabel: "Ferdigstillinger per rullerende døgn",
 									},
 								}
 							: {}),
@@ -214,16 +261,7 @@ const panel = (
 					overrides:
 						type === "timeseries"
 							? [
-									...groupColors.map(([group, color, name]) => ({
-										matcher: { id: "byRegexp", options: `/^${group}/` },
-										properties: [
-											{ id: "displayName", value: name },
-											{
-												id: "color",
-												value: { mode: "fixed", fixedColor: color },
-											},
-										],
-									})),
+									...seriesOverrides(groupColors),
 									{
 										matcher: { id: "byRegexp", options: "/^kontroll/" },
 										properties: [
@@ -234,13 +272,36 @@ const panel = (
 										],
 									},
 								]
-							: type === "table"
-								? [evaluationChoiceOverride, ...tableLabels]
-								: [],
+							: type === "bargauge"
+								? seriesOverrides(barCategories[barCategory])
+								: type === "table"
+									? [evaluationChoiceOverride, ...tableLabels]
+									: [],
 				},
 				options:
-					type === "text"
-						? { mode: "markdown", content }
+					type === "bargauge"
+						? {
+								displayMode: "basic",
+								orientation: "horizontal",
+								valueMode: "text",
+								namePlacement: "left",
+								showUnfilled: false,
+								sizing: "manual",
+								minVizHeight: 32,
+								maxVizHeight: 64,
+								minVizWidth: 8,
+								text: { titleSize: 16, valueSize: 24 },
+								reduceOptions: {
+									calcs: ["lastNotNull"],
+									fields: "",
+									values: false,
+								},
+								legend: {
+									displayMode: "list",
+									placement: "bottom",
+									showLegend: false,
+								},
+							}
 						: type === "stat"
 							? {
 									colorMode: "none",
@@ -296,7 +357,7 @@ const planGroupVariable = {
 	kind: "CustomVariable",
 	spec: {
 		name: "plan_group",
-		label: "Vis planer for",
+		label: "Forsøksgruppe",
 		description:
 			"Gjelder bare denne delen. Begge forsøksgrupper vises som standard.",
 		query:
@@ -313,30 +374,22 @@ const planGroupVariable = {
 };
 
 const planDescription =
-	"Registrerte opprettelser gjennom planskjemaet. Nye planversjoner teller også; dette er ikke unike personer eller første planer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk vanlig skjema.";
+	"Antall ferdigstillinger i valgt tidsrom. Oppdaterte planer som ferdigstilles på nytt, teller også; dette er ikke antall unike planer eller personer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk oppfølgingsplanen uten AID-tilpasninger. Målingen startet 9. september 2026 kl. 09.28 i produksjon.";
 const reminderDescription =
 	"Tiltaksgruppen i Dine sykmeldte. Registrerte handlinger, ikke unike personer. Tallene er separate hendelser, ikke trinn i en brukertrakt.";
 
 export const buildAidDashboard = () => {
 	const elements = {
-		"panel-1": panel(
-			1,
-			"",
-			"",
-			[],
-			"text",
-			"Registrerte handlinger i forsøket, ikke effekt. **Nye planversjoner teller også.** Tomt betyr ingen registreringer, ikke dokumentert null bruk. Målingen dekker planskjemaet og påminnelsestilbudet – ikke hele tiltakspakken.",
-		),
 		"panel-28": panel(
 			28,
-			"Planopprettelser · også nye versjoner",
+			"Ferdigstilte oppfølgingsplaner",
 			planDescription,
-			[query(aidProductPlanCreationsQuery, "loki", "Opprettelser")],
-			"table",
+			[query(aidProductPlanCreationsQuery, "loki", "{{gruppe}}")],
+			"bargauge",
 		),
 		"panel-29": panel(
 			29,
-			"Planopprettelser over tid · siste 24 timer ved hvert tidspunkt",
+			"Ferdigstilte oppfølgingsplaner · rullerende døgn",
 			planDescription +
 				" Punktene viser overlappende 24-timersvinduer, ikke kalenderdager. Ikke summer punktene. Volumforskjeller mellom gruppene dokumenterer ikke effekt.",
 			[query(aidProductPlanTrendQuery, "loki", "{{gruppe}}", true)],
@@ -344,21 +397,22 @@ export const buildAidDashboard = () => {
 		),
 		"panel-23": panel(
 			23,
-			"Hvilket skjema blir vist?",
-			"Registrerte visninger av planskjemaet i valgt gruppe. Nytt skjema er tiltaksskjemaet; vanlig skjema er standardopplevelsen. Tiltaksgruppen kan få vanlig skjema. En visning betyr at skjemabeholderen kom inn i skjermbildet, ikke at alt innhold ble lest.",
+			"Visninger av utfyllingssiden",
+			"Visninger av siden der oppfølgingsplanen fylles ut, fordelt på forsøksgruppe og AID-tilpasninger. Tiltaksgruppen kan også få siden uten AID-tilpasninger. En visning betyr at utfyllingsområdet kom inn i skjermbildet, ikke at innholdet ble lest eller planen ferdigstilt.",
 			[query(aidProductPlanViewsQuery, "loki", "Visninger")],
 			"table",
 		),
 		"panel-30": panel(
 			30,
-			"Med eller uten påminnelse om evaluering",
-			"Valget ved registrert planopprettelse i tiltaksgruppen med nytt skjema. Vanlig skjema og kontrollgruppen inngår ikke: de får ikke valget. Uten påminnelse kan være et urørt valg eller et tidligere lagret valg, ikke et aktivt avslag. Teller også nye planversjoner. Bekrefter ikke utsendt påminnelse eller utført evaluering.",
-			[query(aidProductEvaluationQuery, "loki", "Opprettelser")],
-			"table",
+			"Ferdigstilte planer med og uten evalueringspåminnelse",
+			"Valgt ja eller nei til e-post tre dager før avtalt evalueringsmøte. Teller ferdigstillinger i tiltaksgruppen der valget tilbys, ikke personer. Oppdaterte planer som ferdigstilles på nytt, teller også. Planer uten AID-tilpasninger og kontrollgruppen inngår ikke: de får ikke valget. Bekrefter ikke utsendt påminnelse eller utført evaluering.",
+			[query(aidProductEvaluationQuery, "loki", "{{evaluering_paaminnelse}}")],
+			"bargauge",
+			"evaluering_paaminnelse",
 		),
 		"panel-31": panel(
 			31,
-			"Tilbudet vist",
+			"Tilbud om påminnelse vist",
 			reminderDescription +
 				" Kortet har kommet inn i skjermbildet. Det betyr ikke at det er lest.",
 			[query(aidReminderViewsQuery, "loki", "Visninger")],
@@ -366,7 +420,7 @@ export const buildAidDashboard = () => {
 		),
 		"panel-32": panel(
 			32,
-			"Påminnelse bestilt",
+			"Påminnelse slått på",
 			reminderDescription +
 				" Vellykkede bestillinger. Ikke antall aktive bestillinger eller sendte påminnelser.",
 			[query(aidReminderOrdersQuery, "loki", "Bestillinger")],
@@ -374,7 +428,7 @@ export const buildAidDashboard = () => {
 		),
 		"panel-33": panel(
 			33,
-			"Påminnelse avbestilt",
+			"Påminnelse slått av",
 			reminderDescription +
 				" Vellykkede avbestillinger. Ikke antall personer som har ombestemt seg.",
 			[query(aidReminderCancellationsQuery, "loki", "Avbestillinger")],
@@ -382,35 +436,35 @@ export const buildAidDashboard = () => {
 		),
 		"panel-15": panel(
 			15,
-			"Er påminnelsestilbudet tilgjengelig?",
+			"Kunne tilbudet om påminnelse vises?",
 			"Vurderinger i tiltaksgruppen. Tilgjengelig betyr at tilbudet kan vises, ikke at det er sett. Ikke tilgjengelig kan være forventet, for eksempel når påminnelsen ikke lenger er aktuell; årsaken fremgår ikke av denne målingen. Ingen vurderinger er ikke bevis på feilfri levering.",
 			[query(aidReminderAvailabilityQuery, "loki", "Vurderinger")],
 			"table",
 		),
 		"panel-34": panel(
 			34,
-			"Påminnelsestilbud · alle grupper",
+			"Påminnelse før fireukersfristen – tilgjengelighet per gruppe",
 			"Kontroll av tilgjengelighet, inkludert utenfor forsøket og manglende gruppetilhørighet. Ikke en telling av personer eller arbeidsgivere. Utenfor forsøket er ikke kontrollgruppen.",
-			[query(aidDecisionsQuery, "loki", "Vurderinger")],
+			[query(aidReminderAvailabilityByGroupQuery, "loki", "Vurderinger")],
 			"table",
 		),
 		"panel-22": panel(
 			22,
-			"Planskjema tilgjengeliggjort · alle grupper",
-			"Tildelt gruppe og skjema ved åpning, ikke bekreftet visning. Bruk denne kontrollen for å undersøke manglende gruppe eller uventet skjema. Utenfor forsøket inngår ikke i produktanalysen.",
+			"Oppfølgingsplan – hvilken løsning ble åpnet?",
+			"Tildelt gruppe og AID-tilpasninger ved åpning, ikke bekreftet visning. Bruk denne kontrollen for å undersøke manglende gruppe eller uventet utforming av oppfølgingsplanen. Utenfor forsøket inngår ikke i produktanalysen.",
 			[query(aidPlanDecisionsQuery, "loki", "Vurderinger")],
 			"table",
 		),
 		"panel-24": panel(
 			24,
-			"Innsendinger · forsøk og svar til nettleseren",
-			"Kontroll av innsendinger og manglende eller ugyldige evalueringsvalg i alle grupper. Vanlig skjema tilbyr ikke valget. Forsøk og resultater er separate hendelser og må ikke summeres. Manglende bekreftelse betyr ikke nødvendigvis at planen ikke ble lagret. Ikke summer med planopprettelsene øverst.",
-			[query(aidPlanEvaluationDetailsQuery, "loki", "Innsendinger")],
+			"Ferdigstilling – forsøk og svar i nettleseren",
+			"Kontroll av ferdigstilling og manglende eller ugyldige evalueringsvalg i alle grupper. Oppfølgingsplanen uten AID-tilpasninger tilbyr ikke valget. Forsøk og resultater er separate hendelser og må ikke summeres. Feil eller manglende svar i nettleseren betyr ikke nødvendigvis at planen ikke ble lagret. Ikke summer med ferdigstillingene øverst.",
+			[query(aidPlanEvaluationDetailsQuery, "loki", "Hendelser")],
 			"table",
 		),
 		"panel-20": panel(
 			20,
-			"Påminnelser · problemer ved visning og handling",
+			"Påminnelse før fireukersfristen – registrerte problemer",
 			"Registrerte problemer i alle grupper. Ingen registreringer er ikke bevis på at alt virker. Bruk feiloversikten for videre feilsøking.",
 			[query(aidFailuresQuery, "loki", "Problemer")],
 			"table",
@@ -426,7 +480,7 @@ export const buildAidDashboard = () => {
 		spec: {
 			title: "AID · Bruk av tiltakspakke 1",
 			description:
-				"Planopprettelser, påminnelsesvalg og levering i forsøket. Registrerte handlinger, ikke effekt.",
+				"Produksjon: ferdigstilte oppfølgingsplaner, påminnelsesvalg og levering i forsøket. Registrerte handlinger, ikke effekt.",
 			editable: true,
 			annotations: [],
 			cursorSync: "Off",
@@ -435,9 +489,8 @@ export const buildAidDashboard = () => {
 				kind: "RowsLayout",
 				spec: {
 					rows: [
-						row("", [layoutItem("panel-1", 0, 0, 24, 2)]),
 						row(
-							"Planer · tiltak og kontroll",
+							"Oppfølgingsplaner i forsøket",
 							[
 								layoutItem("panel-28", 0, 0, 8, 7),
 								layoutItem("panel-29", 8, 0, 16, 7),
@@ -446,18 +499,20 @@ export const buildAidDashboard = () => {
 							false,
 							[planGroupVariable],
 						),
-						row(
-							"Påminnelse om å evaluere planen · tiltaksgruppen med nytt skjema",
-							[layoutItem("panel-30", 0, 0, 24, 5)],
-						),
-						row("Påminnelse om å lage plan · tiltaksgruppen", [
-							layoutItem("panel-31", 0, 0, 8, 4),
-							layoutItem("panel-32", 8, 0, 8, 4),
-							layoutItem("panel-33", 16, 0, 8, 4),
-							layoutItem("panel-15", 0, 4, 24, 5),
+						row("Valg av evalueringspåminnelse · tiltaksgruppen", [
+							layoutItem("panel-30", 0, 0, 24, 5),
 						]),
 						row(
-							"Kontroll av målingen · alle grupper",
+							"Påminnelse før fireukersfristen · Dine sykmeldte · tiltaksgruppen",
+							[
+								layoutItem("panel-31", 0, 0, 8, 4),
+								layoutItem("panel-32", 8, 0, 8, 4),
+								layoutItem("panel-33", 16, 0, 8, 4),
+								layoutItem("panel-15", 0, 4, 24, 5),
+							],
+						),
+						row(
+							"Teknisk kontroll · produksjon · alle grupper",
 							[
 								layoutItem("panel-34", 0, 0, 12, 6),
 								layoutItem("panel-22", 12, 0, 12, 6),
@@ -507,25 +562,7 @@ export const buildAidDashboard = () => {
 				hideTimepicker: false,
 				timezone: "browser",
 			},
-			variables: [
-				{
-					kind: "CustomVariable",
-					spec: {
-						name: "environment",
-						label: "Miljø",
-						description: "Gjelder hele dashboardet.",
-						query: "Produksjon : prod-gcp,Test : dev-gcp",
-						current: { text: "Produksjon", value: "prod-gcp" },
-						options: [],
-						multi: false,
-						includeAll: false,
-						hide: "dontHide",
-						skipUrlSync: false,
-						allowCustomValue: false,
-						valuesFormat: "csv",
-					},
-				},
-			],
+			variables: [],
 		},
 	} satisfies GrafanaDashboardResource;
 };

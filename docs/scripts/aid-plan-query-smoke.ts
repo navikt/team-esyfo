@@ -12,7 +12,7 @@ import {
 } from "../.vitepress/grafana/aid-plan-queries.ts";
 import { aidServerPlanCreationsQuery } from "../.vitepress/grafana/aid-server-plan-queries.ts";
 import { aidPlanEvaluationDetailsQuery, aidProductPlanCreationsQuery, aidProductPlanTrendQuery, aidProductEvaluationQuery, aidProductPlanViewsQuery } from "../.vitepress/grafana/aid-product-queries.ts";
-import { aidReminderViewsQuery, aidReminderOrdersQuery, aidReminderCancellationsQuery, buildAidDashboard } from "../.vitepress/grafana/aid-delivery-usage.ts";
+import { aidReminderViewsQuery, aidReminderOrdersQuery, aidReminderCancellationsQuery, aidReminderAvailabilityByGroupQuery, buildAidDashboard } from "../.vitepress/grafana/aid-delivery-usage.ts";
 
 const exec = promisify(execFile);
 const container = `aid-plan-query-check-${process.pid}-${randomBytes(4).toString("hex")}`;
@@ -207,6 +207,10 @@ try {
 						{ event_data_hendelse: "bestill", event_data_utfall: "feilet" },
 						{ event_data_hendelse: "bestill", event_data_utfall: "bekreftet", event_data_gruppe: "utenfor_scope" },
 						{ event_data_hendelse: "bestill", event_data_utfall: "bekreftet", app_environment: "prod-gcp" },
+						{ event_data_hendelse: "beslutning", event_data_utfall: "skjult", event_data_variant: "aid" },
+						{ event_data_hendelse: "beslutning", event_data_utfall: "skjult", event_data_variant: "skjult" },
+						{ event_data_hendelse: "beslutning", event_data_utfall: "vurdering_mangler", event_data_variant: "skjult", event_data_gruppe: "ukjent" },
+						{ event_data_hendelse: "beslutning", event_data_utfall: "skjult", event_data_variant: "skjult", event_data_gruppe: "utenfor_scope" },
 					].map((fixture, index) => [
 						String(BigInt(now - 900) * 1000000n + BigInt(index)),
 						Object.entries({ ...base, event_name: "aid_paaminnelse", event_data_flate: "dinesykmeldte", event_data_variant: "aid", event_data_paaminnelsevalg: "ikke_bestilt", ...fixture }).map(([key,value]) => `${key}=${JSON.stringify(value)}`).join(" "),
@@ -324,6 +328,17 @@ try {
 		assert.equal(total(await count(query)), 1);
 		assert.deepEqual(await count(query, "no-events"), []);
 	}
+	assert.deepEqual(
+		(await count(aidReminderAvailabilityByGroupQuery)).map(row => [row.metric, Number(row.value[1])]).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+		[
+			[{ gruppe: "tiltak", utfall: "skjult" }, 2],
+			[{ gruppe: "ukjent", utfall: "vurdering_mangler" }, 1],
+			[{ gruppe: "utenfor_scope", utfall: "skjult" }, 1],
+		],
+	);
+	// The published dashboard remains production-only even when an old URL carries a dev selection.
+	const productionPlanQuery = buildAidDashboard().spec.elements["panel-28"].spec.data.spec.queries[0].spec.query.spec.expr;
+	assert.equal(total(await count(productionPlanQuery, "dev-gcp")), 1);
 	for (const panel of Object.values(buildAidDashboard().spec.elements)) {
 		for (const query of panel.spec.data.spec.queries) await count(query.spec.query.spec.expr);
 	}

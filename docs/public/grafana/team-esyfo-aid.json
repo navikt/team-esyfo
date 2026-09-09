@@ -9,366 +9,17 @@
   },
   "spec": {
     "title": "AID · Bruk av tiltakspakke 1",
-    "description": "Planopprettelser, påminnelsesvalg og levering i forsøket. Registrerte handlinger, ikke effekt.",
+    "description": "Produksjon: ferdigstilte oppfølgingsplaner, påminnelsesvalg og levering i forsøket. Registrerte handlinger, ikke effekt.",
     "editable": true,
     "annotations": [],
     "cursorSync": "Off",
     "elements": {
-      "panel-1": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1,
-          "title": "",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "text",
-            "version": "13.1.2",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "noValue": "Ingen registreringer",
-                  "unit": "locale",
-                  "decimals": 0,
-                  "color": {
-                    "mode": "palette-classic"
-                  }
-                },
-                "overrides": []
-              },
-              "options": {
-                "mode": "markdown",
-                "content": "Registrerte handlinger i forsøket, ikke effekt. **Nye planversjoner teller også.** Tomt betyr ingen registreringer, ikke dokumentert null bruk. Målingen dekker planskjemaet og påminnelsestilbudet – ikke hele tiltakspakken."
-              }
-            }
-          }
-        }
-      },
       "panel-28": {
         "kind": "Panel",
         "spec": {
           "id": 28,
-          "title": "Planopprettelser · også nye versjoner",
-          "description": "Registrerte opprettelser gjennom planskjemaet. Nye planversjoner teller også; dette er ikke unike personer eller første planer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk vanlig skjema.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "refId": "Opprettelser",
-                    "hidden": false,
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "loki",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "PEA2100DC89AE9FE2"
-                      },
-                      "spec": {
-                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"${environment:raw}\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| keep gruppe\n[$__auto]))",
-                        "editorMode": "code",
-                        "queryType": "instant",
-                        "legendFormat": "Opprettelser"
-                      }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": [
-                {
-                  "kind": "Transformation",
-                  "group": "organize",
-                  "spec": {
-                    "options": {
-                      "excludeByName": {
-                        "Time": true
-                      },
-                      "renameByName": {
-                        "gruppe": "Gruppe",
-                        "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
-                        "hendelse": "Hendelse",
-                        "paaminnelsevalg": "Bestilling ved visning",
-                        "evaluering_paaminnelse": "Påminnelse om evaluering",
-                        "utfall": "Resultat",
-                        "Value": "Registreringer",
-                        "Value #Opprettelser": "Registreringer"
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "table",
-            "version": "13.1.2",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "noValue": "Ingen registreringer",
-                  "unit": "locale",
-                  "decimals": 0,
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "filterable": true
-                  }
-                },
-                "overrides": [
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Påminnelse om evaluering"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "ja": {
-                                "text": "Med påminnelse"
-                              },
-                              "nei": {
-                                "text": "Uten påminnelse"
-                              },
-                              "ikke_tilbudt": {
-                                "text": "Valget ble ikke tilbudt"
-                              },
-                              "ikke_registrert": {
-                                "text": "Ikke registrert"
-                              },
-                              "ugyldig": {
-                                "text": "Ugyldig verdi"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Gruppe"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "tiltak": {
-                                "text": "Tiltaksgruppen"
-                              },
-                              "kontroll": {
-                                "text": "Kontrollgruppen"
-                              },
-                              "utenfor_scope": {
-                                "text": "Utenfor forsøket"
-                              },
-                              "ukjent": {
-                                "text": "Gruppe mangler"
-                              },
-                              "blandet": {
-                                "text": "Flere ulike grupper"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Skjema"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "tiltak": {
-                                "text": "Nytt skjema"
-                              },
-                              "standard": {
-                                "text": "Vanlig skjema"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Tilbud"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "aid": {
-                                "text": "Tilgjengelig"
-                              },
-                              "skjult": {
-                                "text": "Ikke tilgjengelig"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Resultat"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "tilgjengelig": {
-                                "text": "Tilgjengelig"
-                              },
-                              "skjult": {
-                                "text": "Ikke tilgjengelig"
-                              },
-                              "vurdering_mangler": {
-                                "text": "Gruppe mangler"
-                              },
-                              "status_feilet": {
-                                "text": "Status kunne ikke hentes"
-                              },
-                              "forsok": {
-                                "text": "Forsøk"
-                              },
-                              "bekreftet": {
-                                "text": "Bekreftet"
-                              },
-                              "feilet": {
-                                "text": "Mangler bekreftelse"
-                              },
-                              "ikke_bekreftet": {
-                                "text": "Uventet svar"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Hendelse"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "beslutning": {
-                                "text": "Tilgjengelighet vurdert"
-                              },
-                              "vist": {
-                                "text": "Vist"
-                              },
-                              "bestill": {
-                                "text": "Bestilling"
-                              },
-                              "avbestill": {
-                                "text": "Avbestilling"
-                              },
-                              "opprett": {
-                                "text": "Opprettelse"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Bestilling ved visning"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "bestilt": {
-                                "text": "Aktiv bestilling"
-                              },
-                              "ikke_bestilt": {
-                                "text": "Ingen aktiv bestilling"
-                              },
-                              "ikke_tilbudt": {
-                                "text": "Ikke tilbudt"
-                              },
-                              "ukjent": {
-                                "text": "Ukjent"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              },
-              "options": {
-                "showHeader": true,
-                "cellHeight": "sm",
-                "footer": {
-                  "show": false
-                }
-              }
-            }
-          }
-        }
-      },
-      "panel-29": {
-        "kind": "Panel",
-        "spec": {
-          "id": 29,
-          "title": "Planopprettelser over tid · siste 24 timer ved hvert tidspunkt",
-          "description": "Registrerte opprettelser gjennom planskjemaet. Nye planversjoner teller også; dette er ikke unike personer eller første planer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk vanlig skjema. Punktene viser overlappende 24-timersvinduer, ikke kalenderdager. Ikke summer punktene. Volumforskjeller mellom gruppene dokumenterer ikke effekt.",
+          "title": "Ferdigstilte oppfølgingsplaner",
+          "description": "Antall ferdigstillinger i valgt tidsrom. Oppdaterte planer som ferdigstilles på nytt, teller også; dette er ikke antall unike planer eller personer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk oppfølgingsplanen uten AID-tilpasninger. Målingen startet 9. september 2026 kl. 09.28 i produksjon.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -387,7 +38,156 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"${environment:raw}\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| keep gruppe\n[1d]))",
+                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"prod-gcp\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| keep gruppe\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "{{gruppe}}"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "rowsToFields",
+                  "spec": {
+                    "options": {
+                      "mappings": [
+                        {
+                          "fieldName": "gruppe",
+                          "handlerKey": "field.name"
+                        },
+                        {
+                          "fieldName": "Value #{{gruppe}}",
+                          "handlerKey": "field.value"
+                        },
+                        {
+                          "fieldName": "Time",
+                          "handlerKey": "__ignore"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen registreringer",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "min": 0,
+                  "fieldMinMax": false,
+                  "displayName": "${__field.name}"
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^tiltak(?:$|\\s|\\{)/"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Tiltaksgruppen"
+                      },
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "blue"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/^kontroll(?:$|\\s|\\{)/"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Kontrollgruppen"
+                      },
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "orange"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "displayMode": "basic",
+                "orientation": "horizontal",
+                "valueMode": "text",
+                "namePlacement": "left",
+                "showUnfilled": false,
+                "sizing": "manual",
+                "minVizHeight": 32,
+                "maxVizHeight": 64,
+                "minVizWidth": 8,
+                "text": {
+                  "titleSize": 16,
+                  "valueSize": 24
+                },
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-29": {
+        "kind": "Panel",
+        "spec": {
+          "id": 29,
+          "title": "Ferdigstilte oppfølgingsplaner · rullerende døgn",
+          "description": "Antall ferdigstillinger i valgt tidsrom. Oppdaterte planer som ferdigstilles på nytt, teller også; dette er ikke antall unike planer eller personer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk oppfølgingsplanen uten AID-tilpasninger. Målingen startet 9. september 2026 kl. 09.28 i produksjon. Punktene viser overlappende 24-timersvinduer, ikke kalenderdager. Ikke summer punktene. Volumforskjeller mellom gruppene dokumenterer ikke effekt.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "{{gruppe}}",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum by (gruppe) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"prod-gcp\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| keep gruppe\n[1d]))",
                         "editorMode": "code",
                         "queryType": "range",
                         "legendFormat": "{{gruppe}}"
@@ -419,14 +219,14 @@
                     "fillOpacity": 8,
                     "showPoints": "never",
                     "spanNulls": false,
-                    "axisLabel": "Registreringer siste 24 timer"
+                    "axisLabel": "Ferdigstillinger per rullerende døgn"
                   }
                 },
                 "overrides": [
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "/^tiltak/"
+                      "options": "/^tiltak(?:$|\\s|\\{)/"
                     },
                     "properties": [
                       {
@@ -445,7 +245,7 @@
                   {
                     "matcher": {
                       "id": "byRegexp",
-                      "options": "/^kontroll/"
+                      "options": "/^kontroll(?:$|\\s|\\{)/"
                     },
                     "properties": [
                       {
@@ -500,8 +300,8 @@
         "kind": "Panel",
         "spec": {
           "id": 23,
-          "title": "Hvilket skjema blir vist?",
-          "description": "Registrerte visninger av planskjemaet i valgt gruppe. Nytt skjema er tiltaksskjemaet; vanlig skjema er standardopplevelsen. Tiltaksgruppen kan få vanlig skjema. En visning betyr at skjemabeholderen kom inn i skjermbildet, ikke at alt innhold ble lest.",
+          "title": "Visninger av utfyllingssiden",
+          "description": "Visninger av siden der oppfølgingsplanen fylles ut, fordelt på forsøksgruppe og AID-tilpasninger. Tiltaksgruppen kan også få siden uten AID-tilpasninger. En visning betyr at utfyllingsområdet kom inn i skjermbildet, ikke at innholdet ble lest eller planen ferdigstilt.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -520,7 +320,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n| keep gruppe, skjemavariant\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| gruppe=~\"tiltak|kontroll\"\n| gruppe=~\"${plan_group:raw}\"\n| hendelse=\"vist\" | utfall=\"tilgjengelig\"\n| keep gruppe, skjemavariant\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Visninger"
@@ -542,7 +342,7 @@
                       "renameByName": {
                         "gruppe": "Gruppe",
                         "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
+                        "skjemavariant": "Oppfølgingsplan",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Bestilling ved visning",
                         "evaluering_paaminnelse": "Påminnelse om evaluering",
@@ -587,10 +387,10 @@
                             "type": "value",
                             "options": {
                               "ja": {
-                                "text": "Med påminnelse"
+                                "text": "Påminnelse valgt"
                               },
                               "nei": {
-                                "text": "Uten påminnelse"
+                                "text": "Påminnelse ikke valgt"
                               },
                               "ikke_tilbudt": {
                                 "text": "Valget ble ikke tilbudt"
@@ -643,7 +443,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Skjema"
+                      "options": "Oppfølgingsplan"
                     },
                     "properties": [
                       {
@@ -653,10 +453,10 @@
                             "type": "value",
                             "options": {
                               "tiltak": {
-                                "text": "Nytt skjema"
+                                "text": "Med AID-tilpasninger"
                               },
                               "standard": {
-                                "text": "Vanlig skjema"
+                                "text": "Uten AID-tilpasninger"
                               }
                             }
                           }
@@ -707,7 +507,7 @@
                                 "text": "Ikke tilgjengelig"
                               },
                               "vurdering_mangler": {
-                                "text": "Gruppe mangler"
+                                "text": "Vurdering mangler"
                               },
                               "status_feilet": {
                                 "text": "Status kunne ikke hentes"
@@ -716,10 +516,10 @@
                                 "text": "Forsøk"
                               },
                               "bekreftet": {
-                                "text": "Bekreftet"
+                                "text": "Vellykket svar"
                               },
                               "feilet": {
-                                "text": "Mangler bekreftelse"
+                                "text": "Feil eller manglende svar"
                               },
                               "ikke_bekreftet": {
                                 "text": "Uventet svar"
@@ -749,13 +549,13 @@
                                 "text": "Vist"
                               },
                               "bestill": {
-                                "text": "Bestilling"
+                                "text": "Slå på påminnelse"
                               },
                               "avbestill": {
-                                "text": "Avbestilling"
+                                "text": "Slå av påminnelse"
                               },
                               "opprett": {
-                                "text": "Opprettelse"
+                                "text": "Ferdigstilling"
                               }
                             }
                           }
@@ -810,8 +610,8 @@
         "kind": "Panel",
         "spec": {
           "id": 30,
-          "title": "Med eller uten påminnelse om evaluering",
-          "description": "Valget ved registrert planopprettelse i tiltaksgruppen med nytt skjema. Vanlig skjema og kontrollgruppen inngår ikke: de får ikke valget. Uten påminnelse kan være et urørt valg eller et tidligere lagret valg, ikke et aktivt avslag. Teller også nye planversjoner. Bekrefter ikke utsendt påminnelse eller utført evaluering.",
+          "title": "Ferdigstilte planer med og uten evalueringspåminnelse",
+          "description": "Valgt ja eller nei til e-post tre dager før avtalt evalueringsmøte. Teller ferdigstillinger i tiltaksgruppen der valget tilbys, ikke personer. Oppdaterte planer som ferdigstilles på nytt, teller også. Planer uten AID-tilpasninger og kontrollgruppen inngår ikke: de får ikke valget. Bekrefter ikke utsendt påminnelse eller utført evaluering.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -820,7 +620,7 @@
                 {
                   "kind": "PanelQuery",
                   "spec": {
-                    "refId": "Opprettelser",
+                    "refId": "{{evaluering_paaminnelse}}",
                     "hidden": false,
                     "query": {
                       "kind": "DataQuery",
@@ -830,10 +630,10 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (evaluering_paaminnelse) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"${environment:raw}\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=\"tiltak\"\n| skjemavariant=\"tiltak\"\n| keep evaluering_paaminnelse\n[$__auto]))",
+                        "expr": "sum by (evaluering_paaminnelse) (count_over_time({service_namespace=\"team-esyfo\", service_name=\"syfo-oppfolgingsplan-frontend\", k8s_cluster_name=~\"dev|prod\"}\n| label_format selected_environment=`{{ .k8s_cluster_name }}-gcp`\n| selected_environment=\"prod-gcp\"\n| x_isFrontend!=\"true\"\n| json aid_event=\"event_type\", aid_schema=\"schema_version\", aid_package=\"tiltakspakke\", aid_group=\"gruppe\", aid_variant=\"variant\", aid_form=\"skjemavariant\", aid_reminder=\"evaluering_paaminnelse\", forwarded_browser=\"x_isFrontend\"\n| __error__=\"\"\n| forwarded_browser!=\"true\"\n| aid_event=\"aid_plan_opprettet\"\n| aid_schema=\"1\"\n| aid_package=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| aid_group=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .aid_form \"\" }}{{ .aid_form }}{{ else if eq .aid_variant \"aid\" }}tiltak{{ else if eq .aid_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| aid_reminder=~\"ja|nei\"\n| label_format gruppe=aid_group, evaluering_paaminnelse=aid_reminder\n| keep gruppe, skjemavariant, evaluering_paaminnelse\n| gruppe=\"tiltak\"\n| skjemavariant=\"tiltak\"\n| keep evaluering_paaminnelse\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
-                        "legendFormat": "Opprettelser"
+                        "legendFormat": "{{evaluering_paaminnelse}}"
                       }
                     }
                   }
@@ -843,23 +643,23 @@
               "transformations": [
                 {
                   "kind": "Transformation",
-                  "group": "organize",
+                  "group": "rowsToFields",
                   "spec": {
                     "options": {
-                      "excludeByName": {
-                        "Time": true
-                      },
-                      "renameByName": {
-                        "gruppe": "Gruppe",
-                        "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
-                        "hendelse": "Hendelse",
-                        "paaminnelsevalg": "Bestilling ved visning",
-                        "evaluering_paaminnelse": "Påminnelse om evaluering",
-                        "utfall": "Resultat",
-                        "Value": "Registreringer",
-                        "Value #Opprettelser": "Registreringer"
-                      }
+                      "mappings": [
+                        {
+                          "fieldName": "evaluering_paaminnelse",
+                          "handlerKey": "field.name"
+                        },
+                        {
+                          "fieldName": "Value #{{evaluering_paaminnelse}}",
+                          "handlerKey": "field.value"
+                        },
+                        {
+                          "fieldName": "Time",
+                          "handlerKey": "__ignore"
+                        }
+                      ]
                     }
                   }
                 }
@@ -868,7 +668,7 @@
           },
           "vizConfig": {
             "kind": "VizConfig",
-            "group": "table",
+            "group": "bargauge",
             "version": "13.1.2",
             "spec": {
               "fieldConfig": {
@@ -879,237 +679,76 @@
                   "color": {
                     "mode": "palette-classic"
                   },
-                  "custom": {
-                    "filterable": true
-                  }
+                  "min": 0,
+                  "fieldMinMax": false,
+                  "displayName": "${__field.name}"
                 },
                 "overrides": [
                   {
                     "matcher": {
-                      "id": "byName",
-                      "options": "Påminnelse om evaluering"
+                      "id": "byRegexp",
+                      "options": "/^ja(?:$|\\s|\\{)/"
                     },
                     "properties": [
                       {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "ja": {
-                                "text": "Med påminnelse"
-                              },
-                              "nei": {
-                                "text": "Uten påminnelse"
-                              },
-                              "ikke_tilbudt": {
-                                "text": "Valget ble ikke tilbudt"
-                              },
-                              "ikke_registrert": {
-                                "text": "Ikke registrert"
-                              },
-                              "ugyldig": {
-                                "text": "Ugyldig verdi"
-                              }
-                            }
-                          }
-                        ]
+                        "id": "displayName",
+                        "value": "Påminnelse valgt"
+                      },
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "blue"
+                        }
                       }
                     ]
                   },
                   {
                     "matcher": {
-                      "id": "byName",
-                      "options": "Gruppe"
+                      "id": "byRegexp",
+                      "options": "/^nei(?:$|\\s|\\{)/"
                     },
                     "properties": [
                       {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "tiltak": {
-                                "text": "Tiltaksgruppen"
-                              },
-                              "kontroll": {
-                                "text": "Kontrollgruppen"
-                              },
-                              "utenfor_scope": {
-                                "text": "Utenfor forsøket"
-                              },
-                              "ukjent": {
-                                "text": "Gruppe mangler"
-                              },
-                              "blandet": {
-                                "text": "Flere ulike grupper"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Skjema"
-                    },
-                    "properties": [
+                        "id": "displayName",
+                        "value": "Påminnelse ikke valgt"
+                      },
                       {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "tiltak": {
-                                "text": "Nytt skjema"
-                              },
-                              "standard": {
-                                "text": "Vanlig skjema"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Tilbud"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "aid": {
-                                "text": "Tilgjengelig"
-                              },
-                              "skjult": {
-                                "text": "Ikke tilgjengelig"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Resultat"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "tilgjengelig": {
-                                "text": "Tilgjengelig"
-                              },
-                              "skjult": {
-                                "text": "Ikke tilgjengelig"
-                              },
-                              "vurdering_mangler": {
-                                "text": "Gruppe mangler"
-                              },
-                              "status_feilet": {
-                                "text": "Status kunne ikke hentes"
-                              },
-                              "forsok": {
-                                "text": "Forsøk"
-                              },
-                              "bekreftet": {
-                                "text": "Bekreftet"
-                              },
-                              "feilet": {
-                                "text": "Mangler bekreftelse"
-                              },
-                              "ikke_bekreftet": {
-                                "text": "Uventet svar"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Hendelse"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "beslutning": {
-                                "text": "Tilgjengelighet vurdert"
-                              },
-                              "vist": {
-                                "text": "Vist"
-                              },
-                              "bestill": {
-                                "text": "Bestilling"
-                              },
-                              "avbestill": {
-                                "text": "Avbestilling"
-                              },
-                              "opprett": {
-                                "text": "Opprettelse"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Bestilling ved visning"
-                    },
-                    "properties": [
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "type": "value",
-                            "options": {
-                              "bestilt": {
-                                "text": "Aktiv bestilling"
-                              },
-                              "ikke_bestilt": {
-                                "text": "Ingen aktiv bestilling"
-                              },
-                              "ikke_tilbudt": {
-                                "text": "Ikke tilbudt"
-                              },
-                              "ukjent": {
-                                "text": "Ukjent"
-                              }
-                            }
-                          }
-                        ]
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "gray"
+                        }
                       }
                     ]
                   }
                 ]
               },
               "options": {
-                "showHeader": true,
-                "cellHeight": "sm",
-                "footer": {
-                  "show": false
+                "displayMode": "basic",
+                "orientation": "horizontal",
+                "valueMode": "text",
+                "namePlacement": "left",
+                "showUnfilled": false,
+                "sizing": "manual",
+                "minVizHeight": 32,
+                "maxVizHeight": 64,
+                "minVizWidth": 8,
+                "text": {
+                  "titleSize": 16,
+                  "valueSize": 24
+                },
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
                 }
               }
             }
@@ -1120,7 +759,7 @@
         "kind": "Panel",
         "spec": {
           "id": 31,
-          "title": "Tilbudet vist",
+          "title": "Tilbud om påminnelse vist",
           "description": "Tiltaksgruppen i Dine sykmeldte. Registrerte handlinger, ikke unike personer. Tallene er separate hendelser, ikke trinn i en brukertrakt. Kortet har kommet inn i skjermbildet. Det betyr ikke at det er lest.",
           "links": [],
           "data": {
@@ -1140,7 +779,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | variant=\"aid\" | hendelse=\"vist\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "expr": "sum by (gruppe) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | variant=\"aid\" | hendelse=\"vist\" | utfall=\"tilgjengelig\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Visninger"
@@ -1193,7 +832,7 @@
         "kind": "Panel",
         "spec": {
           "id": 32,
-          "title": "Påminnelse bestilt",
+          "title": "Påminnelse slått på",
           "description": "Tiltaksgruppen i Dine sykmeldte. Registrerte handlinger, ikke unike personer. Tallene er separate hendelser, ikke trinn i en brukertrakt. Vellykkede bestillinger. Ikke antall aktive bestillinger eller sendte påminnelser.",
           "links": [],
           "data": {
@@ -1213,7 +852,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | variant=\"aid\" | hendelse=\"bestill\" | utfall=\"bekreftet\"\n[$__auto]))",
+                        "expr": "sum by (gruppe) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | variant=\"aid\" | hendelse=\"bestill\" | utfall=\"bekreftet\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Bestillinger"
@@ -1266,7 +905,7 @@
         "kind": "Panel",
         "spec": {
           "id": 33,
-          "title": "Påminnelse avbestilt",
+          "title": "Påminnelse slått av",
           "description": "Tiltaksgruppen i Dine sykmeldte. Registrerte handlinger, ikke unike personer. Tallene er separate hendelser, ikke trinn i en brukertrakt. Vellykkede avbestillinger. Ikke antall personer som har ombestemt seg.",
           "links": [],
           "data": {
@@ -1286,7 +925,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | variant=\"aid\" | hendelse=\"avbestill\" | utfall=\"bekreftet\"\n[$__auto]))",
+                        "expr": "sum by (gruppe) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | variant=\"aid\" | hendelse=\"avbestill\" | utfall=\"bekreftet\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Avbestillinger"
@@ -1339,7 +978,7 @@
         "kind": "Panel",
         "spec": {
           "id": 15,
-          "title": "Er påminnelsestilbudet tilgjengelig?",
+          "title": "Kunne tilbudet om påminnelse vises?",
           "description": "Vurderinger i tiltaksgruppen. Tilgjengelig betyr at tilbudet kan vises, ikke at det er sett. Ikke tilgjengelig kan være forventet, for eksempel når påminnelsen ikke lenger er aktuell; årsaken fremgår ikke av denne målingen. Ingen vurderinger er ikke bevis på feilfri levering.",
           "links": [],
           "data": {
@@ -1359,7 +998,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (utfall) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | hendelse=\"beslutning\"\n[$__auto]))",
+                        "expr": "sum by (utfall) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| gruppe=\"tiltak\" | hendelse=\"beslutning\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Vurderinger"
@@ -1381,7 +1020,7 @@
                       "renameByName": {
                         "gruppe": "Gruppe",
                         "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
+                        "skjemavariant": "Oppfølgingsplan",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Bestilling ved visning",
                         "evaluering_paaminnelse": "Påminnelse om evaluering",
@@ -1426,10 +1065,10 @@
                             "type": "value",
                             "options": {
                               "ja": {
-                                "text": "Med påminnelse"
+                                "text": "Påminnelse valgt"
                               },
                               "nei": {
-                                "text": "Uten påminnelse"
+                                "text": "Påminnelse ikke valgt"
                               },
                               "ikke_tilbudt": {
                                 "text": "Valget ble ikke tilbudt"
@@ -1482,7 +1121,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Skjema"
+                      "options": "Oppfølgingsplan"
                     },
                     "properties": [
                       {
@@ -1492,10 +1131,10 @@
                             "type": "value",
                             "options": {
                               "tiltak": {
-                                "text": "Nytt skjema"
+                                "text": "Med AID-tilpasninger"
                               },
                               "standard": {
-                                "text": "Vanlig skjema"
+                                "text": "Uten AID-tilpasninger"
                               }
                             }
                           }
@@ -1546,7 +1185,7 @@
                                 "text": "Ikke tilgjengelig"
                               },
                               "vurdering_mangler": {
-                                "text": "Gruppe mangler"
+                                "text": "Vurdering mangler"
                               },
                               "status_feilet": {
                                 "text": "Status kunne ikke hentes"
@@ -1555,10 +1194,10 @@
                                 "text": "Forsøk"
                               },
                               "bekreftet": {
-                                "text": "Bekreftet"
+                                "text": "Vellykket svar"
                               },
                               "feilet": {
-                                "text": "Mangler bekreftelse"
+                                "text": "Feil eller manglende svar"
                               },
                               "ikke_bekreftet": {
                                 "text": "Uventet svar"
@@ -1588,13 +1227,13 @@
                                 "text": "Vist"
                               },
                               "bestill": {
-                                "text": "Bestilling"
+                                "text": "Slå på påminnelse"
                               },
                               "avbestill": {
-                                "text": "Avbestilling"
+                                "text": "Slå av påminnelse"
                               },
                               "opprett": {
-                                "text": "Opprettelse"
+                                "text": "Ferdigstilling"
                               }
                             }
                           }
@@ -1649,7 +1288,7 @@
         "kind": "Panel",
         "spec": {
           "id": 34,
-          "title": "Påminnelsestilbud · alle grupper",
+          "title": "Påminnelse før fireukersfristen – tilgjengelighet per gruppe",
           "description": "Kontroll av tilgjengelighet, inkludert utenfor forsøket og manglende gruppetilhørighet. Ikke en telling av personer eller arbeidsgivere. Utenfor forsøket er ikke kontrollgruppen.",
           "links": [],
           "data": {
@@ -1669,7 +1308,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, variant, utfall) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| hendelse=\"beslutning\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, utfall) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| hendelse=\"beslutning\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Vurderinger"
@@ -1691,7 +1330,7 @@
                       "renameByName": {
                         "gruppe": "Gruppe",
                         "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
+                        "skjemavariant": "Oppfølgingsplan",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Bestilling ved visning",
                         "evaluering_paaminnelse": "Påminnelse om evaluering",
@@ -1736,10 +1375,10 @@
                             "type": "value",
                             "options": {
                               "ja": {
-                                "text": "Med påminnelse"
+                                "text": "Påminnelse valgt"
                               },
                               "nei": {
-                                "text": "Uten påminnelse"
+                                "text": "Påminnelse ikke valgt"
                               },
                               "ikke_tilbudt": {
                                 "text": "Valget ble ikke tilbudt"
@@ -1792,7 +1431,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Skjema"
+                      "options": "Oppfølgingsplan"
                     },
                     "properties": [
                       {
@@ -1802,10 +1441,10 @@
                             "type": "value",
                             "options": {
                               "tiltak": {
-                                "text": "Nytt skjema"
+                                "text": "Med AID-tilpasninger"
                               },
                               "standard": {
-                                "text": "Vanlig skjema"
+                                "text": "Uten AID-tilpasninger"
                               }
                             }
                           }
@@ -1856,7 +1495,7 @@
                                 "text": "Ikke tilgjengelig"
                               },
                               "vurdering_mangler": {
-                                "text": "Gruppe mangler"
+                                "text": "Vurdering mangler"
                               },
                               "status_feilet": {
                                 "text": "Status kunne ikke hentes"
@@ -1865,10 +1504,10 @@
                                 "text": "Forsøk"
                               },
                               "bekreftet": {
-                                "text": "Bekreftet"
+                                "text": "Vellykket svar"
                               },
                               "feilet": {
-                                "text": "Mangler bekreftelse"
+                                "text": "Feil eller manglende svar"
                               },
                               "ikke_bekreftet": {
                                 "text": "Uventet svar"
@@ -1898,13 +1537,13 @@
                                 "text": "Vist"
                               },
                               "bestill": {
-                                "text": "Bestilling"
+                                "text": "Slå på påminnelse"
                               },
                               "avbestill": {
-                                "text": "Avbestilling"
+                                "text": "Slå av påminnelse"
                               },
                               "opprett": {
-                                "text": "Opprettelse"
+                                "text": "Ferdigstilling"
                               }
                             }
                           }
@@ -1959,8 +1598,8 @@
         "kind": "Panel",
         "spec": {
           "id": 22,
-          "title": "Planskjema tilgjengeliggjort · alle grupper",
-          "description": "Tildelt gruppe og skjema ved åpning, ikke bekreftet visning. Bruk denne kontrollen for å undersøke manglende gruppe eller uventet skjema. Utenfor forsøket inngår ikke i produktanalysen.",
+          "title": "Oppfølgingsplan – hvilken løsning ble åpnet?",
+          "description": "Tildelt gruppe og AID-tilpasninger ved åpning, ikke bekreftet visning. Bruk denne kontrollen for å undersøke manglende gruppe eller uventet utforming av oppfølgingsplanen. Utenfor forsøket inngår ikke i produktanalysen.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1979,7 +1618,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| hendelse=\"beslutning\" | utfall=\"tilgjengelig\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| keep gruppe, skjemavariant, hendelse, utfall\n| hendelse=\"beslutning\" | utfall=\"tilgjengelig\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Vurderinger"
@@ -2001,7 +1640,7 @@
                       "renameByName": {
                         "gruppe": "Gruppe",
                         "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
+                        "skjemavariant": "Oppfølgingsplan",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Bestilling ved visning",
                         "evaluering_paaminnelse": "Påminnelse om evaluering",
@@ -2046,10 +1685,10 @@
                             "type": "value",
                             "options": {
                               "ja": {
-                                "text": "Med påminnelse"
+                                "text": "Påminnelse valgt"
                               },
                               "nei": {
-                                "text": "Uten påminnelse"
+                                "text": "Påminnelse ikke valgt"
                               },
                               "ikke_tilbudt": {
                                 "text": "Valget ble ikke tilbudt"
@@ -2102,7 +1741,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Skjema"
+                      "options": "Oppfølgingsplan"
                     },
                     "properties": [
                       {
@@ -2112,10 +1751,10 @@
                             "type": "value",
                             "options": {
                               "tiltak": {
-                                "text": "Nytt skjema"
+                                "text": "Med AID-tilpasninger"
                               },
                               "standard": {
-                                "text": "Vanlig skjema"
+                                "text": "Uten AID-tilpasninger"
                               }
                             }
                           }
@@ -2166,7 +1805,7 @@
                                 "text": "Ikke tilgjengelig"
                               },
                               "vurdering_mangler": {
-                                "text": "Gruppe mangler"
+                                "text": "Vurdering mangler"
                               },
                               "status_feilet": {
                                 "text": "Status kunne ikke hentes"
@@ -2175,10 +1814,10 @@
                                 "text": "Forsøk"
                               },
                               "bekreftet": {
-                                "text": "Bekreftet"
+                                "text": "Vellykket svar"
                               },
                               "feilet": {
-                                "text": "Mangler bekreftelse"
+                                "text": "Feil eller manglende svar"
                               },
                               "ikke_bekreftet": {
                                 "text": "Uventet svar"
@@ -2208,13 +1847,13 @@
                                 "text": "Vist"
                               },
                               "bestill": {
-                                "text": "Bestilling"
+                                "text": "Slå på påminnelse"
                               },
                               "avbestill": {
-                                "text": "Avbestilling"
+                                "text": "Slå av påminnelse"
                               },
                               "opprett": {
-                                "text": "Opprettelse"
+                                "text": "Ferdigstilling"
                               }
                             }
                           }
@@ -2269,8 +1908,8 @@
         "kind": "Panel",
         "spec": {
           "id": 24,
-          "title": "Innsendinger · forsøk og svar til nettleseren",
-          "description": "Kontroll av innsendinger og manglende eller ugyldige evalueringsvalg i alle grupper. Vanlig skjema tilbyr ikke valget. Forsøk og resultater er separate hendelser og må ikke summeres. Manglende bekreftelse betyr ikke nødvendigvis at planen ikke ble lagret. Ikke summer med planopprettelsene øverst.",
+          "title": "Ferdigstilling – forsøk og svar i nettleseren",
+          "description": "Kontroll av ferdigstilling og manglende eller ugyldige evalueringsvalg i alle grupper. Oppfølgingsplanen uten AID-tilpasninger tilbyr ikke valget. Forsøk og resultater er separate hendelser og må ikke summeres. Feil eller manglende svar i nettleseren betyr ikke nødvendigvis at planen ikke ble lagret. Ikke summer med ferdigstillingene øverst.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2279,7 +1918,7 @@
                 {
                   "kind": "PanelQuery",
                   "spec": {
-                    "refId": "Innsendinger",
+                    "refId": "Hendelser",
                     "hidden": false,
                     "query": {
                       "kind": "DataQuery",
@@ -2289,10 +1928,10 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, skjemavariant, evaluering_paaminnelse, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n| label_format evaluering_paaminnelse=`{{ if eq .event_data_evaluering_paaminnelse \"ja\" }}ja{{ else if eq .event_data_evaluering_paaminnelse \"nei\" }}nei{{ else if eq .event_data_evaluering_paaminnelse \"\" }}ikke_registrert{{ else }}ugyldig{{ end }}`\n| keep gruppe, skjemavariant, evaluering_paaminnelse, utfall\n| label_format evaluering_paaminnelse=`{{ if eq .skjemavariant \"standard\" }}ikke_tilbudt{{ else }}{{ .evaluering_paaminnelse }}{{ end }}`\n[$__auto]))",
+                        "expr": "sum by (gruppe, skjemavariant, evaluering_paaminnelse, utfall) (count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_skjemavariant, event_data_variant, event_data_hendelse, event_data_utfall, event_data_evaluering_paaminnelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_oppfolgingsplan\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"ny_plan\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|ukjent\"\n| label_format skjemavariant=`{{ if ne .event_data_skjemavariant \"\" }}{{ .event_data_skjemavariant }}{{ else if eq .event_data_variant \"aid\" }}tiltak{{ else if eq .event_data_variant \"standard\" }}standard{{ end }}`\n| skjemavariant=~\"tiltak|standard\"\n| label_format gruppe=event_data_gruppe, hendelse=event_data_hendelse, utfall=event_data_utfall\n| hendelse=\"opprett\" | utfall=~\"forsok|bekreftet|feilet\"\n| label_format evaluering_paaminnelse=`{{ if eq .event_data_evaluering_paaminnelse \"ja\" }}ja{{ else if eq .event_data_evaluering_paaminnelse \"nei\" }}nei{{ else if eq .event_data_evaluering_paaminnelse \"\" }}ikke_registrert{{ else }}ugyldig{{ end }}`\n| keep gruppe, skjemavariant, evaluering_paaminnelse, utfall\n| label_format evaluering_paaminnelse=`{{ if eq .skjemavariant \"standard\" }}ikke_tilbudt{{ else }}{{ .evaluering_paaminnelse }}{{ end }}`\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
-                        "legendFormat": "Innsendinger"
+                        "legendFormat": "Hendelser"
                       }
                     }
                   }
@@ -2311,13 +1950,13 @@
                       "renameByName": {
                         "gruppe": "Gruppe",
                         "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
+                        "skjemavariant": "Oppfølgingsplan",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Bestilling ved visning",
                         "evaluering_paaminnelse": "Påminnelse om evaluering",
                         "utfall": "Resultat",
-                        "Value": "Registreringer",
-                        "Value #Innsendinger": "Registreringer"
+                        "Value": "Hendelser",
+                        "Value #Hendelser": "Hendelser"
                       }
                     }
                   }
@@ -2356,10 +1995,10 @@
                             "type": "value",
                             "options": {
                               "ja": {
-                                "text": "Med påminnelse"
+                                "text": "Påminnelse valgt"
                               },
                               "nei": {
-                                "text": "Uten påminnelse"
+                                "text": "Påminnelse ikke valgt"
                               },
                               "ikke_tilbudt": {
                                 "text": "Valget ble ikke tilbudt"
@@ -2412,7 +2051,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Skjema"
+                      "options": "Oppfølgingsplan"
                     },
                     "properties": [
                       {
@@ -2422,10 +2061,10 @@
                             "type": "value",
                             "options": {
                               "tiltak": {
-                                "text": "Nytt skjema"
+                                "text": "Med AID-tilpasninger"
                               },
                               "standard": {
-                                "text": "Vanlig skjema"
+                                "text": "Uten AID-tilpasninger"
                               }
                             }
                           }
@@ -2476,7 +2115,7 @@
                                 "text": "Ikke tilgjengelig"
                               },
                               "vurdering_mangler": {
-                                "text": "Gruppe mangler"
+                                "text": "Vurdering mangler"
                               },
                               "status_feilet": {
                                 "text": "Status kunne ikke hentes"
@@ -2485,10 +2124,10 @@
                                 "text": "Forsøk"
                               },
                               "bekreftet": {
-                                "text": "Bekreftet"
+                                "text": "Vellykket svar"
                               },
                               "feilet": {
-                                "text": "Mangler bekreftelse"
+                                "text": "Feil eller manglende svar"
                               },
                               "ikke_bekreftet": {
                                 "text": "Uventet svar"
@@ -2518,13 +2157,13 @@
                                 "text": "Vist"
                               },
                               "bestill": {
-                                "text": "Bestilling"
+                                "text": "Slå på påminnelse"
                               },
                               "avbestill": {
-                                "text": "Avbestilling"
+                                "text": "Slå av påminnelse"
                               },
                               "opprett": {
-                                "text": "Opprettelse"
+                                "text": "Ferdigstilling"
                               }
                             }
                           }
@@ -2579,7 +2218,7 @@
         "kind": "Panel",
         "spec": {
           "id": 20,
-          "title": "Påminnelser · problemer ved visning og handling",
+          "title": "Påminnelse før fireukersfristen – registrerte problemer",
           "description": "Registrerte problemer i alle grupper. Ingen registreringer er ikke bevis på at alt virker. Bruk feiloversikten for videre feilsøking.",
           "links": [],
           "data": {
@@ -2599,7 +2238,7 @@
                         "name": "PEA2100DC89AE9FE2"
                       },
                       "spec": {
-                        "expr": "sum by (gruppe, hendelse, utfall) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"${environment:raw}\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| utfall=~\"vurdering_mangler|status_feilet|feilet|ikke_bekreftet\"\n[$__auto]))",
+                        "expr": "sum by (gruppe, hendelse, utfall) (count_over_time({service_name=\"dinesykmeldte\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_variant, event_data_hendelse, event_data_paaminnelsevalg, event_data_utfall\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_paaminnelse\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"dinesykmeldte\"\n| event_data_gruppe=~\"tiltak|kontroll|utenfor_scope|blandet|ukjent\"\n| event_data_variant=~\"aid|skjult\"\n| event_data_hendelse=~\"beslutning|vist|bestill|avbestill\"\n| event_data_paaminnelsevalg=~\"bestilt|ikke_bestilt|ikke_tilbudt|ukjent\"\n| event_data_utfall=~\"tilgjengelig|skjult|vurdering_mangler|status_feilet|forsok|bekreftet|feilet|ikke_bekreftet\"\n| label_format gruppe=event_data_gruppe, variant=event_data_variant, hendelse=event_data_hendelse, paaminnelsevalg=event_data_paaminnelsevalg, utfall=event_data_utfall\n| keep gruppe, variant, hendelse, paaminnelsevalg, utfall\n| utfall=~\"vurdering_mangler|status_feilet|feilet|ikke_bekreftet\"\n[$__auto]))",
                         "editorMode": "code",
                         "queryType": "instant",
                         "legendFormat": "Problemer"
@@ -2621,7 +2260,7 @@
                       "renameByName": {
                         "gruppe": "Gruppe",
                         "variant": "Tilbud",
-                        "skjemavariant": "Skjema",
+                        "skjemavariant": "Oppfølgingsplan",
                         "hendelse": "Hendelse",
                         "paaminnelsevalg": "Bestilling ved visning",
                         "evaluering_paaminnelse": "Påminnelse om evaluering",
@@ -2666,10 +2305,10 @@
                             "type": "value",
                             "options": {
                               "ja": {
-                                "text": "Med påminnelse"
+                                "text": "Påminnelse valgt"
                               },
                               "nei": {
-                                "text": "Uten påminnelse"
+                                "text": "Påminnelse ikke valgt"
                               },
                               "ikke_tilbudt": {
                                 "text": "Valget ble ikke tilbudt"
@@ -2722,7 +2361,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Skjema"
+                      "options": "Oppfølgingsplan"
                     },
                     "properties": [
                       {
@@ -2732,10 +2371,10 @@
                             "type": "value",
                             "options": {
                               "tiltak": {
-                                "text": "Nytt skjema"
+                                "text": "Med AID-tilpasninger"
                               },
                               "standard": {
-                                "text": "Vanlig skjema"
+                                "text": "Uten AID-tilpasninger"
                               }
                             }
                           }
@@ -2786,7 +2425,7 @@
                                 "text": "Ikke tilgjengelig"
                               },
                               "vurdering_mangler": {
-                                "text": "Gruppe mangler"
+                                "text": "Vurdering mangler"
                               },
                               "status_feilet": {
                                 "text": "Status kunne ikke hentes"
@@ -2795,10 +2434,10 @@
                                 "text": "Forsøk"
                               },
                               "bekreftet": {
-                                "text": "Bekreftet"
+                                "text": "Vellykket svar"
                               },
                               "feilet": {
-                                "text": "Mangler bekreftelse"
+                                "text": "Feil eller manglende svar"
                               },
                               "ikke_bekreftet": {
                                 "text": "Uventet svar"
@@ -2828,13 +2467,13 @@
                                 "text": "Vist"
                               },
                               "bestill": {
-                                "text": "Bestilling"
+                                "text": "Slå på påminnelse"
                               },
                               "avbestill": {
-                                "text": "Avbestilling"
+                                "text": "Slå av påminnelse"
                               },
                               "opprett": {
-                                "text": "Opprettelse"
+                                "text": "Ferdigstilling"
                               }
                             }
                           }
@@ -2893,35 +2532,7 @@
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "title": "",
-              "collapse": false,
-              "hideHeader": true,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1"
-                        },
-                        "height": 2,
-                        "width": 24,
-                        "x": 0,
-                        "y": 0
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          {
-            "kind": "RowsLayoutRow",
-            "spec": {
-              "title": "Planer · tiltak og kontroll",
+              "title": "Oppfølgingsplaner i forsøket",
               "collapse": false,
               "hideHeader": false,
               "layout": {
@@ -2975,7 +2586,7 @@
                   "kind": "CustomVariable",
                   "spec": {
                     "name": "plan_group",
-                    "label": "Vis planer for",
+                    "label": "Forsøksgruppe",
                     "description": "Gjelder bare denne delen. Begge forsøksgrupper vises som standard.",
                     "query": "Begge grupper : tiltak|kontroll,Tiltaksgruppen : tiltak,Kontrollgruppen : kontroll",
                     "current": {
@@ -2997,7 +2608,7 @@
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "title": "Påminnelse om å evaluere planen · tiltaksgruppen med nytt skjema",
+              "title": "Valg av evalueringspåminnelse · tiltaksgruppen",
               "collapse": false,
               "hideHeader": false,
               "layout": {
@@ -3025,7 +2636,7 @@
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "title": "Påminnelse om å lage plan · tiltaksgruppen",
+              "title": "Påminnelse før fireukersfristen · Dine sykmeldte · tiltaksgruppen",
               "collapse": false,
               "hideHeader": false,
               "layout": {
@@ -3092,7 +2703,7 @@
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "title": "Kontroll av målingen · alle grupper",
+              "title": "Teknisk kontroll · produksjon · alle grupper",
               "collapse": true,
               "hideHeader": false,
               "layout": {
@@ -3206,27 +2817,6 @@
       "hideTimepicker": false,
       "timezone": "browser"
     },
-    "variables": [
-      {
-        "kind": "CustomVariable",
-        "spec": {
-          "name": "environment",
-          "label": "Miljø",
-          "description": "Gjelder hele dashboardet.",
-          "query": "Produksjon : prod-gcp,Test : dev-gcp",
-          "current": {
-            "text": "Produksjon",
-            "value": "prod-gcp"
-          },
-          "options": [],
-          "multi": false,
-          "includeAll": false,
-          "hide": "dontHide",
-          "skipUrlSync": false,
-          "allowCustomValue": false,
-          "valuesFormat": "csv"
-        }
-      }
-    ]
+    "variables": []
   }
 }
