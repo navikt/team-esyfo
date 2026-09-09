@@ -94,11 +94,11 @@ const collectLayoutItems = (layout: unknown): unknown[] => {
 	if (kind === "GridLayout") {
 		return Array.isArray(spec?.items) ? spec.items : [];
 	}
-	if (kind === "RowsLayout") {
-		const rows = Array.isArray(spec?.rows) ? spec.rows : [];
-		return rows.flatMap((row) => {
-			const rowSpec = (row as { spec?: JsonRecord }).spec;
-			return collectLayoutItems(rowSpec?.layout);
+	if (kind === "RowsLayout" || kind === "TabsLayout") {
+		const children = kind === "RowsLayout" ? spec?.rows : spec?.tabs;
+		return (Array.isArray(children) ? children : []).flatMap((child) => {
+			const childSpec = (child as { spec?: JsonRecord }).spec;
+			return collectLayoutItems(childSpec?.layout);
 		});
 	}
 	return [];
@@ -370,7 +370,7 @@ try {
 			new Set(expected.layoutElementNames).size,
 			expected.elementNames.length,
 		);
-		// Dashboards may use only row-local variables; the full layout is compared below.
+		// Dashboards may use only row/tab-local variables; the full layout is compared below.
 		assert.ok(expected.queries.length > 0);
 		assert.ok(expected.datasources.length > 0);
 		assert.deepEqual(semanticContract(resource), expected);

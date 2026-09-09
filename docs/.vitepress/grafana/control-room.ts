@@ -32,6 +32,7 @@ export { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
 
 export const CONTROL_ROOM_UID = "team-esyfo-kontrollrom";
 export const CONTROL_ROOM_FOLDER_UID = TEAM_ESYFO_DASHBOARD_FOLDER_UID;
+export const SERVICE_TAB_TITLE = "Undersøk en tjeneste";
 
 const FROM = grafanaVariable("__from");
 const TO = grafanaVariable("__to");
@@ -181,12 +182,8 @@ export const selectedReadyRatioQuery = guardedSelectedReadyRatio;
 
 const currentSpanSeriesByService = `max by (service_name) (timestamp(${SPAN_CALLS_METRIC}{${fleetSpanSelector}}))`;
 const recentSpanSeriesByService = `max by (service_name) (max_over_time(timestamp(${SPAN_CALLS_METRIC}{${fleetSpanSelector}})[30m:]))`;
-const currentDeploymentByService = `label_replace(max by (deployment) (${DESIRED_REPLICAS_METRIC}{${fleetKubeDeploymentSelector}}), "service_name", "$1", "deployment", "(.*)")`;
 
 export const telemetryStateByServiceQuery = `((0 * (${expectedServerScopeVectorQuery})) and on(service_name) (${currentSpanSeriesByService})) or (((1 * (${expectedServerScopeVectorQuery})) and on(service_name) (${recentSpanSeriesByService})) unless on(service_name) (${currentSpanSeriesByService})) or ((2 * (${expectedServerScopeVectorQuery})) unless on(service_name) (${recentSpanSeriesByService})) or ((3 * (${expectedScopeVectorQuery})) unless on(service_name) (${expectedServerScopeVectorQuery}))`;
-export const telemetryCoverageQuery = `100 * ((count((${currentSpanSeriesByService}) and on(service_name) (${expectedServerScopeVectorQuery})) or on() vector(0)) / count(${expectedServerScopeVectorQuery}))`;
-export const deploymentCoverageQuery = `100 * ((count((${currentDeploymentByService}) and on(service_name) (${expectedScopeVectorQuery})) or on() vector(0)) / count(${expectedScopeVectorQuery}))`;
-export const missingTelemetryQuery = `count((${expectedServerScopeVectorQuery}) unless on(service_name) (${recentSpanSeriesByService})) or on() vector(0)`;
 
 export const requestRateByServiceQuery = `sum by (service_name) (rate(${SPAN_CALLS_METRIC}{${selectedSpanSelector}}[$__rate_interval]))`;
 const selectedErrorRateByService = `sum by (service_name) (rate(${SPAN_CALLS_METRIC}{${selectedErrorSpanSelector}}[$__rate_interval]))`;
@@ -248,6 +245,9 @@ export const dinesykmeldteOutcomeRateQuery = `${dinesykmeldteTrafficRateQuery} o
 
 export const errorDashboardDataLink = (service: string) =>
 	`/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${FROM}&to=${TO}&var-runtime_environment=prod&var-app=${service}`;
+
+export const serviceInvestigationDataLink = (service: string) =>
+	`/d/${CONTROL_ROOM_UID}?orgId=1&from=${FROM}&to=${TO}&dtab=${encodeURIComponent(SERVICE_TAB_TITLE.replaceAll(" ", "-"))}&var-service=${service}`;
 
 const serviceDataLinks = (service: string) => [
 	dataLink("APM og tracing", apmDataLink(service)),
@@ -425,7 +425,7 @@ const timeSeriesPanel = ({
 	kind: "Panel",
 	spec: {
 		data: queryGroup([query]),
-		description,
+		description: `${description} Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.`,
 		id,
 		links,
 		title,
@@ -442,6 +442,9 @@ const timeSeriesPanel = ({
 							axisColorMode: "text",
 							axisLabel: "",
 							axisPlacement: "auto",
+							...(unit === "percent"
+								? { axisSoftMin: 0, axisSoftMax: 100 }
+								: {}),
 							barAlignment: 0,
 							barWidthFactor: 0.6,
 							drawStyle: "line",
@@ -611,7 +614,19 @@ const fleetTablePanel = () => {
 							{
 								matcher: { id: "byName", options: fields.service_name },
 								properties: [
-									{ id: "links", value: serviceDataLinks(ROW_VALUE) },
+									{
+										id: "links",
+										value: [
+											{
+												...dataLink(
+													"Undersøk tjenesten",
+													serviceInvestigationDataLink(ROW_VALUE),
+												),
+												targetBlank: false,
+											},
+											...serviceDataLinks(ROW_VALUE),
+										],
+									},
 									{ id: "custom.width", value: 290 },
 								],
 							},
@@ -815,10 +830,6 @@ const readyThresholds: Threshold[] = [
 	{ color: "yellow", value: 0 },
 	{ color: "green", value: 100 },
 ];
-const coverageThresholds: Threshold[] = [
-	{ color: "yellow", value: 0 },
-	{ color: "blue", value: 100 },
-];
 const neutralThresholds: Threshold[] = [{ color: "blue", value: 0 }];
 const attentionThresholds: Threshold[] = [
 	{ color: "gray", value: 0 },
@@ -840,7 +851,7 @@ const serviceVariable = {
 		allowCustomValue: false,
 		current: { text: selectedServiceText, value: selectedService },
 		description:
-			"Velger tjeneste bare i denne raden. Oversikten over produksjonstjenester endres ikke.",
+			"Velger tjeneste bare i denne fanen. Oversikten over produksjonstjenester endres ikke.",
 		hide: "dontHide",
 		includeAll: false,
 		label: "Tjeneste",
@@ -854,19 +865,32 @@ const serviceVariable = {
 		valuesFormat: "csv",
 	},
 };
-const row = (
+// Native row conditions preserve panel sizes and inherit the tab-local variable.
+const serviceCondition = (operator: "equals" | "matches", value: string) => ({
+	kind: "ConditionalRenderingGroup",
+	spec: {
+		visibility: "show",
+		condition: "and",
+		items: [
+			{
+				kind: "ConditionalRenderingVariable",
+				spec: { variable: "service", operator, value },
+			},
+		],
+	},
+});
+const detailSection = (
 	title: string,
 	items: ReturnType<typeof layoutItem>[],
-	collapse = true,
-	variables: (typeof serviceVariable)[] = [],
+	condition?: ReturnType<typeof serviceCondition>,
 ) => ({
 	kind: "RowsLayoutRow",
 	spec: {
 		title,
-		collapse,
-		hideHeader: false,
+		collapse: false,
+		hideHeader: true,
 		layout: { kind: "GridLayout", spec: { items } },
-		...(variables.length ? { variables } : {}),
+		...(condition ? { conditionalRendering: condition } : {}),
 	},
 });
 const dashboardLink = (title: string, url: string, keepTime = false) => ({
@@ -923,7 +947,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		elements: {
 			"panel-2": statPanel({
 				id: 2,
-				title: "Feilmarkerte kall · tjenester",
+				title: "Feilmarkerte kall",
 				description:
 					"Antall tjenester med minst én inbound SERVER-span markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
 				query: prometheusQuery(
@@ -931,21 +955,21 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					fleetServicesWithOtelErrorsQuery,
 					"instant",
 				),
-				unit: "short",
+				unit: "suffix: tjenester",
 				thresholds: deviationThresholds,
 				decimals: 0,
 				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-32": statPanel({
 				id: 32,
-				title: "Tjenester med loggfeil · 5 min",
+				title: "Loggfeil · 5 min",
 				description:
 					"Antall tjenester med error-, critical- eller fatal-klassifiserte runtime-logger siste fem minutter ved periodens slutt. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
 				query: lokiQuery(
 					"Tjenester med loggfeil",
 					fleetServicesWithRuntimeErrorsQuery,
 				),
-				unit: "short",
+				unit: "suffix: tjenester",
 				thresholds: deviationThresholds,
 				decimals: 0,
 				noValue: "Ingen treff",
@@ -953,7 +977,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-4": statPanel({
 				id: 4,
-				title: "Tjenester med omstarter · 15 min",
+				title: "Omstarter · 15 min",
 				description:
 					"Antall tjenester med observerte containerrestarts siste 15 minutter ved periodens slutt, ikke antall restarts. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
 				query: prometheusQuery(
@@ -961,14 +985,14 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 					fleetServicesWithRecentRestartsQuery,
 					"instant",
 				),
-				unit: "short",
+				unit: "suffix: tjenester",
 				thresholds: attentionThresholds,
 				decimals: 0,
 				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-5": statPanel({
 				id: 5,
-				title: "Klare replikaer · laveste andel",
+				title: "Klare replikaer · lavest",
 				description:
 					"Laveste observerte klare/ønskede replikaandel ved periodens slutt. Gult kan skyldes et kort fall ved deploy eller skalering; se utviklingen for tjenesten før du konkluderer. Manglende målinger og desired=0 gir ikke null eller grønt.",
 				query: prometheusQuery(
@@ -1055,7 +1079,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			"panel-36": podDiagnosticsPanel(),
 			"panel-33": statPanel({
 				id: 33,
-				title: "Innlesing av sykmeldinger · tid siden poll",
+				title: "Kafka-klienter · tid siden poll",
 				description:
 					"Sekunder siden Kafka-klientens siste poll()-kall per pod i syfo-oppfolgingsplan-backend. Under 60 sekunder er nøytralt, 60–300 gult og minst 300 rødt. IKKE POLLET er verdien -1 før første poll, ikke bevis på feil under oppstart. Signalet beviser ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
 				query: prometheusQuery(
@@ -1080,9 +1104,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-34": statPanel({
 				id: 34,
-				title: "Innlesing av sykmeldinger · meldinger bak",
+				title: "Sykmeldinger · samlet Kafka-lag",
 				description:
-					"Committed consumer-group-lag for sykmeldingstopicen til syfo-oppfolgingsplan-backend. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. No data er Ukjent.",
+					"Samlet committed lag for consumer group syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2 på teamsykmelding.syfo-sendt-sykmelding. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. Manglende måling er Ukjent.",
 				query: prometheusQuery(
 					"Meldinger bak",
 					sykmeldingConsumerCommittedLagQuery,
@@ -1098,9 +1122,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-25": timeSeriesPanel({
 				id: 25,
-				title: "Budstikka · meldinger bak",
+				title: "budstikka.v1 · største partisjonslag",
 				description:
-					"Kafka-consumerens observerte lag. Viser transportbacklog, ikke Budstikkas interne leveringskø eller at mottakeren har fått varselet. Kortvarig lag er ikke alene en driftsfeil.",
+					"Største observerte lag for en partisjon på team-esyfo.budstikka.v1, på tvers av Kafka-klienter. Ikke summen av meldinger bak, Budstikkas interne leveringskø eller bevis på at mottakeren har fått varselet. Kortvarig lag er ikke alene en driftsfeil.",
 				query: prometheusQuery(
 					"Meldinger bak",
 					budstikkaLagQuery,
@@ -1122,7 +1146,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-26": timeSeriesPanel({
 				id: 26,
-				title: "Oppfølgingsplan · deserialiseringsfeil",
+				title: "Sykmeldinger · deserialiseringsfeil",
 				description:
 					"Observerte deserialiseringsfeil per sekund. Legacy-telleren skiller ikke terminalt avviste meldinger fra gjentatte forsøk. Bruk runbooken før restart eller ny behandling; ikke les dette som antall tapte meldinger.",
 				query: prometheusQuery(
@@ -1146,9 +1170,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-23": statPanel({
 				id: 23,
-				title: "Varslingsjobb · registrert feilet kjøring",
+				title: "esyfovarsel-job · feilet kjøring",
 				description:
-					"Viser om esyfovarsel-job hadde Kubernetes-tilstanden Failed=True i valgt tidsrom. 0 betyr ingen true-tilstand i observerte serier, ikke bevist vellykket eller forventet kjøring. Manglende Job-metrikk gir Ukjent.",
+					"Den separate jobben esyfovarsel-job starter behandling i esyfovarsel. Viser om jobben hadde Kubernetes-tilstanden Failed=True i valgt tidsrom. 0 betyr ingen true-tilstand i observerte serier, ikke bevist vellykket eller forventet kjøring. Manglende Job-metrikk gir Ukjent.",
 				query: prometheusQuery("Feilet kjøring", jobFailureQuery, "instant"),
 				unit: "short",
 				thresholds: deviationThresholds,
@@ -1162,7 +1186,10 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 						},
 					},
 				],
-				links: [dataLink("Køer og jobber", PIPELINE_RUNBOOK_URL)],
+				links: [
+					dataLink("Jobbens logger", runtimeLogsDataLink("esyfovarsel-job")),
+					dataLink("Køer og jobber", PIPELINE_RUNBOOK_URL),
+				],
 			}),
 			"panel-30": timeSeriesPanel({
 				id: 30,
@@ -1228,59 +1255,16 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				),
 				fieldLinks: serviceDataLinks("syfomotebehov"),
 			}),
-			"panel-3": statPanel({
-				id: 3,
-				title: "Tjenester uten HTTP-målinger",
-				description:
-					"Forventede HTTP-tjenester uten SERVER-spanserie siste 30 minutter. Bakgrunnstjenester er utelatt. Dette er et målegap, ikke automatisk appfeil.",
-				query: prometheusQuery(
-					"Tjenester uten HTTP-målinger",
-					missingTelemetryQuery,
-					"instant",
-				),
-				unit: "short",
-				thresholds: attentionThresholds,
-				decimals: 0,
-				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
-			}),
-			"panel-6": statPanel({
-				id: 6,
-				title: "HTTP-målinger · dekning",
-				description:
-					"Andel forventede HTTP-tjenester med aktuell SERVER-spanserie. Måler tilstedeværende serier, ikke trafikk eller komplett tracing. Bakgrunnstjenester er utelatt.",
-				query: prometheusQuery(
-					"HTTP-dekning",
-					telemetryCoverageQuery,
-					"instant",
-				),
-				unit: "percent",
-				thresholds: coverageThresholds,
-				decimals: 0,
-			}),
-			"panel-7": statPanel({
-				id: 7,
-				title: "Kubernetes-målinger · dekning",
-				description:
-					"Andel forventede tjenester med metrikk for ønskede replikaer. Beviser identitetsmapping og akkurat denne serien, ikke at alle Kubernetes-målinger er tilgjengelige.",
-				query: prometheusQuery(
-					"Kubernetes-dekning",
-					deploymentCoverageQuery,
-					"instant",
-				),
-				unit: "percent",
-				thresholds: coverageThresholds,
-				decimals: 0,
-			}),
 			"panel-35": statPanel({
 				id: 35,
-				title: "Tjenester med API-avvisninger · 5 min",
+				title: "API-avvisninger · 5 min",
 				description:
 					"WARN-hendelsen api_request_rejected siste fem minutter ved periodens slutt. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
 				query: lokiQuery(
 					"Tjenester med API-avvisninger",
 					fleetServicesWithApiRejectionsQuery,
 				),
-				unit: "short",
+				unit: "suffix: tjenester",
 				thresholds: attentionThresholds,
 				decimals: 0,
 				noValue: "Ingen treff",
@@ -1294,51 +1278,96 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 		},
 		layout: {
-			kind: "RowsLayout",
+			kind: "TabsLayout",
 			spec: {
-				rows: [
-					row(
-						"Produksjon · oversikt",
-						[
-							layoutItem("panel-2", 0, 0, 5, 4),
-							layoutItem("panel-32", 5, 0, 5, 4),
-							layoutItem("panel-35", 10, 0, 5, 4),
-							layoutItem("panel-4", 15, 0, 5, 4),
-							layoutItem("panel-5", 20, 0, 4, 4),
-							layoutItem("panel-10", 0, 4, 24, 14),
-						],
-						false,
-					),
-					row(
-						"Undersøk en tjeneste",
-						[
-							layoutItem("panel-12", 0, 0, 8, 7),
-							layoutItem("panel-13", 8, 0, 8, 7),
-							layoutItem("panel-14", 16, 0, 8, 7),
-							layoutItem("panel-15", 0, 7, 6, 6),
-							layoutItem("panel-37", 6, 7, 18, 6),
-							layoutItem("panel-36", 0, 13, 24, 8),
-						],
-						true,
-						[serviceVariable],
-					),
-					row("Køer og jobber · produksjon", [
-						layoutItem("panel-33", 0, 0, 12, 5),
-						layoutItem("panel-34", 12, 0, 6, 5),
-						layoutItem("panel-23", 18, 0, 6, 5),
-						layoutItem("panel-25", 0, 5, 12, 7),
-						layoutItem("panel-26", 12, 5, 12, 7),
-					]),
-					row("Utvalgte tjenester · produksjon", [
-						layoutItem("panel-30", 0, 0, 12, 7),
-						layoutItem("panel-31", 12, 0, 12, 7),
-						layoutItem("panel-27", 0, 7, 24, 6),
-					]),
-					row("Måledata · produksjon", [
-						layoutItem("panel-3", 0, 0, 8, 4),
-						layoutItem("panel-6", 8, 0, 8, 4),
-						layoutItem("panel-7", 16, 0, 8, 4),
-					]),
+				tabs: [
+					{
+						kind: "TabsLayoutTab",
+						spec: {
+							title: "Oversikt",
+							layout: {
+								kind: "GridLayout",
+								spec: {
+									items: [
+										layoutItem("panel-2", 0, 0, 4, 4),
+										layoutItem("panel-32", 4, 0, 5, 4),
+										layoutItem("panel-35", 9, 0, 5, 4),
+										layoutItem("panel-4", 14, 0, 5, 4),
+										layoutItem("panel-5", 19, 0, 5, 4),
+										layoutItem("panel-10", 0, 4, 24, 14),
+									],
+								},
+							},
+						},
+					},
+					{
+						kind: "TabsLayoutTab",
+						spec: {
+							title: SERVICE_TAB_TITLE,
+							variables: [serviceVariable],
+							layout: {
+								kind: "RowsLayout",
+								spec: {
+									rows: [
+										detailSection(
+											"HTTP",
+											[
+												layoutItem("panel-12", 0, 0, 8, 7),
+												layoutItem("panel-13", 8, 0, 8, 7),
+												layoutItem("panel-14", 16, 0, 8, 7),
+											],
+											serviceCondition(
+												"matches",
+												`^(${controlRoomServerApplications.map(({ runtime }) => runtime.name).join("|")})$`,
+											),
+										),
+										detailSection("Runtime", [
+											layoutItem("panel-15", 0, 0, 6, 6),
+											layoutItem("panel-37", 6, 0, 18, 6),
+										]),
+										detailSection(
+											"Sykmeldinger",
+											[
+												layoutItem("panel-33", 0, 0, 12, 5),
+												layoutItem("panel-34", 12, 0, 12, 5),
+												layoutItem("panel-26", 0, 5, 24, 7),
+											],
+											serviceCondition(
+												"equals",
+												"syfo-oppfolgingsplan-backend",
+											),
+										),
+										detailSection(
+											"Budstikka",
+											[layoutItem("panel-25", 0, 0, 24, 7)],
+											serviceCondition("equals", "syfo-budstikka"),
+										),
+										detailSection(
+											"Varslingsjobb",
+											[layoutItem("panel-23", 0, 0, 24, 4)],
+											serviceCondition("equals", "esyfovarsel"),
+										),
+										detailSection(
+											"Dine sykmeldte",
+											[
+												layoutItem("panel-30", 0, 0, 12, 7),
+												layoutItem("panel-31", 12, 0, 12, 7),
+											],
+											serviceCondition("equals", "dinesykmeldte-backend"),
+										),
+										detailSection(
+											"Møtebehov",
+											[layoutItem("panel-27", 0, 0, 24, 6)],
+											serviceCondition("equals", "syfomotebehov"),
+										),
+										detailSection("Podder", [
+											layoutItem("panel-36", 0, 0, 24, 6),
+										]),
+									],
+								},
+							},
+						},
+					},
 				],
 			},
 		},

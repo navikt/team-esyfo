@@ -15,7 +15,7 @@ Tabellen beskriver #454-kandidaten som er deployert til dev for canary: tre endr
 
 Bekreft alltid datakvaliteten før køtilstanden tolkes:
 
-1. Velg `syfo-oppfolgingsplan-backend`, riktig miljø og samme `message_type` i Kontrollrommet eller Metrics Explore.
+1. Avgrens til `syfo-oppfolgingsplan-backend`, riktig miljø og samme `message_type` i Metrics Explore. Kontrollrommet viser tjenestedetaljer, men har ingen egen velger for outboxens meldingstyper.
 2. Kontroller `syfo_oppfolgingsplan_backend_outbox_queue_snapshot_last_success_timestamp_seconds` per pod og meldingstype. Et målesnapshot eldre enn 180 sekunder er **ukjent køtilstand**, ikke en frisk kø.
 3. Sammenlign køsignalene fra samme ferske snapshot. Ikke bruk en gammel gauge sammen med et nytt podsett, og summer aldri pod-gaugene: poddene observerer den samme globale køen.
 4. Skill produsentfeil fra neste ledd: outboxen slutter ved broker-ACK; Budstikkas inbox, delivery-kø og terminale kanalutfall undersøkes separat.
@@ -28,7 +28,7 @@ Normal drift er først bevist når alle tre kjente meldingstyper har ferskt snap
 
 ## Pipeline
 
-1. Les den samlede kontraktstatusen i Kontrollrommet, og åpne runtimeinventaret derfra for å identifisere aktive interne produsenter og konsumenter.
+1. Les [Kafka-kontraktene](../kafka-kontrakter) og [runtimeinventaret](../runtimeinventar) for å identifisere aktive interne produsenter og konsumenter. Kontrollrommets tjenestedetaljer er diagnostikk, ikke en samlet pipelinehelse.
 2. Bekreft kontraktstatus:
    - `IKKE EVALUERT`: signalbinding eller tjenestenivå er ikke godkjent.
    - `UKJENT`: kontrakten finnes, men evidens mangler eller er for gammel.
