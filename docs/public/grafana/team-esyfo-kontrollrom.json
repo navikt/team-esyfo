@@ -33,7 +33,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "count((sum by (service_name) (increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\"}[$__range]))) > 0) or on() (count(sum by (service_name) (increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\"}[$__range]))) * 0)",
+                        "expr": "sum(((sum by (service_name) (increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\"}[$__range]))) or on(service_name) ((sum by (service_name) (increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\"}[$__range]))) * 0)) and on(service_name) ((sum by (service_name) (increase(traces_spanmetrics_calls_total{service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\", span_kind=\"SPAN_KIND_SERVER\"}[$__range]))) > 0))",
                         "instant": true,
                         "interval": "",
                         "legendFormat": "",
@@ -41,7 +41,7 @@
                       },
                       "version": "v0"
                     },
-                    "refId": "Tjenester med feil i kall"
+                    "refId": "Feilmarkerte kall"
                   }
                 }
               ],
@@ -49,7 +49,7 @@
               "transformations": []
             }
           },
-          "description": "Antall tjenester med minst én inbound SERVER-span markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
+          "description": "Antall inngående SERVER-spans markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
           "id": 2,
           "links": [
             {
@@ -58,7 +58,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Feilmarkerte kall",
+          "title": "Feilmarkerte kall i perioden",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -80,7 +80,7 @@
                       }
                     ]
                   },
-                  "unit": "suffix: tjenester"
+                  "unit": "short"
                 },
                 "overrides": []
               },
@@ -129,12 +129,12 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "count((sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n[5m]))) > 0)",
+                        "expr": "sum(sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n[$__range])))",
                         "queryType": "instant"
                       },
                       "version": "v0"
                     },
-                    "refId": "Tjenester med loggfeil"
+                    "refId": "Loggfeil"
                   }
                 }
               ],
@@ -142,7 +142,7 @@
               "transformations": []
             }
           },
-          "description": "Antall tjenester med error-, critical- eller fatal-klassifiserte runtime-logger siste fem minutter ved periodens slutt. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
+          "description": "Antall error-, critical- eller fatal-klassifiserte runtime-logghendelser i valgt tidsrom. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
           "id": 32,
           "links": [
             {
@@ -151,7 +151,7 @@
               "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=$__all"
             }
           ],
-          "title": "Loggfeil · 5 min",
+          "title": "Loggfeil i perioden",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -173,7 +173,7 @@
                       }
                     ]
                   },
-                  "unit": "suffix: tjenester"
+                  "unit": "short"
                 },
                 "overrides": []
               },
@@ -222,7 +222,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "count((sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}[15m]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))) > 0) or on() (count(sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}[15m]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))) * 0)",
+                        "expr": "sum(sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}[$__range]))), \"service_name\", \"$1\", \"container\", \"(.*)\")))",
                         "instant": true,
                         "interval": "",
                         "legendFormat": "",
@@ -230,7 +230,7 @@
                       },
                       "version": "v0"
                     },
-                    "refId": "Tjenester med omstarter"
+                    "refId": "Omstarter"
                   }
                 }
               ],
@@ -238,7 +238,7 @@
               "transformations": []
             }
           },
-          "description": "Antall tjenester med observerte containerrestarts siste 15 minutter ved periodens slutt, ikke antall restarts. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
+          "description": "Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
           "id": 4,
           "links": [
             {
@@ -247,7 +247,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Omstarter · 15 min",
+          "title": "Omstarter i perioden",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -269,7 +269,7 @@
                       }
                     ]
                   },
-                  "unit": "suffix: tjenester"
+                  "unit": "short"
                 },
                 "overrides": []
               },
@@ -343,7 +343,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Klare replikaer · lavest",
+          "title": "Replikaer · lavest ved periodeslutt",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -489,12 +489,33 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n[5m]))",
+                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(error|critical|fatal)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n[$__range]))",
                         "queryType": "instant"
                       },
                       "version": "v0"
                     },
                     "refId": "Runtimefeil"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "group": "loki",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(warn|warning)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| json event_type\n| __error__=\"\"\n| event_type=\"api_request_rejected\"\n| keep service_name\n[$__range]))",
+                        "queryType": "instant"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Avvisninger"
                   }
                 },
                 {
@@ -510,7 +531,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}[15m]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))",
+                        "expr": "sum by (service_name) (label_replace(sum by (container) (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}[$__range]))), \"service_name\", \"$1\", \"container\", \"(.*)\"))",
                         "format": "table",
                         "instant": true,
                         "interval": "",
@@ -519,7 +540,7 @@
                       },
                       "version": "v0"
                     },
-                    "refId": "Nylige restarts"
+                    "refId": "Restarts"
                   }
                 },
                 {
@@ -577,16 +598,18 @@
                         "Value #Requests": 1,
                         "Value #OTel-feil": 2,
                         "Value #Runtimefeil": 3,
-                        "Value #Nylige restarts": 4,
-                        "Value #Klare replikaer": 5,
-                        "Value #Telemetry": 6
+                        "Value #Avvisninger": 4,
+                        "Value #Restarts": 5,
+                        "Value #Klare replikaer": 6,
+                        "Value #Telemetry": 7
                       },
                       "renameByName": {
                         "service_name": "Tjeneste",
                         "Value #Requests": "Kall i perioden",
                         "Value #OTel-feil": "Feilmarkerte kall",
-                        "Value #Runtimefeil": "Loggfeil · 5 min",
-                        "Value #Nylige restarts": "Omstarter · 15 min",
+                        "Value #Runtimefeil": "Loggfeil i perioden",
+                        "Value #Avvisninger": "API-avvisninger i perioden",
+                        "Value #Restarts": "Omstarter i perioden",
                         "Value #Klare replikaer": "Klare replikaer",
                         "Value #Telemetry": "HTTP-målinger"
                       }
@@ -596,7 +619,7 @@
               ]
             }
           },
-          "description": "Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall og feil i kall gjelder valgt tidsrom; loggfeil gjelder siste fem minutter og omstarter siste 15 minutter ved periodens slutt. HTTP-målinger viser seriesignal, ikke siste kall. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Datasourcefeil feiler hele queryen. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
+          "description": "Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall, logghendelser, API-avvisninger og omstarter gjelder valgt tidsrom. Replikaer og HTTP-målinger er tilstand ved periodens slutt. HTTP-målinger viser seriesignal, ikke siste kall. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
           "id": 10,
           "links": [
             {
@@ -740,7 +763,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Loggfeil · 5 min"
+                      "options": "Loggfeil i perioden"
                     },
                     "properties": [
                       {
@@ -770,7 +793,37 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Omstarter · 15 min"
+                      "options": "Omstarter i perioden"
+                    },
+                    "properties": [
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "gray",
+                              "value": 0
+                            },
+                            {
+                              "color": "yellow",
+                              "value": 1
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "API-avvisninger i perioden"
                     },
                     "properties": [
                       {
@@ -850,12 +903,12 @@
               },
               "options": {
                 "cellHeight": "sm",
-                "enablePagination": true,
+                "enablePagination": false,
                 "showHeader": true,
                 "sortBy": [
                   {
                     "desc": true,
-                    "displayName": "Loggfeil · 5 min"
+                    "displayName": "Loggfeil i perioden"
                   },
                   {
                     "desc": false,
@@ -867,7 +920,7 @@
                   },
                   {
                     "desc": true,
-                    "displayName": "Omstarter · 15 min"
+                    "displayName": "Omstarter i perioden"
                   }
                 ]
               }
@@ -1574,7 +1627,7 @@
         "spec": {
           "id": 36,
           "title": "Omstarter og siste avslutningsårsak",
-          "description": "Estimerte restarts i faste 15m- og 24t-vinduer, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+          "description": "Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
           "links": [
             {
               "targetBlank": true,
@@ -1614,7 +1667,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[15m]))",
+                        "expr": "max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range]))",
                         "format": "table",
                         "instant": true,
                         "interval": "",
@@ -1623,32 +1676,7 @@
                       },
                       "version": "v0"
                     },
-                    "refId": "Restarts 15m"
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "PA58DA793C7250F1B"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[24h]))",
-                        "format": "table",
-                        "instant": true,
-                        "interval": "",
-                        "legendFormat": "",
-                        "range": false
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "Restarts 24t"
+                    "refId": "Restarts"
                   }
                 },
                 {
@@ -1698,14 +1726,12 @@
                       },
                       "indexByName": {
                         "pod": 0,
-                        "Value #Restarts 15m": 1,
-                        "Value #Restarts 24t": 2,
-                        "reason": 3
+                        "Value #Restarts": 1,
+                        "reason": 2
                       },
                       "renameByName": {
                         "pod": "Pod",
-                        "Value #Restarts 15m": "Omstarter · 15 min",
-                        "Value #Restarts 24t": "Omstarter · 24 timer",
+                        "Value #Restarts": "Omstarter i perioden",
                         "reason": "Siste avslutningsårsak"
                       }
                     }
@@ -1757,11 +1783,7 @@
                 "enablePagination": true,
                 "sortBy": [
                   {
-                    "displayName": "Omstarter · 15 min",
-                    "desc": true
-                  },
-                  {
-                    "displayName": "Omstarter · 24 timer",
+                    "displayName": "Omstarter i perioden",
                     "desc": true
                   }
                 ]
@@ -1806,7 +1828,7 @@
               "transformations": []
             }
           },
-          "description": "Sekunder siden Kafka-klientens siste poll()-kall per pod i syfo-oppfolgingsplan-backend. Under 60 sekunder er nøytralt, 60–300 gult og minst 300 rødt. IKKE POLLET er verdien -1 før første poll, ikke bevis på feil under oppstart. Signalet beviser ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
+          "description": "Ved periodens slutt: sekunder siden Kafka-klientens siste poll()-kall per pod i syfo-oppfolgingsplan-backend. Under 60 sekunder er nøytralt, 60–300 gult og minst 300 rødt. IKKE POLLET er verdien -1 før første poll, ikke bevis på feil under oppstart. Signalet beviser ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
           "id": 33,
           "links": [
             {
@@ -1835,7 +1857,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
             }
           ],
-          "title": "Kafka-klienter · tid siden poll",
+          "title": "Kafka · tid siden poll ved periodeslutt",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -1937,7 +1959,7 @@
               "transformations": []
             }
           },
-          "description": "Samlet committed lag for consumer group syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2 på teamsykmelding.syfo-sendt-sykmelding. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. Manglende måling er Ukjent.",
+          "description": "Ved periodens slutt: samlet committed lag for consumer group syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2 på teamsykmelding.syfo-sendt-sykmelding. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. Manglende måling er Ukjent.",
           "id": 34,
           "links": [
             {
@@ -1966,7 +1988,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/pipelines-og-jobber"
             }
           ],
-          "title": "Sykmeldinger · samlet Kafka-lag",
+          "title": "Sykmeldinger · kø ved periodeslutt",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -2213,7 +2235,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": true,
-                        "expr": "sum(rate(syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\"}[5m]))",
+                        "expr": "sum(rate(syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\"}[$__rate_interval]))",
                         "instant": false,
                         "interval": "",
                         "legendFormat": "observerte deserialiseringsfeil",
@@ -3132,12 +3154,12 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "count((sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(warn|warning)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| json event_type\n| __error__=\"\"\n| event_type=\"api_request_rejected\"\n| keep service_name\n[5m]))) > 0)",
+                        "expr": "sum(sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(warn|warning)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| json event_type\n| __error__=\"\"\n| event_type=\"api_request_rejected\"\n| keep service_name\n[$__range])))",
                         "queryType": "instant"
                       },
                       "version": "v0"
                     },
-                    "refId": "Tjenester med API-avvisninger"
+                    "refId": "API-avvisninger"
                   }
                 }
               ],
@@ -3145,7 +3167,7 @@
               "transformations": []
             }
           },
-          "description": "WARN-hendelsen api_request_rejected siste fem minutter ved periodens slutt. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
+          "description": "Antall WARN-hendelser av typen api_request_rejected i valgt tidsrom. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
           "id": 35,
           "links": [
             {
@@ -3159,7 +3181,7 @@
               "url": "/explore?panes=%7B%22A%22%3A%7B%22datasource%22%3A%22PEA2100DC89AE9FE2%22%2C%22queries%22%3A%5B%7B%22datasource%22%3A%7B%22type%22%3A%22loki%22%2C%22uid%22%3A%22PEA2100DC89AE9FE2%22%7D%2C%22direction%22%3A%22backward%22%2C%22editorMode%22%3A%22code%22%2C%22expr%22%3A%22%7Bservice_namespace%3D%5C%22team-esyfo%5C%22%2C%20k8s_cluster_name%3D%5C%22prod%5C%22%2C%20service_name%3D~%5C%22%5E(aktivitetskrav-backend%7Caktivitetskrav-frontend%7Caktivitetskrav-microfrontend%7Cbro-frontend%7Cdialogmote-frontend%7Cdialogmote-microfrontend%7Cdinesykmeldte%7Cdinesykmeldte-backend%7Cesyfo-narmesteleder%7Cesyfovarsel%7Cflaggskipet%7Clps-oppfolgingsplan-mottak%7Clumi-api%7Clumi-dashboard%7Cmeroppfolging-backend%7Cmeroppfolging-frontend%7Cmeroppfolging-microfrontend%7Cnarmesteleder-frontend%7Csyfo-budstikka%7Csyfo-dokumentporten%7Csyfo-oppfolgingsplan-backend%7Csyfo-oppfolgingsplan-frontend%7Csyfobrukertilgang%7Csyfomotebehov%7Csyfooppdfgen%7Csykepengedager-informasjon)%24%5C%22%7D%5Cn%7C%20k8s_container_name%20!~%20%60secure-logs-fluentbit%7Ccloudsql-proxy%7Cwonderwall%7Celector%60%5Cn%7C%20detected_level%3D~%60(%3Fi)(warn%7Cwarning)%60%5Cn%7C%20x_isFrontend!%3D%5C%22true%5C%22%5Cn%7C%20json%20forwarded_browser%3D%5C%22x_isFrontend%5C%22%5Cn%7C%20forwarded_browser!%3D%5C%22true%5C%22%5Cn%7C%20drop%20forwarded_browser%2C%20__error__%2C%20__error_details__%5Cn%7C%20json%20event_type%5Cn%7C%20__error__%3D%5C%22%5C%22%5Cn%7C%20event_type%3D%5C%22api_request_rejected%5C%22%22%2C%22queryType%22%3A%22range%22%2C%22refId%22%3A%22A%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D&schemaVersion=1&orgId=1"
             }
           ],
-          "title": "API-avvisninger · 5 min",
+          "title": "API-avvisninger i perioden",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -3181,7 +3203,7 @@
                       }
                     ]
                   },
-                  "unit": "suffix: tjenester"
+                  "unit": "short"
                 },
                 "overrides": []
               },
@@ -3295,7 +3317,7 @@
                           "kind": "ElementReference",
                           "name": "panel-10"
                         },
-                        "height": 14,
+                        "height": 28,
                         "width": 24,
                         "x": 0,
                         "y": 4

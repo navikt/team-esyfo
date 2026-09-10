@@ -10,15 +10,18 @@
 2. Fanen **Undersøk en tjeneste** har en lokal tjenestevelger og lenker til logger, APM, Feiloversikt og runbook. Valget endrer ikke produksjonsoversikten. Replikaer, omstarter og logger vises for valgt tjeneste; HTTP-grafer vises bare for tjenester med HTTP-målinger som del av kontrakten.
 3. Følg tjenestens egne signaler når de finnes: meldingsbehandling for Oppfølgingsplan og Budstikka, varslingsjobben for esyfovarsel og rutespesifikke svar for Dine sykmeldte. Målegap står ved tjenesten i oversikten, ikke i en egen statusrad.
 
-Det er ingen globale område- eller tjenestefiltre. Oversikten gjelder alltid hele produksjonsflåten. Tidsrommet er felles; paneler merket **5 min**, **15 min** eller **24 t** bruker det oppgitte vinduet bakover fra slutten av valgt tidsrom.
+Det er ingen globale område- eller tjenestefiltre. Oversikten viser alle tjenestene uten sidebytte. Tidsrommet er felles: hendelsestall følger tidsvelgeren, både i oversikten og under **Undersøk en tjeneste**. Toppkortene teller hendelser, ikke berørte tjenester. Tabellen viser fordelingen per tjeneste.
+
+Tilstandstall for replikaer, køstørrelse og tid siden poll viser siste måling ved slutten av valgt tidsrom. Grafer viser utviklingen gjennom perioden; rater beregnes i løpende intervaller, ikke som periodetotaler. Jobbpanelet viser om feilstatus ble observert i perioden, ikke antall nye jobbfeil.
 
 ## Hva tallene betyr
 
 | Signal | Tolkning |
 |---|---|
 | Feilmarkerte kall | Inngående SERVER-spans med OTel `STATUS_CODE_ERROR`. Ikke automatisk HTTP 5xx eller påvist brukerimpact. |
-| Loggfeil · 5 min | Logghendelser med `error`, `critical` eller `fatal`, uavhengig av HTTP-sporene. |
-| Omstarter · 15 min | Toppkortet teller tjenester med omstarter; tabellen viser estimerte omstarter per tjeneste. Gult er et undersøkelsessignal, ikke en nedetidsalarm. |
+| Loggfeil i perioden | Antall logghendelser med `error`, `critical` eller `fatal`, uavhengig av HTTP-sporene. |
+| API-avvisninger i perioden | Antall WARN-hendelser av typen `api_request_rejected`. Ikke alle HTTP 4xx eller API-feil; bare tjenester som logger denne hendelsen er dekket. |
+| Omstarter i perioden | Estimert antall containeromstarter i valgt tidsrom. Gult er et undersøkelsessignal, ikke en nedetidsalarm. |
 | Klare replikaer | Klare i forhold til ønskede replikaer. Et øyeblikksbilde, ikke målt tilgjengelighet. |
 | HTTP-målinger | Om forventede HTTP-måleserier er oppdatert, forsinket eller mangler. Ikke tidspunktet for siste kall. |
 
@@ -30,7 +33,7 @@ Datasource- og spørringsfeil skal vises som feil, aldri som frisk tjeneste. Det
 
 Vanlig oppretting, fjerning eller erstatning av podder ved deploy og skalering øker ikke containerens restart-teller. Derfor undertrykker vi ikke alle avvik rundt deploy. Korte fall i antall klare replikaer kan likevel være normale; se tidsserien og eventuell brukerimpact før du konkluderer.
 
-Podtabellen viser omstarter siste 15 minutter og 24 timer, samt **siste registrerte avslutningsårsak på nåværende podder**. Årsaken gjelder ikke nødvendigvis alle omstarter i vinduet. Erstattede podder kan ha restarthistorikk uten tilgjengelig årsak, og dagens metrikkgrunnlag gir ikke avslutningstidspunkt.
+Podtabellen viser omstarter i valgt tidsrom, samt **siste registrerte avslutningsårsak på nåværende podder**. Årsaken kan være eldre enn tidsrommet og gjelder ikke nødvendigvis alle omstarter i perioden. Erstattede podder kan ha restarthistorikk uten tilgjengelig årsak, og dagens metrikkgrunnlag gir ikke avslutningstidspunkt.
 
 - `OOMKilled`: sammenhold minnebruk og minnegrense før tiltak.
 - `Error`: åpne poddens logger rundt hendelsen; årsaken kan ikke leses av exit-status alene.
@@ -99,7 +102,7 @@ Query-smoken kjører syntetiske hendelser i lokal Loki og måleserier gjennom Pr
 
 Rendring og lenker må også prøves i Grafana: hele flåten, en backend/frontend/worker, normal utrulling, reelle omstarter, manglende målinger og ett konkret feilforløp. Kontroller at tjenestelenken åpner riktig detaljvisning, at en worker ikke får tomme HTTP-grafer, og at ingen tjeneste får en annen tjenestes særpaneler. Lokalt tjenestevalg skal ikke endre produksjonsoversikten. Se [designprinsippene](./dashboard-design).
 
-Ved publisering: eksporter live-dashboardet som rollback-kopi, importer artefakten med samme UID `team-esyfo-kontrollrom` i **Team Esyfo** (`K-1b-N_4k`), og eksporter på nytt for semantisk sammenligning. Ikke overskriv uavklarte live-endringer. Standard er én time og to minutters oppdatering; flåte-Loki leser bare fem minutter.
+Ved publisering: eksporter live-dashboardet som rollback-kopi, importer artefakten med samme UID `team-esyfo-kontrollrom` i **Team Esyfo** (`K-1b-N_4k`), og eksporter på nytt for semantisk sammenligning. Ikke overskriv uavklarte live-endringer. Standard er én time og to minutters oppdatering. Lengre tidsvalg leser mer loggdata og kan ta lengre tid.
 
 ## Referanser
 
