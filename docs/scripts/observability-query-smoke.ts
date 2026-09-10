@@ -13,6 +13,9 @@ import {
 	jobFailureQuery,
 	lowestReadyRatioQuery,
 	podTerminationReasonQuery,
+	podTerminationTimestampQuery,
+	podTerminationExitCodeQuery,
+	podTerminationInPeriodQuery,
 	readyRatioByServiceQuery,
 	selectedReadyRatioQuery,
 } from "../.vitepress/grafana/control-room.ts";
@@ -29,6 +32,7 @@ import {
 	runtimeTrendQuery,
 	tracedRuntimeErrorsQuery,
 } from "../.vitepress/grafana/error-drilldown.ts";
+import { runtimePodLogsDataLink } from "../.vitepress/grafana/runtime-links.ts";
 
 // Only synthetic data is sent to the loopback-bound test container.
 const exec = promisify(execFile);
@@ -53,6 +57,7 @@ const canonicalError = {
 	trace_id: safeTrace,
 	message: "Synthetic message that must not enter summary tables",
 };
+const systemDenial = "System user does not have access to nav_syfo_oppgi-narmesteleder resource";
 type Fixture = {
 	labels?: Record<string, string>;
 	fields?: Record<string, unknown>;
@@ -180,6 +185,20 @@ async function checkLogQueries(url: string) {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			streams: [
+				...["esyfo-narmesteleder", "wrong-denial-service"].map((app) => ({
+					stream: { ...runtimeLabels, service_name: app, k8s_container_name: app, detected_level: "warn" },
+					values: [
+						[String(BigInt(now - 60000) * 1000000n), `Unhandled API exception\nForbiddenException: ${systemDenial}`],
+						[String(BigInt(now - 30000) * 1000000n), JSON.stringify({ event_type: "api_request_rejected", rejection_reason: "INVALID_INPUT", message: systemDenial })],
+					],
+				})),
+				{
+					stream: { service_namespace: "team-esyfo", service_name: "pod-link-fixture", k8s_cluster_name: "prod" },
+					values: [
+						[String(BigInt(now - 60000) * 1000000n), "Synthetic previous container startup", { k8s_pod_name: "old-pod" }],
+						[String(BigInt(now - 30000) * 1000000n), "Synthetic replacement startup", { k8s_pod_name: "replacement-pod" }],
+					],
+				},
 				...["error", "warn"].map((level) => ({
 					stream: {
 						...runtimeLabels,
@@ -362,6 +381,11 @@ async function checkLogQueries(url: string) {
 		["INVALID_INPUT", "Årsak ikke oppgitt"],
 	);
 	await checkRowLinks(rejections, runtimeRejectionDataLink());
+	const systemRejections: Vector[] = await request(runtimeRejectionsQuery, "esyfo-narmesteleder");
+	assert.equal(total(systemRejections), 2, "Legacy denial and canonical event count once each");
+	assert.deepEqual(systemRejections.map(({ metric }) => metric.rejection_reason_display).sort(), ["INVALID_INPUT", "Systembrukertilgang ikke innvilget"]);
+	await checkRowLinks(systemRejections, runtimeRejectionDataLink());
+	assert.equal(total(await request(runtimeRejectionsQuery, "wrong-denial-service")), 1, "Legacy phrase must not classify another service; canonical event still counts");
 	const traces: Stream[] = await request(
 		tracedRuntimeErrorsQuery,
 		service,
@@ -426,9 +450,12 @@ async function checkLogQueries(url: string) {
 		),
 	);
 	assert.deepEqual(await browser("absent-environment"), []);
-	console.log(
-		"Loki: levels, signatures, exclusions, rejections, traces, browser environments, row-to-log parity and empty results passed",
-	);
+	const podLink = new URL(runtimePodLogsDataLink("pod-link-fixture", "old-pod"), "https://grafana.example.test");
+	const podQuery = JSON.parse(podLink.searchParams.get("panes")!).A.queries[0].expr;
+	const podLogs: Stream[] = await request(podQuery, service, true);
+	assert.equal(podLogs.flatMap(({ values }) => values).length, 1, "Pod link must find structured metadata, excluding the replacement pod");
+	assert.equal(podLogs[0].values[0][1], "Synthetic previous container startup");
+	console.log("Loki: levels, signatures, exclusions, rejections, traces, browser environments, row-to-log parity, pod metadata links and empty results passed");
 }
 
 type Sample = { labels: string; value: number };
@@ -674,6 +701,28 @@ async function checkMetricQueries(directory: string) {
 				successfulTraffic,
 				historicalRestarts,
 				...reasonCases,
+				{
+					name: "Latest exit code follows the newest termination, not the largest historical code",
+					interval: "1m",
+					input_series: [
+						...[{ instance: "old-exporter", time: 1200, code: 143 }, { instance: "new-exporter", time: 1800, code: 137 }].flatMap(({ instance, time, code }) => [
+							{ series: `kube_pod_container_status_last_terminated_timestamp{${reasonLabels},pod="old",instance="${instance}"}`, values: `${time}+0x30 stale _x29` },
+							{ series: `kube_pod_container_status_last_terminated_exitcode{${reasonLabels},pod="old",instance="${instance}"}`, values: `${code}+0x30 stale _x29` },
+						]),
+					],
+					promql_expr_test: [
+						{ query: podTerminationTimestampQuery, expected: 1800000 },
+						{ query: podTerminationExitCodeQuery, expected: 137 },
+						{ query: podTerminationInPeriodQuery.replaceAll("${__from}", "0"), expected: 1 },
+						{ query: podTerminationInPeriodQuery.replaceAll("${__from}", "2400000"), expected: 0 },
+					].map(({ query, expected }) => ({ expr: renderQuery(query), eval_time: "60m", exp_samples: [{ labels: `{container="${service}",pod="old"}`, value: expected }] })),
+				},
+				{
+					name: "Missing termination data remains unknown",
+					interval: "1m",
+					input_series: [],
+					promql_expr_test: [podTerminationTimestampQuery, podTerminationExitCodeQuery, podTerminationInPeriodQuery.replaceAll("${__from}", "0")].map(query => ({ expr: renderQuery(query), eval_time: "60m", exp_samples: [] })),
+				},
 			],
 		}),
 	);

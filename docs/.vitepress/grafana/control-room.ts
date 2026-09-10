@@ -21,7 +21,11 @@ import {
 	MIMIR_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
-import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
+import {
+	apmDataLink,
+	runtimeLogsDataLink,
+	runtimePodLogsDataLink,
+} from "./runtime-links.ts";
 import { runtimeErrorPipeline } from "./runtime-logql.ts";
 
 export { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
@@ -152,6 +156,14 @@ export const podRestartsQuery = `max by (pod, container) (increase(${RESTARTS_ME
 // A reason observed during the period may describe an earlier termination.
 const observedPodTerminationReasons = `max by (pod, container, reason) (max_over_time(kube_pod_container_status_last_terminated_reason{${selectedKubeContainerSelector}}[$__range])) == 1`;
 export const podTerminationReasonQuery = `(${observedPodTerminationReasons}) or on(pod, container) label_replace(0 * (${podRestartsQuery}) + 1, "reason", "Ikke registrert", "", ".*")`;
+
+// Select the exporter with the newest termination, then take its exit code.
+// Choosing the highest historical exit code could pair an old 143 with a new 137.
+const latestPodTerminationSeries = `topk by (pod, container) (1, last_over_time(kube_pod_container_status_last_terminated_timestamp{${selectedKubeContainerSelector}}[$__range]) > 0)`;
+const latestPodTerminationSeconds = `max by (pod, container) (${latestPodTerminationSeries})`;
+export const podTerminationTimestampQuery = `1000 * (${latestPodTerminationSeconds})`;
+export const podTerminationExitCodeQuery = `max by (pod, container) (last_over_time(kube_pod_container_status_last_terminated_exitcode{${selectedKubeContainerSelector}}[$__range]) and (${latestPodTerminationSeries}))`;
+export const podTerminationInPeriodQuery = `(${latestPodTerminationSeconds}) >= bool (${FROM} / 1000)`;
 
 const readyByDeployment = (selector: string) =>
 	`max by (deployment) (${READY_REPLICAS_METRIC}{${selector}})`;
@@ -713,11 +725,32 @@ const podDiagnosticsPanel = () => ({
 		id: 36,
 		title: "Omstarter og registrerte avslutningsårsaker",
 		description:
-			"Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsakene er verdier som ble observert i målingene i perioden, også for podder som senere ble erstattet. De kan gjelde avslutninger før perioden og er ikke årsak til alle restarts. Flere årsaker samles på samme rad; antall omstarter telles bare én gang per pod. Tidspunkt for avslutningen er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+			"Estimerte restarts i valgt tidsrom, også fra erstattede podder. Registrerte årsaker er historiske observasjoner, ikke årsak til alle restarts eller nødvendigvis siste avslutning. Siste avslutning og exit-kode kommer fra den sist registrerte avslutningen; tidsstatus markerer om den er eldre enn valgt tidsrom. 137 alene beviser ikke OOM; bruk OOMKilled og minnemålinger. Ukjent betyr at målingen mangler. Klikk podnavnet for podlogger i valgt tidsrom.",
 		links: serviceDataLinks(SERVICE_VARIABLE),
 		data: queryGroup(
 			[
 				prometheusQuery("Restarts", podRestartsQuery, "instant", "", "table"),
+				prometheusQuery(
+					"Avsluttet",
+					podTerminationTimestampQuery,
+					"instant",
+					"",
+					"table",
+				),
+				prometheusQuery(
+					"Exit",
+					podTerminationExitCodeQuery,
+					"instant",
+					"",
+					"table",
+				),
+				prometheusQuery(
+					"Tidsstatus",
+					podTerminationInPeriodQuery,
+					"instant",
+					"",
+					"table",
+				),
 				prometheusQuery(
 					"Årsaker",
 					podTerminationReasonQuery,
@@ -736,6 +769,18 @@ const podDiagnosticsPanel = () => ({
 							fields: {
 								pod: { operation: "groupby", aggregations: [] },
 								"Value #Restarts": {
+									operation: "aggregate",
+									aggregations: ["max"],
+								},
+								"Value #Avsluttet": {
+									operation: "aggregate",
+									aggregations: ["max"],
+								},
+								"Value #Exit": {
+									operation: "aggregate",
+									aggregations: ["max"],
+								},
+								"Value #Tidsstatus": {
 									operation: "aggregate",
 									aggregations: ["max"],
 								},
@@ -761,11 +806,17 @@ const podDiagnosticsPanel = () => ({
 								pod: 0,
 								"Value #Restarts (max)": 1,
 								"reason (uniqueValues)": 2,
+								"Value #Avsluttet (max)": 3,
+								"Value #Exit (max)": 4,
+								"Value #Tidsstatus (max)": 5,
 							},
 							renameByName: {
 								pod: "Pod",
 								"Value #Restarts (max)": "Omstarter i perioden",
 								"reason (uniqueValues)": "Registrerte årsaker",
+								"Value #Avsluttet (max)": "Siste avslutning",
+								"Value #Exit (max)": "Siste exit-kode",
+								"Value #Tidsstatus (max)": "Avslutningens tidsrom",
 							},
 						},
 					},
@@ -785,6 +836,27 @@ const podDiagnosticsPanel = () => ({
 					},
 					overrides: [
 						{
+							matcher: { id: "byName", options: "Siste avslutning" },
+							properties: [{ id: "unit", value: "dateTimeAsIso" }],
+						},
+						{
+							matcher: { id: "byName", options: "Avslutningens tidsrom" },
+							properties: [
+								{
+									id: "mappings",
+									value: [
+										{
+											type: "value",
+											options: {
+												"0": { text: "Før valgt tidsrom" },
+												"1": { text: "I valgt tidsrom" },
+											},
+										},
+									],
+								},
+							],
+						},
+						{
 							matcher: { id: "byName", options: "Pod" },
 							properties: [
 								{
@@ -792,7 +864,7 @@ const podDiagnosticsPanel = () => ({
 									value: [
 										dataLink(
 											"Podlogger · valgt tidsrom",
-											`${runtimeLogsDataLink(SERVICE_VARIABLE)}&var-filters=k8s_pod_name%7C%3D%7C${ROW_VALUE}`,
+											runtimePodLogsDataLink(SERVICE_VARIABLE, ROW_VALUE),
 										),
 									],
 								},

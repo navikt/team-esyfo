@@ -32,10 +32,15 @@ Datasource- og spørringsfeil skal vises som feil, aldri som frisk tjeneste. Det
 
 Vanlig oppretting, fjerning eller erstatning av podder ved deploy og skalering øker ikke containerens restart-teller. Derfor undertrykker vi ikke alle avvik rundt deploy. Korte fall i antall klare replikaer kan likevel være normale; se tidsserien og eventuell brukerimpact før du konkluderer.
 
-Podtabellen viser omstarter og **avslutningsårsaker observert i målingene i valgt tidsrom**, også for podder som senere ble erstattet. Flere årsaker samles på én rad per pod, uten å summere restarttallet flere ganger. Årsaken kan beskrive en avslutning før tidsrommet og gjelder ikke nødvendigvis alle omstarter i perioden. Dagens metrikkgrunnlag gir ikke avslutningstidspunkt eller en komplett hendelseslogg. **Ikke registrert** betyr at en restartmåling finnes, men at ingen årsak ble funnet i perioden.
+Podtabellen viser omstarter og **avslutningsårsaker observert i målingene i valgt tidsrom**, også for podder som senere ble erstattet. Flere årsaker samles på én rad per pod, uten å summere restarttallet flere ganger. Årsakene er historiske observasjoner og gjelder ikke nødvendigvis siste avslutning eller alle omstarter i perioden. **Ikke registrert** betyr at en restartmåling finnes, men at ingen årsak ble funnet i perioden.
+
+**Siste avslutning** og **Siste exit-kode** hentes fra `kube_pod_container_status_last_terminated_timestamp` og `kube_pod_container_status_last_terminated_exitcode`. De finnes også historisk for erstattede podder. Ved flere eksportører velges serien med nyeste registrerte avslutning, ikke den høyeste historiske exit-koden. **Avslutningens tidsrom** markerer om avslutningen er eldre enn valgt tidsrom. Manglende målinger forblir **Ukjent**; dette er fortsatt ikke en komplett hendelseslogg.
+
+Podlenken åpner et ferdig Explore-søk med samme pod og tidsrom. `k8s_pod_name` er strukturert metadata i produksjons-Loki og filtreres etter stream-selektoren, ikke som en indekslabel. Logger fra tidligere containeroppstarter i samme pod beholdes. En avslutning før tidsrommet krever et utvidet tidsvalg for å se de eldre loggene.
 
 - `OOMKilled`: sammenhold minnebruk og minnegrense før tiltak.
 - `Error`: åpne poddens logger rundt hendelsen; årsaken kan ikke leses av exit-status alene.
+- Exit-kode `137` alene er ikke bevis for OOM; `143` alene forklarer ikke hvem som ba om terminering.
 - Manglende årsak: ikke bevis på normal deploy.
 
 Prometheus `increase()` estimerer tellerøkning. Tellere presenteres avrundet til heltall, men verdiene er fortsatt estimater, ikke en eksakt hendelseslogg. Se [HTTP-/runtime-runbook](./runbooks/http-runtime).
@@ -56,7 +61,9 @@ HTTP-måledata klassifiseres slik:
 - **Ingen nyere data:** ingen serie siste 30 minutter for en HTTP-tjeneste. Dette kan også skyldes lite trafikk, og er ikke alene bevis for manglende instrumentering eller nedetid.
 - **Bakgrunnstjeneste:** worker uten inbound SERVER-kontrakt.
 
-Den avgrensede WARN-hendelsen `api_request_rejected` vises under **Avviste API-kall** i [Feiloversikt](./feildrilldown), ikke som et generelt signal for hele flåten. Flaggskipet logger blant annet eksplisitt avvist input og autentisering slik. Ingen treff betyr bare at ingen samsvarende hendelser ble funnet; dette er ikke en telling av alle API-avvisninger i teamet.
+SERVER-spans er ikke nødvendigvis unike HTTP-forespørsler. Blant annet kan Next-tjenester rapportere både `GET`, rutede spans og `RSC GET`. Tallene brukes til diagnostikk, ikke som sammenlignbar brukertrafikk eller vedtatt HTTP-SLI på tvers av apper. Feilspans kan finnes uten ERROR-logg, og en klient-timeout før forbindelse er etablert kan mangle i mottakerens innkommende spans.
+
+Den avgrensede WARN-hendelsen `api_request_rejected` vises under **Registrerte API-avvisninger** i [Feiloversikt](./feildrilldown), ikke som et generelt signal for hele flåten. Flaggskipet logger blant annet eksplisitt avvist input og autentisering slik. Visningen gjenkjenner også én verifisert legacy-avvisning av systembrukertilgang i esyfo-narmesteleder. Ingen treff betyr bare at ingen samsvarende hendelser ble funnet; dette er ikke en telling av alle API-avvisninger i teamet.
 
 ### Tjenestens egne signaler
 

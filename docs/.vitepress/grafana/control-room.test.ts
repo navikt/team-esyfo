@@ -641,6 +641,9 @@ test("bevarer dedupliserte restarts, observasjonsforankret null og nøytral hist
 		fields: {
 			pod: { operation: "groupby", aggregations: [] },
 			"Value #Restarts": { operation: "aggregate", aggregations: ["max"] },
+			"Value #Avsluttet": { operation: "aggregate", aggregations: ["max"] },
+			"Value #Exit": { operation: "aggregate", aggregations: ["max"] },
+			"Value #Tidsstatus": { operation: "aggregate", aggregations: ["max"] },
 			reason: { operation: "aggregate", aggregations: ["uniqueValues"] },
 		},
 	});
@@ -651,7 +654,8 @@ test("bevarer dedupliserte restarts, observasjonsforankret null og nøytral hist
 			(q) => q.includes("last_terminated_reason") && q.includes("== 1"),
 		),
 	);
-	assert.ok(!JSON.stringify(diagnostic).includes("last_terminated_timestamp"));
+	assert.ok(JSON.stringify(diagnostic).includes("last_terminated_timestamp"));
+	assert.ok(JSON.stringify(diagnostic).includes("last_terminated_exitcode"));
 	assert.match(diagnostic.spec.description, /ikke årsak til alle restarts/);
 	assert.ok(
 		!JSON.stringify(diagnostic.spec.vizConfig).includes('"color":"red"'),
