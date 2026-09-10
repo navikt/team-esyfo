@@ -1,6 +1,28 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
+import {
+	apmDataLink,
+	runtimeLogsDataLink,
+	runtimePodLogsDataLink,
+} from "./runtime-links.ts";
+
+test("pod logs filter structured metadata outside the stream selector and preserve time", () => {
+	const link = runtimePodLogsDataLink("${service:raw}", "${__value.raw}");
+	const url = new URL(
+		link
+			.replaceAll("${service:raw}", "flaggskipet")
+			.replaceAll("${__value.raw}", "flaggskipet-old"),
+		"https://grafana.example.test",
+	);
+	const pane = JSON.parse(url.searchParams.get("panes")!).A;
+	assert.equal(
+		pane.queries[0].expr,
+		'{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name="flaggskipet"} | k8s_pod_name="flaggskipet-old"',
+	);
+	assert.deepEqual(pane.range, { from: "${__from}", to: "${__to}" });
+	assert.equal(pane.queries[0].queryType, "range");
+	assert.equal(pane.datasource, "PEA2100DC89AE9FE2");
+});
 
 test("APM links preserve service, environment and the dashboard's absolute time range", () => {
 	for (const environment of ["prod", "dev"]) {

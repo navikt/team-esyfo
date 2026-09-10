@@ -1575,7 +1575,7 @@
         "spec": {
           "id": 36,
           "title": "Omstarter og registrerte avslutningsårsaker",
-          "description": "Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsakene er verdier som ble observert i målingene i perioden, også for podder som senere ble erstattet. De kan gjelde avslutninger før perioden og er ikke årsak til alle restarts. Flere årsaker samles på samme rad; antall omstarter telles bare én gang per pod. Tidspunkt for avslutningen er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+          "description": "Estimerte restarts i valgt tidsrom, også fra erstattede podder. Registrerte årsaker er historiske observasjoner, ikke årsak til alle restarts eller nødvendigvis siste avslutning. Siste avslutning og exit-kode kommer fra den sist registrerte avslutningen; tidsstatus markerer om den er eldre enn valgt tidsrom. 137 alene beviser ikke OOM; bruk OOMKilled og minnemålinger. Ukjent betyr at målingen mangler. Klikk podnavnet for podlogger i valgt tidsrom.",
           "links": [
             {
               "targetBlank": true,
@@ -1640,6 +1640,81 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
+                        "expr": "1000 * (max by (pod, container) (topk by (pod, container) (1, last_over_time(kube_pod_container_status_last_terminated_timestamp{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range]) > 0)))",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Avsluttet"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "max by (pod, container) (last_over_time(kube_pod_container_status_last_terminated_exitcode{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range]) and (topk by (pod, container) (1, last_over_time(kube_pod_container_status_last_terminated_timestamp{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range]) > 0)))",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Exit"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "(max by (pod, container) (topk by (pod, container) (1, last_over_time(kube_pod_container_status_last_terminated_timestamp{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range]) > 0))) >= bool (${__from} / 1000)",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Tidsstatus"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
                         "expr": "(max by (pod, container, reason) (max_over_time(kube_pod_container_status_last_terminated_reason{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range])) == 1) or on(pod, container) label_replace(0 * (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range]))) + 1, \"reason\", \"Ikke registrert\", \"\", \".*\")",
                         "format": "table",
                         "instant": true,
@@ -1678,6 +1753,24 @@
                             "max"
                           ]
                         },
+                        "Value #Avsluttet": {
+                          "operation": "aggregate",
+                          "aggregations": [
+                            "max"
+                          ]
+                        },
+                        "Value #Exit": {
+                          "operation": "aggregate",
+                          "aggregations": [
+                            "max"
+                          ]
+                        },
+                        "Value #Tidsstatus": {
+                          "operation": "aggregate",
+                          "aggregations": [
+                            "max"
+                          ]
+                        },
                         "reason": {
                           "operation": "aggregate",
                           "aggregations": [
@@ -1701,12 +1794,18 @@
                       "indexByName": {
                         "pod": 0,
                         "Value #Restarts (max)": 1,
-                        "reason (uniqueValues)": 2
+                        "reason (uniqueValues)": 2,
+                        "Value #Avsluttet (max)": 3,
+                        "Value #Exit (max)": 4,
+                        "Value #Tidsstatus (max)": 5
                       },
                       "renameByName": {
                         "pod": "Pod",
                         "Value #Restarts (max)": "Omstarter i perioden",
-                        "reason (uniqueValues)": "Registrerte årsaker"
+                        "reason (uniqueValues)": "Registrerte årsaker",
+                        "Value #Avsluttet (max)": "Siste avslutning",
+                        "Value #Exit (max)": "Siste exit-kode",
+                        "Value #Tidsstatus (max)": "Avslutningens tidsrom"
                       }
                     }
                   }
@@ -1734,6 +1833,42 @@
                   {
                     "matcher": {
                       "id": "byName",
+                      "options": "Siste avslutning"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "dateTimeAsIso"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Avslutningens tidsrom"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "0": {
+                                "text": "Før valgt tidsrom"
+                              },
+                              "1": {
+                                "text": "I valgt tidsrom"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
                       "options": "Pod"
                     },
                     "properties": [
@@ -1743,7 +1878,7 @@
                           {
                             "targetBlank": true,
                             "title": "Podlogger · valgt tidsrom",
-                            "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-filters=k8s_pod_name%7C%3D%7C${__value.raw}"
+                            "url": "/explore?panes=%7B%22A%22%3A%7B%22datasource%22%3A%22PEA2100DC89AE9FE2%22%2C%22queries%22%3A%5B%7B%22datasource%22%3A%7B%22type%22%3A%22loki%22%2C%22uid%22%3A%22PEA2100DC89AE9FE2%22%7D%2C%22direction%22%3A%22backward%22%2C%22editorMode%22%3A%22code%22%2C%22expr%22%3A%22%7Bservice_namespace%3D%5C%22team-esyfo%5C%22%2C%20k8s_cluster_name%3D%5C%22prod%5C%22%2C%20service_name%3D%5C%22${service:raw}%5C%22%7D%20%7C%20k8s_pod_name%3D%5C%22${__value.raw}%5C%22%22%2C%22queryType%22%3A%22range%22%2C%22refId%22%3A%22A%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D&schemaVersion=1&orgId=1"
                           }
                         ]
                       }

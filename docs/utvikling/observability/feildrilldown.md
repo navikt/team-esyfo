@@ -11,9 +11,11 @@ Den primære, åpne delen har én rekkefølge:
 1. **Loggede feil per minutt** viser utviklingen med samme enhet uansett tidsrom. **Hvor skjer feilene?** viser antall hendelser per tjeneste i hele tidsrommet som horisontale stolper.
 2. **Hva feiler?** viser hendelsestype, kode og operasjon. Topp 25 beregnes separat for `error`, `critical` og `fatal`, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser.
 3. **Konkrete feilforløp · åpne trace** gir et utvalg fra de 100 nyeste trace-koblede feilene, med valgfri HTTP-status fra tjenesten som ble kalt.
-4. **Avviste API-kall · WARN** viser inntil 50 grupper separat fra ERROR. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
+4. **Registrerte API-avvisninger · WARN** viser inntil 50 grupper separat fra ERROR. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
 
-Avvisningspanelet omfatter bare `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak får samme verdi, **Årsak ikke oppgitt**, i både grupperingen og loggsøket. Gruppelinken bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
+Avvisningspanelet omfatter `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak får samme verdi, **Årsak ikke oppgitt**, i både grupperingen og loggsøket. Gruppelinken bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
+
+En avgrenset overgangsleser gjenkjenner også den kodeeide meldingen `System user does not have access to nav_syfo_oppgi-narmesteleder resource`, bare for `esyfo-narmesteleder` og bare på WARN. Den vises som **Systembrukertilgang ikke innvilget**. Rå melding og identifikatorer returneres ikke til panelet. En hendelse som også har kanonisk `api_request_rejected`, telles bare én gang med den kanoniske årsaken. Produsentkontrakt og funksjonell avklaring følges i [esyfo-narmesteleder #516](https://github.com/navikt/esyfo-narmesteleder/issues/516); overgangsleseren kan fjernes når kontrakten og nødvendig historikk tillater det. Avvisningen beviser ikke i seg selv manglende delegering: PDPs `Deny`, `NotApplicable` og `Indeterminate` blir i dag samme boolean-resultat.
 
 I runtime-tabellene åpner **Undersøk** en meny:
 

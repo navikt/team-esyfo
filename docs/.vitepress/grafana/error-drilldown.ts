@@ -13,7 +13,12 @@ import {
 	PROD_TEMPO_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
-import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
+import {
+	apmDataLink,
+	encodeExploreState,
+	lokiExploreDataLink,
+	runtimeLogsDataLink,
+} from "./runtime-links.ts";
 import {
 	runtimeErrorPipeline,
 	runtimeRejectionPipeline,
@@ -252,7 +257,7 @@ ${safeLabel("safe_error_code", "error_code", safeCodePattern)}
 ${safeLabel("safe_rejection_reason", "rejection_reason", safeGenericTypeAsCodePattern)}
 | label_format operation_display=\`{{ if .safe_operation }}{{ .safe_operation }}{{ else }}—{{ end }}\`
 | label_format error_code_display=\`{{ if .safe_error_code }}{{ .safe_error_code }}{{ else }}—{{ end }}\`
-| label_format rejection_reason_display=\`{{ if and .safe_rejection_reason (ne .safe_rejection_reason "UNSPECIFIED") }}{{ .safe_rejection_reason }}{{ else }}Årsak ikke oppgitt{{ end }}\``;
+| label_format rejection_reason_display=\`{{ if and (ne .event_type "api_request_rejected") (eq .service_name "esyfo-narmesteleder") .legacy_system_denial }}Systembrukertilgang ikke innvilget{{ else if and .safe_rejection_reason (ne .safe_rejection_reason "UNSPECIFIED") }}{{ .safe_rejection_reason }}{{ else }}Årsak ikke oppgitt{{ end }}\``;
 
 export const runtimeRejectionsQuery = `topk(50, sum by(service_name, operation_display, error_code_display, rejection_reason_display, action) (count_over_time(${runtimeSelector}
 ${runtimeRejectionPipeline}
@@ -278,23 +283,6 @@ ${runtimeTraceLabels}
 | keep service_name, error_type_display, error_code_display, error_context, upstream_status_display, safe_trace_id
 | drop __error__, __error_details__`;
 
-const encodeExploreState = (value: unknown) => {
-	const variables: string[] = [];
-	const withTokens = JSON.stringify(value, (_key, child) => {
-		if (typeof child !== "string") return child;
-		return child.replace(/\$\{[^}]+\}/g, (variable) => {
-			const token = `__GRAFANA_VARIABLE_${variables.length}__`;
-			variables.push(variable);
-			return token;
-		});
-	});
-	return variables.reduce(
-		(encoded, variable, index) =>
-			encoded.replace(`__GRAFANA_VARIABLE_${index}__`, variable),
-		encodeURIComponent(withTokens),
-	);
-};
-
 export const traceDataLink = (traceId: string) => {
 	const panes = {
 		A: {
@@ -307,26 +295,6 @@ export const traceDataLink = (traceId: string) => {
 					queryType: "traceql",
 					query: traceId,
 					filters: [],
-				},
-			],
-			range: { from: FROM, to: TO },
-		},
-	};
-	return `/explore?panes=${encodeExploreState(panes)}&schemaVersion=1&orgId=1`;
-};
-
-const lokiExploreDataLink = (expr: string) => {
-	const panes = {
-		A: {
-			datasource: LOKI_DATASOURCE_UID,
-			queries: [
-				{
-					datasource: { type: "loki", uid: LOKI_DATASOURCE_UID },
-					direction: "backward",
-					editorMode: "code",
-					expr,
-					queryType: "range",
-					refId: "A",
 				},
 			],
 			range: { from: FROM, to: TO },
@@ -992,9 +960,9 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 			"panel-3": tracedErrorsPanel(),
 			"panel-6": tablePanel({
 				id: 6,
-				title: "Avviste API-kall · WARN",
+				title: "Registrerte API-avvisninger · WARN",
 				description:
-					"Inntil 50 grupper av WARN-hendelsen api_request_rejected, ikke alle advarsler eller HTTP 4xx. Gjentatte avvisninger kan vise klientfeil eller feilkonfigurasjon selv om serveren avviser riktig. Antallet er logghendelser, ikke brukere. Logger for feilgruppen bevarer også avvisningsgrunnen.",
+					"Dekker api_request_rejected (blant annet Flaggskipet) og den verifiserte avvisningen av systembrukertilgang i esyfo-narmesteleder. Ikke alle WARN eller HTTP 4xx. Sistnevnte gjenkjennes midlertidig fra én kodeeid melding inntil produsenten har strukturert hendelse. Tilgang ikke innvilget beviser ikke feil i tilgangskontrollen. Inntil 50 grupper; antallet er logghendelser, ikke brukere. Gruppelinken bevarer avvisningsgrunnen.",
 				refId: "API-avvisninger",
 				expr: runtimeRejectionsQuery,
 				renameByName: {
