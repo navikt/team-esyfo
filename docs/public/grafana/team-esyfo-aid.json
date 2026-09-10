@@ -14,6 +14,225 @@
     "annotations": [],
     "cursorSync": "Off",
     "elements": {
+      "panel-35": {
+        "kind": "Panel",
+        "spec": {
+          "id": 35,
+          "title": "Åpnet unntaksteksten",
+          "description": "Tiltaksgruppen med unntaksvalget tilgjengelig på arbeidsgivers oversikt. Registrerte åpninger og handlinger, ikke unike personer. Handlinger gjelder samme besøk som åpningen. Gjentatte klikk teller; send og lag plan kan forekomme i samme besøk. Tallene er ikke en konverteringstrakt. Måles først etter utrulling av instrumenteringen; ingen registreringer er ikke dokumentert null bruk. Kortet ble åpnet, én gang per besøk. Det betyr ikke at teksten er lest.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Åpninger",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum(count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_hendelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_unntaksvurdering\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"oversikt_arbeidsgiver\"\n| event_data_gruppe=\"tiltak\"\n| event_data_hendelse=~\"aapnet|send|lag_plan\"\n| label_format hendelse=event_data_hendelse\n| keep hendelse\n| hendelse=\"aapnet\"\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Åpninger"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen registreringer",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "textMode": "auto",
+                "text": {
+                  "valueSize": 32
+                },
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-36": {
+        "kind": "Panel",
+        "spec": {
+          "id": 36,
+          "title": "Trykket «Send» etter åpning",
+          "description": "Tiltaksgruppen med unntaksvalget tilgjengelig på arbeidsgivers oversikt. Registrerte åpninger og handlinger, ikke unike personer. Handlinger gjelder samme besøk som åpningen. Gjentatte klikk teller; send og lag plan kan forekomme i samme besøk. Tallene er ikke en konverteringstrakt. Måles først etter utrulling av instrumenteringen; ingen registreringer er ikke dokumentert null bruk. Aktivering av «Send til Nav og den ansatte», også med tastatur. Telles før validering og svar fra lagringen, ikke som bekreftet registrering.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Send",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum(count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_hendelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_unntaksvurdering\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"oversikt_arbeidsgiver\"\n| event_data_gruppe=\"tiltak\"\n| event_data_hendelse=~\"aapnet|send|lag_plan\"\n| label_format hendelse=event_data_hendelse\n| keep hendelse\n| hendelse=\"send\"\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Send"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen registreringer",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "textMode": "auto",
+                "text": {
+                  "valueSize": 32
+                },
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-37": {
+        "kind": "Panel",
+        "spec": {
+          "id": 37,
+          "title": "Trykket «Lag plan» etter åpning",
+          "description": "Tiltaksgruppen med unntaksvalget tilgjengelig på arbeidsgivers oversikt. Registrerte åpninger og handlinger, ikke unike personer. Handlinger gjelder samme besøk som åpningen. Gjentatte klikk teller; send og lag plan kan forekomme i samme besøk. Tallene er ikke en konverteringstrakt. Måles først etter utrulling av instrumenteringen; ingen registreringer er ikke dokumentert null bruk. Aktivering av lenken til utfyllingssiden etter at unntaksteksten har vært åpnet, også hvis kortet senere ble lukket. Det betyr ikke ferdigstilt plan.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "refId": "Lag plan",
+                    "hidden": false,
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "spec": {
+                        "expr": "sum(count_over_time({service_name=\"syfo-oppfolgingsplan-frontend\", kind=\"event\"}\n| logfmt app_namespace, app_environment, event_name, event_domain, event_data_schema_version, event_data_tiltakspakke, event_data_flate, event_data_gruppe, event_data_hendelse\n| __error__=\"\"\n| app_namespace=\"team-esyfo\"\n| app_environment=\"prod-gcp\"\n| event_name=\"aid_unntaksvurdering\"\n| event_domain=\"aid\"\n| event_data_schema_version=\"1\"\n| event_data_tiltakspakke=\"OPPFOLGINGSPLAN_TILTAKSPAKKE_1\"\n| event_data_flate=\"oversikt_arbeidsgiver\"\n| event_data_gruppe=\"tiltak\"\n| event_data_hendelse=~\"aapnet|send|lag_plan\"\n| label_format hendelse=event_data_hendelse\n| keep hendelse\n| hendelse=\"lag_plan\"\n[$__auto]))",
+                        "editorMode": "code",
+                        "queryType": "instant",
+                        "legendFormat": "Lag plan"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.1.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "Ingen registreringer",
+                  "unit": "locale",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "textMode": "auto",
+                "text": {
+                  "valueSize": 32
+                },
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
       "panel-28": {
         "kind": "Panel",
         "spec": {
@@ -2671,6 +2890,60 @@
                         "width": 24,
                         "x": 0,
                         "y": 4
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Unntaksvurdering · tiltaksgruppen",
+              "collapse": false,
+              "hideHeader": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-35"
+                        },
+                        "height": 4,
+                        "width": 8,
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-36"
+                        },
+                        "height": 4,
+                        "width": 8,
+                        "x": 8,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-37"
+                        },
+                        "height": 4,
+                        "width": 8,
+                        "x": 16,
+                        "y": 0
                       }
                     }
                   ]
