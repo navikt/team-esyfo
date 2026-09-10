@@ -8,6 +8,11 @@ import {
 } from "./aid-product-queries.ts";
 import { aidCount, aidFailuresQuery } from "./aid-reminder-queries.ts";
 import {
+	aidUnntakOpenedQuery,
+	aidUnntakPlanQuery,
+	aidUnntakSendQuery,
+} from "./aid-unntak-queries.ts";
+import {
 	GRAFANA_VERSION,
 	type GrafanaDashboardResource,
 	LOKI_DATASOURCE_UID,
@@ -356,9 +361,35 @@ const planDescription =
 	"Antall ferdigstillinger i valgt tidsrom. Oppdaterte planer som ferdigstilles på nytt, teller også; dette er ikke antall unike planer eller personer. Måles etter vellykket svar fra lagringen, og kan undertelle ved tap av svar eller logg. Tiltaksgruppen inkluderer også dem som fikk oppfølgingsplanen uten AID-tilpasninger. Målingen startet 9. september 2026 kl. 09.28 i produksjon.";
 const reminderDescription =
 	"Tiltaksgruppen i Dine sykmeldte. Registrerte handlinger, ikke unike personer. Tallene er separate hendelser, ikke trinn i en brukertrakt.";
+const unntakDescription =
+	"Tiltaksgruppen med unntaksvalget tilgjengelig på arbeidsgivers oversikt. Registrerte åpninger og handlinger, ikke unike personer. Handlinger gjelder samme besøk som åpningen. Gjentatte klikk teller; send og lag plan kan forekomme i samme besøk. Tallene er ikke en konverteringstrakt. Måles først etter utrulling av instrumenteringen; ingen registreringer er ikke dokumentert null bruk.";
 
 export const buildAidDashboard = () => {
 	const elements = {
+		"panel-35": panel(
+			35,
+			"Åpnet unntaksteksten",
+			unntakDescription +
+				" Kortet ble åpnet, én gang per besøk. Det betyr ikke at teksten er lest.",
+			[query(aidUnntakOpenedQuery, "loki", "Åpninger")],
+			"stat",
+		),
+		"panel-36": panel(
+			36,
+			"Trykket «Send» etter åpning",
+			unntakDescription +
+				" Aktivering av «Send til Nav og den ansatte», også med tastatur. Telles før validering og svar fra lagringen, ikke som bekreftet registrering.",
+			[query(aidUnntakSendQuery, "loki", "Send")],
+			"stat",
+		),
+		"panel-37": panel(
+			37,
+			"Trykket «Lag plan» etter åpning",
+			unntakDescription +
+				" Aktivering av lenken til utfyllingssiden etter at unntaksteksten har vært åpnet, også hvis kortet senere ble lukket. Det betyr ikke ferdigstilt plan.",
+			[query(aidUnntakPlanQuery, "loki", "Lag plan")],
+			"stat",
+		),
 		"panel-28": panel(
 			28,
 			"Ferdigstilte oppfølgingsplaner",
@@ -485,6 +516,11 @@ export const buildAidDashboard = () => {
 								layoutItem("panel-15", 0, 4, 24, 5),
 							],
 						),
+						row("Unntaksvurdering · tiltaksgruppen", [
+							layoutItem("panel-35", 0, 0, 8, 4),
+							layoutItem("panel-36", 8, 0, 8, 4),
+							layoutItem("panel-37", 16, 0, 8, 4),
+						]),
 						row(
 							"Teknisk kontroll · produksjon · alle grupper",
 							[

@@ -9,7 +9,7 @@ beskrevet i [AID som produktdashboard](./produktdashboard).
 
 ## Innhold og tidsrom
 
-Oppsettet har 12 paneler: åtte datapaneler i produktoversikten og fire tekniske
+Oppsettet har 15 paneler: elleve datapaneler i produktoversikten og fire tekniske
 paneler i en sammenfoldet kontrollseksjon.
 
 | Seksjon | Innhold | Avgrensning |
@@ -17,6 +17,7 @@ paneler i en sammenfoldet kontrollseksjon.
 | Oppfølgingsplaner i forsøket | Ferdigstillinger, trend og visninger av utfyllingssiden | Tiltak og kontroll vises sammen |
 | Valg av evalueringspåminnelse | Ferdigstilte planer med og uten valgt påminnelse | Tiltaksgruppen med AID-tilpasninger |
 | Påminnelse før fireukersfristen | Tilbud vist, påminnelse slått på eller av, og tilgjengelighet | Tiltaksgruppen i Dine sykmeldte |
+| Unntaksvurdering | Åpnet unntaksteksten, trykket «Send» og trykket «Lag plan» etter åpning | Tiltaksgruppen med unntaksvalget tilgjengelig |
 | Teknisk kontroll | Tilgjengelighet, tildeling og resultater fra appene | Alle grupper, inkludert utenfor forsøket og ukjent |
 
 **Dashboardet viser bare produksjon.** Alle paneler er bundet til `prod-gcp`;
@@ -128,6 +129,40 @@ forventet, for eksempel når bestillingsvinduet er over eller en plan allerede
 er ferdigstilt. Målingen skiller ikke disse årsakene. Den er ikke automatisk en feil.
 Status ved handling beskriver tilstanden før handlingen. Ingen aktiv
 bestilling er verken et sikkert nei eller bevis på at brukeren ikke har svart.
+
+## Unntaksvurdering
+
+Seksjonen viser tre tall fra nettleserhendelsen `aid_unntaksvurdering` på
+arbeidsgivers oversikt i oppfølgingsplanen:
+
+- **Åpnet unntaksteksten:** «Det finnes noen unntak fra å lage oppfølgingsplan»
+  ble åpnet. Telles én gang per besøk; betyr ikke at teksten er lest.
+- **Trykket «Send» etter åpning:** aktivering av «Send til Nav og den ansatte»,
+  også med tastatur. Telles før validering og lagring. Et forsøk uten avkrysset
+  bekreftelse teller også; tallet sier ikke hvor mange unntak som ble registrert.
+- **Trykket «Lag plan» etter åpning:** aktivering av lenken til utfyllingssiden
+  etter åpning, også hvis kortet senere ble lukket. Dette er ikke ferdigstilling.
+
+Dette måler adferd i tiltaksgruppen der unntaksvalget faktisk tilbys:
+AID-tilpasninger, redigeringstilgang og ingen aktiv plan, tidligere plan eller
+utkast. Ingen ekstra resultat-, feil- eller visningstall inngår i seksjonen.
+
+«Etter åpning» gjelder samme besøk og lederkontekst. Rerender, oppfriskning
+etter innsending og gjenåpning av kortet bevarer besøket. Navigasjon bort og
+tilbake, omlasting og bytte av kontekst nullstiller målingen. Et åpent kort som
+gjenopprettes ved tilbake-navigasjon regnes ikke som en ny eksplisitt åpning;
+brukeren må åpne det på nytt før handlinger regnes som «etter åpning».
+
+Send og lag plan kan forekomme i samme besøk, og gjentatte aktiveringer teller
+hver for seg. Tallene gjelder registrerte åpninger og handlinger, ikke unike
+personer eller en konverteringstrakt. De kan ikke brukes til å beregne frafall
+eller kobles til senere ferdigstillinger. Ingen identifikatorer eller fritekst
+legges til hendelsene. Historikk finnes først etter at instrumenteringen er
+rullet ut; dokumenter tidspunkt og observerte kategorier ved utrulling.
+
+Kontrakten har `schema_version=1`, pakke 1, `flate=oversikt_arbeidsgiver`,
+`gruppe=tiltak` og `hendelse=aapnet|send|lag_plan`. Spørringene bruker eksisterende
+Loki-datakilde med eksplisitt tjeneste-, namespace- og produksjonsavgrensning.
 
 ## Teknisk kontroll og datadekning
 

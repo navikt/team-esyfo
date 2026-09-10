@@ -14,6 +14,8 @@ import { aidServerPlanCreationsQuery } from "../.vitepress/grafana/aid-server-pl
 import { aidPlanEvaluationDetailsQuery, aidProductPlanCreationsQuery, aidProductPlanTrendQuery, aidProductEvaluationQuery, aidProductPlanViewsQuery } from "../.vitepress/grafana/aid-product-queries.ts";
 import { aidReminderViewsQuery, aidReminderOrdersQuery, aidReminderCancellationsQuery, aidReminderAvailabilityByGroupQuery, buildAidDashboard } from "../.vitepress/grafana/aid-delivery-usage.ts";
 
+import { aidUnntakOpenedQuery, aidUnntakSendQuery, aidUnntakPlanQuery } from "../.vitepress/grafana/aid-unntak-queries.ts";
+
 const exec = promisify(execFile);
 const container = `aid-plan-query-check-${process.pid}-${randomBytes(4).toString("hex")}`;
 const base = {
@@ -176,11 +178,39 @@ try {
 			.map(([key, value]) => `${key}=${JSON.stringify(value)}`)
 			.join(" "),
 	]);
+	const unntakBase = {
+		...base,
+		event_name: "aid_unntaksvurdering",
+		event_data_flate: "oversikt_arbeidsgiver",
+		event_data_hendelse: "aapnet",
+	};
+	const unntakFixtures: Record<string, string | undefined>[] = [
+		{}, {},
+		{ event_data_hendelse: "send" }, { event_data_hendelse: "send" },
+		{ event_data_hendelse: "lag_plan" },
+		{ app_environment: "prod-gcp" },
+		{ app_namespace: "other" }, { event_domain: "other" },
+		{ event_name: "aid_oppfolgingsplan" },
+		{ event_data_schema_version: "2" },
+		{ event_data_tiltakspakke: "OTHER" },
+		{ event_data_flate: "ny_plan" },
+		{ event_data_gruppe: "kontroll" }, { event_data_gruppe: "ukjent" },
+		{ event_data_hendelse: "bekreftet" }, { event_data_hendelse: undefined },
+	];
+	const unntakValues = unntakFixtures.map((fixture, index) => [
+		String(BigInt(now - 500) * 1000000n + BigInt(index)),
+		Object.entries({ ...unntakBase, ...fixture })
+			.filter(([, value]) => value !== undefined)
+			.map(([key, value]) => `${key}=${JSON.stringify(value)}`).join(" "),
+	]);
 	const response = await fetch(`${url}/loki/api/v1/push`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			streams: [
+				{ stream: { service_name: "syfo-oppfolgingsplan-frontend", kind: "event" }, values: unntakValues },
+				{ stream: { service_name: "other-frontend", kind: "event" }, values: [unntakValues[0]] },
+				{ stream: { service_name: "syfo-oppfolgingsplan-frontend", kind: "log" }, values: [unntakValues[0]] },
 				...serverFixtures.map(({ labels, fields }, index) => ({
 					stream: { ...serverLabels, ...labels },
 					values: [
@@ -244,6 +274,12 @@ try {
 		assert.equal(response.status, 200, body);
 		return JSON.parse(body).data.result;
 	};
+	for (const [query, expected] of [[aidUnntakOpenedQuery, 2], [aidUnntakSendQuery, 2], [aidUnntakPlanQuery, 1]] as const) {
+		assert.equal(total(await count(query)), expected);
+		assert.deepEqual(await count(query, "no-events"), []);
+	}
+	assert.equal(total(await count(aidUnntakOpenedQuery, "prod-gcp")), 1);
+	console.log("Exception behaviour: opening, send intent and plan clicks have exact counts with producer, environment and contract isolation.");
 	const choices = await count(aidPlanEvaluationQuery);
 	assert.deepEqual(
 		choices

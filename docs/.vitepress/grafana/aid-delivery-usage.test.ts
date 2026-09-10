@@ -303,6 +303,36 @@ test("every panel is laid out once without overlap within a row", () => {
 	assert.equal(new Set(names).size, names.length);
 });
 
+test("exception behaviour has exactly three visible counts without API results", () => {
+	const section = rowWithPanel(35);
+	assert.equal(section.spec.title, "Unntaksvurdering · tiltaksgruppen");
+	assert.equal(section.spec.collapse, false);
+	assert.deepEqual(
+		section.spec.layout.spec.items.map((i) => i.spec.element.name),
+		["panel-35", "panel-36", "panel-37"],
+	);
+	for (const [id, event] of [
+		[35, "aapnet"],
+		[36, "send"],
+		[37, "lag_plan"],
+	] as const) {
+		assert.equal(elements()[`panel-${id}`].spec.vizConfig.group, "stat");
+		assert.match(expr(id), /event_name="aid_unntaksvurdering"/);
+		assert.match(expr(id), /event_data_gruppe="tiltak"/);
+		assert.ok(expr(id).includes(`| hendelse="${event}"`));
+		assert.doesNotMatch(expr(id), /bekreftet|utfall|vector\(0\)/);
+		assert.match(
+			elements()[`panel-${id}`].spec.description,
+			/ikke unike personer/,
+		);
+	}
+	assert.match(elements()["panel-36"].spec.description, /før validering/);
+	assert.match(
+		elements()["panel-37"].spec.description,
+		/ikke ferdigstilt plan/,
+	);
+});
+
 test("tables retain native filtering and explain the measured unit", () => {
 	for (const p of Object.values(elements())) {
 		if (p.spec.vizConfig.group !== "table") continue;
