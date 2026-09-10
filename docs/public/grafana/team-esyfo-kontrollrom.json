@@ -238,7 +238,7 @@
               "transformations": []
             }
           },
-          "description": "Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
+          "description": "Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og registrerte avslutningsårsaker finnes under Undersøk en tjeneste.",
           "id": 4,
           "links": [
             {
@@ -503,27 +503,6 @@
                     "hidden": false,
                     "query": {
                       "datasource": {
-                        "name": "PEA2100DC89AE9FE2"
-                      },
-                      "group": "loki",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "direction": "backward",
-                        "editorMode": "code",
-                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(warn|warning)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| json event_type\n| __error__=\"\"\n| event_type=\"api_request_rejected\"\n| keep service_name\n[$__range]))",
-                        "queryType": "instant"
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "Avvisninger"
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
                         "name": "PA58DA793C7250F1B"
                       },
                       "group": "prometheus",
@@ -598,17 +577,15 @@
                         "Value #Requests": 1,
                         "Value #OTel-feil": 2,
                         "Value #Runtimefeil": 3,
-                        "Value #Avvisninger": 4,
-                        "Value #Restarts": 5,
-                        "Value #Klare replikaer": 6,
-                        "Value #Telemetry": 7
+                        "Value #Restarts": 4,
+                        "Value #Klare replikaer": 5,
+                        "Value #Telemetry": 6
                       },
                       "renameByName": {
                         "service_name": "Tjeneste",
                         "Value #Requests": "Kall i perioden",
                         "Value #OTel-feil": "Feilmarkerte kall",
                         "Value #Runtimefeil": "Loggfeil i perioden",
-                        "Value #Avvisninger": "API-avvisninger i perioden",
                         "Value #Restarts": "Omstarter i perioden",
                         "Value #Klare replikaer": "Klare replikaer",
                         "Value #Telemetry": "HTTP-målinger"
@@ -619,7 +596,7 @@
               ]
             }
           },
-          "description": "Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall, logghendelser, API-avvisninger og omstarter gjelder valgt tidsrom. Replikaer og HTTP-målinger er tilstand ved periodens slutt. HTTP-målinger viser seriesignal, ikke siste kall. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
+          "description": "Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall, logghendelser og omstarter gjelder valgt tidsrom. Replikaer og HTTP-målinger er tilstand ved periodens slutt. HTTP-målinger viser tilstedeværelse av måleserier, ikke siste kall. Ingen nyere data kan skyldes lite trafikk eller manglende innsamling; det påviser ikke en feil. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Tellere vises avrundet; Prometheus-estimater er ikke en eksakt hendelseslogg. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
           "id": 10,
           "links": [
             {
@@ -645,7 +622,8 @@
                     },
                     "inspect": false
                   },
-                  "noValue": "—"
+                  "noValue": "—",
+                  "decimals": 0
                 },
                 "overrides": [
                   {
@@ -703,15 +681,15 @@
                             "options": {
                               "0": {
                                 "color": "blue",
-                                "text": "Mottar data"
+                                "text": "Nyere data"
                               },
                               "1": {
-                                "color": "yellow",
-                                "text": "Forsinket"
+                                "color": "gray",
+                                "text": "Sett siste 30 min"
                               },
                               "2": {
-                                "color": "yellow",
-                                "text": "Mangler"
+                                "color": "gray",
+                                "text": "Ingen nyere data"
                               },
                               "3": {
                                 "color": "text",
@@ -794,36 +772,6 @@
                     "matcher": {
                       "id": "byName",
                       "options": "Omstarter i perioden"
-                    },
-                    "properties": [
-                      {
-                        "id": "thresholds",
-                        "value": {
-                          "mode": "absolute",
-                          "steps": [
-                            {
-                              "color": "gray",
-                              "value": 0
-                            },
-                            {
-                              "color": "yellow",
-                              "value": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "id": "custom.cellOptions",
-                        "value": {
-                          "type": "color-text"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "API-avvisninger i perioden"
                     },
                     "properties": [
                       {
@@ -1626,8 +1574,8 @@
         "kind": "Panel",
         "spec": {
           "id": 36,
-          "title": "Omstarter og siste avslutningsårsak",
-          "description": "Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+          "title": "Omstarter og registrerte avslutningsårsaker",
+          "description": "Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsakene er verdier som ble observert i målingene i perioden, også for podder som senere ble erstattet. De kan gjelde avslutninger før perioden og er ikke årsak til alle restarts. Flere årsaker samles på samme rad; antall omstarter telles bare én gang per pod. Tidspunkt for avslutningen er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
           "links": [
             {
               "targetBlank": true,
@@ -1692,7 +1640,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "max by (pod, container, reason) (kube_pod_container_status_last_terminated_reason{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}) == 1",
+                        "expr": "(max by (pod, container, reason) (max_over_time(kube_pod_container_status_last_terminated_reason{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range])) == 1) or on(pod, container) label_replace(0 * (max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", container=\"${service:raw}\"}[$__range]))) + 1, \"reason\", \"Ikke registrert\", \"\", \".*\")",
                         "format": "table",
                         "instant": true,
                         "interval": "",
@@ -1701,7 +1649,7 @@
                       },
                       "version": "v0"
                     },
-                    "refId": "Siste årsak"
+                    "refId": "Årsaker"
                   }
                 }
               ],
@@ -1716,23 +1664,49 @@
                 },
                 {
                   "kind": "Transformation",
+                  "group": "groupBy",
+                  "spec": {
+                    "options": {
+                      "fields": {
+                        "pod": {
+                          "operation": "groupby",
+                          "aggregations": []
+                        },
+                        "Value #Restarts": {
+                          "operation": "aggregate",
+                          "aggregations": [
+                            "max"
+                          ]
+                        },
+                        "reason": {
+                          "operation": "aggregate",
+                          "aggregations": [
+                            "uniqueValues"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
                   "group": "organize",
                   "spec": {
                     "options": {
                       "excludeByName": {
                         "Time": true,
                         "container": true,
-                        "Value #Siste årsak": true
+                        "Value #Årsaker": true
                       },
                       "indexByName": {
                         "pod": 0,
-                        "Value #Restarts": 1,
-                        "reason": 2
+                        "Value #Restarts (max)": 1,
+                        "reason (uniqueValues)": 2
                       },
                       "renameByName": {
                         "pod": "Pod",
-                        "Value #Restarts": "Omstarter i perioden",
-                        "reason": "Siste avslutningsårsak"
+                        "Value #Restarts (max)": "Omstarter i perioden",
+                        "reason (uniqueValues)": "Registrerte årsaker"
                       }
                     }
                   }
@@ -1780,7 +1754,7 @@
               "options": {
                 "showHeader": true,
                 "cellHeight": "sm",
-                "enablePagination": true,
+                "enablePagination": false,
                 "sortBy": [
                   {
                     "displayName": "Omstarter i perioden",
@@ -3133,104 +3107,6 @@
             "version": "13.1.2"
           }
         }
-      },
-      "panel-35": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "PEA2100DC89AE9FE2"
-                      },
-                      "group": "loki",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "direction": "backward",
-                        "editorMode": "code",
-                        "expr": "sum(sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfobrukertilgang|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n| k8s_container_name !~ `secure-logs-fluentbit|cloudsql-proxy|wonderwall|elector`\n| detected_level=~`(?i)(warn|warning)`\n| x_isFrontend!=\"true\"\n| json forwarded_browser=\"x_isFrontend\"\n| forwarded_browser!=\"true\"\n| drop forwarded_browser, __error__, __error_details__\n| json event_type\n| __error__=\"\"\n| event_type=\"api_request_rejected\"\n| keep service_name\n[$__range])))",
-                        "queryType": "instant"
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "API-avvisninger"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Antall WARN-hendelser av typen api_request_rejected i valgt tidsrom. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
-          "id": 35,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Feiloversikt",
-              "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=$__all"
-            },
-            {
-              "targetBlank": true,
-              "title": "Avgrensede avvisningslogger",
-              "url": "/explore?panes=%7B%22A%22%3A%7B%22datasource%22%3A%22PEA2100DC89AE9FE2%22%2C%22queries%22%3A%5B%7B%22datasource%22%3A%7B%22type%22%3A%22loki%22%2C%22uid%22%3A%22PEA2100DC89AE9FE2%22%7D%2C%22direction%22%3A%22backward%22%2C%22editorMode%22%3A%22code%22%2C%22expr%22%3A%22%7Bservice_namespace%3D%5C%22team-esyfo%5C%22%2C%20k8s_cluster_name%3D%5C%22prod%5C%22%2C%20service_name%3D~%5C%22%5E(aktivitetskrav-backend%7Caktivitetskrav-frontend%7Caktivitetskrav-microfrontend%7Cbro-frontend%7Cdialogmote-frontend%7Cdialogmote-microfrontend%7Cdinesykmeldte%7Cdinesykmeldte-backend%7Cesyfo-narmesteleder%7Cesyfovarsel%7Cflaggskipet%7Clps-oppfolgingsplan-mottak%7Clumi-api%7Clumi-dashboard%7Cmeroppfolging-backend%7Cmeroppfolging-frontend%7Cmeroppfolging-microfrontend%7Cnarmesteleder-frontend%7Csyfo-budstikka%7Csyfo-dokumentporten%7Csyfo-oppfolgingsplan-backend%7Csyfo-oppfolgingsplan-frontend%7Csyfobrukertilgang%7Csyfomotebehov%7Csyfooppdfgen%7Csykepengedager-informasjon)%24%5C%22%7D%5Cn%7C%20k8s_container_name%20!~%20%60secure-logs-fluentbit%7Ccloudsql-proxy%7Cwonderwall%7Celector%60%5Cn%7C%20detected_level%3D~%60(%3Fi)(warn%7Cwarning)%60%5Cn%7C%20x_isFrontend!%3D%5C%22true%5C%22%5Cn%7C%20json%20forwarded_browser%3D%5C%22x_isFrontend%5C%22%5Cn%7C%20forwarded_browser!%3D%5C%22true%5C%22%5Cn%7C%20drop%20forwarded_browser%2C%20__error__%2C%20__error_details__%5Cn%7C%20json%20event_type%5Cn%7C%20__error__%3D%5C%22%5C%22%5Cn%7C%20event_type%3D%5C%22api_request_rejected%5C%22%22%2C%22queryType%22%3A%22range%22%2C%22refId%22%3A%22A%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D&schemaVersion=1&orgId=1"
-            }
-          ],
-          "title": "API-avvisninger i perioden",
-          "vizConfig": {
-            "group": "stat",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "decimals": 0,
-                  "noValue": "Ingen treff",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "gray",
-                        "value": 0
-                      },
-                      {
-                        "color": "yellow",
-                        "value": 1
-                      }
-                    ]
-                  },
-                  "unit": "short"
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "percentChangeColorMode": "standard",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showPercentChange": false,
-                "text": {
-                  "valueSize": 32
-                },
-                "textMode": "auto",
-                "wideLayout": true
-              }
-            },
-            "version": "13.1.2"
-          }
-        }
       }
     },
     "layout": {
@@ -3253,7 +3129,7 @@
                           "name": "panel-2"
                         },
                         "height": 4,
-                        "width": 4,
+                        "width": 6,
                         "x": 0,
                         "y": 0
                       }
@@ -3266,21 +3142,8 @@
                           "name": "panel-32"
                         },
                         "height": 4,
-                        "width": 5,
-                        "x": 4,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-35"
-                        },
-                        "height": 4,
-                        "width": 5,
-                        "x": 9,
+                        "width": 6,
+                        "x": 6,
                         "y": 0
                       }
                     },
@@ -3292,8 +3155,8 @@
                           "name": "panel-4"
                         },
                         "height": 4,
-                        "width": 5,
-                        "x": 14,
+                        "width": 6,
+                        "x": 12,
                         "y": 0
                       }
                     },
@@ -3305,8 +3168,8 @@
                           "name": "panel-5"
                         },
                         "height": 4,
-                        "width": 5,
-                        "x": 19,
+                        "width": 6,
+                        "x": 18,
                         "y": 0
                       }
                     },
@@ -3751,7 +3614,7 @@
                                     "kind": "ElementReference",
                                     "name": "panel-36"
                                   },
-                                  "height": 6,
+                                  "height": 12,
                                   "width": 24,
                                   "x": 0,
                                   "y": 0

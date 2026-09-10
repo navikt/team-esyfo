@@ -21,7 +21,6 @@ import {
 	errorRatioByServiceQuery,
 	expectedScopeVectorQuery,
 	expectedServerScopeVectorQuery,
-	fleetApiRejectionCountQuery,
 	fleetOtelErrorCountQuery,
 	fleetRestartCountQuery,
 	fleetRuntimeErrorCountQuery,
@@ -349,7 +348,7 @@ test("har ingen globale filtre og avgrenser tjenestevelgeren til detaljfanen", (
 	}
 });
 
-test("viser fem oversiktskort inkludert WARN og tjenestetabellen som standard", () => {
+test("viser fire felles oversiktskort og tjenestetabellen som standard", () => {
 	assert.equal(
 		(buildControlRoomDashboard().spec.layout as { kind: string }).kind,
 		"TabsLayout",
@@ -360,10 +359,10 @@ test("viser fem oversiktskort inkludert WARN og tjenestetabellen som standard", 
 	);
 	assert.deepEqual(
 		overviewItems().map(({ spec }) => spec.element.name),
-		["panel-2", "panel-32", "panel-35", "panel-4", "panel-5", "panel-10"],
+		["panel-2", "panel-32", "panel-4", "panel-5", "panel-10"],
 	);
-	assert.equal(overviewItems()[5].spec.y, 4);
-	for (const id of ["panel-2", "panel-32", "panel-35", "panel-4"]) {
+	assert.equal(overviewItems()[4].spec.y, 4);
+	for (const id of ["panel-2", "panel-32", "panel-4"]) {
 		assert.equal(
 			panels()[id].spec.vizConfig.spec.fieldConfig.defaults.unit,
 			"short",
@@ -468,7 +467,7 @@ test("viser hele tjenestelisten uten sidebytte", () => {
 		panels()["panel-10"].spec.vizConfig.spec.options.enablePagination,
 		false,
 	);
-	assert.ok(overviewItems()[5].spec.height >= controlRoomApplications.length);
+	assert.ok(overviewItems()[4].spec.height >= controlRoomApplications.length);
 });
 
 test("slanker tabellen uten å fjerne målegap eller lenker", () => {
@@ -481,7 +480,6 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 		"Requests",
 		"OTel-feil",
 		"Runtimefeil",
-		"Avvisninger",
 		"Restarts",
 		"Klare replikaer",
 	]);
@@ -499,7 +497,6 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 		"Kall i perioden",
 		"Feilmarkerte kall",
 		"Loggfeil i perioden",
-		"API-avvisninger i perioden",
 		"Omstarter i perioden",
 		"Klare replikaer",
 		"HTTP-målinger",
@@ -515,9 +512,9 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 		assert.ok(field in organize.renameByName);
 	const mapped = JSON.stringify(panel);
 	for (const state of [
-		"Mottar data",
-		"Forsinket",
-		"Mangler",
+		"Nyere data",
+		"Sett siste 30 min",
+		"Ingen nyere data",
 		"Bakgrunnstjeneste",
 	])
 		assert.ok(mapped.includes(state));
@@ -621,6 +618,9 @@ test("lar manglende readiness være ukjent i stedet for falsk null", () => {
 });
 
 test("bevarer dedupliserte restarts, observasjonsforankret null og nøytral historikk", () => {
+	assert.ok(podTerminationReasonQuery.includes("max_over_time("));
+	assert.ok(podTerminationReasonQuery.includes("[$__range]"));
+	assert.ok(podTerminationReasonQuery.includes("Ikke registrert"));
 	for (const query of [restartCountQuery, restartsByServiceQuery]) {
 		assert.ok(query.includes(RESTARTS_METRIC));
 		assert.match(query, /max by \(pod, container\)/);
@@ -634,6 +634,16 @@ test("bevarer dedupliserte restarts, observasjonsforankret null og nøytral hist
 	assert.ok(expressions(top)[0].includes("[$__range]"));
 	assert.ok(!JSON.stringify(top.spec.vizConfig).includes('"color":"red"'));
 	const diagnostic = panels()["panel-36"];
+	const grouping = diagnostic.spec.data.spec.transformations.find(
+		({ group }) => group === "groupBy",
+	)?.spec.options;
+	assert.deepEqual(grouping, {
+		fields: {
+			pod: { operation: "groupby", aggregations: [] },
+			"Value #Restarts": { operation: "aggregate", aggregations: ["max"] },
+			reason: { operation: "aggregate", aggregations: ["uniqueValues"] },
+		},
+	});
 	assert.ok(expressions(diagnostic).some((q) => q.includes("[$__range]")));
 	assert.ok(!expressions(diagnostic).some((q) => /\[(15m|24h)\]/.test(q)));
 	assert.ok(
@@ -653,6 +663,17 @@ test("bevarer dedupliserte restarts, observasjonsforankret null og nøytral hist
 	);
 });
 
+test("viser heltall og beskriver fravær av HTTP-data uten feildiagnose", () => {
+	assert.equal(
+		panels()["panel-10"].spec.vizConfig.spec.fieldConfig.defaults.decimals,
+		0,
+	);
+	const panel = JSON.stringify(panels()["panel-10"]);
+	assert.ok(panel.includes("Ingen nyere data"));
+	assert.ok(!panel.includes('"Forsinket"'));
+	assert.ok(!panel.includes('"Mangler"'));
+});
+
 test("viser tomme loggsøk som ingen treff uten kunstig null", () => {
 	for (const query of [
 		runtimeErrorCountQuery,
@@ -666,7 +687,7 @@ test("viser tomme loggsøk som ingen treff uten kunstig null", () => {
 		assert.ok(query.includes('| json forwarded_browser="x_isFrontend"'));
 		assert.ok(query.includes('| forwarded_browser!="true"'));
 	}
-	for (const id of ["panel-32", "panel-15", "panel-35"]) {
+	for (const id of ["panel-32", "panel-15"]) {
 		assert.equal(
 			panels()[id].spec.vizConfig.spec.fieldConfig.defaults.noValue,
 			"Ingen treff",
@@ -676,39 +697,9 @@ test("viser tomme loggsøk som ingen treff uten kunstig null", () => {
 	assert.ok(runtimeErrorsByServiceQuery.includes("[$__range]"));
 });
 
-test("bevarer WARN-avvisninger separat med fast produksjonsscope", () => {
-	assert.match(
-		fleetApiRejectionCountQuery,
-		/detected_level=~`\(\?i\)\(warn\|warning\)`/,
-	);
-	assert.match(
-		fleetApiRejectionCountQuery,
-		/event_type="api_request_rejected"/,
-	);
-	assert.ok(fleetApiRejectionCountQuery.includes(controlRoomApplicationRegex));
-	assert.ok(fleetApiRejectionCountQuery.includes("[$__range]"));
-	assert.ok(!fleetApiRejectionCountQuery.includes("vector(0)"));
-	const urls = values(panels()["panel-35"], "url") as string[];
-	const link = urls.find((url) => url.startsWith("/explore?"));
-	assert.ok(link);
-	const panes = JSON.parse(
-		new URL(link, "https://grafana.test").searchParams.get("panes") ?? "{}",
-	);
-	assert.ok(panes.A.queries[0].expr.includes(controlRoomApplicationRegex));
-	assert.match(panes.A.queries[0].expr, /event_type="api_request_rejected"/);
-	assert.equal(panes.A.range.from, grafanaVariable("__from"));
-	assert.equal(panes.A.range.to, grafanaVariable("__to"));
-	for (const id of ["panel-32", "panel-35"]) {
-		const links = values(panels()[id], "url") as string[];
-		const dashboard = links.find((url) =>
-			url.startsWith("/d/team-esyfo-feiloversikt"),
-		);
-		assert.ok(dashboard);
-		assert.equal(
-			new URL(dashboard, "https://grafana.test").searchParams.get("var-app"),
-			"$__all",
-		);
-	}
+test("holder smale API-avvisninger utenfor flåteoversikten", () => {
+	assert.equal(panels()["panel-35"], undefined);
+	assert.ok(!serializeControlRoomDashboard().includes("api_request_rejected"));
 });
 
 test("viser bare Failed=True som jobbfeil og beholder manglende måling", () => {
@@ -886,7 +877,7 @@ test("holder browser utenfor produksjonskontrollrommet og persondata utenfor res
 		values(buildControlRoomDashboard(), "group").filter(
 			(group) => group === "loki",
 		).length,
-		5,
+		3,
 	);
 	assert.ok(serialized.includes('"autoRefresh": "2m"'));
 	assert.ok(serialized.includes('"from": "now-1h"'));
@@ -894,7 +885,7 @@ test("holder browser utenfor produksjonskontrollrommet og persondata utenfor res
 
 test("har unik, deterministisk fanelayout uten overlapp eller foreldreløse paneler", () => {
 	const panelMap = panels();
-	assert.equal(Object.keys(panelMap).length, 20);
+	assert.equal(Object.keys(panelMap).length, 19);
 	const ids = Object.values(panelMap).map(({ spec }) => spec.id);
 	assert.equal(new Set(ids).size, ids.length);
 	const names: string[] = [];

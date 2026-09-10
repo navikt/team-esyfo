@@ -21,12 +21,8 @@ import {
 	MIMIR_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
-import { runtimeRejectionScopeDataLink } from "./error-drilldown.ts";
 import { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
-import {
-	runtimeErrorPipeline,
-	runtimeRejectionPipeline,
-} from "./runtime-logql.ts";
+import { runtimeErrorPipeline } from "./runtime-logql.ts";
 
 export { apmDataLink, runtimeLogsDataLink } from "./runtime-links.ts";
 
@@ -147,20 +143,15 @@ ${runtimeErrorPipeline}
 [$__range]))`;
 export const fleetRuntimeErrorCountQuery = `sum(${runtimeErrorsByServiceQuery})`;
 
-export const apiRejectionsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector}
-${runtimeRejectionPipeline}
-| keep service_name
-[$__range]))`;
-export const fleetApiRejectionCountQuery = `sum(${apiRejectionsByServiceQuery})`;
-
 const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[$__range])))`;
 export const restartsByServiceQuery = `sum by (service_name) (label_replace(${fleetRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
 export const restartCountQuery = `sum(max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[$__range])))`;
 export const fleetRestartCountQuery = `sum(${restartsByServiceQuery})`;
 
 export const podRestartsQuery = `max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[$__range]))`;
-// Latest reason on current pods, not the cause of every restart in a window.
-export const podTerminationReasonQuery = `max by (pod, container, reason) (kube_pod_container_status_last_terminated_reason{${selectedKubeContainerSelector}}) == 1`;
+// A reason observed during the period may describe an earlier termination.
+const observedPodTerminationReasons = `max by (pod, container, reason) (max_over_time(kube_pod_container_status_last_terminated_reason{${selectedKubeContainerSelector}}[$__range])) == 1`;
+export const podTerminationReasonQuery = `(${observedPodTerminationReasons}) or on(pod, container) label_replace(0 * (${podRestartsQuery}) + 1, "reason", "Ikke registrert", "", ".*")`;
 
 const readyByDeployment = (selector: string) =>
 	`max by (deployment) (${READY_REPLICAS_METRIC}{${selector}})`;
@@ -492,7 +483,6 @@ const fleetTablePanel = () => {
 		"Value #Requests": "Kall i perioden",
 		"Value #OTel-feil": "Feilmarkerte kall",
 		"Value #Runtimefeil": "Loggfeil i perioden",
-		"Value #Avvisninger": "API-avvisninger i perioden",
 		"Value #Restarts": "Omstarter i perioden",
 		"Value #Klare replikaer": "Klare replikaer",
 		"Value #Telemetry": "HTTP-målinger",
@@ -522,7 +512,6 @@ const fleetTablePanel = () => {
 				{ color: "yellow", value: 1 },
 			],
 		],
-		["Value #Avvisninger", attentionThresholds],
 	];
 	return {
 		kind: "Panel",
@@ -551,7 +540,6 @@ const fleetTablePanel = () => {
 						"table",
 					),
 					lokiQuery("Runtimefeil", runtimeErrorsByServiceQuery),
-					lokiQuery("Avvisninger", apiRejectionsByServiceQuery),
 					prometheusQuery(
 						"Restarts",
 						restartsByServiceQuery,
@@ -592,7 +580,7 @@ const fleetTablePanel = () => {
 				],
 			),
 			description:
-				"Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall, logghendelser, API-avvisninger og omstarter gjelder valgt tidsrom. Replikaer og HTTP-målinger er tilstand ved periodens slutt. HTTP-målinger viser seriesignal, ikke siste kall. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
+				"Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall, logghendelser og omstarter gjelder valgt tidsrom. Replikaer og HTTP-målinger er tilstand ved periodens slutt. HTTP-målinger viser tilstedeværelse av måleserier, ikke siste kall. Ingen nyere data kan skyldes lite trafikk eller manglende innsamling; det påviser ikke en feil. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Tellere vises avrundet; Prometheus-estimater er ikke en eksakt hendelseslogg. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
 			id: 10,
 			links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
 			title: "Tjenester i produksjon",
@@ -609,6 +597,7 @@ const fleetTablePanel = () => {
 								inspect: false,
 							},
 							noValue: "—",
+							decimals: 0,
 						},
 						overrides: [
 							{
@@ -638,9 +627,9 @@ const fleetTablePanel = () => {
 										value: [
 											{
 												options: {
-													"0": { color: "blue", text: "Mottar data" },
-													"1": { color: "yellow", text: "Forsinket" },
-													"2": { color: "yellow", text: "Mangler" },
+													"0": { color: "blue", text: "Nyere data" },
+													"1": { color: "gray", text: "Sett siste 30 min" },
+													"2": { color: "gray", text: "Ingen nyere data" },
 													"3": { color: "text", text: "Bakgrunnstjeneste" },
 												},
 												type: "value",
@@ -722,15 +711,15 @@ const podDiagnosticsPanel = () => ({
 	kind: "Panel",
 	spec: {
 		id: 36,
-		title: "Omstarter og siste avslutningsårsak",
+		title: "Omstarter og registrerte avslutningsårsaker",
 		description:
-			"Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+			"Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsakene er verdier som ble observert i målingene i perioden, også for podder som senere ble erstattet. De kan gjelde avslutninger før perioden og er ikke årsak til alle restarts. Flere årsaker samles på samme rad; antall omstarter telles bare én gang per pod. Tidspunkt for avslutningen er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
 		links: serviceDataLinks(SERVICE_VARIABLE),
 		data: queryGroup(
 			[
 				prometheusQuery("Restarts", podRestartsQuery, "instant", "", "table"),
 				prometheusQuery(
-					"Siste årsak",
+					"Årsaker",
 					podTerminationReasonQuery,
 					"instant",
 					"",
@@ -741,23 +730,42 @@ const podDiagnosticsPanel = () => ({
 				mergeTableFrames,
 				{
 					kind: "Transformation",
+					group: "groupBy",
+					spec: {
+						options: {
+							fields: {
+								pod: { operation: "groupby", aggregations: [] },
+								"Value #Restarts": {
+									operation: "aggregate",
+									aggregations: ["max"],
+								},
+								reason: {
+									operation: "aggregate",
+									aggregations: ["uniqueValues"],
+								},
+							},
+						},
+					},
+				},
+				{
+					kind: "Transformation",
 					group: "organize",
 					spec: {
 						options: {
 							excludeByName: {
 								Time: true,
 								container: true,
-								"Value #Siste årsak": true,
+								"Value #Årsaker": true,
 							},
 							indexByName: {
 								pod: 0,
-								"Value #Restarts": 1,
-								reason: 2,
+								"Value #Restarts (max)": 1,
+								"reason (uniqueValues)": 2,
 							},
 							renameByName: {
 								pod: "Pod",
-								"Value #Restarts": "Omstarter i perioden",
-								reason: "Siste avslutningsårsak",
+								"Value #Restarts (max)": "Omstarter i perioden",
+								"reason (uniqueValues)": "Registrerte årsaker",
 							},
 						},
 					},
@@ -795,7 +803,7 @@ const podDiagnosticsPanel = () => ({
 				options: {
 					showHeader: true,
 					cellHeight: "sm",
-					enablePagination: true,
+					enablePagination: false,
 					sortBy: [{ displayName: "Omstarter i perioden", desc: true }],
 				},
 			},
@@ -958,7 +966,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				id: 4,
 				title: "Omstarter i perioden",
 				description:
-					"Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
+					"Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og registrerte avslutningsårsaker finnes under Undersøk en tjeneste.",
 				query: prometheusQuery("Omstarter", fleetRestartCountQuery, "instant"),
 				unit: "short",
 				thresholds: attentionThresholds,
@@ -1230,24 +1238,6 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				),
 				fieldLinks: serviceDataLinks("syfomotebehov"),
 			}),
-			"panel-35": statPanel({
-				id: 35,
-				title: "API-avvisninger i perioden",
-				description:
-					"Antall WARN-hendelser av typen api_request_rejected i valgt tidsrom. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
-				query: lokiQuery("API-avvisninger", fleetApiRejectionCountQuery),
-				unit: "short",
-				thresholds: attentionThresholds,
-				decimals: 0,
-				noValue: "Ingen treff",
-				links: [
-					dataLink("Feiloversikt", errorDashboardDataLink("$__all")),
-					dataLink(
-						"Avgrensede avvisningslogger",
-						runtimeRejectionScopeDataLink(FLEET_SERVICE_REGEX),
-					),
-				],
-			}),
 		},
 		layout: {
 			kind: "TabsLayout",
@@ -1261,11 +1251,10 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 								kind: "GridLayout",
 								spec: {
 									items: [
-										layoutItem("panel-2", 0, 0, 4, 4),
-										layoutItem("panel-32", 4, 0, 5, 4),
-										layoutItem("panel-35", 9, 0, 5, 4),
-										layoutItem("panel-4", 14, 0, 5, 4),
-										layoutItem("panel-5", 19, 0, 5, 4),
+										layoutItem("panel-2", 0, 0, 6, 4),
+										layoutItem("panel-32", 6, 0, 6, 4),
+										layoutItem("panel-4", 12, 0, 6, 4),
+										layoutItem("panel-5", 18, 0, 6, 4),
 										layoutItem(
 											"panel-10",
 											0,
@@ -1339,7 +1328,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 											serviceCondition("equals", "syfomotebehov"),
 										),
 										detailSection("Podder", [
-											layoutItem("panel-36", 0, 0, 24, 6),
+											layoutItem("panel-36", 0, 0, 24, 12),
 										]),
 									],
 								},

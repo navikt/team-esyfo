@@ -12,6 +12,7 @@ import {
 	fleetRestartCountQuery,
 	jobFailureQuery,
 	lowestReadyRatioQuery,
+	podTerminationReasonQuery,
 	readyRatioByServiceQuery,
 	selectedReadyRatioQuery,
 } from "../.vitepress/grafana/control-room.ts";
@@ -246,10 +247,7 @@ async function checkLogQueries(url: string) {
 			};
 		}
 	>;
-	for (const [id, shortCount] of [
-		["panel-32", 8],
-		["panel-35", 4],
-	] as const) {
+	for (const [id, shortCount] of [["panel-32", 8]] as const) {
 		const query =
 			controlPanels[id].spec.data.spec.queries[0].spec.query.spec.expr;
 		const total = (rows: Vector[]) =>
@@ -612,6 +610,59 @@ async function checkMetricQueries(directory: string) {
 			exp_samples: [{ labels: "{}", value: window === "1h" ? 2 : 0 }],
 		})),
 	};
+	const reasonLabels = `namespace="team-esyfo",k8s_cluster_name="prod",container="${service}"`;
+	const reasonCases = [
+		{
+			name: "An absent pod retains all historically observed reasons without duplicate exporters",
+			input_series: [
+				{
+					series: `kube_pod_container_status_restarts_total{${reasonLabels},pod="old"}`,
+					values: "0+0x19 5+0x10 stale _x29",
+				},
+				...["a", "b"].flatMap((instance) =>
+					["Error", "OOMKilled"].map((reason) => ({
+						series: `kube_pod_container_status_last_terminated_reason{${reasonLabels},pod="old",instance="${instance}",reason="${reason}"}`,
+						values: "_x20 1+0x10 stale _x28",
+					})),
+				),
+			],
+			expected: ["Error", "OOMKilled"].map((reason) => ({
+				labels: `{container="${service}",pod="old",reason="${reason}"}`,
+				value: 1,
+			})),
+		},
+		{
+			name: "A measured pod without a reason is explicitly unknown",
+			input_series: [
+				{
+					series: `kube_pod_container_status_restarts_total{${reasonLabels},pod="old"}`,
+					values: "0+0x60",
+				},
+			],
+			expected: [
+				{
+					labels: `{container="${service}",pod="old",reason="Ikke registrert"}`,
+					value: 1,
+				},
+			],
+		},
+		{
+			name: "Missing metrics do not invent pods or reasons",
+			input_series: [],
+			expected: [],
+		},
+	].map(({ name, input_series, expected }) => ({
+		name,
+		input_series,
+		interval: "1m",
+		promql_expr_test: [
+			{
+				expr: renderQuery(podTerminationReasonQuery),
+				eval_time: "60m",
+				exp_samples: expected,
+			},
+		],
+	}));
 	await writeFile(
 		join(directory, "metrics.test.yml"),
 		JSON.stringify({
@@ -622,6 +673,7 @@ async function checkMetricQueries(directory: string) {
 				...fleetCases,
 				successfulTraffic,
 				historicalRestarts,
+				...reasonCases,
 			],
 		}),
 	);
