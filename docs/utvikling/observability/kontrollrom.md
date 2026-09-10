@@ -20,10 +20,9 @@ Tilstandstall for replikaer, køstørrelse og tid siden poll viser siste måling
 |---|---|
 | Feilmarkerte kall | Inngående SERVER-spans med OTel `STATUS_CODE_ERROR`. Ikke automatisk HTTP 5xx eller påvist brukerimpact. |
 | Loggfeil i perioden | Antall logghendelser med `error`, `critical` eller `fatal`, uavhengig av HTTP-sporene. |
-| API-avvisninger i perioden | Antall WARN-hendelser av typen `api_request_rejected`. Ikke alle HTTP 4xx eller API-feil; bare tjenester som logger denne hendelsen er dekket. |
 | Omstarter i perioden | Estimert antall containeromstarter i valgt tidsrom. Gult er et undersøkelsessignal, ikke en nedetidsalarm. |
 | Klare replikaer | Klare i forhold til ønskede replikaer. Et øyeblikksbilde, ikke målt tilgjengelighet. |
-| HTTP-målinger | Om forventede HTTP-måleserier er oppdatert, forsinket eller mangler. Ikke tidspunktet for siste kall. |
+| HTTP-målinger | Om HTTP-måleserier finnes ved periodens slutt eller nylig er observert. Fravær kan skyldes lite trafikk eller manglende innsamling, ikke nødvendigvis en feil. |
 
 **Ingen treff** i et loggpanel betyr at søket ikke returnerte kvalifiserende hendelser. Det beviser ikke at alle tjenester har komplett logging. Manglende Kubernetes-målinger er ukjent, ikke 0 % klare replikaer. En faktisk målt null med ønskede replikaer større enn null er derimot 0 %. Tjenester med ønsket antall null inngår ikke i prosentberegningen.
 
@@ -33,13 +32,13 @@ Datasource- og spørringsfeil skal vises som feil, aldri som frisk tjeneste. Det
 
 Vanlig oppretting, fjerning eller erstatning av podder ved deploy og skalering øker ikke containerens restart-teller. Derfor undertrykker vi ikke alle avvik rundt deploy. Korte fall i antall klare replikaer kan likevel være normale; se tidsserien og eventuell brukerimpact før du konkluderer.
 
-Podtabellen viser omstarter i valgt tidsrom, samt **siste registrerte avslutningsårsak på nåværende podder**. Årsaken kan være eldre enn tidsrommet og gjelder ikke nødvendigvis alle omstarter i perioden. Erstattede podder kan ha restarthistorikk uten tilgjengelig årsak, og dagens metrikkgrunnlag gir ikke avslutningstidspunkt.
+Podtabellen viser omstarter og **avslutningsårsaker observert i målingene i valgt tidsrom**, også for podder som senere ble erstattet. Flere årsaker samles på én rad per pod, uten å summere restarttallet flere ganger. Årsaken kan beskrive en avslutning før tidsrommet og gjelder ikke nødvendigvis alle omstarter i perioden. Dagens metrikkgrunnlag gir ikke avslutningstidspunkt eller en komplett hendelseslogg. **Ikke registrert** betyr at en restartmåling finnes, men at ingen årsak ble funnet i perioden.
 
 - `OOMKilled`: sammenhold minnebruk og minnegrense før tiltak.
 - `Error`: åpne poddens logger rundt hendelsen; årsaken kan ikke leses av exit-status alene.
 - Manglende årsak: ikke bevis på normal deploy.
 
-Prometheus `increase()` estimerer tellerøkning. Verdiene er ikke en eksakt hendelseslogg. Se [HTTP-/runtime-runbook](./runbooks/http-runtime).
+Prometheus `increase()` estimerer tellerøkning. Tellere presenteres avrundet til heltall, men verdiene er fortsatt estimater, ikke en eksakt hendelseslogg. Se [HTTP-/runtime-runbook](./runbooks/http-runtime).
 
 ## Avgrensning og datagrunnlag
 
@@ -52,10 +51,12 @@ Produksjonsflåten genereres fra [runtimeinventaret](./runtimeinventar): 26 oper
 
 HTTP-måledata klassifiseres slik:
 
-- **Mottar data:** aktuell SERVER-serie finnes. Det beviser måleserie, ikke trafikk.
-- **Forsinket:** sett siste 30 minutter, men ikke aktuell.
-- **Mangler:** ingen serie siste 30 minutter for en forventet HTTP-tjeneste.
+- **Nyere data:** aktuell SERVER-serie finnes. Det beviser måleserie, ikke trafikk.
+- **Sett siste 30 min:** en serie ble sett i dette vinduet, men er ikke aktuell ved periodens slutt.
+- **Ingen nyere data:** ingen serie siste 30 minutter for en HTTP-tjeneste. Dette kan også skyldes lite trafikk, og er ikke alene bevis for manglende instrumentering eller nedetid.
 - **Bakgrunnstjeneste:** worker uten inbound SERVER-kontrakt.
+
+Den avgrensede WARN-hendelsen `api_request_rejected` vises under **Avviste API-kall** i [Feiloversikt](./feildrilldown), ikke som et generelt signal for hele flåten. Flaggskipet logger blant annet eksplisitt avvist input og autentisering slik. Ingen treff betyr bare at ingen samsvarende hendelser ble funnet; dette er ikke en telling av alle API-avvisninger i teamet.
 
 ### Tjenestens egne signaler
 
