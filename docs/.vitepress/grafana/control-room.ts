@@ -131,9 +131,9 @@ export const p95LatencyQuery = `(histogram_quantile(0.95, sum by (le) (rate(${SP
 const fleetRequestsByService = `sum by (service_name) (increase(${SPAN_CALLS_METRIC}{${fleetSpanSelector}}[$__range]))`;
 const fleetOtelErrorsByService = `sum by (service_name) (increase(${SPAN_CALLS_METRIC}{${fleetErrorSpanSelector}}[$__range]))`;
 
-export const fleetServicesWithOtelErrorsQuery = `count((${fleetOtelErrorsByService}) > 0) or on() (count(${fleetRequestsByService}) * 0)`;
 export const requestsByServiceQuery = fleetRequestsByService;
 export const otelErrorsByServiceQuery = `((${fleetOtelErrorsByService}) or on(service_name) ((${fleetRequestsByService}) * 0)) and on(service_name) ((${fleetRequestsByService}) > 0)`;
+export const fleetOtelErrorCountQuery = `sum(${otelErrorsByServiceQuery})`;
 
 const fleetRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name=~"${FLEET_SERVICE_REGEX}"}`;
 const selectedRuntimeSelector = `{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name="${SERVICE_VARIABLE}"}`;
@@ -144,24 +144,21 @@ ${runtimeErrorPipeline}
 
 export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector}
 ${runtimeErrorPipeline}
-[5m]))`;
-export const fleetServicesWithRuntimeErrorsQuery = `count((${runtimeErrorsByServiceQuery}) > 0)`;
+[$__range]))`;
+export const fleetRuntimeErrorCountQuery = `sum(${runtimeErrorsByServiceQuery})`;
 
-export const fleetServicesWithApiRejectionsQuery = `count((sum by (service_name) (count_over_time(${fleetRuntimeSelector}
+export const apiRejectionsByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector}
 ${runtimeRejectionPipeline}
 | keep service_name
-[5m]))) > 0)`;
+[$__range]))`;
+export const fleetApiRejectionCountQuery = `sum(${apiRejectionsByServiceQuery})`;
 
-const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[24h])))`;
+const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[$__range])))`;
 export const restartsByServiceQuery = `sum by (service_name) (label_replace(${fleetRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
-export const restartCountQuery = `sum(max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[24h])))`;
-export const fleetServicesWithRestartsQuery = `count((${restartsByServiceQuery}) > 0) or on() (count(${restartsByServiceQuery}) * 0)`;
+export const restartCountQuery = `sum(max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[$__range])))`;
+export const fleetRestartCountQuery = `sum(${restartsByServiceQuery})`;
 
-const recentRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[15m])))`;
-export const recentRestartsByServiceQuery = `sum by (service_name) (label_replace(${recentRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
-export const fleetServicesWithRecentRestartsQuery = `count((${recentRestartsByServiceQuery}) > 0) or on() (count(${recentRestartsByServiceQuery}) * 0)`;
-const podRestartsQuery = (window: string) =>
-	`max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[${window}]))`;
+export const podRestartsQuery = `max by (pod, container) (increase(${RESTARTS_METRIC}{${selectedKubeContainerSelector}}[$__range]))`;
 // Latest reason on current pods, not the cause of every restart in a window.
 export const podTerminationReasonQuery = `max by (pod, container, reason) (kube_pod_container_status_last_terminated_reason{${selectedKubeContainerSelector}}) == 1`;
 
@@ -195,7 +192,7 @@ export const jobFailureQuery = `max(max_over_time(${JOB_FAILED_METRIC}{namespace
 export const budstikkaLagQuery = `max by (topic) (${BUDSTIKKA_LAG_METRIC}{app="syfo-budstikka", namespace="team-esyfo", k8s_cluster_name="prod", topic="team-esyfo.budstikka.v1"})`;
 export const sykmeldingConsumerPollAgeByPodQuery = `max by (pod) (${KAFKA_CONSUMER_LAST_POLL_METRIC}{app="syfo-oppfolgingsplan-backend", namespace="team-esyfo", k8s_cluster_name="prod"})`;
 export const sykmeldingConsumerCommittedLagQuery = `max(${KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC}{namespace="nais-system", k8s_cluster_name="prod", group="syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2", topic="teamsykmelding.syfo-sendt-sykmelding"})`;
-export const deserializationRateQuery = `sum(rate(${DESERIALIZATION_ERROR_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod"}[5m]))`;
+export const deserializationRateQuery = `sum(rate(${DESERIALIZATION_ERROR_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod"}[$__rate_interval]))`;
 export const motebehovAvailableRatioQuery = `(100 * max by (deployment) (${AVAILABLE_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) / max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"})) and on(deployment) (max by (deployment) (${DESIRED_REPLICAS_METRIC}{namespace="team-esyfo", k8s_cluster_name="prod", deployment="syfomotebehov"}) > 0)`;
 
 const dinesykmeldteRoutePattern =
@@ -494,8 +491,9 @@ const fleetTablePanel = () => {
 		service_name: "Tjeneste",
 		"Value #Requests": "Kall i perioden",
 		"Value #OTel-feil": "Feilmarkerte kall",
-		"Value #Runtimefeil": "Loggfeil · 5 min",
-		"Value #Nylige restarts": "Omstarter · 15 min",
+		"Value #Runtimefeil": "Loggfeil i perioden",
+		"Value #Avvisninger": "API-avvisninger i perioden",
+		"Value #Restarts": "Omstarter i perioden",
 		"Value #Klare replikaer": "Klare replikaer",
 		"Value #Telemetry": "HTTP-målinger",
 	};
@@ -518,12 +516,13 @@ const fleetTablePanel = () => {
 			],
 		],
 		[
-			"Value #Nylige restarts",
+			"Value #Restarts",
 			[
 				{ color: "gray", value: 0 },
 				{ color: "yellow", value: 1 },
 			],
 		],
+		["Value #Avvisninger", attentionThresholds],
 	];
 	return {
 		kind: "Panel",
@@ -552,9 +551,10 @@ const fleetTablePanel = () => {
 						"table",
 					),
 					lokiQuery("Runtimefeil", runtimeErrorsByServiceQuery),
+					lokiQuery("Avvisninger", apiRejectionsByServiceQuery),
 					prometheusQuery(
-						"Nylige restarts",
-						recentRestartsByServiceQuery,
+						"Restarts",
+						restartsByServiceQuery,
 						"instant",
 						"",
 						"table",
@@ -592,7 +592,7 @@ const fleetTablePanel = () => {
 				],
 			),
 			description:
-				"Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall og feil i kall gjelder valgt tidsrom; loggfeil gjelder siste fem minutter og omstarter siste 15 minutter ved periodens slutt. HTTP-målinger viser seriesignal, ikke siste kall. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Datasourcefeil feiler hele queryen. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
+				"Alle operative produksjonstjenester fra inventaret, også når målinger mangler. Kall, logghendelser, API-avvisninger og omstarter gjelder valgt tidsrom. Replikaer og HTTP-målinger er tilstand ved periodens slutt. HTTP-målinger viser seriesignal, ikke siste kall. Bakgrunnstjenester har ikke HTTP-kontrakt. Manglende tall er ukjent, ikke null. Klikk tjenesten for APM, tracing, feilgrupper eller logger.",
 			id: 10,
 			links: [dataLink("HTTP/runtime-runbook", RUNTIME_RUNBOOK_URL)],
 			title: "Tjenester i produksjon",
@@ -702,13 +702,13 @@ const fleetTablePanel = () => {
 					},
 					options: {
 						cellHeight: "sm",
-						enablePagination: true,
+						enablePagination: false,
 						showHeader: true,
 						sortBy: [
 							{ desc: true, displayName: fields["Value #Runtimefeil"] },
 							{ desc: false, displayName: "Klare replikaer" },
 							{ desc: true, displayName: fields["Value #OTel-feil"] },
-							{ desc: true, displayName: fields["Value #Nylige restarts"] },
+							{ desc: true, displayName: fields["Value #Restarts"] },
 						],
 					},
 				},
@@ -724,24 +724,11 @@ const podDiagnosticsPanel = () => ({
 		id: 36,
 		title: "Omstarter og siste avslutningsårsak",
 		description:
-			"Estimerte restarts i faste 15m- og 24t-vinduer, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
+			"Estimerte restarts i valgt tidsrom, også fra erstattede podder. Årsak er siste registrerte avslutning på nåværende pod, ikke årsak til alle restarts i vinduet. Tidspunkt er ikke tilgjengelig. OOMKilled betyr drept på grunn av minne; Error krever logger. Manglende årsak er ukjent. Klikk podnavnet for poddens logger i valgt tidsrom.",
 		links: serviceDataLinks(SERVICE_VARIABLE),
 		data: queryGroup(
 			[
-				prometheusQuery(
-					"Restarts 15m",
-					podRestartsQuery("15m"),
-					"instant",
-					"",
-					"table",
-				),
-				prometheusQuery(
-					"Restarts 24t",
-					podRestartsQuery("24h"),
-					"instant",
-					"",
-					"table",
-				),
+				prometheusQuery("Restarts", podRestartsQuery, "instant", "", "table"),
 				prometheusQuery(
 					"Siste årsak",
 					podTerminationReasonQuery,
@@ -764,14 +751,12 @@ const podDiagnosticsPanel = () => ({
 							},
 							indexByName: {
 								pod: 0,
-								"Value #Restarts 15m": 1,
-								"Value #Restarts 24t": 2,
-								reason: 3,
+								"Value #Restarts": 1,
+								reason: 2,
 							},
 							renameByName: {
 								pod: "Pod",
-								"Value #Restarts 15m": "Omstarter · 15 min",
-								"Value #Restarts 24t": "Omstarter · 24 timer",
+								"Value #Restarts": "Omstarter i perioden",
 								reason: "Siste avslutningsårsak",
 							},
 						},
@@ -811,10 +796,7 @@ const podDiagnosticsPanel = () => ({
 					showHeader: true,
 					cellHeight: "sm",
 					enablePagination: true,
-					sortBy: [
-						{ displayName: "Omstarter · 15 min", desc: true },
-						{ displayName: "Omstarter · 24 timer", desc: true },
-					],
+					sortBy: [{ displayName: "Omstarter i perioden", desc: true }],
 				},
 			},
 		},
@@ -947,29 +929,26 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		elements: {
 			"panel-2": statPanel({
 				id: 2,
-				title: "Feilmarkerte kall",
+				title: "Feilmarkerte kall i perioden",
 				description:
-					"Antall tjenester med minst én inbound SERVER-span markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
+					"Antall inngående SERVER-spans markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
 				query: prometheusQuery(
-					"Tjenester med feil i kall",
-					fleetServicesWithOtelErrorsQuery,
+					"Feilmarkerte kall",
+					fleetOtelErrorCountQuery,
 					"instant",
 				),
-				unit: "suffix: tjenester",
+				unit: "short",
 				thresholds: deviationThresholds,
 				decimals: 0,
 				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-32": statPanel({
 				id: 32,
-				title: "Loggfeil · 5 min",
+				title: "Loggfeil i perioden",
 				description:
-					"Antall tjenester med error-, critical- eller fatal-klassifiserte runtime-logger siste fem minutter ved periodens slutt. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
-				query: lokiQuery(
-					"Tjenester med loggfeil",
-					fleetServicesWithRuntimeErrorsQuery,
-				),
-				unit: "suffix: tjenester",
+					"Antall error-, critical- eller fatal-klassifiserte runtime-logghendelser i valgt tidsrom. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
+				query: lokiQuery("Loggfeil", fleetRuntimeErrorCountQuery),
+				unit: "short",
 				thresholds: deviationThresholds,
 				decimals: 0,
 				noValue: "Ingen treff",
@@ -977,22 +956,18 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-4": statPanel({
 				id: 4,
-				title: "Omstarter · 15 min",
+				title: "Omstarter i perioden",
 				description:
-					"Antall tjenester med observerte containerrestarts siste 15 minutter ved periodens slutt, ikke antall restarts. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
-				query: prometheusQuery(
-					"Tjenester med omstarter",
-					fleetServicesWithRecentRestartsQuery,
-					"instant",
-				),
-				unit: "suffix: tjenester",
+					"Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og siste avslutningsårsak finnes under Undersøk en tjeneste.",
+				query: prometheusQuery("Omstarter", fleetRestartCountQuery, "instant"),
+				unit: "short",
 				thresholds: attentionThresholds,
 				decimals: 0,
 				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-5": statPanel({
 				id: 5,
-				title: "Klare replikaer · lavest",
+				title: "Replikaer · lavest ved periodeslutt",
 				description:
 					"Laveste observerte klare/ønskede replikaandel ved periodens slutt. Gult kan skyldes et kort fall ved deploy eller skalering; se utviklingen for tjenesten før du konkluderer. Manglende målinger og desired=0 gir ikke null eller grønt.",
 				query: prometheusQuery(
@@ -1079,9 +1054,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			"panel-36": podDiagnosticsPanel(),
 			"panel-33": statPanel({
 				id: 33,
-				title: "Kafka-klienter · tid siden poll",
+				title: "Kafka · tid siden poll ved periodeslutt",
 				description:
-					"Sekunder siden Kafka-klientens siste poll()-kall per pod i syfo-oppfolgingsplan-backend. Under 60 sekunder er nøytralt, 60–300 gult og minst 300 rødt. IKKE POLLET er verdien -1 før første poll, ikke bevis på feil under oppstart. Signalet beviser ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
+					"Ved periodens slutt: sekunder siden Kafka-klientens siste poll()-kall per pod i syfo-oppfolgingsplan-backend. Under 60 sekunder er nøytralt, 60–300 gult og minst 300 rødt. IKKE POLLET er verdien -1 før første poll, ikke bevis på feil under oppstart. Signalet beviser ikke null lag eller ende-til-ende-leveranse. No data er Ukjent.",
 				query: prometheusQuery(
 					"Tid siden poll",
 					sykmeldingConsumerPollAgeByPodQuery,
@@ -1104,9 +1079,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-34": statPanel({
 				id: 34,
-				title: "Sykmeldinger · samlet Kafka-lag",
+				title: "Sykmeldinger · kø ved periodeslutt",
 				description:
-					"Samlet committed lag for consumer group syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2 på teamsykmelding.syfo-sendt-sykmelding. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. Manglende måling er Ukjent.",
+					"Ved periodens slutt: samlet committed lag for consumer group syfo-oppfolgingsplan-backend-sykmeldingsperiode-v2 på teamsykmelding.syfo-sendt-sykmelding. Null betyr ingen observert transportbacklog ved siste scrape, ikke bevist korrekt behandling. Positiv lag kan være kortvarig. Manglende måling er Ukjent.",
 				query: prometheusQuery(
 					"Meldinger bak",
 					sykmeldingConsumerCommittedLagQuery,
@@ -1257,14 +1232,11 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-35": statPanel({
 				id: 35,
-				title: "API-avvisninger · 5 min",
+				title: "API-avvisninger i perioden",
 				description:
-					"WARN-hendelsen api_request_rejected siste fem minutter ved periodens slutt. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
-				query: lokiQuery(
-					"Tjenester med API-avvisninger",
-					fleetServicesWithApiRejectionsQuery,
-				),
-				unit: "suffix: tjenester",
+					"Antall WARN-hendelser av typen api_request_rejected i valgt tidsrom. Dekker bare produsenter av denne hendelsen, ikke alle WARN eller HTTP 4xx. Kan skyldes input, klientintegrasjon eller konfigurasjon; ikke automatisk driftsfeil. Ingen treff er ikke bevist fravær av avvisninger. Feiloversikt viser grupper av avvisningsgrunner.",
+				query: lokiQuery("API-avvisninger", fleetApiRejectionCountQuery),
+				unit: "short",
 				thresholds: attentionThresholds,
 				decimals: 0,
 				noValue: "Ingen treff",
@@ -1294,7 +1266,13 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 										layoutItem("panel-35", 9, 0, 5, 4),
 										layoutItem("panel-4", 14, 0, 5, 4),
 										layoutItem("panel-5", 19, 0, 5, 4),
-										layoutItem("panel-10", 0, 4, 24, 14),
+										layoutItem(
+											"panel-10",
+											0,
+											4,
+											24,
+											controlRoomApplications.length + 2,
+										),
 									],
 								},
 							},

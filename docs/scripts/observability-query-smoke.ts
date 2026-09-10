@@ -7,9 +7,9 @@ import { join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
 import { promisify } from "node:util";
 import {
-	fleetServicesWithOtelErrorsQuery,
-	fleetServicesWithRecentRestartsQuery,
-	fleetServicesWithRestartsQuery,
+	buildControlRoomDashboard,
+	fleetOtelErrorCountQuery,
+	fleetRestartCountQuery,
 	jobFailureQuery,
 	lowestReadyRatioQuery,
 	readyRatioByServiceQuery,
@@ -179,6 +179,23 @@ async function checkLogQueries(url: string) {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			streams: [
+				...["error", "warn"].map((level) => ({
+					stream: {
+						...runtimeLabels,
+						service_name: "syfo-dokumentporten",
+						detected_level: level,
+					},
+					values: [20, 21, 22]
+						.map((minutes) => [
+							String(BigInt(now - minutes * 60000) * 1000000n),
+							JSON.stringify({
+								...canonicalError,
+								event_type:
+									level === "warn" ? "api_request_rejected" : "fixture_failed",
+							}),
+						])
+						.reverse(),
+				})),
 				...fixtures.map(({ labels, fields, line }, index) => ({
 					stream: { ...runtimeLabels, ...labels },
 					values: [
@@ -217,6 +234,35 @@ async function checkLogQueries(url: string) {
 		assert.equal(response.status, 200, body);
 		return JSON.parse(body).data.result;
 	};
+	const controlPanels = buildControlRoomDashboard().spec.elements as Record<
+		string,
+		{
+			spec: {
+				data: {
+					spec: {
+						queries: Array<{ spec: { query: { spec: { expr: string } } } }>;
+					};
+				};
+			};
+		}
+	>;
+	for (const [id, shortCount] of [
+		["panel-32", 8],
+		["panel-35", 4],
+	] as const) {
+		const query =
+			controlPanels[id].spec.data.spec.queries[0].spec.query.spec.expr;
+		const total = (rows: Vector[]) =>
+			rows.reduce((sum, row) => sum + Number(row.value[1]), 0);
+		assert.equal(
+			total(await request(query.replaceAll("$__range", "5m"))),
+			shortCount,
+		);
+		assert.equal(
+			total(await request(query.replaceAll("$__range", "1h"))),
+			shortCount + 3,
+		);
+	}
 	// Link fields have no text-changing Grafana mappings. Their query labels are
 	// therefore the same strings that a person sees and follows in the table.
 	const checkRowLinks = async (rows: Vector[], link: string) => {
@@ -246,7 +292,11 @@ async function checkLogQueries(url: string) {
 				from: String(now - 3600000),
 				to: String(now),
 			});
-			const logs: Stream[] = await request(state.queries[0].expr, service, true);
+			const logs: Stream[] = await request(
+				state.queries[0].expr,
+				service,
+				true,
+			);
 			assert.equal(
 				logs.reduce((count, { values }) => count + values.length, 0),
 				Number(value[1]),
@@ -494,14 +544,14 @@ async function checkMetricQueries(directory: string) {
 	const fleetCases = [
 		{ name: "Missing counters stay unknown" },
 		{
-			name: "Observed counters without increase give zero",
+			name: "No traffic stays unknown; observed restart counter stays zero",
 			values: "0+0x10",
 			expected: 0,
 		},
 		{
-			name: "Observed counter increases identify one service",
+			name: "Multiple events on one service are counted as events",
 			values: "0+1x10",
-			expected: 1,
+			expected: 10,
 		},
 	].map(({ name, values, expected }) => ({
 		name,
@@ -519,23 +569,60 @@ async function checkMetricQueries(directory: string) {
 							values,
 						},
 					],
-		promql_expr_test: [
-			fleetServicesWithOtelErrorsQuery,
-			fleetServicesWithRecentRestartsQuery,
-			fleetServicesWithRestartsQuery,
-		].map((query) =>
-			expressionTest(
-				query,
-				expected === undefined ? [] : [{ labels: "{}", value: expected }],
-			),
+		promql_expr_test: [fleetOtelErrorCountQuery, fleetRestartCountQuery].map(
+			(query) =>
+				expressionTest(
+					query,
+					expected === undefined ||
+						(query === fleetOtelErrorCountQuery && expected === 0)
+						? []
+						: [{ labels: "{}", value: expected }],
+				),
 		),
 	}));
-	// JSON is valid YAML. The test file is generated from the current exported queries.
+	const successfulTraffic = {
+		name: "Observed successful traffic without error series gives zero errors",
+		interval: "1m",
+		input_series: [
+			{
+				series: `traces_spanmetrics_calls_total{service_namespace="team-esyfo",k8s_cluster_name="prod",service_name="${service}",span_kind="SPAN_KIND_SERVER",status_code="STATUS_CODE_UNSET"}`,
+				values: "0+1x10",
+			},
+		],
+		promql_expr_test: [
+			expressionTest(fleetOtelErrorCountQuery, [{ labels: "{}", value: 0 }]),
+		],
+	};
+	const historicalRestarts = {
+		name: "Selected hour includes older restarts; duplicates and replacement pods do not inflate totals",
+		interval: "1m",
+		input_series: [
+			...["a", "b"].map((instance) => ({
+				series: `kube_pod_container_status_restarts_total{namespace="team-esyfo",k8s_cluster_name="prod",container="${service}",pod="old",instance="${instance}"}`,
+				values: "0+0x19 2+0x40",
+			})),
+			{
+				series: `kube_pod_container_status_restarts_total{namespace="team-esyfo",k8s_cluster_name="prod",container="${service}",pod="replacement"}`,
+				values: "_x30 0+0x29",
+			},
+		],
+		promql_expr_test: ["5m", "15m", "1h"].map((window) => ({
+			expr: fleetRestartCountQuery.replaceAll("$__range", window),
+			eval_time: "60m",
+			exp_samples: [{ labels: "{}", value: window === "1h" ? 2 : 0 }],
+		})),
+	};
 	await writeFile(
 		join(directory, "metrics.test.yml"),
 		JSON.stringify({
 			evaluation_interval: "1m",
-			tests: [...readiness, ...jobCases, ...fleetCases],
+			tests: [
+				...readiness,
+				...jobCases,
+				...fleetCases,
+				successfulTraffic,
+				historicalRestarts,
+			],
 		}),
 	);
 	const { stdout } = await exec("docker", [

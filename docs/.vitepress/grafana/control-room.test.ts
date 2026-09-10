@@ -21,11 +21,10 @@ import {
 	errorRatioByServiceQuery,
 	expectedScopeVectorQuery,
 	expectedServerScopeVectorQuery,
-	fleetServicesWithApiRejectionsQuery,
-	fleetServicesWithOtelErrorsQuery,
-	fleetServicesWithRecentRestartsQuery,
-	fleetServicesWithRestartsQuery,
-	fleetServicesWithRuntimeErrorsQuery,
+	fleetApiRejectionCountQuery,
+	fleetOtelErrorCountQuery,
+	fleetRestartCountQuery,
+	fleetRuntimeErrorCountQuery,
 	httpErrorCountQuery,
 	httpErrorRatioQuery,
 	JOB_FAILED_METRIC,
@@ -41,7 +40,6 @@ import {
 	READY_REPLICAS_METRIC,
 	RESTARTS_METRIC,
 	readyRatioByServiceQuery,
-	recentRestartsByServiceQuery,
 	requestCountQuery,
 	requestRateByServiceQuery,
 	requestsByServiceQuery,
@@ -204,9 +202,8 @@ const selectedQueries = [
 	podTerminationReasonQuery,
 ];
 const fleetQueries = [
-	fleetServicesWithOtelErrorsQuery,
-	fleetServicesWithRestartsQuery,
-	fleetServicesWithRecentRestartsQuery,
+	fleetOtelErrorCountQuery,
+	fleetRestartCountQuery,
 	requestsByServiceQuery,
 	otelErrorsByServiceQuery,
 	runtimeErrorsByServiceQuery,
@@ -369,7 +366,7 @@ test("viser fem oversiktskort inkludert WARN og tjenestetabellen som standard", 
 	for (const id of ["panel-2", "panel-32", "panel-35", "panel-4"]) {
 		assert.equal(
 			panels()[id].spec.vizConfig.spec.fieldConfig.defaults.unit,
-			"suffix: tjenester",
+			"short",
 		);
 	}
 	for (const id of ["panel-3", "panel-6", "panel-7"])
@@ -466,6 +463,14 @@ test("åpner riktig detaljfane fra tjenestetabellen med samme tidsrom", () => {
 	);
 });
 
+test("viser hele tjenestelisten uten sidebytte", () => {
+	assert.equal(
+		panels()["panel-10"].spec.vizConfig.spec.options.enablePagination,
+		false,
+	);
+	assert.ok(overviewItems()[5].spec.height >= controlRoomApplications.length);
+});
+
 test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 	const panel = panels()["panel-10"];
 	assert.equal(panel.spec.title, "Tjenester i produksjon");
@@ -476,7 +481,8 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 		"Requests",
 		"OTel-feil",
 		"Runtimefeil",
-		"Nylige restarts",
+		"Avvisninger",
+		"Restarts",
 		"Klare replikaer",
 	]);
 	assert.deepEqual(
@@ -492,8 +498,9 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 		"Tjeneste",
 		"Kall i perioden",
 		"Feilmarkerte kall",
-		"Loggfeil · 5 min",
-		"Omstarter · 15 min",
+		"Loggfeil i perioden",
+		"API-avvisninger i perioden",
+		"Omstarter i perioden",
 		"Klare replikaer",
 		"HTTP-målinger",
 	]);
@@ -515,7 +522,8 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 	])
 		assert.ok(mapped.includes(state));
 	assert.match(panel.spec.description, /ikke null/);
-	assert.match(panel.spec.description, /Datasourcefeil feiler hele queryen/);
+	assert.match(panel.spec.description, /gjelder valgt tidsrom/);
+	assert.match(panel.spec.description, /tilstand ved periodens slutt/);
 	assert.ok(
 		(values(panel, "url") as string[]).some((url) =>
 			url.includes(grafanaVariable("__value.raw")),
@@ -569,8 +577,8 @@ test("lager bare HTTP-null med observerte serier og trafikk", () => {
 		assert.match(query, /> 0\)/);
 		assert.ok(!query.includes("vector(0)"));
 	}
-	assert.ok(!fleetServicesWithOtelErrorsQuery.includes("vector(0)"));
-	assert.ok(fleetServicesWithOtelErrorsQuery.includes(requestsByServiceQuery));
+	assert.ok(!fleetOtelErrorCountQuery.includes("vector(0)"));
+	assert.ok(fleetOtelErrorCountQuery.includes(requestsByServiceQuery));
 });
 
 test("lar manglende readiness være ukjent i stedet for falsk null", () => {
@@ -613,28 +621,21 @@ test("lar manglende readiness være ukjent i stedet for falsk null", () => {
 });
 
 test("bevarer dedupliserte restarts, observasjonsforankret null og nøytral historikk", () => {
-	for (const query of [
-		restartCountQuery,
-		restartsByServiceQuery,
-		recentRestartsByServiceQuery,
-	]) {
+	for (const query of [restartCountQuery, restartsByServiceQuery]) {
 		assert.ok(query.includes(RESTARTS_METRIC));
 		assert.match(query, /max by \(pod, container\)/);
 		assert.match(query, /namespace="team-esyfo"/);
 	}
-	for (const query of [
-		fleetServicesWithRestartsQuery,
-		fleetServicesWithRecentRestartsQuery,
-	]) {
+	for (const query of [fleetRestartCountQuery]) {
 		assert.ok(!query.includes("vector(0)"));
-		assert.match(query, /or on\(\) \(count\(/);
+		assert.ok(query.startsWith("sum("));
 	}
 	const top = panels()["panel-4"];
-	assert.ok(expressions(top)[0].includes("[15m]"));
+	assert.ok(expressions(top)[0].includes("[$__range]"));
 	assert.ok(!JSON.stringify(top.spec.vizConfig).includes('"color":"red"'));
 	const diagnostic = panels()["panel-36"];
-	assert.ok(expressions(diagnostic).some((q) => q.includes("[24h]")));
-	assert.ok(expressions(diagnostic).some((q) => q.includes("[15m]")));
+	assert.ok(expressions(diagnostic).some((q) => q.includes("[$__range]")));
+	assert.ok(!expressions(diagnostic).some((q) => /\[(15m|24h)\]/.test(q)));
 	assert.ok(
 		expressions(diagnostic).some(
 			(q) => q.includes("last_terminated_reason") && q.includes("== 1"),
@@ -656,7 +657,7 @@ test("viser tomme loggsøk som ingen treff uten kunstig null", () => {
 	for (const query of [
 		runtimeErrorCountQuery,
 		runtimeErrorsByServiceQuery,
-		fleetServicesWithRuntimeErrorsQuery,
+		fleetRuntimeErrorCountQuery,
 	]) {
 		assert.ok(!query.includes("vector(0)"));
 		assert.ok(!query.includes("* 0"));
@@ -672,24 +673,21 @@ test("viser tomme loggsøk som ingen treff uten kunstig null", () => {
 		);
 		assert.match(panels()[id].spec.description, /ikke bevis/);
 	}
-	assert.match(runtimeErrorsByServiceQuery, /\[5m\]/);
-	assert.ok(!runtimeErrorsByServiceQuery.includes("$__range"));
+	assert.ok(runtimeErrorsByServiceQuery.includes("[$__range]"));
 });
 
 test("bevarer WARN-avvisninger separat med fast produksjonsscope", () => {
 	assert.match(
-		fleetServicesWithApiRejectionsQuery,
+		fleetApiRejectionCountQuery,
 		/detected_level=~`\(\?i\)\(warn\|warning\)`/,
 	);
 	assert.match(
-		fleetServicesWithApiRejectionsQuery,
+		fleetApiRejectionCountQuery,
 		/event_type="api_request_rejected"/,
 	);
-	assert.ok(
-		fleetServicesWithApiRejectionsQuery.includes(controlRoomApplicationRegex),
-	);
-	assert.match(fleetServicesWithApiRejectionsQuery, /\[5m\]/);
-	assert.ok(!fleetServicesWithApiRejectionsQuery.includes("vector(0)"));
+	assert.ok(fleetApiRejectionCountQuery.includes(controlRoomApplicationRegex));
+	assert.ok(fleetApiRejectionCountQuery.includes("[$__range]"));
+	assert.ok(!fleetApiRejectionCountQuery.includes("vector(0)"));
 	const urls = values(panels()["panel-35"], "url") as string[];
 	const link = urls.find((url) => url.startsWith("/explore?"));
 	assert.ok(link);
@@ -888,7 +886,7 @@ test("holder browser utenfor produksjonskontrollrommet og persondata utenfor res
 		values(buildControlRoomDashboard(), "group").filter(
 			(group) => group === "loki",
 		).length,
-		4,
+		5,
 	);
 	assert.ok(serialized.includes('"autoRefresh": "2m"'));
 	assert.ok(serialized.includes('"from": "now-1h"'));
