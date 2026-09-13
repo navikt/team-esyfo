@@ -1,0 +1,4 @@
+{
+	"event_type": "sykmelding_lookup_failed",
+	"exception_type": "HTTP 502 from https://example.test/person/123"
+}

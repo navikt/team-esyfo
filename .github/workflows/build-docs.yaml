@@ -25,7 +25,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: ${{ fromJSON(inputs.deploy && '0' || '1') }} # Full history for VitePress lastUpdated on deploy
+          # Full history exposes the PR base so published contract versions can
+          # be checked for immutability. Deploy also uses it for lastUpdated.
+          fetch-depth: 0
       - name: Setup pnpm
         uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
         with:
@@ -43,6 +45,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build VitePress
         working-directory: docs
+        env:
+          RUNTIME_ERROR_CONTRACT_BASE_REF: ${{ github.base_ref && format('origin/{0}', github.base_ref) || 'origin/main' }}
         run: pnpm build
       - name: Smoke-test Grafana dashboard resources
         working-directory: docs
