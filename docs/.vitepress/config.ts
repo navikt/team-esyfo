@@ -132,6 +132,10 @@ export default withMermaid(
 									link: "/utvikling/observability/alert-register",
 								},
 								{
+									text: "Legg til en god logg",
+									link: "/utvikling/observability/gode-logger",
+								},
+								{
 									text: "Runtime-feilkontrakt",
 									link: "/utvikling/observability/runtime-feilkontrakt",
 								},
