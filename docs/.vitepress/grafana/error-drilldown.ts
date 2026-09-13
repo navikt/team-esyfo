@@ -1,4 +1,13 @@
 import {
+	combineRuntimePatterns,
+	runtimeErrorIngestionErrorCodePattern,
+	runtimeErrorIngestionEventTypePattern,
+	runtimeErrorIngestionExceptionTypePattern,
+	runtimeErrorIngestionOperationPattern,
+	runtimeErrorIngestionTraceIdPattern,
+	runtimeErrorIngestionUpstreamStatusPattern,
+} from "../observability/runtime-error-contract.ts";
+import {
 	activeApplicationIds,
 	runtimeInventory,
 } from "../runtime/inventory.ts";
@@ -147,16 +156,22 @@ ${runtimeErrorPipeline}
 const runtimeSignatureParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
 const runtimeTraceParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, upstream_status, trace_id, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
 
-export const safeEventTypePattern = "^[a-z][a-z0-9_.-]{0,79}$";
+export const safeEventTypePattern = runtimeErrorIngestionEventTypePattern;
 export const safeGenericErrorTypePattern =
-	"^([A-Za-z][A-Za-z0-9_.:$]{0,143})?(Error|Exception)$";
-export const safeCodePattern = "^([A-Z][A-Z0-9_]{1,79}|[1-5][0-9]{2})$";
+	runtimeErrorIngestionExceptionTypePattern;
+// Older producers use numeric HTTP statuses as error codes. Keep those visible
+// without making them valid error_code values in the producer contract.
+export const safeCodePattern = combineRuntimePatterns([
+	runtimeErrorIngestionErrorCodePattern,
+	"^[1-5][0-9]{2}$",
+]);
 // Loki stringifies extracted JSON scalars. Producer tests enforce the number type;
 // this pattern keeps only the allowed integer range in the operator view.
-export const safeUpstreamStatusPattern = "^[1-5][0-9]{2}$";
-const safeGenericTypeAsCodePattern = "^[A-Z][A-Z0-9_]{1,79}$";
+export const safeUpstreamStatusPattern =
+	runtimeErrorIngestionUpstreamStatusPattern;
+const safeGenericTypeAsCodePattern = runtimeErrorIngestionErrorCodePattern;
 const safeErrorStatusPattern = "^[45][0-9]{2}$";
-const safeTraceIdPattern = "^[A-Fa-f0-9]{32}$";
+const safeTraceIdPattern = runtimeErrorIngestionTraceIdPattern;
 export const safeBrowserTypePattern =
 	"^(Error|TypeError|RangeError|ReferenceError|SyntaxError|URIError|EvalError|AggregateError|AbortError|DOMException|NetworkError|SecurityError|NotFoundError|NotAllowedError|DataCloneError|InvalidStateError|QuotaExceededError|TimeoutError|UnknownError|UnhandledRejection)$";
 
@@ -206,7 +221,7 @@ ${safeLabel(
 	safeGenericTypeAsCodePattern,
 )}
 ${safeLabel("safe_status", "status", safeErrorStatusPattern)}
-${safeLabel("safe_operation", "operation", safeEventTypePattern)}
+${safeLabel("safe_operation", "operation", runtimeErrorIngestionOperationPattern)}
 | label_format error_type_display=\`{{ if .safe_event_type }}{{ .safe_event_type }}{{ else if .safe_event }}{{ .safe_event }}{{ else if .safe_top_exception_type }}{{ .safe_top_exception_type }}{{ else if .safe_nested_exception_type }}{{ .safe_nested_exception_type }}{{ else if .safe_top_error_type }}{{ .safe_top_error_type }}{{ else if .safe_nested_error_type }}{{ .safe_nested_error_type }}{{ else if .safe_top_err_type }}{{ .safe_top_err_type }}{{ else if .safe_nested_err_type }}{{ .safe_nested_err_type }}{{ else if .safe_runtime_error_type }}{{ .safe_runtime_error_type }}{{ else }}Ikke oppgitt av appen{{ end }}\`
 | label_format error_code_display=\`{{ if .safe_error_code }}{{ .safe_error_code }}{{ else if .safe_code }}{{ .safe_code }}{{ else if .safe_feilkode }}{{ .safe_feilkode }}{{ else if .safe_runtime_type_code }}{{ .safe_runtime_type_code }}{{ else if .safe_status }}{{ .safe_status }}{{ else }}—{{ end }}\`
 | label_format operation_display=\`{{ if .safe_operation }}{{ .safe_operation }}{{ else }}—{{ end }}\`
@@ -237,8 +252,11 @@ const runtimeLevelLabel =
 	"| label_format error_level=`{{ .detected_level | lower }}`";
 
 // Display-only composition; the original grouping fields remain available to links.
-const runtimeDetailsLabel =
-	'| label_format error_details=`{{ if and .error_level (ne .error_level "error") }}{{ .error_level | upper }} · {{ end }}{{ if ne .error_code_display "—" }}{{ .error_code_display }}{{ end }}{{ if and (ne .operation_display "—") (ne .operation_display .error_type_display) }}{{ if ne .error_code_display "—" }} · {{ end }}{{ .operation_display }}{{ end }}`';
+const codeAndOperationDetailsLabel = (operationCondition: string) =>
+	`| label_format error_details=\`{{ if ne .error_code_display "—" }}{{ .error_code_display }}{{ end }}{{ if ${operationCondition} }}{{ if ne .error_code_display "—" }} · {{ end }}{{ .operation_display }}{{ end }}\``;
+
+const runtimeDetailsLabel = `${codeAndOperationDetailsLabel('and (ne .operation_display "—") (ne .operation_display .error_type_display)')}
+| label_format error_details=\`{{ if and .error_level (ne .error_level "error") }}{{ .error_level | upper }}{{ if .error_details }} · {{ end }}{{ end }}{{ .error_details }}\``;
 
 export const runtimeByClassificationQuery = `topk by(error_level) (25, sum by(error_level, service_name, error_type_display, error_code_display, operation_display, error_details, action) (count_over_time(${runtimeSelector}
 ${runtimeErrorPipeline}
@@ -261,18 +279,19 @@ ${runtimeSignatureLabels}
 
 const runtimeRejectionLabels = `| json operation, error_code, rejection_reason
 | drop __error__, __error_details__
-${safeLabel("safe_operation", "operation", safeEventTypePattern)}
+${safeLabel("safe_operation", "operation", runtimeErrorIngestionOperationPattern)}
 ${safeLabel("safe_error_code", "error_code", safeCodePattern)}
 ${safeLabel("safe_rejection_reason", "rejection_reason", safeGenericTypeAsCodePattern)}
 | label_format operation_display=\`{{ if .safe_operation }}{{ .safe_operation }}{{ else }}—{{ end }}\`
 | label_format error_code_display=\`{{ if .safe_error_code }}{{ .safe_error_code }}{{ else }}—{{ end }}\`
 | label_format rejection_reason_display=\`{{ if and (ne .event_type "api_request_rejected") (eq .service_name "esyfo-narmesteleder") .legacy_system_denial }}Systembrukertilgang ikke innvilget{{ else if and .safe_rejection_reason (ne .safe_rejection_reason "UNSPECIFIED") }}{{ .safe_rejection_reason }}{{ else }}Årsak ikke oppgitt{{ end }}\``;
 
-export const runtimeRejectionsQuery = `topk(50, sum by(service_name, operation_display, error_code_display, rejection_reason_display, action) (count_over_time(${runtimeSelector}
+export const runtimeRejectionsQuery = `topk(50, sum by(service_name, operation_display, error_code_display, rejection_reason_display, error_details, action) (count_over_time(${runtimeSelector}
 ${runtimeRejectionPipeline}
 ${runtimeRejectionLabels}
+${codeAndOperationDetailsLabel('ne .operation_display "—"')}
 | label_format action=\`Undersøk\`
-| keep service_name, operation_display, error_code_display, rejection_reason_display, action
+| keep service_name, operation_display, error_code_display, rejection_reason_display, error_details, action
 [$__auto])))`;
 
 export const browserByTypeQuery = `topk(50, sum by(service_name, browser_environment_display, browser_apm_path, browser_type_display, action) (count_over_time(${browserSelector}
@@ -288,7 +307,7 @@ ${runtimeTraceParser}
 ${runtimeTraceLabels}
 ${runtimeLevelLabel}
 ${runtimeDetailsLabel}
-| label_format error_details=\`{{ .error_details }}{{ if ne .upstream_status_display "—" }} · HTTP {{ .upstream_status_display }}{{ end }}\`
+| label_format error_details=\`{{ .error_details }}{{ if ne .upstream_status_display "—" }}{{ if .error_details }} · {{ end }}HTTP {{ .upstream_status_display }}{{ end }}\`
 | safe_trace_id!=""
 | safe_trace_id!="00000000000000000000000000000000"
 | line_format \`{{ .error_type_display }}\`
@@ -816,8 +835,13 @@ const tracedErrorsPanel = () => ({
 							matcher: { id: "byName", options: "service_name" },
 							properties: [
 								{ id: "custom.width", value: 190 },
+								{ id: "custom.wrapText", value: true },
 								{ id: "links", value: runtimeServiceLinks(ROW_VALUE) },
 							],
+						},
+						{
+							matcher: { id: "byName", options: "error_type_display" },
+							properties: [{ id: "custom.wrapText", value: true }],
 						},
 						{
 							matcher: { id: "byName", options: "error_code_display" },
@@ -849,6 +873,7 @@ const tracedErrorsPanel = () => ({
 				options: {
 					cellHeight: "sm",
 					enablePagination: false,
+					maxRowHeight: 72,
 					showHeader: true,
 					sortBy: [{ desc: true, displayName: "Tidspunkt" }],
 				},
@@ -1034,22 +1059,24 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					operation_display: "Operasjon",
 					error_code_display: "Kode",
 					rejection_reason_display: "Avvisningsgrunn",
+					error_details: "Detaljer",
 					action: "Handling",
 				},
 				indexByName: {
 					service_name: 0,
-					operation_display: 1,
-					error_code_display: 2,
-					rejection_reason_display: 3,
-					"Value #API-avvisninger": 4,
-					action: 5,
+					rejection_reason_display: 1,
+					error_details: 2,
+					"Value #API-avvisninger": 3,
+					action: 4,
+					error_code_display: 5,
+					operation_display: 6,
 				},
 				actionLinks: runtimeInvestigationLinks(runtimeRejectionDataLink()),
 				panelLinks: runtimePanelLinks(),
+				hiddenFields: ["error_code_display", "operation_display"],
 				widths: {
 					service_name: 200,
-					operation_display: 170,
-					error_code_display: 145,
+					error_details: 230,
 				},
 			}),
 			"panel-4": tablePanel({

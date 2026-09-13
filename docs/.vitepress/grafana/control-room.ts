@@ -614,6 +614,7 @@ const fleetTablePanel = () => {
 								cellOptions: { type: "auto" },
 								footer: { reducers: [] },
 								inspect: false,
+								wrapText: true,
 							},
 							noValue: "—",
 							decimals: 0,
@@ -706,13 +707,13 @@ const fleetTablePanel = () => {
 								],
 							},
 							...tableColumnWidths({
-								[fields.service_name]: 265,
+								[fields.service_name]: 235,
 								[fields["Value #Requests"]]: 70,
-								[fields["Value #OTel-feil"]]: 130,
+								[fields["Value #OTel-feil"]]: 155,
 								[fields["Value #Runtimefeil"]]: 80,
-								[fields["Value #Restarts"]]: 95,
-								[fields["Value #Klare replikaer"]]: 115,
-								[fields["Value #Telemetry"]]: 160,
+								[fields["Value #Restarts"]]: 100,
+								[fields["Value #Klare replikaer"]]: 140,
+								[fields["Value #Telemetry"]]: 150,
 							}),
 						],
 					},
@@ -1032,7 +1033,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		elements: {
 			"panel-2": statPanel({
 				id: 2,
-				title: "Feilmarkerte kall i perioden",
+				title: "Feilmarkerte kall",
 				description:
 					"Antall inngående SERVER-spans markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
 				query: prometheusQuery(
@@ -1043,11 +1044,10 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				unit: "short",
 				thresholds: deviationThresholds,
 				decimals: 0,
-				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-32": statPanel({
 				id: 32,
-				title: "Loggfeil i perioden",
+				title: "Loggfeil",
 				description:
 					"Antall error-, critical- eller fatal-klassifiserte runtime-logghendelser i valgt tidsrom. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
 				query: lokiQuery("Loggfeil", fleetRuntimeErrorCountQuery),
@@ -1061,18 +1061,17 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-4": statPanel({
 				id: 4,
-				title: "Omstarter i perioden",
+				title: "Omstarter",
 				description:
 					"Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og registrerte avslutningsårsaker finnes under Undersøk en tjeneste.",
 				query: prometheusQuery("Omstarter", fleetRestartCountQuery, "instant"),
 				unit: "short",
 				thresholds: attentionThresholds,
 				decimals: 0,
-				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-5": statPanel({
 				id: 5,
-				title: "Replikaer · lavest ved periodeslutt",
+				title: "Replikaer ved slutt",
 				description:
 					"Laveste observerte klare/ønskede replikaandel ved periodens slutt. Gult kan skyldes et kort fall ved deploy eller skalering; se utviklingen for tjenesten før du konkluderer. Manglende målinger og desired=0 gir ikke null eller grønt.",
 				query: prometheusQuery(
@@ -1083,7 +1082,6 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				unit: "percent",
 				thresholds: readyThresholds,
 				decimals: 0,
-				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-10": fleetTablePanel(),
 			"panel-12": timeSeriesPanel({
@@ -1130,7 +1128,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-15": statPanel({
 				id: 15,
-				title: "Loggfeil i perioden",
+				title: "Loggfeil",
 				description:
 					"Error-, critical- eller fatal-klassifiserte runtime-logger for valgt tjeneste og tidsrom. Browservideresendte logger er ekskludert. Ingen treff er ikke bevis på feilfri drift eller komplett logging. Åpne Feiloversikt for feilgrupper.",
 				query: lokiQuery("Loggfeil", runtimeErrorCountQuery),

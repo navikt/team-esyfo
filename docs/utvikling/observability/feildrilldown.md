@@ -11,7 +11,7 @@ Den primære, åpne delen har én rekkefølge:
 1. **Loggede feil per minutt** viser utviklingen med samme enhet uansett tidsrom. **Hvor skjer feilene?** viser antall hendelser per tjeneste i hele tidsrommet som horisontale stolper.
 2. **Hva feiler?** prioriterer tjeneste og hendelse. **Detaljer** samler kode og operasjon når de tilfører informasjon. CRITICAL og FATAL fremgår også der. Topp 25 beregnes separat per nivå, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser. En tjenestestolpe åpner tjenestens feilgrupper.
 3. **Siste feil med trace · valgt tjenesteutvalg** gir et utvalg fra de 100 nyeste trace-koblede feilene. Dette er ikke forløp for en valgt rad i tabellen over; bruk radens **Logger i gruppen med trace** for det.
-4. **Registrerte API-avvisninger · WARN** viser inntil 50 grupper separat fra ERROR. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
+4. **Registrerte API-avvisninger · WARN** viser inntil 50 grupper separat fra ERROR, med avvisningsgrunn først og kode/operasjon samlet under **Detaljer**. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
 
 Avvisningspanelet omfatter `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak får samme verdi, **Årsak ikke oppgitt**, i både grupperingen og loggsøket. Gruppelinken bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
 
@@ -28,14 +28,14 @@ I trace-tabellen åpner **Åpne trace** det konkrete sporet direkte i Explore, m
 
 Hjelpefeltene som spørringen beregner, fjernes fra Explore-resultatet etter at gruppen er filtrert. Den opprinnelige logglinjen, appens feildiagnostikk, podmetadata og trace-ID beholdes. Dette er opprydding i visningen, ikke scrubbing av loggene.
 
-Tabellene er tilpasset en laptop på 1366–1440 px, også med Grafana-menyen åpen. Hovedtabell og trace-tabell har fem synlige kolonner og intern scrolling fremfor mange små sider. Støttefelter skjules bare i tabellen; presise lenker beholder dem.
+Tabellene er tilpasset en laptop på 1366–1440 px, også med Grafana-menyen åpen. Feilgrupper, avvisninger og trace-tabell har fem synlige kolonner og intern scrolling fremfor mange små sider. Støttefelter skjules bare i tabellen; presise lenker beholder dem.
 
 I tillegg finnes:
 
 - **Forbedre loggdata**, en sammenfoldet del som viser hendelser uten gyldig `event_type`. Disse feilene er allerede med i hovedtabellen, ikke ekstra feil. Delen arver miljø og tjeneste fra **Feil i tjenestene**.
 - **Nettleserfeil · eget utvalg**, med egen inventarstyrt flatevelger og miljøvelger. Den påvirkes ikke av runtime-valgene. Standard er alle miljøer, også ukjent, med miljø oppgitt per rad.
 
-Nettlesertabellen grupperer på brede JavaScript-typer som `Error`, ikke på rotårsak. **Se logger** finner radens nøyaktige tjeneste, miljø og type. **Nettleserfeil i APM** åpner flatens egne feilgrupper, alle typer, i samme miljø og tidsrom. For **Ukjent** åpnes alle miljøer; dashboardet gjetter ikke produksjon. APMs gruppering gjenbrukes i stedet for en ny fingerprint-løsning i teamets dashboard.
+Nettlesertabellen grupperer på brede JavaScript-typer som `Error`, ikke på rotårsak. **Se logger** finner radens nøyaktige tjeneste, miljø og type. **APM · alle typer (ukjent miljø → alle)** åpner flatens egne feilgrupper, alle typer, i samme miljø og tidsrom. For **Ukjent** åpnes alle miljøer; dashboardet gjetter ikke produksjon. APMs gruppering gjenbrukes i stedet for en ny fingerprint-løsning i teamets dashboard.
 
 Panelbeskrivelser og lenker til kontrakt og runbook ligger i panelmenyene. Dashboardet har ikke et stort forklaringspanel som skyver feilinformasjonen ut av første skjermbilde.
 

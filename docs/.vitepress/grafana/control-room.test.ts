@@ -470,6 +470,37 @@ test("viser hele tjenestelisten uten sidebytte", () => {
 	assert.ok(overviewItems()[4].spec.height >= controlRoomApplications.length);
 });
 
+test("bruker korte korttitler uten å miste periode eller replikaandel", () => {
+	const titles = {
+		"panel-2": "Feilmarkerte kall",
+		"panel-32": "Loggfeil",
+		"panel-4": "Omstarter",
+		"panel-5": "Replikaer ved slutt",
+		"panel-15": "Loggfeil",
+	};
+	for (const [id, title] of Object.entries(titles)) {
+		assert.equal(panels()[id].spec.title, title);
+		assert.match(panels()[id].spec.description, /tidsrom|periodens slutt/);
+	}
+	assert.match(
+		panels()["panel-5"].spec.description,
+		/Laveste observerte klare\/ønskede replikaandel ved periodens slutt/,
+	);
+	for (const id of ["panel-2", "panel-4", "panel-5"]) {
+		assert.deepEqual(values(panels()[id], "url"), []);
+	}
+	assert.ok(
+		values(panels()["panel-32"], "url").includes(
+			errorDashboardDataLink("$__all"),
+		),
+	);
+	assert.ok(
+		objects(buildControlRoomDashboard().spec.links).some(
+			({ title }) => title === "Runbooks",
+		),
+	);
+});
+
 test("holder begge tabeller lesbare innen vanlig laptopbredde", () => {
 	for (const id of ["panel-10", "panel-36"]) {
 		const panel = panels()[id];
@@ -486,7 +517,17 @@ test("holder begge tabeller lesbare innen vanlig laptopbredde", () => {
 			assert.ok(Number(matches[0].value) >= 70);
 			return Number(matches[0].value);
 		});
-		assert.ok(widths.reduce((sum, width) => sum + width, 0) <= 960, id);
+		const maxWidth = id === "panel-10" ? 930 : 960;
+		assert.ok(widths.reduce((sum, width) => sum + width, 0) <= maxWidth, id);
+		if (id === "panel-10") {
+			assert.equal(
+				panel.spec.vizConfig.spec.fieldConfig.defaults.custom.wrapText,
+				true,
+			);
+			const names = Object.values(organize.renameByName);
+			assert.ok(widths[names.indexOf("Feilmarkerte kall")] >= 155);
+			assert.ok(widths[names.indexOf("Klare replikaer")] >= 140);
+		}
 		assert.equal(panel.spec.vizConfig.spec.fieldConfig.defaults.decimals, 0);
 	}
 });

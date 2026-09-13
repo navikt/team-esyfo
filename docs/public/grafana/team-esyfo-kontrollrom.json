@@ -51,14 +51,8 @@
           },
           "description": "Antall inngående SERVER-spans markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
           "id": 2,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "Feilmarkerte kall i perioden",
+          "links": [],
+          "title": "Feilmarkerte kall",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -151,7 +145,7 @@
               "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=$__all"
             }
           ],
-          "title": "Loggfeil i perioden",
+          "title": "Loggfeil",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -240,14 +234,8 @@
           },
           "description": "Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og registrerte avslutningsårsaker finnes under Undersøk en tjeneste.",
           "id": 4,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "Omstarter i perioden",
+          "links": [],
+          "title": "Omstarter",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -336,14 +324,8 @@
           },
           "description": "Laveste observerte klare/ønskede replikaandel ved periodens slutt. Gult kan skyldes et kort fall ved deploy eller skalering; se utviklingen for tjenesten før du konkluderer. Manglende målinger og desired=0 gir ikke null eller grønt.",
           "id": 5,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "Replikaer · lavest ved periodeslutt",
+          "links": [],
+          "title": "Replikaer ved slutt",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -620,7 +602,8 @@
                     "footer": {
                       "reducers": []
                     },
-                    "inspect": false
+                    "inspect": false,
+                    "wrapText": true
                   },
                   "noValue": "—",
                   "decimals": 0
@@ -856,7 +839,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 265
+                        "value": 235
                       }
                     ]
                   },
@@ -880,7 +863,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 130
+                        "value": 155
                       }
                     ]
                   },
@@ -904,7 +887,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 95
+                        "value": 100
                       }
                     ]
                   },
@@ -916,7 +899,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 115
+                        "value": 140
                       }
                     ]
                   },
@@ -928,7 +911,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 160
+                        "value": 150
                       }
                     ]
                   }
@@ -1458,7 +1441,7 @@
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Loggfeil i perioden",
+          "title": "Loggfeil",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",

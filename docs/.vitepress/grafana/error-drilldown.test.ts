@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
+import {
+	combineRuntimePatterns,
+	runtimeErrorIngestionErrorCodePattern,
+	runtimeErrorIngestionEventTypePattern,
+	runtimeErrorIngestionExceptionTypePattern,
+	runtimeErrorIngestionOperationPattern,
+	runtimeErrorIngestionTraceIdPattern,
+	runtimeErrorIngestionUpstreamStatusPattern,
+} from "../observability/runtime-error-contract.ts";
 import {
 	activeApplicationIds,
 	runtimeInventory,
@@ -166,6 +176,59 @@ const decodedExplorePane = (url: string) => {
 };
 
 describe("feiloversikt-dashboard", () => {
+	test("inntaket følger kontraktregisteret og beholder eldre HTTP-feilkoder", () => {
+		const fixture = JSON.parse(
+			readFileSync(
+				new URL(
+					"../observability/fixtures/runtime-error/v1/valid/shape.json",
+					import.meta.url,
+				),
+				"utf8",
+			),
+		);
+		const canonicalValues: Record<string, string> = {
+			safe_event_type: fixture.event_type,
+			safe_top_exception_type: fixture.exception_type,
+			safe_error_code: fixture.error_code,
+			safe_operation: fixture.operation,
+			safe_trace_id: fixture.trace_id,
+			safe_upstream_status: String(fixture.upstream_status),
+		};
+		const expectedPatterns = {
+			safe_event_type: runtimeErrorIngestionEventTypePattern,
+			safe_top_exception_type: runtimeErrorIngestionExceptionTypePattern,
+			safe_error_code: combineRuntimePatterns([
+				runtimeErrorIngestionErrorCodePattern,
+				"^[1-5][0-9]{2}$",
+			]),
+			safe_operation: runtimeErrorIngestionOperationPattern,
+			safe_trace_id: runtimeErrorIngestionTraceIdPattern,
+			safe_upstream_status: runtimeErrorIngestionUpstreamStatusPattern,
+		};
+		for (const [field, expectedPattern] of Object.entries(expectedPatterns)) {
+			const parser = tracedRuntimeErrorsQuery
+				.split("\n")
+				.find((line) => line.startsWith(`| label_format ${field}=`));
+			assert.ok(parser, `${field} må leses av dashboardet`);
+			const actualPattern = parser.match(/regexReplaceAll "([^"]+)"/)?.[1];
+			assert.equal(
+				actualPattern,
+				expectedPattern,
+				`${field} må følge alle versjonene i kontraktregisteret`,
+			);
+			assert.ok(
+				fullMatch(actualPattern!, canonicalValues[field]),
+				`${field} må godta kontraktens gyldige JSON-fixture`,
+			);
+		}
+		for (const code of ["UPSTREAM_HTTP_ERROR", "100", "503", "599"]) {
+			assert.ok(fullMatch(safeCodePattern, code), code);
+		}
+		for (const code of ["099", "600", "503 details", "12345678901"]) {
+			assert.ok(!fullMatch(safeCodePattern, code), code);
+		}
+	});
+
 	test("lenkefiltre bruker samme verdi som tabellcellen uten ekstra value mapping", () => {
 		for (const [panelId, fieldName] of [
 			["panel-5", "browser_environment_display"],
@@ -201,11 +264,11 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(query, /event_type="api_request_rejected"/);
 		assert.match(
 			query,
-			/sum by\(service_name, operation_display, error_code_display, rejection_reason_display, action\)/,
+			/sum by\(service_name, operation_display, error_code_display, rejection_reason_display, error_details, action\)/,
 		);
 		assert.match(
 			query,
-			/\| keep service_name, operation_display, error_code_display, rejection_reason_display, action/,
+			/\| keep service_name, operation_display, error_code_display, rejection_reason_display, error_details, action/,
 		);
 		assert.match(
 			query,
@@ -242,6 +305,54 @@ describe("feiloversikt-dashboard", () => {
 		);
 		assert.equal(pane.range.from, "${__from}");
 		assert.equal(pane.range.to, "${__to}");
+	});
+
+	test("viser avvisninger i fem arbeidskolonner og beholder presise lenkefelt", () => {
+		const panel = panels()["panel-6"];
+		const overrides = collectByKey(panel, "overrides").flat() as Array<{
+			matcher: { id: string; options: string };
+			properties: Array<{ id: string; value: unknown }>;
+		}>;
+		const hidden = overrides
+			.filter(({ properties }) =>
+				properties.some(
+					({ id, value }) => id === "custom.hideFrom.viz" && value === true,
+				),
+			)
+			.map(({ matcher }) => matcher.options);
+		assert.deepEqual(hidden, ["error_code_display", "operation_display"]);
+		const index = collectByKey(panel, "indexByName")[0] as Record<
+			string,
+			number
+		>;
+		assert.deepEqual(
+			Object.entries(index)
+				.filter(([field]) => !hidden.includes(field))
+				.sort(([, left], [, right]) => left - right)
+				.map(([field]) => field),
+			[
+				"service_name",
+				"rejection_reason_display",
+				"error_details",
+				"Value #API-avvisninger",
+				"action",
+			],
+		);
+		assert.ok(
+			overrides.some(
+				({ matcher, properties }) =>
+					matcher.options === "error_details" &&
+					properties.some(
+						({ id, value }) => id === "custom.width" && value === 230,
+					),
+			),
+		);
+		const query = collectByKey(panel, "expr")[0] as string;
+		assert.match(query, /label_format error_details=/);
+		assert.match(
+			query,
+			/sum by\(service_name, operation_display, error_code_display, rejection_reason_display, error_details, action\)/,
+		);
 	});
 
 	test("bruker stabil identitet, autoritativ kode og gjeldende datasources", () => {
@@ -676,12 +787,13 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(panel, /"browser_environment_display":"Miljø"/);
 	});
 
-	test("tracepanelet har sju arbeidskolonner og dedupliserer identiske feil", () => {
+	test("tracepanelet beholder støttefelt og dedupliserer identiske feil", () => {
 		const trace = JSON.stringify(panels()["panel-3"]);
 		assert.match(trace, /Siste feil med trace · valgt tjenesteutvalg/);
 		assert.equal(RECENT_RUNTIME_EVENT_LIMIT, 100);
 		assert.match(trace, /"group":"extractFields"/);
 		assert.match(trace, /"group":"groupBy"/);
+		assert.match(trace, /"maxRowHeight":72/);
 		assert.match(trace, /"operation":"groupby"/);
 		for (const column of [
 			'"Time (max)":"Tidspunkt"',
