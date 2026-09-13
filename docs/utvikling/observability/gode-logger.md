@@ -15,7 +15,9 @@ de samme konstantene, eller en test sjekker at de stemmer overens. Ikke bygg
 katalogen ved å samle verdier fra loggen som skal valideres; da godkjenner den
 sitt eget testresultat.
 
-Eksempel på `test/observability/catalog.json`:
+Katalogen kan være appens eksisterende konstanter; en egen JSON-fil er ikke
+påkrevd. Bruker dere filbasert validering, kan `test/observability/catalog.json`
+for eksempel se slik ut:
 
 ```json
 {
@@ -26,9 +28,11 @@ Eksempel på `test/observability/catalog.json`:
 }
 ```
 
-Bruk appens faktiske verdier, ikke hele eksempelsettet. Katalogen er lukket:
-et strukturert felt som brukes i en logg, men ikke finnes i katalogen, feiler
-testen. Den beviser ikke at en bestemt kombinasjon er riktig; det kontrollerer
+Bruk appens faktiske verdier, ikke hele eksempelsettet. Kontroller at verdier
+for `event_type`, `operation`, `error_code`, `rejection_reason` og eventuell
+`exception_type` finnes i appens lukkede katalog når feltene brukes. Legger dere
+til et slikt felt, må den lokale testen også kontrollere katalogverdien.
+Katalogen beviser ikke at en bestemt kombinasjon er riktig; det kontrollerer
 testen av det konkrete feilforløpet.
 
 ## 2. Behold forklaringen
@@ -96,25 +100,49 @@ validere samme schema direkte i testen.
 **JVM:** Fang den faktiske Logback-encoderens utdata, for eksempel fra en
 `OutputStreamAppender` med appens `LogstashEncoder`. En `ListAppender` alene
 beviser ikke at JSON-feltene blir riktige. Valider JSON i eksisterende
-draft-07-kompatibel testvalidator, eller bruk den samme CLI-en etter Gradle-testen.
-Node/Ajv er i så fall bare testverktøy, ingen runtimeavhengighet i JVM-appen.
+draft-07-kompatibel testvalidator. En JVM-validator som testavhengighet krever
+verken Node eller endringer i appens runtime.
+
+Schemaet kontrollerer feltformatet. De lokale testene kontrollerer betydning,
+loggnivå, antall hendelser og personvern. Kontrollen gjelder feilforløpene som
+testene utløser, ikke automatisk alle logger i appen.
 
 ## 4. Kjør samme kontroll lokalt og i CI
 
-Hent versjon **1.0.0** én gang, kontroller og legg de tre filene i apprepoet,
-for eksempel under `test/observability/runtime-error-v1.0.0/`:
+### Anbefalt: valider direkte i eksisterende tester
 
-- [schema.json](/contracts/runtime-error/v1.0.0/schema.json)
-- [validate.mjs](/contracts/runtime-error/v1.0.0/validate.mjs)
-- [SHA256SUMS.txt](/contracts/runtime-error/v1.0.0/SHA256SUMS.txt)
+Hent [schema v1.0.0](/contracts/runtime-error/v1.0.0/schema.json) én gang og
+kontroller SHA-256 mot
+[publiserte sjekksummer](/contracts/runtime-error/v1.0.0/SHA256SUMS.txt).
+Legg schemaet og den forventede sjekksummen i appens testressurser. Testen skal
+både kontrollere sjekksummen og validere de faktiske JSON-loggene.
 
-Kontroller sjekksummene i denne mappen med `shasum -a 256 -c SHA256SUMS.txt`
-(Linux: `sha256sum -c SHA256SUMS.txt`). Review deretter filene og commit dem.
-CI bruker disse lokale, pinnede kopiene; ikke hent en flytende `latest` eller
-ny scriptkode fra nettet for hvert bygg. Sjekksummer oppdager endrede bytes,
-men erstatter ikke kontroll av kilden ved førstegangsinnføring.
+Kjør kontrollen som del av vanlig `pnpm test --run` eller `./gradlew test`,
+og la eksisterende CI kjøre den samme testen. Ingen separat CLI, loggfil eller
+ny workflow er nødvendig. Validatoren er kun en testavhengighet.
 
-Validatoren krever Node 22 eller nyere og Ajv 8 som låst **dev-avhengighet**
+Pilotene viser to konkrete oppsett (PR-er til human review):
+
+- [narmesteleder-frontend #452](https://github.com/navikt/narmesteleder-frontend/pull/452):
+  eksisterende next-logger, Ajv og appens TypeScript-konstanter.
+- [esyfo-narmesteleder #520](https://github.com/navikt/esyfo-narmesteleder/pull/520):
+  eksisterende Logstash-encoder, JVM-validator og lokal hendelseskatalog.
+
+Review og commit de pinnede testressursene. Ikke hent en flytende `latest`
+eller ny scriptkode fra nettet for hvert bygg. Sjekksummer oppdager endrede
+bytes, men erstatter ikke kontroll av kilden ved førstegangsinnføring.
+Ved oppgradering gjennomgås og oppdateres versjon, schema og sjekksum samlet.
+
+### Alternativ: valider en loggfil med CLI
+
+Bruk dette hvis testene allerede skriver faktiske JSON-logger til fil, eller
+dere ønsker samme kommandolinjekontroll på tvers av språk. Hent også
+[validate.mjs](/contracts/runtime-error/v1.0.0/validate.mjs) og den komplette
+[SHA256SUMS.txt](/contracts/runtime-error/v1.0.0/SHA256SUMS.txt) til samme mappe
+som schemaet. Kontroller begge filer med `shasum -a 256 -c SHA256SUMS.txt`
+(Linux: `sha256sum -c SHA256SUMS.txt`) før review og commit.
+
+Denne CLI-en krever Node 22 eller nyere og Ajv 8 som låst **dev-avhengighet**
 (`pnpm add -D -E ajv@8.20.0`). Legg dette i appens vanlige test/build-kommando
 etter testen som produserer loggfilen:
 
