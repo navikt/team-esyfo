@@ -563,6 +563,25 @@ test("skiller alle tjenesters feil fra valgt tjenestes ressursdiagnostikk", () =
 	);
 });
 
+test("gir podnavn linjebryting og omstarter en lesbar overskrift", () => {
+	const viz = panels()["panel-36"].spec.vizConfig.spec;
+	const propertiesFor = (name: string) =>
+		viz.fieldConfig.overrides
+			.filter(({ matcher }) => matcher.options === name)
+			.flatMap(({ properties }) => properties);
+	assert.ok(
+		propertiesFor("Pod").some(
+			({ id, value }) => id === "custom.wrapText" && value === true,
+		),
+	);
+	assert.ok(
+		propertiesFor("Omstarter").some(
+			({ id, value }) => id === "custom.width" && value === 100,
+		),
+	);
+	assert.equal(viz.options.maxRowHeight, 72);
+});
+
 test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 	const panel = panels()["panel-10"];
 	assert.equal(panel.spec.title, "Tjenester i produksjon");
@@ -578,9 +597,9 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 	]);
 	assert.deepEqual(
 		transformations.map(({ group }) => group),
-		["merge", "organize"],
+		["merge", "calculateField", "organize"],
 	);
-	const organize = transformations[1].spec.options as {
+	const organize = transformations[2].spec.options as {
 		excludeByName: Record<string, boolean>;
 		indexByName: Record<string, number>;
 		renameByName: Record<string, string>;
@@ -601,7 +620,11 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 		assert.equal(matcher.id, "byName");
 		assert.ok(names.includes(matcher.options), matcher.options);
 	}
-	for (const field of ["service_name", ...refIds.map((id) => `Value #${id}`)])
+	for (const field of [
+		"service_name",
+		"Loggfeil",
+		...refIds.filter((id) => id !== "Runtimefeil").map((id) => `Value #${id}`),
+	])
 		assert.ok(field in organize.renameByName);
 	const mapped = JSON.stringify(panel);
 	for (const state of [
@@ -619,6 +642,40 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 			url.includes(grafanaVariable("__value.raw")),
 		),
 	);
+});
+
+test("beholder loggkolonnen med null når Loki-feltet mangler helt", () => {
+	const panel = panels()["panel-10"];
+	const transforms = panel.spec.data.spec.transformations;
+	assert.deepEqual(transforms[1], {
+		group: "calculateField",
+		kind: "Transformation",
+		spec: {
+			options: {
+				mode: "reduceRow",
+				timeSeries: false,
+				reduce: {
+					include: ["Value #Runtimefeil"],
+					reducer: "lastNotNull",
+				},
+				alias: "Loggfeil",
+				replaceFields: false,
+			},
+		},
+	});
+	const organize = transforms[2].spec.options as {
+		excludeByName: Record<string, boolean>;
+		indexByName: Record<string, number>;
+		renameByName: Record<string, string>;
+	};
+	assert.equal(organize.excludeByName["Value #Runtimefeil"], true);
+	assert.equal(organize.indexByName.Loggfeil, 3);
+	assert.equal(organize.renameByName.Loggfeil, "Loggfeil");
+	assert.equal(organize.renameByName["Value #Runtimefeil"], undefined);
+	assert.equal(panel.spec.vizConfig.spec.fieldConfig.defaults.noValue, "—");
+	assert.ok(expressions(panel).includes(runtimeErrorsByServiceQuery));
+	assert.ok(!runtimeErrorsByServiceQuery.includes("vector(0)"));
+	assert.ok(!runtimeErrorsByServiceQuery.includes("* 0"));
 });
 
 test("forankrer måledekningen i HTTP-profilene og skiller stale fra manglende", () => {

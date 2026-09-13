@@ -540,11 +540,30 @@
                   }
                 },
                 {
+                  "group": "calculateField",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "mode": "reduceRow",
+                      "timeSeries": false,
+                      "reduce": {
+                        "include": [
+                          "Value #Runtimefeil"
+                        ],
+                        "reducer": "lastNotNull"
+                      },
+                      "alias": "Loggfeil",
+                      "replaceFields": false
+                    }
+                  }
+                },
+                {
                   "group": "organize",
                   "kind": "Transformation",
                   "spec": {
                     "options": {
                       "excludeByName": {
+                        "Value #Runtimefeil": true,
                         "Time": true,
                         "__control_room_scope": true,
                         "criticality": true,
@@ -558,7 +577,7 @@
                         "service_name": 0,
                         "Value #Requests": 1,
                         "Value #OTel-feil": 2,
-                        "Value #Runtimefeil": 3,
+                        "Loggfeil": 3,
                         "Value #Restarts": 4,
                         "Value #Klare replikaer": 5,
                         "Value #Telemetry": 6
@@ -567,7 +586,7 @@
                         "service_name": "Tjeneste",
                         "Value #Requests": "Kall",
                         "Value #OTel-feil": "Feilmarkerte kall",
-                        "Value #Runtimefeil": "Loggfeil",
+                        "Loggfeil": "Loggfeil",
                         "Value #Restarts": "Omstarter",
                         "Value #Klare replikaer": "Klare replikaer",
                         "Value #Telemetry": "HTTP-målinger"
@@ -1976,6 +1995,10 @@
                     },
                     "properties": [
                       {
+                        "id": "custom.wrapText",
+                        "value": true
+                      },
+                      {
                         "id": "links",
                         "value": [
                           {
@@ -1995,7 +2018,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 310
+                        "value": 300
                       }
                     ]
                   },
@@ -2007,7 +2030,7 @@
                     "properties": [
                       {
                         "id": "custom.width",
-                        "value": 90
+                        "value": 100
                       }
                     ]
                   },
@@ -2064,6 +2087,7 @@
               "options": {
                 "showHeader": true,
                 "cellHeight": "sm",
+                "maxRowHeight": 72,
                 "enablePagination": false,
                 "sortBy": [
                   {

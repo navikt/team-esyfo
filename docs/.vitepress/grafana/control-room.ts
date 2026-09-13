@@ -501,7 +501,7 @@ const fleetTablePanel = () => {
 		service_name: "Tjeneste",
 		"Value #Requests": "Kall",
 		"Value #OTel-feil": "Feilmarkerte kall",
-		"Value #Runtimefeil": "Loggfeil",
+		Loggfeil: "Loggfeil",
 		"Value #Restarts": "Omstarter",
 		"Value #Klare replikaer": "Klare replikaer",
 		"Value #Telemetry": "HTTP-målinger",
@@ -518,7 +518,7 @@ const fleetTablePanel = () => {
 			],
 		],
 		[
-			"Value #Runtimefeil",
+			"Loggfeil",
 			[
 				{ color: "gray", value: 0 },
 				{ color: "red", value: 1 },
@@ -576,12 +576,30 @@ const fleetTablePanel = () => {
 				],
 				[
 					mergeTableFrames,
+					// Preserve a null column when Loki returns no field, never a zero count.
+					{
+						group: "calculateField",
+						kind: "Transformation",
+						spec: {
+							options: {
+								mode: "reduceRow",
+								timeSeries: false,
+								reduce: {
+									include: ["Value #Runtimefeil"],
+									reducer: "lastNotNull",
+								},
+								alias: fields.Loggfeil,
+								replaceFields: false,
+							},
+						},
+					},
 					{
 						group: "organize",
 						kind: "Transformation",
 						spec: {
 							options: {
 								excludeByName: {
+									"Value #Runtimefeil": true,
 									Time: true,
 									__control_room_scope: true,
 									criticality: true,
@@ -710,7 +728,7 @@ const fleetTablePanel = () => {
 								[fields.service_name]: 235,
 								[fields["Value #Requests"]]: 70,
 								[fields["Value #OTel-feil"]]: 155,
-								[fields["Value #Runtimefeil"]]: 80,
+								[fields.Loggfeil]: 80,
 								[fields["Value #Restarts"]]: 100,
 								[fields["Value #Klare replikaer"]]: 140,
 								[fields["Value #Telemetry"]]: 150,
@@ -722,7 +740,7 @@ const fleetTablePanel = () => {
 						enablePagination: false,
 						showHeader: true,
 						sortBy: [
-							{ desc: true, displayName: fields["Value #Runtimefeil"] },
+							{ desc: true, displayName: fields.Loggfeil },
 							{ desc: false, displayName: "Klare replikaer" },
 							{ desc: true, displayName: fields["Value #OTel-feil"] },
 							{ desc: true, displayName: fields["Value #Restarts"] },
@@ -875,6 +893,7 @@ const podDiagnosticsPanel = () => ({
 						{
 							matcher: { id: "byName", options: "Pod" },
 							properties: [
+								{ id: "custom.wrapText", value: true },
 								{
 									id: "links",
 									value: [
@@ -887,8 +906,8 @@ const podDiagnosticsPanel = () => ({
 							],
 						},
 						...tableColumnWidths({
-							Pod: 310,
-							Omstarter: 90,
+							Pod: 300,
+							Omstarter: 100,
 							"Registrerte årsaker": 155,
 							"Siste avslutning": 165,
 							"Exit-kode": 75,
@@ -899,6 +918,7 @@ const podDiagnosticsPanel = () => ({
 				options: {
 					showHeader: true,
 					cellHeight: "sm",
+					maxRowHeight: 72,
 					enablePagination: false,
 					sortBy: [{ displayName: "Omstarter", desc: true }],
 				},
