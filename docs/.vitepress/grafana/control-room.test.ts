@@ -521,7 +521,12 @@ test("holder begge tabeller lesbare innen vanlig laptopbredde", () => {
 		assert.ok(widths.reduce((sum, width) => sum + width, 0) <= maxWidth, id);
 		if (id === "panel-10") {
 			assert.equal(
-				panel.spec.vizConfig.spec.fieldConfig.defaults.custom.wrapText,
+				(
+					panel.spec.vizConfig.spec.fieldConfig.defaults.custom as Record<
+						string,
+						unknown
+					>
+				).wrapText,
 				true,
 			);
 			const names = Object.values(organize.renameByName);
