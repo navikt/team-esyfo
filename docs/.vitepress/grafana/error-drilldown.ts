@@ -60,6 +60,9 @@ const ROW_BROWSER_TYPE = grafanaVariable(
 const ROW_BROWSER_ENVIRONMENT = grafanaVariable(
 	'__data.fields["browser_environment_display"]',
 );
+const ROW_BROWSER_APM_PATH = grafanaVariable(
+	'__data.fields["browser_apm_path"]',
+);
 
 export const dashboardApplications = runtimeInventory.applications.filter(
 	({ id }) => activeApplicationIds.has(id),
@@ -226,19 +229,25 @@ const browserTypePipeline = `| logfmt type, app_namespace, app_environment
 | app_namespace="" or app_namespace="team-esyfo"
 | label_format browser_environment=\`{{ if and (eq .browser_parse_error "") (eq .app_namespace "team-esyfo") (or (eq .app_environment "prod-gcp") (eq .app_environment "dev-gcp")) }}{{ .app_environment }}{{ else }}ukjent{{ end }}\`
 | label_format browser_environment_display=\`{{ if eq .browser_environment "prod-gcp" }}Produksjon{{ else if eq .browser_environment "dev-gcp" }}Test{{ else }}Ukjent{{ end }}\`
+| label_format browser_apm_path=\`/a/nais-apm-app/services/team-esyfo/{{ .service_name }}?tab=frontend{{ if eq .browser_environment "prod-gcp" }}&environment=prod{{ else if eq .browser_environment "dev-gcp" }}&environment=dev{{ end }}\`
 ${safeLabel("safe_browser_type", "type", safeBrowserTypePattern)}
 | label_format browser_type_display=\`{{ if .safe_browser_type }}{{ .safe_browser_type }}{{ else }}Annen / ikke oppgitt{{ end }}\``;
 
 const runtimeLevelLabel =
 	"| label_format error_level=`{{ .detected_level | lower }}`";
 
-export const runtimeByClassificationQuery = `topk by(error_level) (25, sum by(error_level, service_name, error_type_display, error_code_display, operation_display, action) (count_over_time(${runtimeSelector}
+// Display-only composition; the original grouping fields remain available to links.
+const runtimeDetailsLabel =
+	'| label_format error_details=`{{ if and .error_level (ne .error_level "error") }}{{ .error_level | upper }} · {{ end }}{{ if ne .error_code_display "—" }}{{ .error_code_display }}{{ end }}{{ if and (ne .operation_display "—") (ne .operation_display .error_type_display) }}{{ if ne .error_code_display "—" }} · {{ end }}{{ .operation_display }}{{ end }}`';
+
+export const runtimeByClassificationQuery = `topk by(error_level) (25, sum by(error_level, service_name, error_type_display, error_code_display, operation_display, error_details, action) (count_over_time(${runtimeSelector}
 ${runtimeErrorPipeline}
 ${runtimeSignatureParser}
 ${runtimeSignatureLabels}
 ${runtimeLevelLabel}
+${runtimeDetailsLabel}
 | label_format action=\`Undersøk\`
-| keep error_level, service_name, error_type_display, error_code_display, operation_display, action
+| keep error_level, service_name, error_type_display, error_code_display, operation_display, error_details, action
 [$__auto])))`;
 
 export const runtimeContractGapQuery = `sum by(service_name, contract_state_display, action) (count_over_time(${runtimeSelector}
@@ -266,21 +275,24 @@ ${runtimeRejectionLabels}
 | keep service_name, operation_display, error_code_display, rejection_reason_display, action
 [$__auto])))`;
 
-export const browserByTypeQuery = `topk(50, sum by(service_name, browser_environment_display, browser_type_display, action) (count_over_time(${browserSelector}
+export const browserByTypeQuery = `topk(50, sum by(service_name, browser_environment_display, browser_apm_path, browser_type_display, action) (count_over_time(${browserSelector}
 ${browserTypePipeline}
 | browser_environment=~"${BROWSER_ENVIRONMENT_VARIABLE}"
 | label_format action=\`Undersøk\`
-| keep service_name, browser_environment_display, browser_type_display, action
+| keep service_name, browser_environment_display, browser_apm_path, browser_type_display, action
 [$__auto])))`;
 
 export const tracedRuntimeErrorsQuery = `${runtimeSelector}
 ${runtimeErrorPipeline}
 ${runtimeTraceParser}
 ${runtimeTraceLabels}
+${runtimeLevelLabel}
+${runtimeDetailsLabel}
+| label_format error_details=\`{{ .error_details }}{{ if ne .upstream_status_display "—" }} · HTTP {{ .upstream_status_display }}{{ end }}\`
 | safe_trace_id!=""
 | safe_trace_id!="00000000000000000000000000000000"
 | line_format \`{{ .error_type_display }}\`
-| keep service_name, error_type_display, error_code_display, error_context, upstream_status_display, safe_trace_id
+| keep service_name, error_type_display, error_code_display, error_context, upstream_status_display, safe_trace_id, error_details
 | drop __error__, __error_details__`;
 
 export const traceDataLink = (traceId: string) => {
@@ -305,23 +317,30 @@ export const traceDataLink = (traceId: string) => {
 
 const runtimeRowSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"^${RUNTIME_ENVIRONMENT_REGEX}$", service_name="${ROW_SERVICE}"}`;
 
-export const runtimeErrorGroupDataLink = () =>
+// Only remove parser aliases and derived labels. The original line, platform
+// metadata, producer diagnostics and trace fields remain available in Explore.
+const dropRuntimeHelpers = `| drop safe_event_type, safe_event, safe_top_exception_type, safe_nested_exception_type, safe_top_error_type, safe_nested_error_type, safe_top_err_type, safe_nested_err_type, safe_runtime_error_type, safe_error_code, safe_code, safe_feilkode, safe_runtime_type_code, safe_status, safe_operation, safe_rejection_reason, safe_upstream_status, safe_trace_id, top_exception_type, nested_exception_type, top_error_type, nested_error_type, top_err_type, nested_err_type, runtime_type, error_type_display, error_code_display, operation_display, error_level, error_details, error_context, contract_state, contract_state_display, rejection_reason_display, legacy_system_denial, upstream_status_display`;
+const dropBrowserHelpers = `| drop browser_parse_error, browser_environment, browser_environment_display, browser_apm_path, safe_browser_type, browser_type_display`;
+
+export const runtimeErrorGroupDataLink = (withTrace = false) =>
 	lokiExploreDataLink(`${runtimeRowSelector}
 ${runtimeErrorPipeline}
-${runtimeSignatureParser}
-${runtimeSignatureLabels}
+${withTrace ? runtimeTraceParser : runtimeSignatureParser}
+${withTrace ? runtimeTraceLabels : runtimeSignatureLabels}
 ${runtimeLevelLabel}
 | error_type_display=\`${ROW_ERROR_TYPE}\`
 | error_code_display=\`${ROW_ERROR_CODE}\`
 | operation_display=\`${ROW_OPERATION}\`
-| error_level=\`${ROW_LEVEL}\``);
+| error_level=\`${ROW_LEVEL}\`
+${withTrace ? '| safe_trace_id!="" | safe_trace_id!="00000000000000000000000000000000"\n' : ""}${dropRuntimeHelpers}`);
 
 export const runtimeContractGapDataLink = () =>
 	lokiExploreDataLink(`${runtimeRowSelector}
 ${runtimeErrorPipeline}
 ${runtimeSignatureParser}
 ${runtimeSignatureLabels}
-| contract_state_display=\`${ROW_CONTRACT_GAP}\``);
+| contract_state_display=\`${ROW_CONTRACT_GAP}\`
+${dropRuntimeHelpers}`);
 
 export const runtimeRejectionDataLink = () =>
 	lokiExploreDataLink(`${runtimeRowSelector}
@@ -329,7 +348,8 @@ ${runtimeRejectionPipeline}
 ${runtimeRejectionLabels}
 | operation_display=\`${ROW_OPERATION}\`
 | error_code_display=\`${ROW_ERROR_CODE}\`
-| rejection_reason_display=\`${ROW_REJECTION_REASON}\``);
+| rejection_reason_display=\`${ROW_REJECTION_REASON}\`
+${dropRuntimeHelpers}`);
 
 export const runtimeRejectionScopeDataLink = (serviceRegex: string) =>
 	lokiExploreDataLink(`{service_namespace="team-esyfo", k8s_cluster_name="prod", service_name=~"${serviceRegex}"}
@@ -339,7 +359,11 @@ export const browserErrorGroupDataLink = () =>
 	lokiExploreDataLink(`{kind="exception", service_name="${ROW_SERVICE}"}
 ${browserTypePipeline}
 | browser_environment_display=\`${ROW_BROWSER_ENVIRONMENT}\`
-| browser_type_display=\`${ROW_BROWSER_TYPE}\``);
+| browser_type_display=\`${ROW_BROWSER_TYPE}\`
+${dropBrowserHelpers}`);
+
+const serviceErrorGroupsDataLink = (service: string) =>
+	`/d/${ERROR_DASHBOARD_UID}?var-runtime_environment=${RUNTIME_ENVIRONMENT_RAW}&var-app=${service}&from=${FROM}&to=${TO}&viewPanel=panel-2`;
 
 const runtimePanelLinks = () => [
 	dataLink(
@@ -483,7 +507,7 @@ const runtimeServicePanel = () => ({
 		id: 7,
 		title: "Hvor skjer feilene?",
 		description:
-			"Loggede feil i hele tidsrommet, fordelt på tjeneste. Klikk en stolpe for logger eller APM. Tjenester uten treff vises ikke; dette er ikke en helsestatus.",
+			"Loggede feil i hele tidsrommet, fordelt på tjeneste. Klikk en stolpe for tjenestens feilgrupper, logger eller APM. Tjenester uten treff vises ikke; dette er ikke en helsestatus.",
 		links: [],
 		data: queryGroup(
 			lokiQuery("Feil per tjeneste", runtimeByServiceQuery, "instant"),
@@ -520,7 +544,13 @@ const runtimeServicePanel = () => ({
 						min: 0,
 						noValue: "Ingen treff",
 						unit: "locale",
-						links: runtimeServiceLinks(grafanaVariable("__field.name")),
+						links: [
+							dataLink(
+								"Vis feilgrupper for tjenesten",
+								serviceErrorGroupsDataLink(grafanaVariable("__field.name")),
+							),
+							...runtimeServiceLinks(grafanaVariable("__field.name")),
+						],
 					},
 					overrides: [],
 				},
@@ -578,6 +608,7 @@ const tablePanel = ({
 	actionLinks,
 	panelLinks = [],
 	widths = {},
+	hiddenFields = [],
 }: {
 	id: number;
 	title: string;
@@ -589,6 +620,7 @@ const tablePanel = ({
 	actionLinks: Array<Record<string, unknown>>;
 	panelLinks?: Array<Record<string, unknown>>;
 	widths?: Record<string, number>;
+	hiddenFields?: string[];
 }) => ({
 	kind: "Panel",
 	spec: {
@@ -610,11 +642,17 @@ const tablePanel = ({
 							cellOptions: { type: "auto" },
 							footer: { reducers: [] },
 							inspect: false,
+							wrapText: true,
 						},
 						noValue: "—",
 						decimals: 0,
+						unit: "locale",
 					},
 					overrides: [
+						...hiddenFields.map((field) => ({
+							matcher: { id: "byName", options: field },
+							properties: [{ id: "custom.hideFrom.viz", value: true }],
+						})),
 						{
 							matcher: { id: "byName", options: "action" },
 							properties: [
@@ -625,7 +663,7 @@ const tablePanel = ({
 										type: actionLinks.length > 1 ? "auto" : "data-links",
 									},
 								},
-								{ id: "custom.width", value: 120 },
+								{ id: "custom.width", value: 100 },
 							],
 						},
 						{
@@ -640,7 +678,8 @@ const tablePanel = ({
 				},
 				options: {
 					cellHeight: "sm",
-					enablePagination: true,
+					enablePagination: false,
+					maxRowHeight: 72,
 					showHeader: true,
 					sortBy: [{ desc: true, displayName: "Hendelser" }],
 				},
@@ -679,6 +718,7 @@ const tracedErrorsPanel = () => ({
 									aggregations: [],
 									operation: "groupby",
 								},
+								error_details: { aggregations: [], operation: "groupby" },
 								error_context: {
 									aggregations: [],
 									operation: "groupby",
@@ -714,16 +754,18 @@ const tracedErrorsPanel = () => ({
 								"Time (max)": 0,
 								service_name: 1,
 								error_type_display: 2,
-								error_code_display: 3,
-								error_context: 4,
-								upstream_status_display: 5,
-								safe_trace_id: 6,
+								error_details: 3,
+								safe_trace_id: 4,
+								error_code_display: 5,
+								error_context: 6,
+								upstream_status_display: 7,
 							},
 							renameByName: {
 								"Time (max)": "Tidspunkt",
 								error_context: "Operasjon",
 								error_code_display: "Kode",
-								error_type_display: "Feiltype",
+								error_type_display: "Hendelse",
+								error_details: "Detaljer",
 								safe_trace_id: "Trace",
 								service_name: "Tjeneste",
 								upstream_status_display: "HTTP-status fra kall",
@@ -733,10 +775,10 @@ const tracedErrorsPanel = () => ({
 				},
 			],
 		),
-		description: `Utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste loggede feilene med trace-ID. Identiske feil i samme trace er slått sammen. Åpne trace viser forløpet hvis sporet er lagret og fortsatt finnes. HTTP-status gjelder tjenesten som ble kalt.`,
+		description: `Utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste loggede feilene med trace-ID for tjenestene valgt i filteret, ikke en valgt rad i tabellen over. For én feilgruppe: velg Undersøk → Logger i gruppen med trace. Identiske feil i samme trace er slått sammen. Sporet må være lagret og fortsatt finnes. HTTP-status gjelder tjenesten som ble kalt.`,
 		id: 3,
 		links: runtimePanelLinks(),
-		title: "Konkrete feilforløp · åpne trace",
+		title: "Siste feil med trace · valgt tjenesteutvalg",
 		vizConfig: {
 			group: "table",
 			kind: "VizConfig",
@@ -768,38 +810,45 @@ const tracedErrorsPanel = () => ({
 						},
 						{
 							matcher: { id: "byName", options: "Time (max)" },
-							properties: [{ id: "custom.width", value: 175 }],
+							properties: [{ id: "custom.width", value: 155 }],
 						},
 						{
 							matcher: { id: "byName", options: "service_name" },
 							properties: [
-								{ id: "custom.width", value: 220 },
+								{ id: "custom.width", value: 190 },
 								{ id: "links", value: runtimeServiceLinks(ROW_VALUE) },
 							],
 						},
 						{
 							matcher: { id: "byName", options: "error_code_display" },
-							properties: [{ id: "custom.width", value: 240 }],
+							properties: [{ id: "custom.hideFrom.viz", value: true }],
+						},
+						{
+							matcher: { id: "byName", options: "error_details" },
+							properties: [
+								{ id: "custom.width", value: 260 },
+								{ id: "custom.wrapText", value: true },
+							],
 						},
 						{
 							matcher: {
 								id: "byName",
 								options: "error_context",
 							},
-							properties: [{ id: "custom.width", value: 220 }],
+							properties: [{ id: "custom.hideFrom.viz", value: true }],
 						},
 						{
 							matcher: {
 								id: "byName",
 								options: "upstream_status_display",
 							},
-							properties: [{ id: "custom.width", value: 165 }],
+							properties: [{ id: "custom.hideFrom.viz", value: true }],
 						},
 					],
 				},
 				options: {
 					cellHeight: "sm",
-					enablePagination: true,
+					enablePagination: false,
 					showHeader: true,
 					sortBy: [{ desc: true, displayName: "Tidspunkt" }],
 				},
@@ -813,11 +862,11 @@ const primaryLayout = () => ({
 	kind: "GridLayout",
 	spec: {
 		items: [
-			layoutItem("panel-1", 0, 0, 14, 7),
-			layoutItem("panel-7", 14, 0, 10, 7),
-			layoutItem("panel-2", 0, 7, 24, 10),
-			layoutItem("panel-3", 0, 17, 24, 8),
-			layoutItem("panel-6", 0, 25, 24, 7),
+			layoutItem("panel-1", 0, 0, 14, 6),
+			layoutItem("panel-7", 14, 0, 10, 6),
+			layoutItem("panel-2", 0, 6, 24, 14),
+			layoutItem("panel-3", 0, 20, 24, 11),
+			layoutItem("panel-6", 0, 31, 24, 11),
 		],
 	},
 });
@@ -935,26 +984,41 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					action: "Handling",
 					error_level: "Nivå",
 					error_code_display: "Kode",
-					error_type_display: "Feiltype",
+					error_type_display: "Hendelse",
+					error_details: "Detaljer",
 					operation_display: "Operasjon",
 					service_name: "Tjeneste",
 				},
 				indexByName: {
-					error_level: 0,
-					service_name: 1,
-					error_type_display: 2,
-					error_code_display: 3,
-					operation_display: 4,
-					"Value #Runtimefeil etter type": 5,
-					action: 6,
+					service_name: 0,
+					error_type_display: 1,
+					error_details: 2,
+					"Value #Runtimefeil etter type": 3,
+					action: 4,
+					error_level: 5,
+					error_code_display: 6,
+					operation_display: 7,
 				},
-				actionLinks: runtimeInvestigationLinks(runtimeErrorGroupDataLink()),
+				actionLinks: [
+					dataLink(
+						"Logger for denne gruppen · Explore",
+						runtimeErrorGroupDataLink(),
+					),
+					dataLink(
+						"Logger i gruppen med trace",
+						runtimeErrorGroupDataLink(true),
+					),
+					...runtimeServiceLinks(ROW_SERVICE),
+				],
 				panelLinks: runtimePanelLinks(),
+				hiddenFields: [
+					"error_level",
+					"error_code_display",
+					"operation_display",
+				],
 				widths: {
-					error_level: 95,
-					error_code_display: 230,
-					operation_display: 200,
-					service_name: 220,
+					error_details: 230,
+					service_name: 200,
 				},
 			}),
 			"panel-3": tracedErrorsPanel(),
@@ -983,9 +1047,9 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				actionLinks: runtimeInvestigationLinks(runtimeRejectionDataLink()),
 				panelLinks: runtimePanelLinks(),
 				widths: {
-					service_name: 220,
-					operation_display: 220,
-					rejection_reason_display: 280,
+					service_name: 200,
+					operation_display: 170,
+					error_code_display: 145,
 				},
 			}),
 			"panel-4": tablePanel({
@@ -1012,9 +1076,9 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-5": tablePanel({
 				id: 5,
-				title: "Hva feiler i nettleseren?",
+				title: "Nettleserfeil per JavaScript-type",
 				description:
-					"Inntil 50 grupper fra nettleserens feillogg. Miljøet kommer fra appens metadata; manglende eller ukjent miljø beholdes som Ukjent. Andre eksplisitte namespaces er utelatt. Ukjent type samles som Annen / ikke oppgitt. Tallene er hendelser, ikke berørte brukere.",
+					"Inntil 50 grupper fra nettleserens feillogg. Error og TypeError er brede kategorier, ikke én feilårsak. Se logger beholder akkurat radens tjeneste, miljø og type. APM gir egne feilgrupper for flaten i samme miljø; ved Ukjent åpnes alle miljøer. Tallene er hendelser, ikke berørte brukere.",
 				refId: "Browserfeil",
 				expr: browserByTypeQuery,
 				renameByName: {
@@ -1030,7 +1094,14 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					"Value #Browserfeil": 3,
 					action: 4,
 				},
-				actionLinks: [dataLink("Se logger", browserErrorGroupDataLink())],
+				actionLinks: [
+					dataLink("Se logger", browserErrorGroupDataLink()),
+					dataLink(
+						"APM · alle typer (ukjent miljø → alle)",
+						`${ROW_BROWSER_APM_PATH}&from=${FROM}&to=${TO}`,
+					),
+				],
+				hiddenFields: ["browser_apm_path"],
 				panelLinks: [
 					dataLink(
 						"Browserkontrakt",
@@ -1089,7 +1160,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 							hideHeader: false,
 							layout: {
 								kind: "GridLayout",
-								spec: { items: [layoutItem("panel-5", 0, 0, 24, 8)] },
+								spec: { items: [layoutItem("panel-5", 0, 0, 24, 14)] },
 							},
 							title: "Nettleserfeil · eget utvalg",
 							variables: [

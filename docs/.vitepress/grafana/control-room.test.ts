@@ -470,6 +470,53 @@ test("viser hele tjenestelisten uten sidebytte", () => {
 	assert.ok(overviewItems()[4].spec.height >= controlRoomApplications.length);
 });
 
+test("holder begge tabeller lesbare innen vanlig laptopbredde", () => {
+	for (const id of ["panel-10", "panel-36"]) {
+		const panel = panels()[id];
+		const organize = panel.spec.data.spec.transformations.find(
+			({ group }) => group === "organize",
+		)?.spec.options as { renameByName: Record<string, string> };
+		const widths = Object.values(organize.renameByName).map((name) => {
+			const matches = panel.spec.vizConfig.spec.fieldConfig.overrides
+				.filter(({ matcher }) => matcher.options === name)
+				.flatMap(({ properties }) => properties)
+				.filter(({ id }) => id === "custom.width");
+			assert.equal(matches.length, 1, `${id}: eksplisitt bredde for ${name}`);
+			assert.equal(typeof matches[0].value, "number");
+			assert.ok(Number(matches[0].value) >= 70);
+			return Number(matches[0].value);
+		});
+		assert.ok(widths.reduce((sum, width) => sum + width, 0) <= 960, id);
+		assert.equal(panel.spec.vizConfig.spec.fieldConfig.defaults.decimals, 0);
+	}
+});
+
+test("skiller alle tjenesters feil fra valgt tjenestes ressursdiagnostikk", () => {
+	const dashboard = buildControlRoomDashboard();
+	assert.equal(dashboard.spec.editable, false);
+	const globalLink = objects(dashboard.spec.links).find(
+		({ title }) => title === "Alle tjenesters feil",
+	);
+	assert.ok(globalLink);
+	assert.ok(typeof globalLink.url === "string");
+	assert.ok(globalLink.url.includes("var-app=$__all"));
+	assert.ok(globalLink.url.includes("var-runtime_environment=prod"));
+	assert.equal(globalLink.keepTime, true);
+	const resourceLink = objects(panels()["panel-36"]).find(
+		({ title }) => title === "Minne og ressurser",
+	);
+	assert.ok(resourceLink);
+	assert.equal(
+		resourceLink.url,
+		apmDataLink(grafanaVariable("service:raw"), "prod", "backend"),
+	);
+	assert.ok(
+		String(resourceLink.url).includes(
+			`from=${grafanaVariable("__from")}&to=${grafanaVariable("__to")}`,
+		),
+	);
+});
+
 test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 	const panel = panels()["panel-10"];
 	assert.equal(panel.spec.title, "Tjenester i produksjon");
@@ -494,10 +541,10 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 	};
 	assert.deepEqual(Object.values(organize.renameByName), [
 		"Tjeneste",
-		"Kall i perioden",
+		"Kall",
 		"Feilmarkerte kall",
-		"Loggfeil i perioden",
-		"Omstarter i perioden",
+		"Loggfeil",
+		"Omstarter",
 		"Klare replikaer",
 		"HTTP-målinger",
 	]);

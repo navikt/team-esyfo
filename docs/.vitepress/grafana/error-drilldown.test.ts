@@ -26,6 +26,7 @@ import {
 	runtimeContractGapQuery,
 	runtimeEnvironmentOptions,
 	runtimeErrorGroupDataLink,
+	runtimeRejectionDataLink,
 	runtimeTrendQuery,
 	safeBrowserTypePattern,
 	safeCodePattern,
@@ -429,7 +430,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(main, /Hva feiler\?/);
 		assert.match(main, /"error_level":"Nivå"/);
 		assert.match(main, /"service_name":"Tjeneste"/);
-		assert.match(main, /"error_type_display":"Feiltype"/);
+		assert.match(main, /"error_type_display":"Hendelse"/);
 		assert.match(main, /"error_code_display":"Kode"/);
 		assert.match(main, /"operation_display":"Operasjon"/);
 		assert.match(main, /"action":"Handling"/);
@@ -637,7 +638,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(browserByTypeQuery, /\| drop __error__, __error_details__/);
 		assert.ok(!browserByTypeQuery.includes('| __error__=""'));
 		const panel = JSON.stringify(panels()["panel-5"]);
-		assert.match(panel, /Hva feiler i nettleseren\?/);
+		assert.match(panel, /Nettleserfeil per JavaScript-type/);
 		assert.ok(!panel.includes("NAIS APM"));
 		assert.ok(!panel.includes("runtime_environment"));
 		const expr =
@@ -670,14 +671,14 @@ describe("feiloversikt-dashboard", () => {
 		);
 		assert.match(
 			browserByTypeQuery,
-			/sum by\(service_name, browser_environment_display, browser_type_display, action\)/,
+			/sum by\(service_name, browser_environment_display, browser_apm_path, browser_type_display, action\)/,
 		);
 		assert.match(panel, /"browser_environment_display":"Miljø"/);
 	});
 
 	test("tracepanelet har sju arbeidskolonner og dedupliserer identiske feil", () => {
 		const trace = JSON.stringify(panels()["panel-3"]);
-		assert.match(trace, /Konkrete feilforløp · åpne trace/);
+		assert.match(trace, /Siste feil med trace · valgt tjenesteutvalg/);
 		assert.equal(RECENT_RUNTIME_EVENT_LIMIT, 100);
 		assert.match(trace, /"group":"extractFields"/);
 		assert.match(trace, /"group":"groupBy"/);
@@ -685,7 +686,7 @@ describe("feiloversikt-dashboard", () => {
 		for (const column of [
 			'"Time (max)":"Tidspunkt"',
 			'"service_name":"Tjeneste"',
-			'"error_type_display":"Feiltype"',
+			'"error_type_display":"Hendelse"',
 			'"error_code_display":"Kode"',
 			'"error_context":"Operasjon"',
 			'"upstream_status_display":"HTTP-status fra kall"',
@@ -831,4 +832,39 @@ test("runtime-rader tilbyr både presist loggsøk, enkel loggvisning og APM", ()
 	}
 	assert.match(JSON.stringify(elements["panel-3"]), /Feil i APM/);
 	assert.ok(!JSON.stringify(elements["panel-5"]).includes("Feil i APM"));
+	assert.match(JSON.stringify(elements["panel-5"]), /APM · alle typer/);
+	assert.match(JSON.stringify(elements["panel-5"]), /tab=frontend/);
+});
+
+test("gruppelogger rydder beregnede hjelpefelt etter filtrering uten å endre råloggen", () => {
+	for (const link of [
+		runtimeErrorGroupDataLink(),
+		runtimeErrorGroupDataLink(true),
+		runtimeRejectionDataLink(),
+		runtimeContractGapDataLink(),
+		browserErrorGroupDataLink(),
+	]) {
+		const panes = decodedExplorePane(link);
+		const query: string = panes.A.queries[0].expr;
+		assert.match(query.trim().split("\n").at(-1)!, /^\| drop /);
+		assert.doesNotMatch(query, /\| line_format|\| keep /);
+		assert.doesNotMatch(
+			query.trim().split("\n").at(-1)!,
+			/\b(message|stack_trace|err|trace_id|k8s_pod_name)\b/,
+		);
+	}
+});
+
+test("laptoptabellen har én hendelse og samlede detaljer, men beholder råfelt til presise lenker", () => {
+	const main = JSON.stringify(panels()["panel-2"]);
+	assert.match(main, /"error_type_display":"Hendelse"/);
+	assert.match(main, /"error_details":"Detaljer"/);
+	assert.match(main, /"id":"custom.hideFrom.viz","value":true/);
+	assert.match(main, /"wrapText":true/);
+	assert.match(main, /"enablePagination":false/);
+	assert.match(main, /Logger i gruppen med trace/);
+	assert.match(
+		JSON.stringify(panels()["panel-7"]),
+		/Vis feilgrupper for tjenesten/,
+	);
 });

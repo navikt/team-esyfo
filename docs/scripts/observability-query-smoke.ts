@@ -72,7 +72,7 @@ const fixtures: Fixture[] = [
 			event_type: undefined,
 			exception_type: "IllegalStateException",
 			error_code: "500",
-			trace_id: undefined,
+			trace_id: secondTrace,
 		},
 	},
 	{
@@ -319,6 +319,16 @@ async function checkLogQueries(url: string) {
 				Number(value[1]),
 				`The log link must find every counted event for ${JSON.stringify(metric)}`,
 			);
+			for (const { stream, values } of logs) {
+				assert.ok(!Object.keys(stream).some((field) => field.startsWith("safe_") || field.endsWith("_display")), "Explore must not expose derived query helpers");
+				for (const [, line] of values) {
+					if (line.includes('"event_type":"fixture_failed"')) {
+						const record = JSON.parse(line);
+						assert.equal(record.message, canonicalError.message, "Original diagnostic message survives helper cleanup");
+						assert.equal(record.trace_id, safeTrace);
+					}
+				}
+			}
 		}
 	};
 	const errors: Vector[] = await request(runtimeByClassificationQuery);
@@ -361,6 +371,7 @@ async function checkLogQueries(url: string) {
 		/invalid event type|invalid code|invalid operation|Synthetic message/,
 	);
 	await checkRowLinks(errors, runtimeErrorGroupDataLink());
+	await checkRowLinks(errors.filter(({ metric }) => metric.error_type_display === "fixture_failed"), runtimeErrorGroupDataLink(true));
 	const contractGaps: Vector[] = await request(runtimeContractGapQuery);
 	assert.equal(total(contractGaps), 5);
 	await checkRowLinks(contractGaps, runtimeContractGapDataLink());
@@ -393,8 +404,9 @@ async function checkLogQueries(url: string) {
 	);
 	assert.equal(
 		traces.reduce((count, { values }) => count + values.length, 0),
-		3,
+		4,
 	);
+	assert.ok(traces.some(({ stream }) => stream.error_details.startsWith("CRITICAL")), "Trace details retain severity, not only code and operation");
 	assert.deepEqual(
 		[...new Set(traces.map(({ stream }) => stream.safe_trace_id))].sort(),
 		[safeTrace, secondTrace].sort(),
@@ -444,6 +456,12 @@ async function checkLogQueries(url: string) {
 		["Produksjon", "Test", "Ukjent"],
 	);
 	await checkRowLinks(browserRows, browserErrorGroupDataLink());
+	for (const { metric } of browserRows) {
+		const apm = new URL(metric.browser_apm_path, "https://grafana.example.test");
+		assert.equal(apm.pathname, "/a/nais-apm-app/services/team-esyfo/dialogmote-frontend");
+		assert.equal(apm.searchParams.get("tab"), "frontend");
+		assert.equal(apm.searchParams.get("environment"), ({ Produksjon: "prod", Test: "dev", Ukjent: null } as Record<string, string | null>)[metric.browser_environment_display]);
+	}
 	assert.ok(
 		(await browser("prod-gcp")).some(
 			({ metric }) => metric.browser_type_display === "Annen / ikke oppgitt",

@@ -253,6 +253,7 @@ const serviceDataLinks = (service: string) => [
 	dataLink("APM og tracing", apmDataLink(service)),
 	dataLink("Feiloversikt", errorDashboardDataLink(service)),
 	dataLink("Logger", runtimeLogsDataLink(service)),
+	dataLink("Minne og ressurser", apmDataLink(service, "prod", "backend")),
 	dataLink("Runbook", RUNTIME_RUNBOOK_URL),
 ];
 
@@ -264,6 +265,12 @@ const diagnosticLinks = (service: string, runbook: string, issue: string) => [
 
 type PanelQuery = Record<string, unknown>;
 type PanelLink = ReturnType<typeof dataLink>;
+
+const tableColumnWidths = (widths: Record<string, number>) =>
+	Object.entries(widths).map(([name, width]) => ({
+		matcher: { id: "byName", options: name },
+		properties: [{ id: "custom.width", value: width }],
+	}));
 
 const prometheusQuery = (
 	refId: string,
@@ -492,10 +499,10 @@ const mergeTableFrames = {
 const fleetTablePanel = () => {
 	const fields = {
 		service_name: "Tjeneste",
-		"Value #Requests": "Kall i perioden",
+		"Value #Requests": "Kall",
 		"Value #OTel-feil": "Feilmarkerte kall",
-		"Value #Runtimefeil": "Loggfeil i perioden",
-		"Value #Restarts": "Omstarter i perioden",
+		"Value #Runtimefeil": "Loggfeil",
+		"Value #Restarts": "Omstarter",
 		"Value #Klare replikaer": "Klare replikaer",
 		"Value #Telemetry": "HTTP-målinger",
 	};
@@ -628,7 +635,6 @@ const fleetTablePanel = () => {
 											...serviceDataLinks(ROW_VALUE),
 										],
 									},
-									{ id: "custom.width", value: 290 },
 								],
 							},
 							{
@@ -699,6 +705,15 @@ const fleetTablePanel = () => {
 									},
 								],
 							},
+							...tableColumnWidths({
+								[fields.service_name]: 265,
+								[fields["Value #Requests"]]: 70,
+								[fields["Value #OTel-feil"]]: 130,
+								[fields["Value #Runtimefeil"]]: 80,
+								[fields["Value #Restarts"]]: 95,
+								[fields["Value #Klare replikaer"]]: 115,
+								[fields["Value #Telemetry"]]: 160,
+							}),
 						],
 					},
 					options: {
@@ -812,11 +827,11 @@ const podDiagnosticsPanel = () => ({
 							},
 							renameByName: {
 								pod: "Pod",
-								"Value #Restarts (max)": "Omstarter i perioden",
+								"Value #Restarts (max)": "Omstarter",
 								"reason (uniqueValues)": "Registrerte årsaker",
 								"Value #Avsluttet (max)": "Siste avslutning",
-								"Value #Exit (max)": "Siste exit-kode",
-								"Value #Tidsstatus (max)": "Avslutningens tidsrom",
+								"Value #Exit (max)": "Exit-kode",
+								"Value #Tidsstatus (max)": "Tidsrom",
 							},
 						},
 					},
@@ -840,7 +855,7 @@ const podDiagnosticsPanel = () => ({
 							properties: [{ id: "unit", value: "dateTimeAsIso" }],
 						},
 						{
-							matcher: { id: "byName", options: "Avslutningens tidsrom" },
+							matcher: { id: "byName", options: "Tidsrom" },
 							properties: [
 								{
 									id: "mappings",
@@ -870,13 +885,21 @@ const podDiagnosticsPanel = () => ({
 								},
 							],
 						},
+						...tableColumnWidths({
+							Pod: 310,
+							Omstarter: 90,
+							"Registrerte årsaker": 155,
+							"Siste avslutning": 165,
+							"Exit-kode": 75,
+							Tidsrom: 150,
+						}),
 					],
 				},
 				options: {
 					showHeader: true,
 					cellHeight: "sm",
 					enablePagination: false,
-					sortBy: [{ displayName: "Omstarter i perioden", desc: true }],
+					sortBy: [{ displayName: "Omstarter", desc: true }],
 				},
 			},
 		},
@@ -1005,7 +1028,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		cursorSync: "Off",
 		description:
 			"Produksjonsoversikt for Team eSyfo: observerte feil, omstarter, replikaer og måledata. Finn tjenesten og gå videre til APM, tracing, feilgrupper eller logger.",
-		editable: true,
+		editable: false,
 		elements: {
 			"panel-2": statPanel({
 				id: 2,
@@ -1032,7 +1055,9 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				thresholds: deviationThresholds,
 				decimals: 0,
 				noValue: "Ingen treff",
-				links: [dataLink("Feiloversikt", errorDashboardDataLink("$__all"))],
+				links: [
+					dataLink("Alle tjenesters feil", errorDashboardDataLink("$__all")),
+				],
 			}),
 			"panel-4": statPanel({
 				id: 4,
@@ -1412,8 +1437,8 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		},
 		links: [
 			dashboardLink(
-				"Feiloversikt",
-				"https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt?var-runtime_environment=prod",
+				"Alle tjenesters feil",
+				"https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt?var-runtime_environment=prod&var-app=$__all",
 				true,
 			),
 			dashboardLink(

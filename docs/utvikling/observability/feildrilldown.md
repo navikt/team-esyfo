@@ -9,8 +9,8 @@ Dashboardet er en feilsøkingsflate, ikke oversikten over all teknisk helse. Tra
 Den primære, åpne delen har én rekkefølge:
 
 1. **Loggede feil per minutt** viser utviklingen med samme enhet uansett tidsrom. **Hvor skjer feilene?** viser antall hendelser per tjeneste i hele tidsrommet som horisontale stolper.
-2. **Hva feiler?** viser hendelsestype, kode og operasjon. Topp 25 beregnes separat for `error`, `critical` og `fatal`, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser.
-3. **Konkrete feilforløp · åpne trace** gir et utvalg fra de 100 nyeste trace-koblede feilene, med valgfri HTTP-status fra tjenesten som ble kalt.
+2. **Hva feiler?** prioriterer tjeneste og hendelse. **Detaljer** samler kode og operasjon når de tilfører informasjon. CRITICAL og FATAL fremgår også der. Topp 25 beregnes separat per nivå, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser. En tjenestestolpe åpner tjenestens feilgrupper.
+3. **Siste feil med trace · valgt tjenesteutvalg** gir et utvalg fra de 100 nyeste trace-koblede feilene. Dette er ikke forløp for en valgt rad i tabellen over; bruk radens **Logger i gruppen med trace** for det.
 4. **Registrerte API-avvisninger · WARN** viser inntil 50 grupper separat fra ERROR. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
 
 Avvisningspanelet omfatter `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak får samme verdi, **Årsak ikke oppgitt**, i både grupperingen og loggsøket. Gruppelinken bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
@@ -20,15 +20,22 @@ En avgrenset overgangsleser gjenkjenner også den kodeeide meldingen `System use
 I runtime-tabellene åpner **Undersøk** en meny:
 
 - **Logger for denne gruppen · Explore** bevarer miljø, tidsrom og eksakt gruppering. Spørringen er ferdig; du trenger ikke skrive LogQL. Explore beholdes fordi grupperingen også støtter eldre loggformater og utledede felt.
+- **Logger i gruppen med trace** beholder samme feilgruppe, men viser bare hendelser med gyldig trace-ID. Tomt betyr at denne gruppen ikke har registrert en slik ID i tidsrommet. Det beviser ikke at tracing er avslått.
 - **Alle tjenestelogger** åpner den enklere Logs Drilldown-visningen i samme miljø og tidsrom. Denne utvider bevisst fra feilgruppen til tjenesten, slik at du kan lese sammenhengen.
 - **Feil i APM** åpner tjenestens Issues-fane med riktig miljø og tidsrom. APM har egen gruppering og videre tracing; dette er ikke nødvendigvis samme feilgruppe som i tabellen.
 
 I trace-tabellen åpner **Åpne trace** det konkrete sporet direkte i Explore, med valgt Tempo-datakilde og tidsrom, uten et separat metrikksøk i Traces Drilldown. Tjenestecellen gir menyen til logger og APM. En trace-ID betyr ikke at sporet nødvendigvis er lagret eller fortsatt tilgjengelig. Tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace.
 
+Hjelpefeltene som spørringen beregner, fjernes fra Explore-resultatet etter at gruppen er filtrert. Den opprinnelige logglinjen, appens feildiagnostikk, podmetadata og trace-ID beholdes. Dette er opprydding i visningen, ikke scrubbing av loggene.
+
+Tabellene er tilpasset en laptop på 1366–1440 px, også med Grafana-menyen åpen. Hovedtabell og trace-tabell har fem synlige kolonner og intern scrolling fremfor mange små sider. Støttefelter skjules bare i tabellen; presise lenker beholder dem.
+
 I tillegg finnes:
 
 - **Forbedre loggdata**, en sammenfoldet del som viser hendelser uten gyldig `event_type`. Disse feilene er allerede med i hovedtabellen, ikke ekstra feil. Delen arver miljø og tjeneste fra **Feil i tjenestene**.
 - **Nettleserfeil · eget utvalg**, med egen inventarstyrt flatevelger og miljøvelger. Den påvirkes ikke av runtime-valgene. Standard er alle miljøer, også ukjent, med miljø oppgitt per rad.
+
+Nettlesertabellen grupperer på brede JavaScript-typer som `Error`, ikke på rotårsak. **Se logger** finner radens nøyaktige tjeneste, miljø og type. **Nettleserfeil i APM** åpner flatens egne feilgrupper, alle typer, i samme miljø og tidsrom. For **Ukjent** åpnes alle miljøer; dashboardet gjetter ikke produksjon. APMs gruppering gjenbrukes i stedet for en ny fingerprint-løsning i teamets dashboard.
 
 Panelbeskrivelser og lenker til kontrakt og runbook ligger i panelmenyene. Dashboardet har ikke et stort forklaringspanel som skyver feilinformasjonen ut av første skjermbilde.
 
@@ -81,6 +88,8 @@ Trace-ID må være 32 hextegn og kan ikke være W3C/OTel sin ugyldige null-ID. I
 
 Et rått loggsøk åpnes etter et eksplisitt loggvalg: **Undersøk → Logger for denne gruppen · Explore**, **Alle tjenestelogger**, eller nettleserdelens **Se logger**. Gruppelinken filtrerer på den samme, utledede feiltypen, koden og operasjonen; der er den opprinnelige `message`-teksten tilgjengelig. Kontraktsgap og nettlesergrupper har tilsvarende avgrensede lenker.
 
+For nye loggpunkter: følg [Legg til en god logg](./gode-logger). Samme versjonerte JSON Schema testes mot appens faktiske serialiserte logger i CI. Det erstatter ikke tester av riktig loggnivå, nyttig diagnostikk og fravær av persondata.
+
 ## Telling, tomt resultat og kost
 
 Tallene er **logghendelser**, ikke unike feil, incidents eller berørte brukere. Flere logger kan tilhøre samme feilforløp. Trend og metriske Loki-queryer bruker Grafanas `$__auto`, beholder bare nødvendige labels før aggregering og begrenser trendens oppløsning til 240 datapunkter med minimumsintervall ett minutt.
@@ -93,6 +102,18 @@ Tallene er **logghendelser**, ikke unike feil, incidents eller berørte brukere.
 Standard refresh er ett minutt. Intervallene 5 og 10 sekunder er fjernet. Loggdatakontrollen starter sammenfoldet med `preload=false`; nettleserfeil er en egen åpen del. Query Inspector brukes til å kontrollere kostnad og om sammenfoldede queryer faktisk utsettes.
 
 `Topp 25 per nivå` er en prioriteringsvisning, ikke en full flåteliste. Nivå normaliseres til lowercase før gruppering, så `ERROR`, `Error` og `error` bruker samme bøtte. Velg én tjeneste når listen ikke er komplett nok.
+
+## Kort kollegatest
+
+Bruk en vanlig laptop, gjerne 1366 × 768, og et tidsrom med kjente hendelser:
+
+1. Finn en tjeneste i Kontrollrommet. Åpne **Undersøk tjenesten**, deretter **Feiloversikt**. Tjeneste og tidsrom skal følge med. Topplenken **Alle tjenesters feil** utvider bevisst til alle.
+2. Velg en feilgruppe og **Logger for denne gruppen**. Sjekk at samme gruppe og tidsrom åpnes, og at forklaringen er lesbar uten å skrive en query. Explore har en resultatgrense; et stort antall i tabellen betyr ikke at alle linjene lastes samtidig.
+3. Velg **Logger i gruppen med trace**, og åpne et lagret spor når det finnes. Sammenlign med den separate trace-tabellen, som er et utvalg for tjenestene.
+4. Finn en nettleserrad. Sjekk at **Se logger** finner den samme typen og miljøet. APM-valget utvider til alle typer; en rad med ukjent miljø skal ikke påstå produksjon.
+5. Finn en historisk omstart. Podlenken skal beholde pod og tidsrom. Manglende logger eller avslutningsårsak skal ikke tolkes som null omstarter. Sammenlign et tidsrom uten data: ukjent/ingen treff skal ikke se ut som bekreftet frisk drift.
+
+Noter forventning, faktisk resultat og en lenke med tidsrom hvis noe er uklart. Dette er en test av observability-løsningen; feilene den avdekker prioriteres separat.
 
 ## Dashboard som kode
 
