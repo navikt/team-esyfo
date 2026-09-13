@@ -10,16 +10,15 @@ serverlogger i Team eSyfos apper. Den erstatter ikke loggeren eller APM.
 
 - Ett versjonert [JSON Schema v1.0.0](/contracts/runtime-error/v1.0.0/schema.json)
   for form, JSON-typer og grenser.
-- En liten, kodeeid katalog i hver app for hendelser, operasjoner og koder.
-- Test av den **faktisk serialiserte loggen** i appens CI, med
-  [validatoren](/contracts/runtime-error/v1.0.0/validate.mjs) eller en
-  draft-07-kompatibel JSON Schema-validator i appens eksisterende testspråk.
+- Lokale, typesikre hendelsesdefinisjoner med appens operasjoner og koder.
+- Test av den **faktisk serialiserte loggen** i appens CI. Anbefalt oppsett er
+  [eSyfo-bibliotekene og testkittene 0.1.0](https://github.com/navikt/esyfo-observability/releases/tag/v0.1.0),
+  som bruker den eksisterende loggeren og samme byte-låste schema v1.0.0.
 
-Vi lager ikke en ny runtime-logger, npm-/Maven-pakke, generator eller et eget
-repo nå. Katalogen gir lokale konstanter/enumverdier; schema og tester fanger
-avvik etter serialisering. Ny hendelse i en registrert app krever derfor
-verken dashboardendring eller sentral bibliotekrelease. En liten delt
-testpakke kan vurderes hvis pilotene viser konkret gjentakelse.
+Appen eier domenespråk, loggpunkt, alvorlighetsnivå og diagnostikk. En ny
+hendelse i en registrert app krever verken dashboardendring eller sentral
+bibliotekrelease. [CLI-validatoren](/contracts/runtime-error/v1.0.0/validate.mjs)
+og direkte schemavalidering er fortsatt alternativer uten biblioteket.
 
 ## Felt og betydning
 

@@ -1,150 +1,144 @@
 # Legg til en god logg
 
-Målet er enkelt: Finn hendelsen i Feiloversikt, forstå hva som skjedde i
-loggene, og følg sporet videre i APM. Bruk appens eksisterende logger.
+En god logg lar oss finne hendelsen i [Feiloversikt](./feildrilldown), forstå
+årsaken og følge en trace videre i APM. Appen beholder loggeren sin.
 
-## 1. Velg ett loggpunkt og et stabilt navn
+Anbefalt oppsett er [eSyfo-bibliotekene 0.1.0](https://github.com/navikt/esyfo-observability/releases/tag/v0.1.0).
+De gir typesikre, lokale hendelser og teststøtte med den eksisterende
+runtime-error-kontrakten v1.0.0. En ny domenehendelse krever verken ny
+bibliotekrelease eller dashboardendring.
 
-Logg der operasjonen til slutt feiler, ikke på hvert lag den passerer. Bruk
-et konkret `event_type`, som `plan_creation_failed`. Legg bare til `operation`
-og `error_code` når de sier noe mer. En ny hendelse i en registrert app trenger
-ingen dashboardendring.
+## 1. Bruk riktig pakke
 
-Hold verdiene i lokale konstanter eller enumverdier. Testkatalogen hentes fra
-de samme konstantene, eller en test sjekker at de stemmer overens. Ikke bygg
-katalogen ved å samle verdier fra loggen som skal valideres; da godkjenner den
-sitt eget testresultat.
+- **Node/Next, serverkode:** `@navikt/esyfo-logger` som avhengighet og
+  `@navikt/esyfo-logger-testkit` kun i `devDependencies`.
+- **Kotlin/SLF4J:** `no.nav.esyfo.observability:esyfo-logger` som
+  `implementation` og `no.nav.esyfo.observability:esyfo-logger-testkit`
+  kun som `testImplementation`.
 
-Katalogen kan være appens eksisterende konstanter; en egen JSON-fil er ikke
-påkrevd. Bruker dere filbasert validering, kan `test/observability/catalog.json`
-for eksempel se slik ut:
+Pinn versjon `0.1.0`, bruk appens vanlige GitHub Packages-autentisering og
+verifiser bygg og tester i CI. Ingen registry-secrets skal følge appen til
+produksjon. Se [installasjon og støttet oppsett](https://github.com/navikt/esyfo-observability#innføring-i-en-app)
+for Node 24 / TypeScript 6 / Pino 10 og Kotlin 2.4.10 / SLF4J 2 / Java 21+.
+Nettleserfeil fortsetter gjennom eksisterende APM/Faro.
 
-```json
-{
-  "event_type": ["plan_creation_failed", "api_request_rejected"],
-  "operation": ["create_plan"],
-  "error_code": ["NETWORK_ERROR"],
-  "rejection_reason": ["ACCESS_DENIED"]
-}
-```
+## 2. Definer hendelsen der feilen eies
 
-Bruk appens faktiske verdier, ikke hele eksempelsettet. Kontroller at verdier
-for `event_type`, `operation`, `error_code`, `rejection_reason` og eventuell
-`exception_type` finnes i appens lukkede katalog når feltene brukes. Legger dere
-til et slikt felt, må den lokale testen også kontrollere katalogverdien.
-Katalogen beviser ikke at en bestemt kombinasjon er riktig; det kontrollerer
-testen av det konkrete feilforløpet.
+Logg der operasjonen til slutt feiler, ikke på hvert lag eller etter hvert
+retry. Appen eier hendelsesnavn, koder, kontekst, alvorlighetsnivå og loggpunkt.
+Bruk konstanter, uniontyper eller enums, aldri requestverdier eller feilmeldinger
+som grupperingsnøkler. Valgfrie felt tas bare med når de tilfører noe.
 
-## 2. Behold forklaringen
-
-For en kontrollert nettverksfeil uten persondata bruker Pino sin vanlige
-feilserializer. `err` bevarer forklaringen; gruppering trenger ikke kopiere den:
+**TypeScript:** Konteksttypen er appens lokale feltdefinisjon.
 
 ```ts
-logger.error(
-  {
-    event_type: "plan_creation_failed",
-    error_code: "NETWORK_ERROR",
-    err: error,
-  },
-  "Kunne ikke opprette oppfølgingsplan",
-);
+import { logger } from "@navikt/next-logger";
+import { createEventLogger, defineEvent } from "@navikt/esyfo-logger";
+
+const log = createEventLogger(logger);
+const planHentingFeilet = defineEvent<{
+  error_code: "NETWORK_ERROR" | "INVALID_RESPONSE";
+}>({
+  name: "plan_fetch_failed",
+  level: "error",
+  message: "Kunne ikke hente oppfølgingsplan",
+});
+
+// I loggpunktet, med et feilobjekt som er vurdert som egnet for logging:
+log.event(planHentingFeilet, { error_code: "NETWORK_ERROR" }, error);
 ```
 
-Bruk ikke et vilkårlig HTTP-klientobjekt som `err`: noen klienter legger
-headers, URL, request og respons på objektet. Test appens eksisterende
-serializer. Når objektet ikke er trygt, logg den relevante, vurderte
-diagnostikken med eksisterende logger. Ikke dropp all årsaksinformasjon.
-
-I SLF4J/Logback sendes exception som siste argument, ikke som strukturert
-dimensjon. `StructuredArguments` skal være aktivert i appens JSON-encoder:
+**Kotlin:** En dataklasse gir typet kontekst; loggeren er fortsatt appens SLF4J-logger.
 
 ```kotlin
-import net.logstash.logback.argument.StructuredArguments.kv
+import no.nav.esyfo.observability.Event
+import no.nav.esyfo.observability.emit
+import org.slf4j.event.Level
 
-log.error(
-    "Kunne ikke opprette oppfølgingsplan: {} {}",
-    kv("event_type", "plan_creation_failed"),
-    kv("error_code", "NETWORK_ERROR"),
-    exception,
+data class PlanHentingFeilet(val upstreamStatus: Int?)
+
+val planHentingFeilet = Event<PlanHentingFeilet>(
+    name = "plan_fetch_failed",
+    level = Level.ERROR,
+    message = "Kunne ikke hente oppfølgingsplan",
+    errorCode = "PLAN_SERVICE_UNAVAILABLE",
+    fields = mapOf("upstream_status" to { it.upstreamStatus }),
 )
+
+log.emit(planHentingFeilet, PlanHentingFeilet(503), cause = exception)
 ```
 
-For en relevant, forventet API-avvisning brukes WARN med
-`event_type=api_request_rejected` og en kodeeid `rejection_reason`. Andre
-WARN-logger skal ikke merkes slik for å bli synlige. Se
-[hele felt- og nivåkontrakten](./runtime-feilkontrakt).
+Utelat `upstream_status` når ingen HTTP-respons ble mottatt; JVM-adapteren
+utelater feltlesere som returnerer `null`.
 
-## 3. Test utdata fra loggeren
+En relevant, faktisk API-avvisning bruker den felles `apiRequestRejected`-
+definisjonen: WARN, `event_type=api_request_rejected` og en lokal, lukket
+`rejection_reason`. Ikke bruk den for alle 4xx, teknisk svikt eller når en
+fallback gir tilgang. Behold eksisterende HTTP-respons og feilhåndtering.
 
-Utløs ett realistisk, kontrollert feilforløp gjennom appkoden. Fang utdata fra
-den samme JSON-serializeren/encoderen som produksjon bruker, ikke bare et mock-kall
-til `logger.error`. Bruk syntetiske data. Skriv eventuelt testutdata som NDJSON,
-én faktisk JSON-logg per linje, til en midlertidig fil.
+## 3. Behold diagnostikk og personvern
 
-Kontroller i appens vanlige test:
+Send et vurdert feilobjekt separat, som i eksemplene. Biblioteket videresender
+det til den eksisterende loggeren og bevarer native feilinformasjon. Det
+installerer ingen encoder, scrubber eller trace-mekanisme.
 
-- riktig loggnivå og nøyaktig én terminal hendelse, også med retry/propagering;
-- forventet hendelse, operasjon og kode for akkurat dette feilforløpet;
-- aktiv `trace_id` bevares når testen kjører i en span, uten syntetisk fallback;
-- relevant melding, nettverksårsak, exception/stack og `cause` bevares;
-- syntetiske persondata, token, requestvariabler og payload ikke lekker i
-  **hele den serialiserte loggen**, heller ikke via exception/cause;
-- schema og lokale katalogverdier godkjennes, uten typekonvertering eller
-  automatisk fjerning av ugyldige felter.
+Ikke send vilkårlige HTTP-klientobjekter: de kan inneholde headers, URL,
+request og responsdata. Behold nyttig melding, stack, nettverksårsak og
+`cause`, men bruk og test appens eksisterende serialisering og redigering.
+Ikke bygg en ny generell scrubbingmotor.
 
-**Node:** Fang en Pino-/eksisterende logger-destination, kjør appfunksjonen og
-parse de serialiserte linjene. Ajv med `strict: true` og `allErrors: true` kan
-validere samme schema direkte i testen.
+**PDLs GraphQL-`errors[]` er nyttig feildiagnostikk og skal ikke fjernes ved
+generell scrubbing.** PDL-data, requestvariabler og lokal personkontekst skal
+ikke følge med. APMs scrubbing brukes for APM-data; den gjør ikke automatisk
+rå logger trygge.
 
-**JVM:** Fang den faktiske Logback-encoderens utdata, for eksempel fra en
-`OutputStreamAppender` med appens `LogstashEncoder`. En `ListAppender` alene
-beviser ikke at JSON-feltene blir riktige. Valider JSON i eksisterende
-draft-07-kompatibel testvalidator. En JVM-validator som testavhengighet krever
-verken Node eller endringer i appens runtime.
+## 4. Test det appen faktisk skriver
 
-Schemaet kontrollerer feltformatet. De lokale testene kontrollerer betydning,
-loggnivå, antall hendelser og personvern. Kontrollen gjelder feilforløpene som
-testene utløser, ikke automatisk alle logger i appen.
+Utløs et kontrollert feilforløp gjennom appkoden med syntetiske data. Bruk
+produksjonens loggerkonfigurasjon, ikke bare en mock av et loggkall:
 
-## 4. Kjør samme kontroll lokalt og i CI
+- **Node:** `createLogCapture` gir en destination til appens loggerfabrikk.
+  Injiser loggeren i scenariet og kontroller utdata med `assertLogEvent`
+  eller `assertLogEvents`. Se [Node-teststøtten](https://github.com/navikt/esyfo-observability/tree/main/packages/logger-testkit).
+- **JVM:** `captureLogs` bruker appens allerede konfigurerte JSON-encoder.
+  `RuntimeLogContract.forEvents` avleder katalogen fra hendelsesdefinisjonene;
+  dynamiske årsakskoder gis fra lokale enums. Se [JVM-teststøtten](https://github.com/navikt/esyfo-observability/blob/main/jvm/README.md#test-faktisk-json).
 
-### Anbefalt: valider direkte i eksisterende tester
+Testkittene inkluderer det pinnede schemaet; hovedløypen trenger ingen
+app-lokal schemakopi, Ajv-oppsett eller separat katalogfil. Kjør testene i
+appens eksisterende testkommando og CI.
 
-Hent [schema v1.0.0](/contracts/runtime-error/v1.0.0/schema.json) én gang og
-kontroller SHA-256 mot
-[publiserte sjekksummer](/contracts/runtime-error/v1.0.0/SHA256SUMS.txt).
-Legg schemaet og den forventede sjekksummen i appens testressurser. Testen skal
-både kontrollere sjekksummen og validere de faktiske JSON-loggene.
+Kontroller i scenariet:
 
-Kjør kontrollen som del av vanlig `pnpm test --run` eller `./gradlew test`,
-og la eksisterende CI kjøre den samme testen. Ingen separat CLI, loggfil eller
-ny workflow er nødvendig. Validatoren er kun en testavhengighet.
+- riktig nivå, melding og felt, og nøyaktig én terminal hendelse;
+- at vellykket fallback og kansellering ikke blir feilaktige avvisninger;
+- at nødvendig diagnostikk beholdes, også i exception og `cause`;
+- at aktiv trace følger det asynkrone forløpet uten hjemmelaget reserve-ID;
+- at syntetiske sensitive verdier faktisk legges i inngangen, men ikke finnes
+  noe sted i den serialiserte loggen.
 
-Pilotene viser to konkrete oppsett (PR-er til human review):
+Ikke filtrer bort umerkede feil før kontrollen. Typer og schema beviser
+ikke personvern, riktig loggpunkt eller dekning av alle appens logger.
+Capture beviser serialisering, ikke levering til Loki eller APM.
 
-- [narmesteleder-frontend #452](https://github.com/navikt/narmesteleder-frontend/pull/452):
-  eksisterende next-logger, Ajv og appens TypeScript-konstanter.
-- [esyfo-narmesteleder #520](https://github.com/navikt/esyfo-narmesteleder/pull/520):
-  eksisterende Logstash-encoder, JVM-validator og lokal hendelseskatalog.
+Pilotene [narmesteleder-frontend #452](https://github.com/navikt/narmesteleder-frontend/pull/452)
+og [esyfo-narmesteleder #520](https://github.com/navikt/esyfo-narmesteleder/pull/520)
+viser innføring i ekte apper. De krever fortsatt human review før merge.
 
-Review og commit de pinnede testressursene. Ikke hent en flytende `latest`
-eller ny scriptkode fra nettet for hvert bygg. Sjekksummer oppdager endrede
-bytes, men erstatter ikke kontroll av kilden ved førstegangsinnføring.
-Ved oppgradering gjennomgås og oppdateres versjon, schema og sjekksum samlet.
+## Alternativ: schema eller CLI uten biblioteket
 
-### Alternativ: valider en loggfil med CLI
+For andre oppsett kan appens tester fortsatt validere faktisk JSON direkte
+mot [schema v1.0.0](/contracts/runtime-error/v1.0.0/schema.json). Hold lokale
+grupperingsverdier lukket, og kontroller dem fra kodeeide konstanter/enums,
+ikke ved å samle verdier fra loggen som testes.
 
-Bruk dette hvis testene allerede skriver faktiske JSON-logger til fil, eller
-dere ønsker samme kommandolinjekontroll på tvers av språk. Hent også
-[validate.mjs](/contracts/runtime-error/v1.0.0/validate.mjs) og den komplette
-[SHA256SUMS.txt](/contracts/runtime-error/v1.0.0/SHA256SUMS.txt) til samme mappe
-som schemaet. Kontroller begge filer med `shasum -a 256 -c SHA256SUMS.txt`
-(Linux: `sha256sum -c SHA256SUMS.txt`) før review og commit.
+Filbasert validering bruker [validate.mjs](/contracts/runtime-error/v1.0.0/validate.mjs)
+og [SHA256SUMS.txt](/contracts/runtime-error/v1.0.0/SHA256SUMS.txt). Hent schema,
+validator og sjekksummer sammen, kontroller `shasum -a 256 -c SHA256SUMS.txt`
+og review før commit. De publiserte v1-filene endres ikke; ikke hent
+flytende `latest` eller ny scriptkode ved hvert bygg.
 
-Denne CLI-en krever Node 22 eller nyere og Ajv 8 som låst **dev-avhengighet**
-(`pnpm add -D -E ajv@8.20.0`). Legg dette i appens vanlige test/build-kommando
-etter testen som produserer loggfilen:
+CLI-en krever Node 22+ og låst Ajv 8 som dev-avhengighet:
 
 ```sh
 node test/observability/runtime-error-v1.0.0/validate.mjs \
@@ -153,27 +147,12 @@ node test/observability/runtime-error-v1.0.0/validate.mjs \
   test-output/terminal-error.ndjson
 ```
 
-`--expect-count 1` passer et scenario som skal gi én hendelse; flere testscenarier
-kan valideres samlet med riktig antall. `--format json` leser én JSON-logg per
-fil, også pretty-printet. Standard er NDJSON. `-` leser stdin, og flere filer
-kan oppgis. Bare loggene fra de valgte scenarioene skal sendes inn, ikke en
-blanding av vanlig INFO-trafikk og testutdata. Ikke filtrer bort umerkede ERROR-
-logger før kontrollen; en mistet `event_type` skal få testen til å feile.
+Katalogfilen lister appens tillatte verdier for feltene som brukes, som
+`event_type`, `operation` og `error_code`. Velg forventet antall for scenariet.
+Exit-kode 0 betyr gyldige hendelser, 1 ugyldig innhold/antall og 2 tom input
+eller feil oppsett. En tom fil er aldri et grønt bevis på logging.
+Se [felt- og nivåkontrakten](./runtime-feilkontrakt).
 
-Exit-kode **0** betyr at alle hendelsene følger schema og lokal katalog,
-**1** betyr ugyldige hendelser eller feil antall, og **2** betyr manglende/tom
-input eller feil oppsett. Feilmeldinger viser fil, linje og felt, ikke rå
-logginnhold. Tom fil blir aldri et grønt bevis på logging.
-
-Etter deploy: åpne Feiloversikt for riktig app og tidsrom, sjekk at hendelsen
-vises, følg «Se logger», og åpne en trace når aktiv tracing finnes. Logger og
-spans er ulike signaler og skal ikke summeres som antall feil.
-
-## Når oppskriften er fulgt
-
-En kollega skal kunne legge til en relevant hendelse ved å endre appens lokale
-konstanter/katalog og ett testet loggpunkt. Verken dashboardkode, nytt
-bibliotek eller app-lokal scrubbingmotor skal være nødvendig.
-
-Teknisk grunnlag: [JSON Schema om åpne og påkrevde felter](https://json-schema.org/understanding-json-schema/reference/object)
-og [Ajvs validerings-API](https://ajv.js.org/guide/getting-started.html).
+Etter deploy: velg riktig app og tidsrom i Feiloversikt, følg «Se logger» og
+åpne en trace når den finnes. Logghendelser og spans er ulike signaler,
+ikke tall som skal summeres.
