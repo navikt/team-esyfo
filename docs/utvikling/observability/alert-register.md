@@ -49,7 +49,7 @@ Prometheus-reglene rutes i dag via NAIS-teaminnstillingen til `#esyfo-alarm`. Gr
 
 ### Endringer som ennå ikke er live-grunnlag
 
-Registeret forskutterer ikke umergede eller uverifiserte regler. [Oppfølgingsplan #454](https://github.com/navikt/syfo-oppfolgingsplan-backend/pull/454) legger ferskhetsfilter på de tre køtilstandsreglene og foreslår en fjerde regel for gammelt eller manglende snapshot. [syfomotebehov #756](https://github.com/navikt/syfomotebehov/pull/756) erstatter legacy availability/ingress-regler med urutede kandidater i observasjonsmodus (`shadow`) og retter workflowens path-filter. Runbookene beskriver hvordan kandidatene skal verifiseres, men tabellen og v2-eksporten beholder siste live-attesterte definisjon til hver endring er merget, deployert og avstemt i NAIS. Da skal kilde-SHA, uttrykk, fingerprint, timing, instanser, faktisk varslingsrute og observasjon oppdateres i én samlet registerendring. Registermodellen må samtidig kunne representere en eksplisitt urutet PrometheusRule; dagens standardfabrikk legger ellers feilaktig NAIS-ruten `#esyfo-alarm` på alle slike regler.
+Registeret forskutterer ikke umergede eller uverifiserte regler. [Oppfølgingsplan #454](https://github.com/navikt/syfo-oppfolgingsplan-backend/pull/454) legger ferskhetsfilter på de tre køtilstandsreglene og foreslår en fjerde regel for gammelt eller manglende snapshot. [syfomotebehov #756](https://github.com/navikt/syfomotebehov/pull/756) ble merget 4. september 2026. Den erstatter legacy availability/ingress-regler i kildekoden med urutede kandidater i observasjonsmodus (`shadow`) og retter workflowens path-filter. Merge er ikke bevis på live-reglene. Runbookene beskriver hvordan kandidatene skal verifiseres, men tabellen og v2-eksporten beholder siste live-attesterte definisjon til deploy og faktiske regler er avstemt i NAIS. Da skal kilde-SHA, uttrykk, fingerprint, timing, instanser, faktisk varslingsrute og observasjon oppdateres i én samlet registerendring. Registermodellen må samtidig kunne representere en eksplisitt urutet PrometheusRule; dagens standardfabrikk legger ellers feilaktig NAIS-ruten `#esyfo-alarm` på alle slike regler.
 
 ## Oppdatering og kontroll
 
@@ -79,15 +79,15 @@ To historiske kilde-/deploygrunnlag forklarer fire PrometheusRule-instanser som 
 
 Registeret behandler disse repo-referansene som **historiske kilder** og de berørte reglene som oppryddingsfunn under utfasing. De skal verifiseres og ryddes i NAIS, ikke brukes som bevis for at alle 28 gjeldende Prometheus-regler fortsatt styres av dagens kildekode. Kartleggingen har 11 nåværende default-branch-kilder og 2 historiske repo-kilder.
 
-### Leveringsdrift: tre alertfiler har workflow-gap
+### Leveringsdrift: tre registrerte workflow-gap
 
-Tre av de nåværende kildefilene er heller ikke pålitelig koblet til kontinuerlig levering, til sammen for ti sist observerte regelinstanser:
+Ved siste snapshot var tre kildefiler ikke pålitelig koblet til kontinuerlig levering, til sammen for ti observerte regelinstanser:
 
 - [`syfobrukertilgang/.github/workflows/alerts.yaml`](https://github.com/navikt/syfobrukertilgang/blob/9571911ed14724db56d316c379c51b7b832f9676/.github/workflows/alerts.yaml) følger `alerts.yaml`, men deployer `nais/alerts.yaml` til `prod-gcp`.
 - [`syfomotebehov/.github/workflows/alerts.yaml`](https://github.com/navikt/syfomotebehov/blob/0c1549a71463a60569a4c07cc3c1c147c22d45e4/.github/workflows/alerts.yaml) følger `.nais/alerts-gcp.yaml`, men deployer `nais/alerts-gcp.yaml` til `prod-gcp`.
 - [`syfooppfolgingsplanservice/.github/workflows/build-and-deploy.yaml`](https://github.com/navikt/syfooppfolgingsplanservice/blob/46e66123d27cc1ad930beb9cb523b1d0b4b712f3/.github/workflows/build-and-deploy.yaml) deployer applikasjonsmanifestet, men refererer ikke `nais/alerts-fss.yaml`.
 
-Det betyr ikke at live-reglene er deaktivert. Det betyr at en endring i kildefilen ikke har en pålitelig, sporbar vei til produksjon. `syfomotebehov`-gapet er rettet i den umergede PR-en #756, men forblir et faktisk gap frem til workflowendringen ligger på default branch og er verifisert. De øvrige gapene må ryddes eller eksplisitt pensjoneres i policyarbeidet; for `syfooppfolgingsplanservice` er eneste gjenstående handling å avstemme og fjerne eventuelle restregler.
+Dette var leveringsgap, ikke bevis på deaktiverte live-regler. `syfomotebehov`-gapet er rettet på default branch gjennom den mergede #756; ny deploy-/live-avstemming gjenstår i registeret. De øvrige gapene må ryddes eller eksplisitt pensjoneres i policyarbeidet; for `syfooppfolgingsplanservice` er eneste gjenstående handling å avstemme og fjerne eventuelle restregler.
 
 ## Scope og beslutninger
 

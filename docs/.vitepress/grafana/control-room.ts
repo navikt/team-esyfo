@@ -253,6 +253,7 @@ const serviceDataLinks = (service: string) => [
 	dataLink("APM og tracing", apmDataLink(service)),
 	dataLink("Feiloversikt", errorDashboardDataLink(service)),
 	dataLink("Logger", runtimeLogsDataLink(service)),
+	dataLink("Minne og ressurser", apmDataLink(service, "prod", "backend")),
 	dataLink("Runbook", RUNTIME_RUNBOOK_URL),
 ];
 
@@ -264,6 +265,12 @@ const diagnosticLinks = (service: string, runbook: string, issue: string) => [
 
 type PanelQuery = Record<string, unknown>;
 type PanelLink = ReturnType<typeof dataLink>;
+
+const tableColumnWidths = (widths: Record<string, number>) =>
+	Object.entries(widths).map(([name, width]) => ({
+		matcher: { id: "byName", options: name },
+		properties: [{ id: "custom.width", value: width }],
+	}));
 
 const prometheusQuery = (
 	refId: string,
@@ -492,10 +499,10 @@ const mergeTableFrames = {
 const fleetTablePanel = () => {
 	const fields = {
 		service_name: "Tjeneste",
-		"Value #Requests": "Kall i perioden",
+		"Value #Requests": "Kall",
 		"Value #OTel-feil": "Feilmarkerte kall",
-		"Value #Runtimefeil": "Loggfeil i perioden",
-		"Value #Restarts": "Omstarter i perioden",
+		"Value #Runtimefeil": "Loggfeil",
+		"Value #Restarts": "Omstarter",
 		"Value #Klare replikaer": "Klare replikaer",
 		"Value #Telemetry": "HTTP-målinger",
 	};
@@ -607,6 +614,7 @@ const fleetTablePanel = () => {
 								cellOptions: { type: "auto" },
 								footer: { reducers: [] },
 								inspect: false,
+								wrapText: true,
 							},
 							noValue: "—",
 							decimals: 0,
@@ -628,7 +636,6 @@ const fleetTablePanel = () => {
 											...serviceDataLinks(ROW_VALUE),
 										],
 									},
-									{ id: "custom.width", value: 290 },
 								],
 							},
 							{
@@ -699,6 +706,15 @@ const fleetTablePanel = () => {
 									},
 								],
 							},
+							...tableColumnWidths({
+								[fields.service_name]: 235,
+								[fields["Value #Requests"]]: 70,
+								[fields["Value #OTel-feil"]]: 155,
+								[fields["Value #Runtimefeil"]]: 80,
+								[fields["Value #Restarts"]]: 100,
+								[fields["Value #Klare replikaer"]]: 140,
+								[fields["Value #Telemetry"]]: 150,
+							}),
 						],
 					},
 					options: {
@@ -812,11 +828,11 @@ const podDiagnosticsPanel = () => ({
 							},
 							renameByName: {
 								pod: "Pod",
-								"Value #Restarts (max)": "Omstarter i perioden",
+								"Value #Restarts (max)": "Omstarter",
 								"reason (uniqueValues)": "Registrerte årsaker",
 								"Value #Avsluttet (max)": "Siste avslutning",
-								"Value #Exit (max)": "Siste exit-kode",
-								"Value #Tidsstatus (max)": "Avslutningens tidsrom",
+								"Value #Exit (max)": "Exit-kode",
+								"Value #Tidsstatus (max)": "Tidsrom",
 							},
 						},
 					},
@@ -840,7 +856,7 @@ const podDiagnosticsPanel = () => ({
 							properties: [{ id: "unit", value: "dateTimeAsIso" }],
 						},
 						{
-							matcher: { id: "byName", options: "Avslutningens tidsrom" },
+							matcher: { id: "byName", options: "Tidsrom" },
 							properties: [
 								{
 									id: "mappings",
@@ -870,13 +886,21 @@ const podDiagnosticsPanel = () => ({
 								},
 							],
 						},
+						...tableColumnWidths({
+							Pod: 310,
+							Omstarter: 90,
+							"Registrerte årsaker": 155,
+							"Siste avslutning": 165,
+							"Exit-kode": 75,
+							Tidsrom: 150,
+						}),
 					],
 				},
 				options: {
 					showHeader: true,
 					cellHeight: "sm",
 					enablePagination: false,
-					sortBy: [{ displayName: "Omstarter i perioden", desc: true }],
+					sortBy: [{ displayName: "Omstarter", desc: true }],
 				},
 			},
 		},
@@ -1005,11 +1029,11 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		cursorSync: "Off",
 		description:
 			"Produksjonsoversikt for Team eSyfo: observerte feil, omstarter, replikaer og måledata. Finn tjenesten og gå videre til APM, tracing, feilgrupper eller logger.",
-		editable: true,
+		editable: false,
 		elements: {
 			"panel-2": statPanel({
 				id: 2,
-				title: "Feilmarkerte kall i perioden",
+				title: "Feilmarkerte kall",
 				description:
 					"Antall inngående SERVER-spans markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
 				query: prometheusQuery(
@@ -1020,11 +1044,10 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				unit: "short",
 				thresholds: deviationThresholds,
 				decimals: 0,
-				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-32": statPanel({
 				id: 32,
-				title: "Loggfeil i perioden",
+				title: "Loggfeil",
 				description:
 					"Antall error-, critical- eller fatal-klassifiserte runtime-logghendelser i valgt tidsrom. Browservideresendte logger er utelatt. Ingen treff betyr ingen samsvarende logglinjer, ikke bevist feilfri drift eller komplett logging.",
 				query: lokiQuery("Loggfeil", fleetRuntimeErrorCountQuery),
@@ -1032,22 +1055,23 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				thresholds: deviationThresholds,
 				decimals: 0,
 				noValue: "Ingen treff",
-				links: [dataLink("Feiloversikt", errorDashboardDataLink("$__all"))],
+				links: [
+					dataLink("Alle tjenesters feil", errorDashboardDataLink("$__all")),
+				],
 			}),
 			"panel-4": statPanel({
 				id: 4,
-				title: "Omstarter i perioden",
+				title: "Omstarter",
 				description:
 					"Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og registrerte avslutningsårsaker finnes under Undersøk en tjeneste.",
 				query: prometheusQuery("Omstarter", fleetRestartCountQuery, "instant"),
 				unit: "short",
 				thresholds: attentionThresholds,
 				decimals: 0,
-				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-5": statPanel({
 				id: 5,
-				title: "Replikaer · lavest ved periodeslutt",
+				title: "Replikaer ved slutt",
 				description:
 					"Laveste observerte klare/ønskede replikaandel ved periodens slutt. Gult kan skyldes et kort fall ved deploy eller skalering; se utviklingen for tjenesten før du konkluderer. Manglende målinger og desired=0 gir ikke null eller grønt.",
 				query: prometheusQuery(
@@ -1058,7 +1082,6 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 				unit: "percent",
 				thresholds: readyThresholds,
 				decimals: 0,
-				links: [dataLink("Runbook", RUNTIME_RUNBOOK_URL)],
 			}),
 			"panel-10": fleetTablePanel(),
 			"panel-12": timeSeriesPanel({
@@ -1105,7 +1128,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 			}),
 			"panel-15": statPanel({
 				id: 15,
-				title: "Loggfeil i perioden",
+				title: "Loggfeil",
 				description:
 					"Error-, critical- eller fatal-klassifiserte runtime-logger for valgt tjeneste og tidsrom. Browservideresendte logger er ekskludert. Ingen treff er ikke bevis på feilfri drift eller komplett logging. Åpne Feiloversikt for feilgrupper.",
 				query: lokiQuery("Loggfeil", runtimeErrorCountQuery),
@@ -1412,8 +1435,8 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
 		},
 		links: [
 			dashboardLink(
-				"Feiloversikt",
-				"https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt?var-runtime_environment=prod",
+				"Alle tjenesters feil",
+				"https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt?var-runtime_environment=prod&var-app=$__all",
 				true,
 			),
 			dashboardLink(

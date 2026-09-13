@@ -11,7 +11,7 @@
     "annotations": [],
     "cursorSync": "Off",
     "description": "Produksjonsoversikt for Team eSyfo: observerte feil, omstarter, replikaer og måledata. Finn tjenesten og gå videre til APM, tracing, feilgrupper eller logger.",
-    "editable": true,
+    "editable": false,
     "elements": {
       "panel-2": {
         "kind": "Panel",
@@ -51,14 +51,8 @@
           },
           "description": "Antall inngående SERVER-spans markert STATUS_CODE_ERROR i valgt tidsrom. Dette er OTel-feilstatus, ikke automatisk HTTP 5xx eller bevist brukerimpact. Null vises bare når kallmetrikker finnes. Manglende HTTP-målinger vises også per tjeneste.",
           "id": 2,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "Feilmarkerte kall i perioden",
+          "links": [],
+          "title": "Feilmarkerte kall",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -147,11 +141,11 @@
           "links": [
             {
               "targetBlank": true,
-              "title": "Feiloversikt",
+              "title": "Alle tjenesters feil",
               "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=$__all"
             }
           ],
-          "title": "Loggfeil i perioden",
+          "title": "Loggfeil",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -240,14 +234,8 @@
           },
           "description": "Estimert antall containeromstarter i valgt tidsrom. Gult betyr undersøk, ikke påvist nedetid. Vanlig pod-utskifting ved deploy eller skalering teller ikke. Manglende restartmetrikker blir ikke null. Historikk og registrerte avslutningsårsaker finnes under Undersøk en tjeneste.",
           "id": 4,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "Omstarter i perioden",
+          "links": [],
+          "title": "Omstarter",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -336,14 +324,8 @@
           },
           "description": "Laveste observerte klare/ønskede replikaandel ved periodens slutt. Gult kan skyldes et kort fall ved deploy eller skalering; se utviklingen for tjenesten før du konkluderer. Manglende målinger og desired=0 gir ikke null eller grønt.",
           "id": 5,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Runbook",
-              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
-            }
-          ],
-          "title": "Replikaer · lavest ved periodeslutt",
+          "links": [],
+          "title": "Replikaer ved slutt",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -583,10 +565,10 @@
                       },
                       "renameByName": {
                         "service_name": "Tjeneste",
-                        "Value #Requests": "Kall i perioden",
+                        "Value #Requests": "Kall",
                         "Value #OTel-feil": "Feilmarkerte kall",
-                        "Value #Runtimefeil": "Loggfeil i perioden",
-                        "Value #Restarts": "Omstarter i perioden",
+                        "Value #Runtimefeil": "Loggfeil",
+                        "Value #Restarts": "Omstarter",
                         "Value #Klare replikaer": "Klare replikaer",
                         "Value #Telemetry": "HTTP-målinger"
                       }
@@ -620,7 +602,8 @@
                     "footer": {
                       "reducers": []
                     },
-                    "inspect": false
+                    "inspect": false,
+                    "wrapText": true
                   },
                   "noValue": "—",
                   "decimals": 0
@@ -657,14 +640,15 @@
                           },
                           {
                             "targetBlank": true,
+                            "title": "Minne og ressurser",
+                            "url": "/a/nais-apm-app/services/team-esyfo/${__value.raw}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+                          },
+                          {
+                            "targetBlank": true,
                             "title": "Runbook",
                             "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
                           }
                         ]
-                      },
-                      {
-                        "id": "custom.width",
-                        "value": 290
                       }
                     ]
                   },
@@ -741,7 +725,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Loggfeil i perioden"
+                      "options": "Loggfeil"
                     },
                     "properties": [
                       {
@@ -771,7 +755,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Omstarter i perioden"
+                      "options": "Omstarter"
                     },
                     "properties": [
                       {
@@ -846,6 +830,90 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Tjeneste"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 235
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Kall"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 70
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Feilmarkerte kall"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 155
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Loggfeil"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 80
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Omstarter"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 100
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Klare replikaer"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 140
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "HTTP-målinger"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
                   }
                 ]
               },
@@ -856,7 +924,7 @@
                 "sortBy": [
                   {
                     "desc": true,
-                    "displayName": "Loggfeil i perioden"
+                    "displayName": "Loggfeil"
                   },
                   {
                     "desc": false,
@@ -868,7 +936,7 @@
                   },
                   {
                     "desc": true,
-                    "displayName": "Omstarter i perioden"
+                    "displayName": "Omstarter"
                   }
                 ]
               }
@@ -974,6 +1042,11 @@
                       "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&tab=backend&from=${__from}&to=${__to}"
                     },
                     {
                       "targetBlank": true,
@@ -1118,6 +1191,11 @@
                     },
                     {
                       "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+                    },
+                    {
+                      "targetBlank": true,
                       "title": "Runbook",
                       "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
                     }
@@ -1257,6 +1335,11 @@
                     },
                     {
                       "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+                    },
+                    {
+                      "targetBlank": true,
                       "title": "Runbook",
                       "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
                     }
@@ -1349,11 +1432,16 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/${service:raw}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
           ],
-          "title": "Loggfeil i perioden",
+          "title": "Loggfeil",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -1460,6 +1548,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/${service:raw}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
@@ -1527,6 +1620,11 @@
                     },
                     {
                       "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${service:raw}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+                    },
+                    {
+                      "targetBlank": true,
                       "title": "Runbook",
                       "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
                     }
@@ -1591,6 +1689,11 @@
               "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/${service:raw}?environment=prod&tab=backend&from=${__from}&to=${__to}"
             },
             {
               "targetBlank": true,
@@ -1801,11 +1904,11 @@
                       },
                       "renameByName": {
                         "pod": "Pod",
-                        "Value #Restarts (max)": "Omstarter i perioden",
+                        "Value #Restarts (max)": "Omstarter",
                         "reason (uniqueValues)": "Registrerte årsaker",
                         "Value #Avsluttet (max)": "Siste avslutning",
-                        "Value #Exit (max)": "Siste exit-kode",
-                        "Value #Tidsstatus (max)": "Avslutningens tidsrom"
+                        "Value #Exit (max)": "Exit-kode",
+                        "Value #Tidsstatus (max)": "Tidsrom"
                       }
                     }
                   }
@@ -1845,7 +1948,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Avslutningens tidsrom"
+                      "options": "Tidsrom"
                     },
                     "properties": [
                       {
@@ -1883,6 +1986,78 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Pod"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 310
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Omstarter"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 90
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Registrerte årsaker"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 155
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Siste avslutning"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 165
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Exit-kode"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 75
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Tidsrom"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.width",
+                        "value": 150
+                      }
+                    ]
                   }
                 ]
               },
@@ -1892,7 +2067,7 @@
                 "enablePagination": false,
                 "sortBy": [
                   {
-                    "displayName": "Omstarter i perioden",
+                    "displayName": "Omstarter",
                     "desc": true
                   }
                 ]
@@ -1954,6 +2129,11 @@
               "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+            },
+            {
+              "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/syfo-oppfolgingsplan-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
             },
             {
               "targetBlank": true,
@@ -2088,6 +2268,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/syfo-oppfolgingsplan-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             },
@@ -2200,6 +2385,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/syfo-budstikka?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             },
@@ -2272,6 +2462,11 @@
                       "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/syfo-budstikka/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-budstikka&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/syfo-budstikka?environment=prod&tab=backend&from=${__from}&to=${__to}"
                     },
                     {
                       "targetBlank": true,
@@ -2380,6 +2575,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/syfo-oppfolgingsplan-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             },
@@ -2452,6 +2652,11 @@
                       "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/syfo-oppfolgingsplan-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
                     },
                     {
                       "targetBlank": true,
@@ -2676,6 +2881,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             }
@@ -2738,6 +2948,11 @@
                       "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
                     },
                     {
                       "targetBlank": true,
@@ -2885,6 +3100,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             },
@@ -2952,6 +3172,11 @@
                       "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/dinesykmeldte-backend?environment=prod&tab=backend&from=${__from}&to=${__to}"
                     },
                     {
                       "targetBlank": true,
@@ -3123,6 +3348,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Minne og ressurser",
+              "url": "/a/nais-apm-app/services/team-esyfo/syfomotebehov?environment=prod&tab=backend&from=${__from}&to=${__to}"
+            },
+            {
+              "targetBlank": true,
               "title": "Runbook",
               "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
             },
@@ -3197,6 +3427,11 @@
                       "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/syfomotebehov/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfomotebehov&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/syfomotebehov?environment=prod&tab=backend&from=${__from}&to=${__to}"
                     },
                     {
                       "targetBlank": true,
@@ -3770,10 +4005,10 @@
     },
     "links": [
       {
-        "title": "Feiloversikt",
+        "title": "Alle tjenesters feil",
         "tooltip": "",
         "type": "link",
-        "url": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt?var-runtime_environment=prod",
+        "url": "https://grafana.nav.cloud.nais.io/d/team-esyfo-feiloversikt?var-runtime_environment=prod&var-app=$__all",
         "targetBlank": true,
         "icon": "external link",
         "tags": [],

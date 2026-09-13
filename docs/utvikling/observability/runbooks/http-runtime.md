@@ -7,10 +7,11 @@ Bruk denne for apper som vises i Kontrollrommets flåtematrise eller detaljpanel
 1. Åpne [Kontrollrom](https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom/team-esyfo-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m).
 2. Se **Tjenester i produksjon** for hele flåten. Åpne **Undersøk en tjeneste** og velg tjeneste lokalt der. Tidsrommet er felles; velgeren påvirker ikke de andre radene.
 3. Les kolonnen **HTTP-målinger** først:
-   - `Mottar data`: aktuell SERVER-spanserie finnes. Det beviser måleserie, ikke trafikk.
-   - `Forsinket`: serien er sett siste 30 minutter, men er ikke aktuell.
-   - `Mangler`: ingen SERVER-spanserie siste 30 minutter.
-   - Panel-/datasourcefeil: queryen kunne ikke evalueres; ikke tolk dette som `MANGLER`.
+   - `Nyere data`: aktuell SERVER-spanserie finnes. Det beviser måleserie, ikke trafikk.
+   - `Sett siste 30 min`: serien er sett siste 30 minutter, men er ikke aktuell.
+   - `Ingen nyere data`: ingen SERVER-spanserie siste 30 minutter. Det kan skyldes lite trafikk eller manglende innsamling; det påviser ikke en appfeil.
+   - `Bakgrunnstjeneste`: HTTP-målinger inngår ikke i tjenestens kontrakt.
+   - Panel-/datasourcefeil: queryen kunne ikke evalueres; ikke tolk dette som `Ingen nyere data`.
 4. Kontroller at runtime-identiteten stemmer mellom inventar, deployment/container og APM `service_name`. Et mappinggap er et observabilityproblem, ikke en appfeil.
 
 ## 2. Avklar brukerimpact
@@ -22,9 +23,9 @@ Bruk denne for apper som vises i Kontrollrommets flåtematrise eller detaljpanel
 
 Bruk formuleringen **påvist impact** bare når telemetry faktisk viser mislykkede kall eller en domene-/pipelinekontrakt er brutt. Ellers: **ingen impact påvist** eller **ukjent**.
 
-### syfomotebehov: dagens regel og foreslått observasjonsregel
+### syfomotebehov: sist avstemte regel og ny observasjonsregel
 
-Det live-verifiserte registersnapshotet inneholder fortsatt alerten `HIGH RATIO OF HTTP 5XX RESPONSE`. Den bruker denne ingress-ratioen per `backend` i et femminuttersvindu:
+Det sist live-verifiserte registersnapshotet inneholder alerten `HIGH RATIO OF HTTP 5XX RESPONSE`. Snapshotet er eldre enn regelendringen i #756 og er ikke bevis på hva som er deployert nå. Ingress-regelen bruker denne ratioen per `backend` i et femminuttersvindu:
 
 ```promql
 100 * sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo", service="syfomotebehov", status=~"^5\\d\\d"}[5m]))
@@ -32,19 +33,19 @@ Det live-verifiserte registersnapshotet inneholder fortsatt alerten `HIGH RATIO 
 sum by (backend) (rate(nginx_ingress_controller_requests{namespace="team-esyfo", service="syfomotebehov"}[5m]))
 ```
 
-- Kjør samme uttrykk for samme tidsrom og backend. Dagens grense på `> 2 %` er en legacy-terskel, ikke en SLO.
+- Kjør samme uttrykk for samme tidsrom og backend. Grensen på `> 2 %` er en legacy-terskel, ikke en SLO.
 - Regelen mangler minimumstrafikk. Én mislykket request ved lav trafikk kan derfor utløse den.
 - Manglende nevner eller `No data` er ukjent, ikke null feil eller frisk tjeneste.
 - Sammenlign med OTel/APM for brukerimpact, men ikke likestill ingress-5xx med `STATUS_CODE_ERROR` i spans.
 
-[syfomotebehov-PR #756](https://github.com/navikt/syfomotebehov/pull/756) foreslår å erstatte denne med en urutet observasjonsregel (`shadow`) basert på produksjonens SERVER-spans. Kandidaten krever samtidig:
+[syfomotebehov-PR #756](https://github.com/navikt/syfomotebehov/pull/756) ble merget 4. september 2026 og erstatter denne i kildekoden med en urutet observasjonsregel (`shadow`) basert på produksjonens SERVER-spans. Regelen krever samtidig:
 
 - mer enn 2 prosent HTTP 5xx i et 15-minuttersvindu,
 - minst 20 SERVER-spans med HTTP-status fra 1xx til 5xx,
 - en beregnet økning på minst 3 HTTP 5xx SERVER-spans,
 - og at alle vilkårene er sanne sammenhengende i 5 minutter.
 
-Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende totalserie forblir `No data`. SERVER-spans uten `http_response_status_code` er ikke med i nevneren og må behandles som et telemetrygap, ikke som vellykkede kall. Regelen er merket for observasjonsmodus (`shadow`) og ikke-avbrytende oppfølging (`ticket`); den er ikke pager eller bevis på brukerimpact alene. Den generiske 4xx-regelen fjernes også i #756, men først når endringen faktisk er deployert. Frem til #756 er merget, deployert og live-avstemt skal registeret og hendelseshåndteringen fortsatt behandle ingress-reglene som de faktiske live-reglene. Etter deploy må kilde-SHA, fingerprint, timing og live-observasjon oppdateres samlet i alert-registeret.
+Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende totalserie forblir `No data`. SERVER-spans uten `http_response_status_code` er ikke med i nevneren og må behandles som et telemetrygap, ikke som vellykkede kall. Regelen er merket for observasjonsmodus (`shadow`) og ikke-avbrytende oppfølging (`ticket`); den er ikke pager eller bevis på brukerimpact alene. Den generiske 4xx-regelen er også fjernet fra kildekoden i #756. Merge alene er ikke en live-avstemming: kontroller deploy og faktiske regler i NAIS før hendelseshåndteringen bygger på den nye definisjonen. Registeret beholder siste attesterte snapshot inntil kilde-SHA, fingerprint, timing og live-observasjon kan oppdateres samlet.
 
 ## 3. Avklar teknisk helse
 
@@ -58,7 +59,7 @@ Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende tot
 ### Restarts: årsak før tiltak
 
 - **15m** viser nylig aktivitet; **24t** er historikk som også kan inkludere erstattede podder. Prometheus estimerer tellerøkningen, så verdiene er ikke en eksakt hendelseslogg.
-- **OOMKilled:** sammenhold containerens minnebruk og minnegrense. For JVM-apper er heap bare en del av minnet; se også native minne, tråder og buffere. Ikke øk grensen eller anta minnelekkasje uten å undersøke forløpet.
+- **OOMKilled:** åpne **Minne og ressurser** fra detaljpanelet, utvid **Runtime — process resources** i APM og sammenhold containerens minnebruk og minnegrense i samme tidsrom. For JVM-apper er heap bare en del av minnet; se også native minne, tråder og buffere. Ikke øk grensen eller anta minnelekkasje uten å undersøke forløpet.
 - **Error:** åpne poddens logger rundt hendelsen. En ikke-null exit-status sier ikke alene om feilen skyldtes oppstart, en dependency, prosesskrasj eller en probe.
 - **Ukjent årsak:** manglende metrikk er ikke bevis på normal deploy. Siste avslutningsårsak på en nåværende pod kan være eldre enn tellevinduet. Historiske podlogger kan også være utilgjengelige.
 - Vanlig pod-utskifting eller skalering er ikke en containerrestart. Klare replikaer kan likevel falle kort under en utrulling; vurder grafen over tid og eventuell brukerimpact sammen.
@@ -84,6 +85,6 @@ Uttrykket nullfyller bare 5xx-telleren når totaltrafikken finnes; manglende tot
 Kjør som tabletop eller i dev med en ufarlig testtjeneste:
 
 1. Bruk et tidsrom med kjent trafikk og bekreft APM-/logg-/Feiloversikt-lenkene.
-2. Bruk et tidsrom eller en tjeneste uten SERVER-serie og bekreft at den står som `Forsinket`/`Mangler`, ikke grønn.
+2. Bruk et tidsrom eller en HTTP-tjeneste uten aktuell SERVER-serie og bekreft at den står som `Sett siste 30 min`/`Ingen nyere data`, uten å påstå verken feil eller frisk tjeneste.
 3. Bruk en kjent runtimefeil uten OTel-feil og bekreft at sannhetene ikke kollapses.
 4. Avbryt testen hvis den krever produksjonsfeil, ekte payload eller personidentifikator.

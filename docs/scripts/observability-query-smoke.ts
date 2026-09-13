@@ -56,8 +56,21 @@ const canonicalError = {
 	upstream_status: 503,
 	trace_id: safeTrace,
 	message: "Synthetic message that must not enter summary tables",
+	err: {
+		type: "Error",
+		message: "Synthetic dependency explanation",
+		stack: "Synthetic safe stack",
+		cause: { code: "ETIMEDOUT" },
+	},
+	errors: [
+		{
+			message: "Synthetic GraphQL diagnostic",
+			extensions: { code: "INVALID_ARGUMENT" },
+		},
+	],
 };
-const systemDenial = "System user does not have access to nav_syfo_oppgi-narmesteleder resource";
+const systemDenial =
+	"System user does not have access to nav_syfo_oppgi-narmesteleder resource";
 type Fixture = {
 	labels?: Record<string, string>;
 	fields?: Record<string, unknown>;
@@ -72,7 +85,7 @@ const fixtures: Fixture[] = [
 			event_type: undefined,
 			exception_type: "IllegalStateException",
 			error_code: "500",
-			trace_id: undefined,
+			trace_id: secondTrace,
 		},
 	},
 	{
@@ -186,17 +199,44 @@ async function checkLogQueries(url: string) {
 		body: JSON.stringify({
 			streams: [
 				...["esyfo-narmesteleder", "wrong-denial-service"].map((app) => ({
-					stream: { ...runtimeLabels, service_name: app, k8s_container_name: app, detected_level: "warn" },
+					stream: {
+						...runtimeLabels,
+						service_name: app,
+						k8s_container_name: app,
+						detected_level: "warn",
+					},
 					values: [
-						[String(BigInt(now - 60000) * 1000000n), `Unhandled API exception\nForbiddenException: ${systemDenial}`],
-						[String(BigInt(now - 30000) * 1000000n), JSON.stringify({ event_type: "api_request_rejected", rejection_reason: "INVALID_INPUT", message: systemDenial })],
+						[
+							String(BigInt(now - 60000) * 1000000n),
+							`Unhandled API exception\nForbiddenException: ${systemDenial}`,
+						],
+						[
+							String(BigInt(now - 30000) * 1000000n),
+							JSON.stringify({
+								event_type: "api_request_rejected",
+								rejection_reason: "INVALID_INPUT",
+								message: systemDenial,
+							}),
+						],
 					],
 				})),
 				{
-					stream: { service_namespace: "team-esyfo", service_name: "pod-link-fixture", k8s_cluster_name: "prod" },
+					stream: {
+						service_namespace: "team-esyfo",
+						service_name: "pod-link-fixture",
+						k8s_cluster_name: "prod",
+					},
 					values: [
-						[String(BigInt(now - 60000) * 1000000n), "Synthetic previous container startup", { k8s_pod_name: "old-pod" }],
-						[String(BigInt(now - 30000) * 1000000n), "Synthetic replacement startup", { k8s_pod_name: "replacement-pod" }],
+						[
+							String(BigInt(now - 60000) * 1000000n),
+							"Synthetic previous container startup",
+							{ k8s_pod_name: "old-pod" },
+						],
+						[
+							String(BigInt(now - 30000) * 1000000n),
+							"Synthetic replacement startup",
+							{ k8s_pod_name: "replacement-pod" },
+						],
 					],
 				},
 				...["error", "warn"].map((level) => ({
@@ -225,6 +265,32 @@ async function checkLogQueries(url: string) {
 						],
 					],
 				})),
+				{
+					stream: { ...runtimeLabels, service_name: "trace-subset-fixture" },
+					values: [
+						safeTrace,
+						undefined,
+						"00000000000000000000000000000000",
+						"invalid",
+					].map((trace_id, index) => [
+						String(BigInt(now - 120000) * 1000000n + BigInt(index)),
+						JSON.stringify({ ...canonicalError, trace_id }),
+					]),
+				},
+				{
+					stream: { ...runtimeLabels, service_name: "details-fixture" },
+					values: [
+						{ event_type: "details_missing", trace_id: safeTrace },
+						{
+							event_type: "http_status_only",
+							upstream_status: 503,
+							trace_id: safeTrace,
+						},
+					].map((fields, index) => [
+						String(BigInt(now - 120000) * 1000000n + BigInt(index)),
+						JSON.stringify(fields),
+					]),
+				},
 				{
 					stream: { kind: "exception", service_name: "dialogmote-frontend" },
 					values: browserFixtures.map((line, index) => [
@@ -283,6 +349,7 @@ async function checkLogQueries(url: string) {
 	// Link fields have no text-changing Grafana mappings. Their query labels are
 	// therefore the same strings that a person sees and follows in the table.
 	const checkRowLinks = async (rows: Vector[], link: string) => {
+		const records: Record<string, unknown>[] = [];
 		for (const { metric, value } of rows) {
 			const materialized = link
 				.replace(/\$\{__data\.fields\["([^"]+)"\]\}/g, (_match, field) => {
@@ -319,7 +386,40 @@ async function checkLogQueries(url: string) {
 				Number(value[1]),
 				`The log link must find every counted event for ${JSON.stringify(metric)}`,
 			);
+			for (const { stream, values } of logs) {
+				assert.ok(
+					!Object.keys(stream).some(
+						(field) => field.startsWith("safe_") || field.endsWith("_display"),
+					),
+					"Explore must not expose derived query helpers",
+				);
+				for (const [, line] of values) {
+					if (line.includes('"event_type":"fixture_failed"')) {
+						const record = JSON.parse(line);
+						records.push(record);
+						assert.equal(
+							record.message,
+							canonicalError.message,
+							"Original diagnostic message survives helper cleanup",
+						);
+						if (metric.service_name !== "trace-subset-fixture") {
+							assert.equal(record.trace_id, safeTrace);
+						}
+						assert.deepEqual(
+							record.err,
+							canonicalError.err,
+							"Native err, stack and cause survive helper cleanup",
+						);
+						assert.deepEqual(
+							record.errors,
+							canonicalError.errors,
+							"GraphQL diagnostics survive helper cleanup",
+						);
+					}
+				}
+			}
 		}
+		return records;
 	};
 	const errors: Vector[] = await request(runtimeByClassificationQuery);
 	assert.equal(
@@ -341,10 +441,49 @@ async function checkLogQueries(url: string) {
 	);
 	assert.equal(canonical?.metric.error_code_display, "DEPENDENCY_UNAVAILABLE");
 	assert.equal(canonical?.metric.operation_display, "fetch_record");
+	assert.equal(
+		canonical?.metric.error_details,
+		"DEPENDENCY_UNAVAILABLE · fetch_record",
+	);
 	assert.ok(
 		errors.some(
 			({ metric }) => metric.error_type_display === "IllegalStateException",
 		),
+	);
+	assert.equal(
+		errors.find(({ metric }) => metric.error_level === "fatal")?.metric
+			.error_details,
+		"FATAL",
+		"Severity without code or operation has no trailing separator",
+	);
+	const emptyDetails: Vector[] = await request(
+		runtimeByClassificationQuery,
+		"details-fixture",
+	);
+	assert.equal(total(emptyDetails), 2);
+	assert.ok(
+		emptyDetails.every(({ metric }) => !metric.error_details),
+		"Absent details remain empty, not a separator or synthetic value",
+	);
+	const detailsTraces: Stream[] = await request(
+		tracedRuntimeErrorsQuery,
+		"details-fixture",
+		true,
+	);
+	assert.equal(detailsTraces.flatMap(({ values }) => values).length, 2);
+	assert.equal(
+		detailsTraces.find(
+			({ stream }) => stream.error_type_display === "http_status_only",
+		)?.stream.error_details,
+		"HTTP 503",
+		"Upstream status without other details has no leading separator",
+	);
+	assert.equal(
+		detailsTraces.find(
+			({ stream }) => stream.error_type_display === "details_missing",
+		)?.stream.error_details ?? "",
+		"",
+		"Trace records without details remain empty",
 	);
 	assert.ok(
 		errors.some(({ metric }) => metric.error_type_display === "NestedError"),
@@ -361,6 +500,43 @@ async function checkLogQueries(url: string) {
 		/invalid event type|invalid code|invalid operation|Synthetic message/,
 	);
 	await checkRowLinks(errors, runtimeErrorGroupDataLink());
+	await checkRowLinks(
+		errors.filter(
+			({ metric }) => metric.error_type_display === "fixture_failed",
+		),
+		runtimeErrorGroupDataLink(true),
+	);
+	const mixedTraces: Vector[] = await request(
+		runtimeByClassificationQuery,
+		"trace-subset-fixture",
+	);
+	assert.equal(total(mixedTraces), 4);
+	const mixedRecords = await checkRowLinks(
+		mixedTraces,
+		runtimeErrorGroupDataLink(),
+	);
+	assert.deepEqual(
+		new Set(mixedRecords.map(({ trace_id }) => trace_id)),
+		new Set([
+			safeTrace,
+			undefined,
+			"00000000000000000000000000000000",
+			"invalid",
+		]),
+		"The normal log link preserves every original trace field, including missing or invalid IDs",
+	);
+	const tracedRecords = await checkRowLinks(
+		mixedTraces.map(({ metric, value }) => ({
+			metric,
+			value: [value[0], "1"],
+		})),
+		runtimeErrorGroupDataLink(true),
+	);
+	assert.deepEqual(
+		tracedRecords.map(({ trace_id }) => trace_id),
+		[safeTrace],
+		"The trace action opens only the valid non-zero trace subset of the same group",
+	);
 	const contractGaps: Vector[] = await request(runtimeContractGapQuery);
 	assert.equal(total(contractGaps), 5);
 	await checkRowLinks(contractGaps, runtimeContractGapDataLink());
@@ -380,12 +556,35 @@ async function checkLogQueries(url: string) {
 		rejections.map(({ metric }) => metric.rejection_reason_display).sort(),
 		["INVALID_INPUT", "Årsak ikke oppgitt"],
 	);
+	assert.ok(
+		rejections.every(
+			({ metric }) =>
+				metric.error_details === "DEPENDENCY_UNAVAILABLE · fetch_record",
+		),
+		"API rejection details retain code and operation without changing group counts",
+	);
 	await checkRowLinks(rejections, runtimeRejectionDataLink());
-	const systemRejections: Vector[] = await request(runtimeRejectionsQuery, "esyfo-narmesteleder");
-	assert.equal(total(systemRejections), 2, "Legacy denial and canonical event count once each");
-	assert.deepEqual(systemRejections.map(({ metric }) => metric.rejection_reason_display).sort(), ["INVALID_INPUT", "Systembrukertilgang ikke innvilget"]);
+	const systemRejections: Vector[] = await request(
+		runtimeRejectionsQuery,
+		"esyfo-narmesteleder",
+	);
+	assert.equal(
+		total(systemRejections),
+		2,
+		"Legacy denial and canonical event count once each",
+	);
+	assert.deepEqual(
+		systemRejections
+			.map(({ metric }) => metric.rejection_reason_display)
+			.sort(),
+		["INVALID_INPUT", "Systembrukertilgang ikke innvilget"],
+	);
 	await checkRowLinks(systemRejections, runtimeRejectionDataLink());
-	assert.equal(total(await request(runtimeRejectionsQuery, "wrong-denial-service")), 1, "Legacy phrase must not classify another service; canonical event still counts");
+	assert.equal(
+		total(await request(runtimeRejectionsQuery, "wrong-denial-service")),
+		1,
+		"Legacy phrase must not classify another service; canonical event still counts",
+	);
 	const traces: Stream[] = await request(
 		tracedRuntimeErrorsQuery,
 		service,
@@ -393,7 +592,11 @@ async function checkLogQueries(url: string) {
 	);
 	assert.equal(
 		traces.reduce((count, { values }) => count + values.length, 0),
-		3,
+		4,
+	);
+	assert.ok(
+		traces.some(({ stream }) => stream.error_details.startsWith("CRITICAL")),
+		"Trace details retain severity, not only code and operation",
 	);
 	assert.deepEqual(
 		[...new Set(traces.map(({ stream }) => stream.safe_trace_id))].sort(),
@@ -444,18 +647,48 @@ async function checkLogQueries(url: string) {
 		["Produksjon", "Test", "Ukjent"],
 	);
 	await checkRowLinks(browserRows, browserErrorGroupDataLink());
+	for (const { metric } of browserRows) {
+		const apm = new URL(
+			metric.browser_apm_path,
+			"https://grafana.example.test",
+		);
+		assert.equal(
+			apm.pathname,
+			"/a/nais-apm-app/services/team-esyfo/dialogmote-frontend",
+		);
+		assert.equal(apm.searchParams.get("tab"), "frontend");
+		assert.equal(
+			apm.searchParams.get("environment"),
+			(
+				{ Produksjon: "prod", Test: "dev", Ukjent: null } as Record<
+					string,
+					string | null
+				>
+			)[metric.browser_environment_display],
+		);
+	}
 	assert.ok(
 		(await browser("prod-gcp")).some(
 			({ metric }) => metric.browser_type_display === "Annen / ikke oppgitt",
 		),
 	);
 	assert.deepEqual(await browser("absent-environment"), []);
-	const podLink = new URL(runtimePodLogsDataLink("pod-link-fixture", "old-pod"), "https://grafana.example.test");
-	const podQuery = JSON.parse(podLink.searchParams.get("panes")!).A.queries[0].expr;
+	const podLink = new URL(
+		runtimePodLogsDataLink("pod-link-fixture", "old-pod"),
+		"https://grafana.example.test",
+	);
+	const podQuery = JSON.parse(podLink.searchParams.get("panes")!).A.queries[0]
+		.expr;
 	const podLogs: Stream[] = await request(podQuery, service, true);
-	assert.equal(podLogs.flatMap(({ values }) => values).length, 1, "Pod link must find structured metadata, excluding the replacement pod");
+	assert.equal(
+		podLogs.flatMap(({ values }) => values).length,
+		1,
+		"Pod link must find structured metadata, excluding the replacement pod",
+	);
 	assert.equal(podLogs[0].values[0][1], "Synthetic previous container startup");
-	console.log("Loki: levels, signatures, exclusions, rejections, traces, browser environments, row-to-log parity, pod metadata links and empty results passed");
+	console.log(
+		"Loki: levels, signatures, exclusions, rejections, traces, browser environments, row-to-log parity, pod metadata links and empty results passed",
+	);
 }
 
 type Sample = { labels: string; value: number };
@@ -705,23 +938,55 @@ async function checkMetricQueries(directory: string) {
 					name: "Latest exit code follows the newest termination, not the largest historical code",
 					interval: "1m",
 					input_series: [
-						...[{ instance: "old-exporter", time: 1200, code: 143 }, { instance: "new-exporter", time: 1800, code: 137 }].flatMap(({ instance, time, code }) => [
-							{ series: `kube_pod_container_status_last_terminated_timestamp{${reasonLabels},pod="old",instance="${instance}"}`, values: `${time}+0x30 stale _x29` },
-							{ series: `kube_pod_container_status_last_terminated_exitcode{${reasonLabels},pod="old",instance="${instance}"}`, values: `${code}+0x30 stale _x29` },
+						...[
+							{ instance: "old-exporter", time: 1200, code: 143 },
+							{ instance: "new-exporter", time: 1800, code: 137 },
+						].flatMap(({ instance, time, code }) => [
+							{
+								series: `kube_pod_container_status_last_terminated_timestamp{${reasonLabels},pod="old",instance="${instance}"}`,
+								values: `${time}+0x30 stale _x29`,
+							},
+							{
+								series: `kube_pod_container_status_last_terminated_exitcode{${reasonLabels},pod="old",instance="${instance}"}`,
+								values: `${code}+0x30 stale _x29`,
+							},
 						]),
 					],
 					promql_expr_test: [
 						{ query: podTerminationTimestampQuery, expected: 1800000 },
 						{ query: podTerminationExitCodeQuery, expected: 137 },
-						{ query: podTerminationInPeriodQuery.replaceAll("${__from}", "0"), expected: 1 },
-						{ query: podTerminationInPeriodQuery.replaceAll("${__from}", "2400000"), expected: 0 },
-					].map(({ query, expected }) => ({ expr: renderQuery(query), eval_time: "60m", exp_samples: [{ labels: `{container="${service}",pod="old"}`, value: expected }] })),
+						{
+							query: podTerminationInPeriodQuery.replaceAll("${__from}", "0"),
+							expected: 1,
+						},
+						{
+							query: podTerminationInPeriodQuery.replaceAll(
+								"${__from}",
+								"2400000",
+							),
+							expected: 0,
+						},
+					].map(({ query, expected }) => ({
+						expr: renderQuery(query),
+						eval_time: "60m",
+						exp_samples: [
+							{ labels: `{container="${service}",pod="old"}`, value: expected },
+						],
+					})),
 				},
 				{
 					name: "Missing termination data remains unknown",
 					interval: "1m",
 					input_series: [],
-					promql_expr_test: [podTerminationTimestampQuery, podTerminationExitCodeQuery, podTerminationInPeriodQuery.replaceAll("${__from}", "0")].map(query => ({ expr: renderQuery(query), eval_time: "60m", exp_samples: [] })),
+					promql_expr_test: [
+						podTerminationTimestampQuery,
+						podTerminationExitCodeQuery,
+						podTerminationInPeriodQuery.replaceAll("${__from}", "0"),
+					].map((query) => ({
+						expr: renderQuery(query),
+						eval_time: "60m",
+						exp_samples: [],
+					})),
 				},
 			],
 		}),

@@ -7,7 +7,7 @@
 ## Slik bruker vi det
 
 1. Start i **Oversikt**, som er standardfanen. Tabellen **Tjenester i produksjon** beholder forventede tjenester selv når måledata mangler. Bruk **Undersøk tjenesten** fra tabellen for å åpne riktig tjeneste direkte.
-2. Fanen **Undersøk en tjeneste** har en lokal tjenestevelger og lenker til logger, APM, Feiloversikt og runbook. Valget endrer ikke produksjonsoversikten. Replikaer, omstarter og logger vises for valgt tjeneste; HTTP-grafer vises bare for tjenester med HTTP-målinger som del av kontrakten.
+2. Fanen **Undersøk en tjeneste** har en lokal tjenestevelger og lenker til logger, APM, minne/ressurser, Feiloversikt og runbook. Valget endrer ikke produksjonsoversikten. Lenken **Alle tjenesters feil** øverst åpner hele teamets feiloversikt; lenkene i detaljpanelene beholder valgt tjeneste og tidsrom. Replikaer, omstarter og logger vises for valgt tjeneste; HTTP-grafer vises bare for tjenester med HTTP-målinger som del av kontrakten.
 3. Følg tjenestens egne signaler når de finnes: meldingsbehandling for Oppfølgingsplan og Budstikka, varslingsjobben for esyfovarsel og rutespesifikke svar for Dine sykmeldte. Målegap står ved tjenesten i oversikten, ikke i en egen statusrad.
 
 Det er ingen globale område- eller tjenestefiltre. Oversikten viser alle tjenestene uten sidebytte. Tidsrommet er felles: hendelsestall følger tidsvelgeren, både i oversikten og under **Undersøk en tjeneste**. Toppkortene teller hendelser, ikke berørte tjenester. Tabellen viser fordelingen per tjeneste.
@@ -19,8 +19,8 @@ Tilstandstall for replikaer, køstørrelse og tid siden poll viser siste måling
 | Signal | Tolkning |
 |---|---|
 | Feilmarkerte kall | Inngående SERVER-spans med OTel `STATUS_CODE_ERROR`. Ikke automatisk HTTP 5xx eller påvist brukerimpact. |
-| Loggfeil i perioden | Antall logghendelser med `error`, `critical` eller `fatal`, uavhengig av HTTP-sporene. |
-| Omstarter i perioden | Estimert antall containeromstarter i valgt tidsrom. Gult er et undersøkelsessignal, ikke en nedetidsalarm. |
+| Loggfeil | Antall logghendelser med `error`, `critical` eller `fatal` i valgt tidsrom, uavhengig av HTTP-sporene. |
+| Omstarter | Estimert antall containeromstarter i valgt tidsrom. Gult er et undersøkelsessignal, ikke en nedetidsalarm. |
 | Klare replikaer | Klare i forhold til ønskede replikaer. Et øyeblikksbilde, ikke målt tilgjengelighet. |
 | HTTP-målinger | Om HTTP-måleserier finnes ved periodens slutt eller nylig er observert. Fravær kan skyldes lite trafikk eller manglende innsamling, ikke nødvendigvis en feil. |
 
@@ -34,7 +34,7 @@ Vanlig oppretting, fjerning eller erstatning av podder ved deploy og skalering �
 
 Podtabellen viser omstarter og **avslutningsårsaker observert i målingene i valgt tidsrom**, også for podder som senere ble erstattet. Flere årsaker samles på én rad per pod, uten å summere restarttallet flere ganger. Årsakene er historiske observasjoner og gjelder ikke nødvendigvis siste avslutning eller alle omstarter i perioden. **Ikke registrert** betyr at en restartmåling finnes, men at ingen årsak ble funnet i perioden.
 
-**Siste avslutning** og **Siste exit-kode** hentes fra `kube_pod_container_status_last_terminated_timestamp` og `kube_pod_container_status_last_terminated_exitcode`. De finnes også historisk for erstattede podder. Ved flere eksportører velges serien med nyeste registrerte avslutning, ikke den høyeste historiske exit-koden. **Avslutningens tidsrom** markerer om avslutningen er eldre enn valgt tidsrom. Manglende målinger forblir **Ukjent**; dette er fortsatt ikke en komplett hendelseslogg.
+**Siste avslutning** og **Exit-kode** gjelder den siste registrerte avslutningen og hentes fra `kube_pod_container_status_last_terminated_timestamp` og `kube_pod_container_status_last_terminated_exitcode`. De finnes også historisk for erstattede podder. Ved flere eksportører velges serien med nyeste registrerte avslutning, ikke den høyeste historiske exit-koden. **Tidsrom** markerer om avslutningen er eldre enn valgt tidsrom. Manglende målinger forblir **Ukjent**; dette er fortsatt ikke en komplett hendelseslogg. **Minne og ressurser** åpner APMs Backend-fane for samme tjeneste og tidsrom. Utvid **Runtime — process resources** for containerens minnebruk og grense, adskilt fra JVM-heap når slike målinger finnes.
 
 Podlenken åpner et ferdig Explore-søk med samme pod og tidsrom. `k8s_pod_name` er strukturert metadata i produksjons-Loki og filtreres etter stream-selektoren, ikke som en indekslabel. Logger fra tidligere containeroppstarter i samme pod beholdes. En avslutning før tidsrommet krever et utvidet tidsvalg for å se de eldre loggene.
 
