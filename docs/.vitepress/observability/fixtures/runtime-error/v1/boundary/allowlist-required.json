@@ -1,0 +1,6 @@
+{
+	"event_type": "sykmelding_lookup_failed_deadbeef",
+	"operation": "unknown_but_well_formed_operation",
+	"error_code": "UNKNOWN_BUT_WELL_FORMED_CODE",
+	"exception_type": "UnknownButWellFormedError"
+}

@@ -1,0 +1,13 @@
+{
+	"level": 50,
+	"time": 1788182400000,
+	"service": "sample-service",
+	"event_type": "sykmelding_lookup_failed",
+	"error_code": "UPSTREAM_HTTP_ERROR",
+	"operation": "hent_sykmelding",
+	"upstream_status": 502,
+	"exception_type": "UpstreamHttpException",
+	"logger_name": "no.nav.syfo.SykmeldingClient",
+	"trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+	"msg": "Kunne ikke hente sykmelding"
+}
