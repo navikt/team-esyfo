@@ -1,172 +1,114 @@
 # Runtime-feilkontrakt
 
-Denne kontrakten definerer den minste kontraktkonforme errorloggen som gjør en
-runtimefeil grupperbar i [Feiloversikt](./feildrilldown). Den gjelder nye og
-endrede errorlogger i Team eSyfos Node- og JVM-apper.
+Felles felt gjør feil grupperbare i [Feiloversikt](./feildrilldown), mens den
+vanlige loggen forklarer hva som skjedde. Kontrakten gjelder nye og endrede
+serverlogger i Team eSyfos apper. Den erstatter ikke loggeren eller APM.
 
-## Feltkontrakt
+**Skal du legge til en logg?** Følg [oppskriften for gode logger](./gode-logger).
 
-| Felt | Krav | Semantikk |
+## Dette håndhever vi
+
+- Ett versjonert [JSON Schema v1.0.0](/contracts/runtime-error/v1.0.0/schema.json)
+  for form, JSON-typer og grenser.
+- En liten, kodeeid katalog i hver app for hendelser, operasjoner og koder.
+- Test av den **faktisk serialiserte loggen** i appens CI, med
+  [validatoren](/contracts/runtime-error/v1.0.0/validate.mjs) eller en
+  draft-07-kompatibel JSON Schema-validator i appens eksisterende testspråk.
+
+Vi lager ikke en ny runtime-logger, npm-/Maven-pakke, generator eller et eget
+repo nå. Katalogen gir lokale konstanter/enumverdier; schema og tester fanger
+avvik etter serialisering. Ny hendelse i en registrert app krever derfor
+verken dashboardendring eller sentral bibliotekrelease. En liten delt
+testpakke kan vurderes hvis pilotene viser konkret gjentakelse.
+
+## Felt og betydning
+
+Alle identitetsfelt er kodeeide konstanter, aldri verdier bygget fra en request,
+feilmelding eller respons. Valgfrie felt utelates når de ikke tilfører noe.
+
+| Felt | Krav og format | Hva forteller det? |
 |---|---|---|
-| `event_type` | Obligatorisk | Kodeeid, stabil hendelsestype fra et lukket sett, for eksempel `graphql_request_failed`. Maks 80 tegn og format `^[a-z][a-z0-9_.-]{0,79}$`. Verdien skal aldri bygges fra runtime-data. |
-| `error_code` | Valgfritt | Stabil enum-/protokollkode, for eksempel `INTERNAL_SERVER_ERROR`. Ikke exception-melding eller ekstern respons. |
-| `operation` | Valgfritt | Stabil logisk operasjon fra et lukket sett, for eksempel `sykmelding_by_id`. Bruk aldri rått GraphQL-navn, URL, path med ID eller query-parametre. |
-| `upstream_status` | Valgfritt | HTTP-status fra tjenesten operasjonen kalte, som JSON-number fra og med `100` til og med `599`. Feltet er diagnostisk kontekst, ikke feiltype eller `error_code`, og utelates når det ikke kom en HTTP-respons. |
-| `exception_type` | Valgfritt | Kun normalisert, kodeeid type-/klassenavn fra et lukket sett, for eksempel `IllegalStateException` eller `TypeError`; aldri ukontrollert `error.name`, melding eller stack. |
-| `logger_name` | Valgfritt | Frameworkets stabile loggernavn. JVM-encoder fyller ofte dette automatisk; fravær i Node er normalt. |
-| `trace_id` | Påkrevd når tracing finnes | W3C/OTel trace-ID fra aktiv span. Ikke generer en erstatning og ikke bruk domene-, person- eller request-ID. |
+| `event_type` | Påkrevd. `^[a-z][a-z0-9_.-]{0,79}$` | Hva feilet? Eksempel: `plan_creation_failed`. Ikke det generiske `runtime_error`. |
+| `operation` | Valgfritt. Samme format som `event_type`. | Hva forsøkte vi å gjøre? Eksempel: `create_plan`. Utelat hvis det bare gjentar hendelsen. |
+| `error_code` | Valgfritt. `^[A-Z][A-Z0-9_]{1,79}$` | Stabil teknisk kategori eller protokollkode, som `NETWORK_ERROR`. Ikke en status som streng. |
+| `upstream_status` | Valgfritt. JSON-heltall 100–599. | HTTP-status fra tjenesten vi kalte. Utelat ved DNS-/nettverksfeil uten respons. |
+| `exception_type` | Valgfritt. `^([A-Za-z][A-Za-z0-9_.:$]{0,143})?(Error|Exception)$` | Kodeeid exceptionkategori, som `TypeError`. Ukjent dynamisk klassenavn trenger ikke en egen dimensjon. |
+| `rejection_reason` | Påkrevd for `api_request_rejected`. Samme format som `error_code`. | Kodeeid årsak til en avvisning, som `SYSTEM_USER_ACCESS_NOT_GRANTED`. |
+| `logger_name` | Valgfritt. 1–160 tegn. | Frameworkets stabile loggernavn. Fravær i Node er normalt. |
+| `trace_id` | Når aktiv tracing finnes. 32 små hextegn, ikke bare nuller. | Aktiv W3C/OTel trace-ID. Aldri en egen ID eller en erstatning generert av appen. |
 
-Miljø, tjeneste, namespace og cluster kommer fra plattformlabels som
-`k8s_cluster_name`, `service_name` og `service_namespace`. Appen skal ikke
-duplisere dem i loggpayloaden.
+`event_type`, `operation`, `error_code`, `exception_type` og `rejection_reason`
+må i tillegg finnes i appens lokale katalog. Regex alene beviser ikke at en
+verdi er kodeeid eller har lav kardinalitet.
 
-## Eierskap og leveransemodell
+Tjeneste, miljø, cluster og namespace kommer fra plattformlabels som
+`service_name`, `k8s_cluster_name` og `service_namespace`. Ikke legg på nye
+duplikatfelter for dashboardets skyld.
 
-`team-esyfo` eier den normative, funksjonelle kontrakten, migreringsstatusen og
-dashboardtolkningen. Runtimeinventar, dashboardkilder, alert-register og
-runbooks blir også her, fordi de utgjør teamets operative kontrollplan. Et
-senere verktøyrepo er ikke et nytt hjem for «all observability».
+## ERROR, WARN og én logg per feil
 
-Hvert apprepo eier sitt eget lukkede sett av `event_type`-verdier og
-konformitetstestene ved de faktiske loggpunktene. En ny domenespesifikk
-hendelsestype skal derfor ikke kreve release av en sentral runtimepakke.
+**ERROR:** Laget som avgjør at en logisk operasjon har feilet terminalt, logger
+én hendelse. Underliggende lag propagerer feilen. En retry som senere lykkes
+er ikke en ny terminal errorhendelse.
 
-Første utrulling bruker appenes eksisterende Pino- og SLF4J/Logback-API-er. Det
-publiseres ikke en npm- eller Maven-runtimeavhengighet før minst én Node- og én
-JVM-pilot har bevist et stabilt felles adaptergrensesnitt. Når den repeterte
-mekanikken er kjent, flyttes maskinlesbart schema, generator, reusable
-GitHub Action og eventuelle buildverktøy til et eget observability-repo. Dette
-repoet skal da være eneste kilde for de kjørbare artefaktene, mens `team-esyfo`
-beholder funksjonell dokumentasjon, dashboard og en pinnet kontraktversjon.
+**WARN:** Forventet domeneavvisning og ordinær 4xx er ikke automatisk en feil.
+Når en API-avvisning er relevant å følge opp, bruk `event_type=api_request_rejected`
+og en konkret `rejection_reason` fra appens lukkede katalog. Bare denne
+eksplisitte hendelsen inngår i dashboardets registrerte API-avvisninger; alle
+WARN-logger og alle 4xx telles ikke. Det finnes én midlertidig adapter for den
+eldre systembrukerloggen i esyfo-narmesteleder. Nye apper skal ikke bruke den.
 
-Målbildet er schema-first med genererte lokale TS-/Kotlin-typer og validering av
-faktisk serialisert JSON i CI. Genererte kilder kan committes i apprepoet, slik
-at applikasjonen får compile-time-sikkerhet uten en ny produksjonsdependency.
-En collector kan senere normalisere legacy og lage dekningsmetrikk, men skal
-aldri gjette `event_type` fra melding eller stack.
+Loggnivå og duplikater testes ved loggpunktet. Schemaet krever ikke ett bestemt
+`level`-format, siden Pino og Logback serialiserer nivå ulikt. En teknisk svikt
+hos en tilgangstjeneste må ikke omskrives til «brukeren mangler tilgang».
 
-### Én feil, én semantisk errorlogg
+## Behold diagnostikk, ikke persondata
 
-Laget som avgjør at den logiske operasjonen har feilet terminalt, logger én
-errorhendelse. Underliggende lag enten propagerer feilen eller måler retry uten
-å logge samme feil på nytt. En retry som senere lykkes er ikke en ny terminal
-errorhendelse. Forventede domeneavvisninger og ordinære 4xx er heller ikke
-automatisk runtimefeil.
+Signaturfeltene skal aldri inneholde fødselsnummer, aktør-ID, UUID, e-post,
+request-ID, URL, path med ID, query-parametre, fritekst, melding, stack eller
+request-/response-body. Vanlig loggtekst, exception, stack og `cause` kan
+fortsatt være nødvendig diagnostikk **utenfor signaturen**.
 
-`event_type` beskriver utfallet, ikke implementasjonsstedet. Bruk
-`document_dispatch_failed`, ikke `dokumentporten_service_error` eller det
-generiske `runtime_error`.
+Schemaet tillater derfor loggerens vanlige `err`, `stack_trace`, `msg` og
+andre diagnostiske felter. Dette er ikke en tillatelse til å logge et helt
+request-/responseobjekt eller persondata. Test loggerens faktiske serializer
+og eksisterende redaksjon med syntetiske canaryverdier. APMs scrubbing brukes
+for APM-data; den gjør ikke automatisk rå logger trygge. Ikke bygg en parallell,
+generisk scrubbingmotor eller en egen throwable-type for kontraktens skyld.
 
-## Personvern og kardinalitet
+PDL anbefaler logging av GraphQL-`errors`, som ikke inneholder personinformasjon.
+Behold denne feildiagnostikken. PDLs `data`, requestvariabler og lokal
+personkontekst er noe annet og skal ikke følge med.
 
-Felt i signaturen skal være korte identifikatorer fra kodeeide, endelige sett.
-Følgende skal aldri brukes som dimensjoner eller bygges inn i dimensjonsverdier:
+## Hva betyr kontraktstatus i dashboardet?
 
-- fødselsnummer, aktør-ID, UUID, event-/message-ID, e-post eller andre person-
-  og korrelasjonsidentifikatorer;
-- rå `message`, exception-melding, `stack` eller `stack_trace`;
-- URL, path, query-parametre, request-/response-body eller ekstern payload;
-- fritekst, databaseverdier eller andre verdier som kan vokse uten en fast
-  øvre kardinalitetsgrense.
+Dashboardet teller logghendelser, ikke unike feil, berørte brukere eller incidents.
 
-En statisk, personvernvurdert loggmelding kan fortsatt finnes i råloggen, men
-dashboardet bruker den aldri som signatur. Ikke send et helt error-, request-
-eller response-objekt bare for å oppfylle denne kontrakten.
+- `canonical`: formatgyldig `event_type`.
+- `legacy_type`: kjent og formatvalidert eldre hendelses-/exceptionfelt.
+- `rejected`: et kjent identitetsfelt finnes, men formatet er ugyldig.
+- `missing`: ingen kjent feilidentitet.
 
-## Node/Pino
+Dette er måling av **identitetsdekning**, ikke full schemavalidering eller
+personvernkontroll. `missing` kan samle flere forskjellige feil. Fravær av
+valgfri kode, operasjon eller upstream-status er ikke i seg selv et avvik.
+Legacy skal forbli synlig; dashboardet gjetter ikke hendelsesnavn fra fritekst.
 
-`@navikt/pino-logger` legger normalt `trace_id` på logger i en aktiv OTel-span.
-Feltene under er de eneste dynamiske verdiene som sendes, og alle kommer fra
-kodeeide typer eller operasjonsnavn:
+## Versjonering og eierskap
 
-```ts
-logger.error(
-  {
-    event_type: "graphql_request_failed",
-    error_code: "INTERNAL_SERVER_ERROR",
-    operation: "sykmelding_by_id",
-    upstream_status: 502,
-    exception_type: normalizeExceptionType(error),
-  },
-  "GraphQL request failed",
-);
-```
+`team-esyfo` eier schema, validator og dashboardtolkning. Hver app eier sitt
+hendelsessett, riktige loggnivåer og produsentnære tester. Publiserte filer under
+`contracts/runtime-error/v1.0.0/` er byte-låst i CI mot PR-ens base. Endringer
+publiseres på en ny versjonssti; appene oppgraderer gjennom vanlig review.
 
-Ikke legg `error.message`, variabler, URL eller hele `error`-objektet i
-signaturfeltene. Hvis loggeroppsettet ikke propagerer aktiv trace automatisk,
-skal `trace_id` hentes fra aktiv span i stedet for å bruke en applikasjons-ID.
+Schemaet har et åpent feltrom for diagnostikk. Å begrense et tidligere ukjent
+felt, kreve et nytt felt eller innsnevre tillatte verdier er derfor en
+brytende kontraktendring. Det krever ny hovedversjon. Ren dokumentasjons- eller
+validatorretting får også ny filsti, slik at sjekksummer og lokale kopier ikke
+endres under en eksisterende versjon. Eldre gyldige logger må fortsatt kunne
+leses av dashboardet.
 
-## Kotlin/LogstashEncoder
-
-Bruk `StructuredArguments.kv` og la MDC/OTel-integrasjonen levere `trace_id`:
-
-```kotlin
-import net.logstash.logback.argument.StructuredArguments.kv
-
-log.error(
-    "GraphQL request failed: {} {} {} {} {}",
-    kv("event_type", "graphql_request_failed"),
-    kv("error_code", "INTERNAL_SERVER_ERROR"),
-    kv("operation", "sykmelding_by_id"),
-    kv("upstream_status", 502),
-    kv("exception_type", exception::class.simpleName ?: "UnknownException"),
-    exception,
-)
-```
-
-Ikke avled `exception_type` fra stacktekst. Ikke legg throwable-meldingen,
-request-URL eller person-/domeneidentifikatorer i de strukturerte feltene.
-
-## Konformitetstest i apprepoet
-
-Hver ny eller migrert errorhendelse skal ha en test som fanger den serialiserte
-JSON-loggen og verifiserer:
-
-1. nøyaktig én `error`-logg for én kontrollert, terminal logisk feil;
-2. `event_type` er en forventet konstant, matcher formatet og tilhører appens
-   lukkede allowlist;
-3. valgfrie felt matcher forventede, stabile verdier; `upstream_status` er et
-   heltall i serialisert JSON fra `100` til `599`, og `trace_id` er 32 hextegn
-   når testen kjører i en aktiv span;
-4. miljøfelter og canaries for fødselsnummer, UUID, e-post, URL, message,
-   stack og payload ikke finnes i dimensjonsfeltene;
-5. retry-/propageringslag ikke lager duplikate errorlogger.
-
-Testen skal ligge ved loggpunktet i apprepoet. En kontrollert dev-hendelse kan
-i tillegg brukes til å bekrefte én `canonical` logghendelse i Feiloversikt, men er
-ikke en erstatning for kontrakttesten.
-
-## Dashboardets `contract_state`
-
-Feiloversikt teller logghendelser, ikke unike feil eller incidents, og
-klassifiserer identitetskontrakten aggregert:
-
-- `canonical`: gyldig `event_type` finnes;
-- `legacy_type`: en formatvalidert legacy `event`- eller exception/error-type
-  brukes som operativ fallback;
-- `rejected`: et identitetskandidatfelt finnes, men bryter formatet;
-- `missing`: ingen kjent identitetskandidat finnes.
-
-`rejected`, `missing` og `legacy_type` er kontraktsgap som prioriteres etter
-antall hendelser. Fravær av `error_code`, `operation`, `upstream_status` eller
-`logger_name` er ikke alene et identitetsgap; feltene er valgfrie.
-Regex-validering beviser bare format, ikke JSON-type, produsentproveniens eller
-personvern. Full konformitet krever derfor kodeeid katalog og producer-nær
-serialiseringstest.
-
-## Migrasjon og legacy
-
-- Nye errorlogger følger kontrakten fra første commit.
-- Når et eksisterende feilforløp endres, migreres det terminale loggpunktet og
-  duplikate errorlogger fjernes i samme endring.
-- Legacylogger beholdes synlige som `legacy_type`, `missing` eller `rejected`;
-  dashboardet skal aldri gjette type fra melding eller stack.
-- Det tvetydige legacyfeltet `status` beholdes midlertidig som eksisterende
-  fallback under **Kode**, men tolkes aldri som `upstream_status` og fyller ikke
-  kolonnen **HTTP-status fra kall**. Endrede produsenter sender det eksplisitte
-  `upstream_status`-feltet som JSON-number og beholder en separat `error_code`
-  når en stabil kode finnes.
-- Migrering prioriteres etter høyt antall `missing`/`rejected`/`legacy_type`,
-  ikke etter lav kode-, operasjons- eller loggerdekning.
-- Ikke massefyll `event_type=runtime_error`. Hver verdi skal uttrykke et stabilt,
-  handlingsrettet teknisk utfall.
+Migrer det terminale loggpunktet når et feilforløp endres, og fjern eventuelle
+duplikater i samme endring. Prioriter mye `missing`, `rejected` og `legacy_type`,
+ikke å fylle alle valgfrie felter. Det eldre `status`-feltet tolkes aldri som
+`upstream_status`; endrede produsenter sender eksplisitt heltallsfelt.

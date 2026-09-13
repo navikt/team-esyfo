@@ -61,6 +61,41 @@ const expectedInvalidError = {
 } as const;
 
 describe("runtime-feilkontrakt v1", () => {
+	test("krever kodeeid avvisningsgrunn for den eksplisitte WARN-hendelsen", () => {
+		assert.equal(validate({ event_type: "api_request_rejected" }), false);
+		assert.equal(
+			validate({
+				event_type: "api_request_rejected",
+				rejection_reason: "SYSTEM_USER_ACCESS_NOT_GRANTED",
+			}),
+			true,
+		);
+		assert.equal(
+			validate({
+				event_type: "api_request_rejected",
+				rejection_reason: "user input or raw response",
+			}),
+			false,
+		);
+	});
+
+	test("godtar ikke linjeskift som JavaScript-regexens sluttanker ellers tillater", () => {
+		for (const [field, value] of Object.entries({
+			event_type: "plan_failed\n",
+			error_code: "TIMEOUT\n",
+			operation: "create_plan\n",
+			exception_type: "Error\n",
+			trace_id: "4bf92f3577b34da6a3ce929d0e0e4736\n",
+			rejection_reason: "ACCESS_DENIED\n",
+		})) {
+			assert.equal(
+				validate({ event_type: "plan_failed", [field]: value }),
+				false,
+				field,
+			);
+		}
+	});
+
 	test("bevarer alle gyldige kompatibilitets-fixtures", () => {
 		for (const fixture of readFixtures("valid")) {
 			assert.equal(

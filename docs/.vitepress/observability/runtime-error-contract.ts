@@ -70,7 +70,7 @@ export const runtimeErrorContractV1Schema = {
 	$id: runtimeErrorContractV1Url,
 	title: `Team eSyfo runtime error contract v${runtimeErrorContractV1Version}`,
 	description:
-		"Minimum metadata contract for a terminal runtime error log. Application-specific and framework fields are allowed, but remain subject to local privacy and cardinality tests.",
+		"Grouping metadata for terminal runtime errors and explicit api_request_rejected warnings. Native exception diagnostics and application fields are allowed; local tests remain responsible for privacy, cardinality and severity.",
 	type: "object",
 	required: ["event_type"],
 	properties: {
@@ -84,6 +84,12 @@ export const runtimeErrorContractV1Schema = {
 			type: "string",
 			pattern: runtimeErrorCodePattern,
 			description: "Stable code-owned enum or protocol code.",
+		},
+		rejection_reason: {
+			type: "string",
+			pattern: runtimeErrorCodePattern,
+			description:
+				"Code-owned rejection reason from the application's closed catalogue. Required for api_request_rejected warnings.",
 		},
 		operation: {
 			type: "string",
@@ -116,6 +122,14 @@ export const runtimeErrorContractV1Schema = {
 			description:
 				"Non-zero W3C trace identifier from the active span. Required locally when tracing exists.",
 		},
+	},
+	if: {
+		properties: { event_type: { const: "api_request_rejected" } },
+		required: ["event_type"],
+	},
+	then: {
+		properties: { rejection_reason: {} },
+		required: ["rejection_reason"],
 	},
 	additionalProperties: true,
 	$comment:

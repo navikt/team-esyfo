@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { dirname, relative, resolve } from "node:path";
 import {
 	assertPublishedRuntimeErrorContractsAreImmutable,
@@ -21,6 +22,18 @@ const output = resolve(
 
 const canonicalOutput = resolve(`public/${runtimeErrorContractV1PublicPath}`);
 const canonicalContractDirectory = resolve("public/contracts/runtime-error");
+const checksumsPath = resolve(dirname(output), "SHA256SUMS.txt");
+
+const checksums = async () => {
+	const files = ["schema.json", "validate.mjs"];
+	const entries = await Promise.all(
+		files.map(async (file) => {
+			const content = await readFile(resolve(dirname(output), file));
+			return `${createHash("sha256").update(content).digest("hex")}  ${file}`;
+		}),
+	);
+	return `${entries.join("\n")}\n`;
+};
 
 const git = (gitArgs: string[], description: string) => {
 	const result = spawnSync("git", gitArgs, { encoding: "utf8" });
@@ -48,10 +61,10 @@ const readPublishedContractsAtBase = () => {
 	if (output !== canonicalOutput) return {};
 
 	const root = repositoryRoot();
-	const contractDirectory = relative(root, canonicalContractDirectory).replaceAll(
-		"\\",
-		"/",
-	);
+	const contractDirectory = relative(
+		root,
+		canonicalContractDirectory,
+	).replaceAll("\\", "/");
 	const baseRef = configuredBaseRef();
 	const paths = git(
 		[
@@ -67,7 +80,7 @@ const readPublishedContractsAtBase = () => {
 		`Kunne ikke liste publiserte kontrakter på ${baseRef}`,
 	)
 		.split("\n")
-		.filter((path) => path.endsWith("/schema.json"));
+		.filter((path) => /\/v[^/]+\//.test(path));
 
 	return Object.fromEntries(
 		paths.map((path) => [
@@ -101,6 +114,14 @@ const check = async () => {
 			`Kontraktartefakten er utdatert: ${output}. Kjør pnpm runtime-error-contract:export.`,
 		);
 	}
+	if (
+		output === canonicalOutput &&
+		(await readFile(checksumsPath, "utf8")) !== (await checksums())
+	) {
+		throw new Error(
+			"Sjekksummene er utdaterte. Kjør pnpm runtime-error-contract:export.",
+		);
+	}
 	const publishedAtBase = readPublishedContractsAtBase();
 	assertPublishedRuntimeErrorContractsAreImmutable(
 		publishedAtBase,
@@ -112,6 +133,8 @@ const check = async () => {
 const exportContract = async () => {
 	await mkdir(dirname(output), { recursive: true });
 	await writeFile(output, serializeRuntimeErrorContractV1(), "utf8");
+	if (output === canonicalOutput)
+		await writeFile(checksumsPath, await checksums(), "utf8");
 	console.log(`Eksporterte runtime-feilkontrakt til ${output}`);
 };
 
