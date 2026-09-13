@@ -8,7 +8,7 @@ Oversikt over verktøy som støtter Team eSyfos arbeidsprosesser.
 | ----------------------------------- | -------------------------------------------------------- |
 | [CI/CD](/verktoy/ci-cd)             | Kontinuerlig integrasjon og leveranse med GitHub Actions |
 | [Flaggskipet](/verktoy/flaggskipet) | A/B-styring av tiltakspakker i AID                       |
-| [Hovmester](/verktoy/hovmester)     | AI-assistert utviklingsstøtte med spesialiserte agenter  |
+| [Grillmester](/verktoy/grillmester)     | AI-assistert utviklingsstøtte med spesialiserte agenter  |
 
 ---
 

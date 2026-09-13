@@ -35,9 +35,7 @@ const baselineSnapshot = (): ObservedRuntimeSnapshot => ({
 	observedAt,
 	source: "test",
 	applications: [
-		...runtimeInventory.applications
-			.filter(({ lifecycle }) => lifecycle.state !== "retired")
-			.map(({ runtime }) => observed(runtime)),
+		...runtimeInventory.applications.map(({ runtime }) => observed(runtime)),
 		observed({
 			cluster: "prod-gcp",
 			namespace: "team-esyfo",
@@ -57,7 +55,7 @@ describe("runtimeinventar", () => {
 			jobs: 1,
 			ownedTopics: 10,
 			browserSurfaces: 11,
-			sunsetApplications: 3,
+			sunsetApplications: 0,
 		});
 		assert.deepEqual(
 			runtimeInventory.browserSurfaces
@@ -241,7 +239,7 @@ describe("runtimeinventar", () => {
 		assert.deepEqual(result.errors, []);
 	});
 
-	test("bevarer de tre avviklingsressursene samlet frem til #208-cutover", () => {
+	test("registrerer de tre legacyressursene som avviklet etter #208-cutover", () => {
 		const resourceIds = new Set<string>([
 			"app:syfooppfolgingsplanservice",
 			"app:syfooppfolgingsplanservice-redis",
@@ -253,10 +251,10 @@ describe("runtimeinventar", () => {
 
 		assert.equal(resources.length, resourceIds.size);
 		for (const resource of resources) {
-			assert.equal(resource.lifecycle.state, "sunset");
-			if (resource.lifecycle.state !== "sunset") continue;
-			assert.equal(resource.lifecycle.sunsetOn, "2026-08-31");
-			assert.equal(resource.lifecycle.decision, "navikt/team-esyfo#208");
+			assert.equal(resource.lifecycle.state, "retired");
+			if (resource.lifecycle.state !== "retired") continue;
+			assert.equal(resource.lifecycle.retiredOn, "2026-09-02");
+			assert.match(resource.lifecycle.reason, /#208/);
 		}
 
 		const varselbus = runtimeInventory.topics.find(
@@ -264,7 +262,7 @@ describe("runtimeinventar", () => {
 		);
 		assert.ok(varselbus);
 		assert.ok(
-			varselbus.producers.internal.includes("app:syfooppfolgingsplanservice"),
+			!varselbus.producers.internal.includes("app:syfooppfolgingsplanservice"),
 		);
 	});
 
@@ -274,9 +272,7 @@ describe("runtimeinventar", () => {
 		);
 		assert.ok(varselbus);
 		assert.ok(
-			varselbus.producers.internal.includes(
-				"app:syfo-oppfolgingsplan-backend",
-			),
+			varselbus.producers.internal.includes("app:syfo-oppfolgingsplan-backend"),
 		);
 
 		const dinesykmeldte = runtimeInventory.topics.find(
@@ -284,9 +280,7 @@ describe("runtimeinventar", () => {
 		);
 		assert.ok(dinesykmeldte);
 		assert.ok(dinesykmeldte.producers.internal.includes("app:esyfovarsel"));
-		assert.ok(
-			dinesykmeldte.producers.internal.includes("app:syfo-budstikka"),
-		);
+		assert.ok(dinesykmeldte.producers.internal.includes("app:syfo-budstikka"));
 	});
 
 	test("avviser duplisert runtimeidentitet", () => {
@@ -331,17 +325,17 @@ describe("runtimeinventar", () => {
 		);
 	});
 
-	test("gjør passert sunset til hard feil i streng CI-modus", () => {
+	test("har ingen passert sunset etter bekreftet cutover", () => {
 		const warning = validateInventory(runtimeInventory, { asOf: "2026-09-01" });
 		assert.equal(warning.errors.length, 0);
-		assert.equal(warning.warnings.length, 3);
+		assert.equal(warning.warnings.length, 0);
 		const strict = validateInventory(runtimeInventory, {
 			asOf: "2026-09-01",
 			failOnOverdueSunset: true,
 		});
 		assert.equal(
 			strict.errors.filter((error) => error.includes("passerte sunset")).length,
-			3,
+			0,
 		);
 	});
 
@@ -504,7 +498,7 @@ describe("runtimeinventar", () => {
 });
 
 describe("runtime drift", () => {
-	test("godtar aktiv baseline, midlertidig sunset og eksplisitt exclusion", () => {
+	test("godtar aktiv baseline, historisk avviklingsscope og eksplisitt exclusion", () => {
 		const report = reconcileRuntime(runtimeInventory, baselineSnapshot(), {
 			now: "2026-08-28T10:30:00Z",
 		});
@@ -533,20 +527,32 @@ describe("runtime drift", () => {
 		assert.equal(report.unexpectedInRuntime[0].name, "ukjent-app");
 	});
 
-	test("sunset-runtime er påkrevd frem til og med cutoff", () => {
+	test("avviklet runtime går ut av forventet baseline på retiredOn", () => {
 		const snapshot = baselineSnapshot();
 		snapshot.applications = snapshot.applications.filter(
 			({ name }) => !name.startsWith("syfooppfolgingsplanservice"),
 		);
-		const report = reconcileRuntime(runtimeInventory, snapshot, {
+		const beforeRetirement = reconcileRuntime(runtimeInventory, snapshot, {
 			now: "2026-08-28T10:30:00Z",
 		});
-		assert.equal(report.status, "drift");
+		assert.equal(beforeRetirement.status, "drift");
 		assert.equal(
-			report.missingInRuntime.filter((id) =>
+			beforeRetirement.missingInRuntime.filter((id) =>
 				id.startsWith("app:syfooppfolgingsplanservice"),
 			).length,
 			3,
+		);
+
+		const afterRetirement = reconcileRuntime(runtimeInventory, snapshot, {
+			now: "2026-09-02T10:30:00Z",
+			staleAfterMinutes: 10_000,
+		});
+		assert.equal(afterRetirement.status, "ok");
+		assert.equal(
+			afterRetirement.missingInRuntime.filter((id) =>
+				id.startsWith("app:syfooppfolgingsplanservice"),
+			).length,
+			0,
 		);
 	});
 
@@ -605,13 +611,14 @@ describe("runtime drift", () => {
 		assert.equal(report.futureSnapshot, true);
 	});
 
-	test("runtime etter sunset blir drift", () => {
-		const report = reconcileRuntime(runtimeInventory, baselineSnapshot(), {
-			now: "2026-09-01T10:00:00Z",
+	test("observerte avviklede ressurser blir drift", () => {
+		const snapshot = baselineSnapshot();
+		const report = reconcileRuntime(runtimeInventory, snapshot, {
+			now: "2026-09-02T10:00:00Z",
 			staleAfterMinutes: 10_000,
 		});
 		assert.equal(report.status, "drift");
-		assert.equal(report.pastSunset.length, 3);
+		assert.equal(report.retiredInRuntime.length, 3);
 	});
 });
 
@@ -1037,7 +1044,7 @@ describe("dekningsevidens", () => {
 			{ now: "2026-08-28T10:05:00Z" },
 		);
 		assert.equal(report.status, "gaps");
-		assert.equal(report.summary.application.complete, 29);
+		assert.equal(report.summary.application.complete, 26);
 		assert.equal(report.summary.job.complete, 1);
 		assert.equal(report.summary.topic.complete, 10);
 		assert.equal(report.summary["browser-surface"].complete, 0);

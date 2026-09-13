@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vitepress dev",
-		"build": "pnpm typecheck && pnpm runtime-error-contract:check && pnpm runtime-error-contract:test && pnpm inventory:check && pnpm inventory:test && pnpm alert-register:check && pnpm alert-register:test && pnpm grafana-dashboard:test && pnpm error-dashboard:check && pnpm control-room:check && vitepress build && pnpm inventory:export",
+		"build": "pnpm typecheck && pnpm runtime-error-contract:check && pnpm runtime-error-contract:test && pnpm inventory:check && pnpm inventory:test && pnpm alert-register:check && pnpm alert-register:test && pnpm grafana-dashboard:test && pnpm error-dashboard:check && pnpm control-room:check && pnpm aid-dashboard:check && vitepress build && pnpm inventory:export",
 		"typecheck": "vue-tsc --noEmit",
 		"runtime-error-contract:check": "node scripts/runtime-error-contract.ts check",
 		"runtime-error-contract:test": "node --test .vitepress/observability/runtime-error-contract.test.ts",
@@ -27,7 +27,11 @@
 		"control-room:test": "node --test .vitepress/grafana/control-room.test.ts",
 		"control-room:check": "node scripts/control-room.ts check",
 		"control-room:export": "node scripts/control-room.ts export",
+		"aid-dashboard:check": "node scripts/aid-dashboard.ts check",
+		"aid-dashboard:export": "node scripts/aid-dashboard.ts export",
+		"aid-dashboard:query-smoke": "node scripts/aid-plan-query-smoke.ts",
 		"grafana-dashboard:smoke": "node scripts/grafana-dashboard-smoke.ts",
+		"observability:query-smoke": "node scripts/observability-query-smoke.ts",
 		"preview": "vitepress preview"
 	},
 	"devDependencies": {

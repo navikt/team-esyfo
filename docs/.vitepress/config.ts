@@ -86,6 +86,9 @@ export default withMermaid(
 						{ text: "Funksjonelle endringer", link: "/aid/endringer" },
 						{ text: "Dulte-tiltak (nudgelab)", link: "/aid/dulte-tiltak" },
 						{ text: "Måling", link: "/aid/maaling" },
+						{ text: "Dashboard: om tallene", link: "/aid/dashboard" },
+						{ text: "Resultatmåling: datakrav", link: "/aid/resultatmaaling" },
+						{ text: "Datakilder og gjenbruk", link: "/aid/datakilder" },
 					],
 				},
 				{
@@ -93,7 +96,7 @@ export default withMermaid(
 					collapsed: false,
 					items: [
 						{ text: "Oversikt", link: "/verktoy/" },
-						{ text: "Hovmester", link: "/verktoy/hovmester" },
+						{ text: "Grillmester", link: "/verktoy/grillmester" },
 						{ text: "CI/CD", link: "/verktoy/ci-cd" },
 						{ text: "Flaggskipet", link: "/verktoy/flaggskipet" },
 					],
@@ -103,6 +106,7 @@ export default withMermaid(
 					collapsed: false,
 					items: [
 						{ text: "Oversikt", link: "/utvikling/" },
+						{ text: "Teamarbeid og tavla", link: "/utvikling/teamarbeid" },
 						{
 							text: "Observability",
 							collapsed: false,
@@ -120,7 +124,7 @@ export default withMermaid(
 									link: "/utvikling/observability/browserkontrakt",
 								},
 								{
-									text: "Avviklingsport",
+									text: "Avvikling (historikk)",
 									link: "/utvikling/observability/avvikling-syfooppfolgingsplanservice",
 								},
 								{

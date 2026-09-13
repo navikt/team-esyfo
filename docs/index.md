@@ -42,7 +42,7 @@ features:
     linkText: Til dataanalyse
   - icon: 🛠️
     title: Verktøy
-    details: Hovmester, CI/CD og andre verktøy som støtter teamets arbeidsprosesser.
+    details: Grillmester, CI/CD og andre verktøy som støtter teamets arbeidsprosesser.
     link: /verktoy/
     linkText: Se verktøy
 ---

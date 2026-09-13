@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { AID_DASHBOARD_UID } from "../.vitepress/grafana/aid-delivery-usage.ts";
 import {
 	CONTROL_ROOM_FOLDER_UID,
 	CONTROL_ROOM_UID,
@@ -31,6 +32,10 @@ const dashboardArtifacts = [CONTROL_ROOM_UID, ERROR_DASHBOARD_UID].map((uid) => 
 	),
 	uid,
 }));
+dashboardArtifacts.push({
+	artifactPath: fileURLToPath(new URL("../public/grafana/team-esyfo-aid.json", import.meta.url)),
+	uid: AID_DASHBOARD_UID,
+});
 
 type JsonRecord = Record<string, unknown>;
 
@@ -89,11 +94,11 @@ const collectLayoutItems = (layout: unknown): unknown[] => {
 	if (kind === "GridLayout") {
 		return Array.isArray(spec?.items) ? spec.items : [];
 	}
-	if (kind === "RowsLayout") {
-		const rows = Array.isArray(spec?.rows) ? spec.rows : [];
-		return rows.flatMap((row) => {
-			const rowSpec = (row as { spec?: JsonRecord }).spec;
-			return collectLayoutItems(rowSpec?.layout);
+	if (kind === "RowsLayout" || kind === "TabsLayout") {
+		const children = kind === "RowsLayout" ? spec?.rows : spec?.tabs;
+		return (Array.isArray(children) ? children : []).flatMap((child) => {
+			const childSpec = (child as { spec?: JsonRecord }).spec;
+			return collectLayoutItems(childSpec?.layout);
 		});
 	}
 	return [];
@@ -365,7 +370,7 @@ try {
 			new Set(expected.layoutElementNames).size,
 			expected.elementNames.length,
 		);
-		assert.ok(expected.variables.length > 0);
+		// Dashboards may use only row/tab-local variables; the full layout is compared below.
 		assert.ok(expected.queries.length > 0);
 		assert.ok(expected.datasources.length > 0);
 		assert.deepEqual(semanticContract(resource), expected);

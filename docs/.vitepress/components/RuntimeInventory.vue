@@ -27,6 +27,9 @@ const currentApplications = runtimeInventory.applications.filter(
 const sunsetApplications = runtimeInventory.applications.filter(
 	({ lifecycle }) => lifecycle.state === "sunset",
 );
+const retiredApplications = runtimeInventory.applications.filter(
+	({ lifecycle }) => lifecycle.state === "retired",
+);
 const lifecycleChanges = [
 	...runtimeInventory.applications,
 	...runtimeInventory.jobs,
@@ -69,6 +72,8 @@ const lifecycleLabel = (lifecycle: Lifecycle) => {
 };
 
 const lifecycleClass = (lifecycle: Lifecycle) => `state-${lifecycle.state}`;
+const retiredReason = (lifecycle: Lifecycle) =>
+	lifecycle.state === "retired" ? lifecycle.reason : "";
 
 const linkLabel = (link: TrackedLink) => {
 	if (link.status === "linked") return link.label;
@@ -294,6 +299,20 @@ const topicLagLabel = (topic: Topic) =>
 		<ul>
 			<li v-for="app in sunsetApplications" :key="app.id">
 				<code>{{ runtimeLabel(app.runtime) }}</code> — {{ lifecycleLabel(app.lifecycle) }}
+			</li>
+		</ul>
+	</details>
+
+	<details class="sunset-details">
+		<summary>{{ retiredApplications.length }} avviklede workloader i historikken</summary>
+		<p>
+			Disse er ikke del av forventet runtime etter avviklingsdatoen. Hvis de fortsatt
+			observeres, rapporteres de som drift.
+		</p>
+		<ul>
+			<li v-for="app in retiredApplications" :key="app.id">
+				<code>{{ runtimeLabel(app.runtime) }}</code> — {{ lifecycleLabel(app.lifecycle) }}.
+				{{ retiredReason(app.lifecycle) }}
 			</li>
 		</ul>
 	</details>

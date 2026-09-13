@@ -261,9 +261,10 @@ const retiringAccess: AlertLifecycle = {
 		"syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
 	issue: "navikt/syfobrukertilgang#369",
 };
-const followUpPlanSunset: AlertLifecycle = {
-	state: "sunset",
-	sunsetOn: "2026-08-31",
+const followUpPlanAlertCleanup: AlertLifecycle = {
+	state: "retiring",
+	reason:
+		"Produksjonstjenesten er stanset, men de sist observerte prod-fss-reglene beholdes som oppryddingsgjeld frem til en ny live-avstemming beviser at de er borte.",
 	issue: "navikt/team-esyfo#208",
 };
 const orphanedLpsAlert: AlertLifecycle = {
@@ -1474,17 +1475,17 @@ export const alertRules: AlertRule[] = [
 		holdFor: "5m",
 		semantic: "availability",
 		semanticFamily: "legacy-zero-available-replicas",
-		lifecycle: followUpPlanSunset,
+		lifecycle: followUpPlanAlertCleanup,
 		policy: retireBlockedPolicy(
 			teamOwner(
 				"navikt/syfooppfolgingsplanservice",
 				"app:syfooppfolgingsplanservice",
 			),
-			"Availability beholdes kun som midlertidig ticket-guardrail frem til besluttet avvikling 31. august; det gjøres ingen ny pagerinvestering.",
+			"Tjenesten er stanset. Regelen beholdes bare som synlig oppryddingsgjeld og skal ikke få ny pagerinvestering.",
 			ticket(),
 			"navikt/team-esyfo#208",
 			"navikt/team-esyfo#208",
-			"Runtime og avhengigheter må være verifisert borte før regelen fjernes.",
+			"Live-regelen må være verifisert borte før den fjernes fra observasjonshistorikken.",
 		),
 		targetRefs: ["app:syfooppfolgingsplanservice"],
 		externalTargets: [],
@@ -1494,10 +1495,12 @@ export const alertRules: AlertRule[] = [
 		runbook: missingRunbook(),
 		dashboard: missingDashboard(),
 		annotations: {
-			summary: "syfooppfolgingsplanservice er nede.",
-			action: "Undersøk hvorfor tjenesten er nede frem til avvikling.",
+			summary: "Legacy-regel for avviklet syfooppfolgingsplanservice.",
+			action: "Verifiser live-tilstanden og fjern eventuell restregel i #208.",
 		},
-		riskNotes: ["skal fjernes etter bekreftet avvikling 31. august 2026"],
+		riskNotes: [
+			"sist observert 28. august; fysisk regelopprydding er ikke verifisert",
+		],
 	}),
 	prometheusRule({
 		id: "rule:oppfolgingsplanservice-http-5xx",
@@ -1506,17 +1509,17 @@ export const alertRules: AlertRule[] = [
 		holdFor: "5m",
 		semantic: "http-5xx-ratio",
 		semanticFamily: "legacy-nginx-http-5xx-ratio",
-		lifecycle: followUpPlanSunset,
+		lifecycle: followUpPlanAlertCleanup,
 		policy: retireBlockedPolicy(
 			teamOwner(
 				"navikt/syfooppfolgingsplanservice",
 				"app:syfooppfolgingsplanservice",
 			),
-			"5xx er en midlertidig ticket frem til avvikling; det er ikke verdt å bygge ny SLO i en runtime som stenges.",
+			"Tjenesten er stanset. 5xx-regelen beholdes bare som synlig oppryddingsgjeld.",
 			ticket(),
 			"navikt/team-esyfo#208",
 			"navikt/team-esyfo#208",
-			"Runtime må være verifisert borte etter 31. august før alerten fjernes.",
+			"Live-regelen må være verifisert borte før den fjernes fra observasjonshistorikken.",
 		),
 		targetRefs: ["app:syfooppfolgingsplanservice"],
 		externalTargets: [],
@@ -1526,10 +1529,12 @@ export const alertRules: AlertRule[] = [
 		runbook: missingRunbook(),
 		dashboard: missingDashboard(),
 		annotations: {
-			summary: "syfooppfolgingsplanservice har en høy andel 5xx.",
-			action: "Sjekk Grafana og logger frem til avvikling.",
+			summary: "Legacy 5xx-regel for avviklet syfooppfolgingsplanservice.",
+			action: "Verifiser live-tilstanden og fjern eventuell restregel i #208.",
 		},
-		riskNotes: ["skal fjernes etter bekreftet avvikling 31. august 2026"],
+		riskNotes: [
+			"sist observert 28. august; fysisk regelopprydding er ikke verifisert",
+		],
 	}),
 	prometheusRule({
 		id: "rule:oppfolgingsplanservice-http-4xx",
@@ -1538,17 +1543,17 @@ export const alertRules: AlertRule[] = [
 		holdFor: "5m",
 		semantic: "http-4xx-ratio",
 		semanticFamily: "legacy-nginx-http-4xx-ratio",
-		lifecycle: followUpPlanSunset,
+		lifecycle: followUpPlanAlertCleanup,
 		policy: retireBlockedPolicy(
 			teamOwner(
 				"navikt/syfooppfolgingsplanservice",
 				"app:syfooppfolgingsplanservice",
 			),
-			"Generisk 4xx er kun diagnostikk frem til tjenesten avvikles; ingen ny alertinvestering gjøres.",
+			"Tjenesten er stanset. 4xx-regelen beholdes bare som synlig oppryddingsgjeld.",
 			dashboardOnly(),
 			"navikt/team-esyfo#208",
 			"navikt/team-esyfo#208",
-			"Runtime må være verifisert borte etter 31. august før siste regelcleanup.",
+			"Live-regelen må være verifisert borte før den fjernes fra observasjonshistorikken.",
 		),
 		targetRefs: ["app:syfooppfolgingsplanservice"],
 		externalTargets: [],
@@ -1558,10 +1563,12 @@ export const alertRules: AlertRule[] = [
 		runbook: missingRunbook(),
 		dashboard: missingDashboard(),
 		annotations: {
-			summary: "syfooppfolgingsplanservice har en høy andel 4xx.",
-			action: "Sjekk Grafana og logger frem til avvikling.",
+			summary: "Legacy 4xx-regel for avviklet syfooppfolgingsplanservice.",
+			action: "Verifiser live-tilstanden og fjern eventuell restregel i #208.",
 		},
-		riskNotes: ["skal fjernes etter bekreftet avvikling 31. august 2026"],
+		riskNotes: [
+			"sist observert 28. august; fysisk regelopprydding er ikke verifisert",
+		],
 	}),
 	grafanaRule({
 		id: "rule:grafana-varsel-avvik",

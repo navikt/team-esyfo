@@ -43,5 +43,7 @@ Flaggskipet har én aktiv tiltakspakke nå: `OPPFOLGINGSPLAN_TILTAKSPAKKE_1`. Sl
 
 **Regel**
 
-- Scope: virksomheter i Troms og Trondheim
-- Fordeling i scope: myntkast 50/50 mellom `TILTAKSGRUPPE` og `KONTROLLGRUPPE`
+- Scope: virksomheter i Troms (55) og Finnmark (56).
+- Fordeling i scope: deterministisk fordeling med mål om 50/50, basert på tiltakspakke-ID og virksomhetsnummer og lagret ved første vurdering. Ikke et nytt myntkast ved hvert oppslag eller en garanti for helt lik gruppestørrelse.
+
+Dette er [regelen i kildekoden](https://github.com/navikt/flaggskipet/blob/ecb6fd285cf655525d26bbeefc2084f788e9d388/src/main/kotlin/no/nav/flaggskipet/domain/vurdering/Tiltakspakker.kt), kontrollert 8. september 2026. Tabellen viser vurderte virksomheter, ikke nødvendigvis hele den kvalifiserte populasjonen; se [AID-kildekartleggingen](/aid/datakilder).

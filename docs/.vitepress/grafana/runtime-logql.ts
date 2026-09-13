@@ -14,3 +14,11 @@ export const forwardedBrowserLogFilter = `| x_isFrontend!="true"
 export const runtimeErrorPipeline = `${runtimeNoiseFilter}
 ${runtimeErrorLevelFilter}
 ${forwardedBrowserLogFilter}`;
+
+export const runtimeRejectionPipeline = `${runtimeNoiseFilter}
+| detected_level=~\`(?i)(warn|warning)\`
+${forwardedBrowserLogFilter}
+| regexp "(?P<legacy_system_denial>System user does not have access to nav_syfo_oppgi-narmesteleder resource)"
+| json event_type
+| drop __error__, __error_details__
+| event_type="api_request_rejected" or (service_name="esyfo-narmesteleder" and legacy_system_denial!="")`;
