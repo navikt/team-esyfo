@@ -3,9 +3,9 @@
 En god logg lar oss finne hendelsen i [Feiloversikt](./feildrilldown), forstå
 årsaken og følge en trace videre i APM. Appen beholder loggeren sin.
 
-Anbefalt oppsett er [eSyfo-bibliotekene 0.1.0](https://github.com/navikt/esyfo-observability/releases/tag/v0.1.0).
-De gir typesikre, lokale hendelser og teststøtte med den eksisterende
-runtime-error-kontrakten v1.0.0. En ny domenehendelse krever verken ny
+Oppskriften bruker de publiserte [eSyfo-bibliotekene 0.2.0](https://github.com/navikt/esyfo-observability/tree/d2d75795b4571641fa3930c4c3f07daad8f06dfb).
+De gir én logginngang, typesikre lokale hendelser og teststøtte med uendret
+runtime-error-kontrakt v1.0.0. En ny domenehendelse krever ingen
 bibliotekrelease eller dashboardendring.
 
 ## 1. Bruk riktig pakke
@@ -16,13 +16,47 @@ bibliotekrelease eller dashboardendring.
   `implementation` og `no.nav.esyfo.observability:esyfo-logger-testkit`
   kun som `testImplementation`.
 
-Pinn versjon `0.1.0`, bruk appens vanlige GitHub Packages-autentisering og
-verifiser bygg og tester i CI. Ingen registry-secrets skal følge appen til
-produksjon. Se [installasjon og støttet oppsett](https://github.com/navikt/esyfo-observability#innføring-i-en-app)
+Pinn versjon `0.2.0` og verifiser bygg og tester i CI. Node bruker appens vanlige
+GitHub Packages-autentisering. JVM-pakkene kan hentes uten credentials gjennom
+[Navs pakkespeil](https://github.com/navikt/esyfo-observability/blob/d2d75795b4571641fa3930c4c3f07daad8f06dfb/jvm/README.md#avhengigheter-og-verifisering).
+Ingen registry-secrets skal følge appen til produksjon.
+Se [installasjon og støttet oppsett](https://github.com/navikt/esyfo-observability/tree/d2d75795b4571641fa3930c4c3f07daad8f06dfb#innføring-i-en-app)
 for Node 24 / TypeScript 6 / Pino 10 og Kotlin 2.4.10 / SLF4J 2 / Java 21+.
-Nettleserfeil fortsetter gjennom eksisterende APM/Faro.
+JVM-appen må kompileres på nytt ved oppgradering fra 0.1.0.
 
-## 2. Definer hendelsen der feilen eies
+## 2. Bruk én inngang i appen
+
+Koble `createLogger` til appens eksisterende logger i én lokal modul. I Next:
+
+```ts
+import "server-only";
+import { logger } from "@navikt/next-logger";
+import { createLogger } from "@navikt/esyfo-logger";
+
+export const log = createLogger(logger);
+```
+
+Resten av serverkoden importerer denne inngangen. På JVM brukes samme prinsipp
+med `createLogger` og eksisterende SLF4J-logger; behold loggernavnene.
+
+| Du skal logge | Bruk |
+| --- | --- |
+| En advarsel, feil eller navngitt domenehendelse | `log.event(...)`; definisjonen bestemmer nivå og melding. |
+| Vanlig informasjon eller debug | `log.info(...)` / `log.debug(...)`, med valgfri enkel diagnostikk. |
+| Oppstart og integrasjon med rammeverk | Eksisterende native loggeroppsett. |
+
+`info`/`debug` får ikke `event_type` og har bare primitive diagnosefelt, ikke
+rå feilobjekter eller payloads. Strenger er fortsatt ingen personverngaranti.
+Inngangen har ingen fri `warn`/`error`. Nettleserfeil fortsetter gjennom
+APM/Faro; metrikker og tracing er egne signaler.
+
+Håndhev inngangen i migrert serverkode med eksisterende lintregler eller en
+avgrenset arkitekturtest. Sperr direkte native logger-importer og `console`/`println`,
+med navngitte unntak for oppsett, rammeverksintegrasjoner og tester. Test at et
+ugyldig kall faktisk stoppes. Dette er en vedlikeholdsregel, ikke en sikkerhetsgrense.
+Dokumenter hva som ennå ikke er migrert; ikke skjul eldre logger.
+
+## 3. Definer hendelsen der feilen eies
 
 Logg der operasjonen til slutt feiler, ikke på hvert lag eller etter hvert
 retry. Appen eier hendelsesnavn, koder, kontekst, alvorlighetsnivå og loggpunkt.
@@ -32,10 +66,9 @@ som grupperingsnøkler. Valgfrie felt tas bare med når de tilfører noe.
 **TypeScript:** Konteksttypen er appens lokale feltdefinisjon.
 
 ```ts
-import { logger } from "@navikt/next-logger";
-import { createEventLogger, defineEvent } from "@navikt/esyfo-logger";
+import { defineEvent } from "@navikt/esyfo-logger";
+import { log } from "@/server/log";
 
-const log = createEventLogger(logger);
 const planHentingFeilet = defineEvent<{
   error_code: "NETWORK_ERROR" | "INVALID_RESPONSE";
 }>({
@@ -48,11 +81,10 @@ const planHentingFeilet = defineEvent<{
 log.event(planHentingFeilet, { error_code: "NETWORK_ERROR" }, error);
 ```
 
-**Kotlin:** En dataklasse gir typet kontekst; loggeren er fortsatt appens SLF4J-logger.
+**Kotlin:** En dataklasse gir typet kontekst; `log` kommer fra appens lokale inngang.
 
 ```kotlin
 import no.nav.esyfo.observability.Event
-import no.nav.esyfo.observability.emit
 import org.slf4j.event.Level
 
 data class PlanHentingFeilet(val upstreamStatus: Int?)
@@ -65,18 +97,19 @@ val planHentingFeilet = Event<PlanHentingFeilet>(
     fields = mapOf("upstream_status" to { it.upstreamStatus }),
 )
 
-log.emit(planHentingFeilet, PlanHentingFeilet(503), cause = exception)
+log.event(planHentingFeilet, PlanHentingFeilet(503), cause = exception)
 ```
 
 Utelat `upstream_status` når ingen HTTP-respons ble mottatt; JVM-adapteren
-utelater feltlesere som returnerer `null`.
+utelater feltlesere som returnerer `null`. For flere feilkoder i samme hendelse
+kan JVM bruke `errorCodeFrom` med en lokal enum; se bibliotekets JVM-eksempler.
 
 En relevant, faktisk API-avvisning bruker den felles `apiRequestRejected`-
 definisjonen: WARN, `event_type=api_request_rejected` og en lokal, lukket
 `rejection_reason`. Ikke bruk den for alle 4xx, teknisk svikt eller når en
 fallback gir tilgang. Behold eksisterende HTTP-respons og feilhåndtering.
 
-## 3. Behold diagnostikk og personvern
+## 4. Behold diagnostikk og personvern
 
 Send et vurdert feilobjekt separat, som i eksemplene. Biblioteket videresender
 det til den eksisterende loggeren og bevarer native feilinformasjon. Det
@@ -92,17 +125,18 @@ generell scrubbing.** PDL-data, requestvariabler og lokal personkontekst skal
 ikke følge med. APMs scrubbing brukes for APM-data; den gjør ikke automatisk
 rå logger trygge.
 
-## 4. Test det appen faktisk skriver
+## 5. Test det appen faktisk skriver
 
 Utløs et kontrollert feilforløp gjennom appkoden med syntetiske data. Bruk
 produksjonens loggerkonfigurasjon, ikke bare en mock av et loggkall:
 
 - **Node:** `createLogCapture` gir en destination til appens loggerfabrikk.
   Injiser loggeren i scenariet og kontroller utdata med `assertLogEvent`
-  eller `assertLogEvents`. Se [Node-teststøtten](https://github.com/navikt/esyfo-observability/tree/main/packages/logger-testkit).
+  eller `assertLogEvents`. Se [Node-teststøtten](https://github.com/navikt/esyfo-observability/tree/d2d75795b4571641fa3930c4c3f07daad8f06dfb/packages/logger-testkit).
 - **JVM:** `captureLogs` bruker appens allerede konfigurerte JSON-encoder.
   `RuntimeLogContract.forEvents` avleder katalogen fra hendelsesdefinisjonene;
-  dynamiske årsakskoder gis fra lokale enums. Se [JVM-teststøtten](https://github.com/navikt/esyfo-observability/blob/main/jvm/README.md#test-faktisk-json).
+  dynamiske `dynamicErrorCodes` og `rejectionReasons` gis fra lokale enums.
+  Se [JVM-teststøtten](https://github.com/navikt/esyfo-observability/blob/d2d75795b4571641fa3930c4c3f07daad8f06dfb/jvm/README.md#test-faktisk-json).
 
 Testkittene inkluderer det pinnede schemaet; hovedløypen trenger ingen
 app-lokal schemakopi, Ajv-oppsett eller separat katalogfil. Kjør testene i
@@ -121,9 +155,8 @@ Ikke filtrer bort umerkede feil før kontrollen. Typer og schema beviser
 ikke personvern, riktig loggpunkt eller dekning av alle appens logger.
 Capture beviser serialisering, ikke levering til Loki eller APM.
 
-Pilotene [narmesteleder-frontend #452](https://github.com/navikt/narmesteleder-frontend/pull/452)
-og [esyfo-narmesteleder #520](https://github.com/navikt/esyfo-narmesteleder/pull/520)
-viser innføring i ekte apper. De krever fortsatt human review før merge.
+Appendringer går gjennom vanlig human review før merge, også ved innføring
+av et ferdig publisert bibliotek.
 
 ## Alternativ: schema eller CLI uten biblioteket
 

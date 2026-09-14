@@ -1,8 +1,9 @@
 # Runtime-feilkontrakt
 
 Felles felt gjør feil grupperbare i [Feiloversikt](./feildrilldown), mens den
-vanlige loggen forklarer hva som skjedde. Kontrakten gjelder nye og endrede
-serverlogger i Team eSyfos apper. Den erstatter ikke loggeren eller APM.
+vanlige loggen forklarer hva som skjedde. Kontrakten gjelder navngitte
+serverhendelser i Team eSyfos apper, ikke vanlig `info`/`debug`-diagnostikk.
+Den erstatter ikke loggeren eller APM.
 
 **Skal du legge til en logg?** Følg [oppskriften for gode logger](./gode-logger).
 
@@ -11,9 +12,12 @@ serverlogger i Team eSyfos apper. Den erstatter ikke loggeren eller APM.
 - Ett versjonert [JSON Schema v1.0.0](/contracts/runtime-error/v1.0.0/schema.json)
   for form, JSON-typer og grenser.
 - Lokale, typesikre hendelsesdefinisjoner med appens operasjoner og koder.
+- Én app-lokal logginngang: `event` for advarsler, feil og navngitte hendelser;
+  `info`/`debug` for enkel diagnostikk. Appens kodekontroll håndhever inngangen
+  i migrert serverkode, med eksplisitte integrasjonsunntak.
 - Test av den **faktisk serialiserte loggen** i appens CI. Anbefalt oppsett er
-  [eSyfo-bibliotekene og testkittene 0.1.0](https://github.com/navikt/esyfo-observability/releases/tag/v0.1.0),
-  som bruker den eksisterende loggeren og samme byte-låste schema v1.0.0.
+  de publiserte [eSyfo-bibliotekene og testkittene 0.2.0](https://github.com/navikt/esyfo-observability/tree/d2d75795b4571641fa3930c4c3f07daad8f06dfb).
+  De bruker den eksisterende loggeren og samme byte-låste schema v1.0.0.
 
 Appen eier domenespråk, loggpunkt, alvorlighetsnivå og diagnostikk. En ny
 hendelse i en registrert app krever verken dashboardendring eller sentral
