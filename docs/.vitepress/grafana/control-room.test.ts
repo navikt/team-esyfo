@@ -501,40 +501,27 @@ test("bruker korte korttitler uten å miste periode eller replikaandel", () => {
 	);
 });
 
-test("holder begge tabeller lesbare innen vanlig laptopbredde", () => {
-	for (const id of ["panel-10", "panel-36"]) {
-		const panel = panels()[id];
-		const organize = panel.spec.data.spec.transformations.find(
-			({ group }) => group === "organize",
-		)?.spec.options as { renameByName: Record<string, string> };
-		const widths = Object.values(organize.renameByName).map((name) => {
-			const matches = panel.spec.vizConfig.spec.fieldConfig.overrides
-				.filter(({ matcher }) => matcher.options === name)
-				.flatMap(({ properties }) => properties)
-				.filter(({ id }) => id === "custom.width");
-			assert.equal(matches.length, 1, `${id}: eksplisitt bredde for ${name}`);
-			assert.equal(typeof matches[0].value, "number");
-			assert.ok(Number(matches[0].value) >= 70);
-			return Number(matches[0].value);
-		});
-		const maxWidth = id === "panel-10" ? 930 : 960;
-		assert.ok(widths.reduce((sum, width) => sum + width, 0) <= maxWidth, id);
-		if (id === "panel-10") {
-			assert.equal(
-				(
-					panel.spec.vizConfig.spec.fieldConfig.defaults.custom as Record<
-						string,
-						unknown
-					>
-				).wrapText,
-				true,
-			);
-			const names = Object.values(organize.renameByName);
-			assert.ok(widths[names.indexOf("Feilmarkerte kall")] >= 155);
-			assert.ok(widths[names.indexOf("Klare replikaer")] >= 140);
-		}
-		assert.equal(panel.spec.vizConfig.spec.fieldConfig.defaults.decimals, 0);
-	}
+test("holder podtabellen lesbar innen vanlig laptopbredde", () => {
+	const panel = panels()["panel-36"];
+	const organize = panel.spec.data.spec.transformations.find(
+		({ group }) => group === "organize",
+	)?.spec.options as { renameByName: Record<string, string> };
+	const widths = Object.values(organize.renameByName).map((name) => {
+		const matches = panel.spec.vizConfig.spec.fieldConfig.overrides
+			.filter(({ matcher }) => matcher.options === name)
+			.flatMap(({ properties }) => properties)
+			.filter(({ id }) => id === "custom.width");
+		assert.equal(matches.length, 1, `eksplisitt bredde for ${name}`);
+		assert.equal(typeof matches[0].value, "number");
+		assert.ok(Number(matches[0].value) >= 70);
+		return Number(matches[0].value);
+	});
+	assert.ok(widths.reduce((sum, width) => sum + width, 0) <= 960);
+});
+
+test("viser tellere uten desimaler i begge tabeller", () => {
+	for (const id of ["panel-10", "panel-36"])
+		assert.equal(panels()[id].spec.vizConfig.spec.fieldConfig.defaults.decimals, 0);
 });
 
 test("skiller alle tjenesters feil fra valgt tjenestes ressursdiagnostikk", () => {
@@ -642,6 +629,24 @@ test("slanker tabellen uten å fjerne målegap eller lenker", () => {
 			url.includes(grafanaVariable("__value.raw")),
 		),
 	);
+});
+
+test("lar tallkolonnene fylle bredden uten å klemme tjenestenavn og HTTP-status", () => {
+	const { fieldConfig } = panels()["panel-10"].spec.vizConfig.spec;
+	const custom = fieldConfig.defaults.custom as Record<string, unknown>;
+	assert.equal(custom.width, undefined);
+	assert.equal(custom.minWidth, 80);
+	assert.equal(custom.wrapHeaderText, true);
+	assert.equal(custom.wrapText, true);
+	const widths = fieldConfig.overrides.flatMap(({ matcher, properties }) =>
+		properties
+			.filter(({ id }) => id === "custom.width")
+			.map(({ value }) => [matcher.options, value]),
+	);
+	assert.deepEqual(widths, [
+		["Tjeneste", 280],
+		["HTTP-målinger", 160],
+	]);
 });
 
 test("beholder loggkolonnen med null når Loki-feltet mangler helt", () => {
