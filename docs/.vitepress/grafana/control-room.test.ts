@@ -263,7 +263,6 @@ test("holder alle operative produksjonstjenester synlige uten avviklede ressurse
 		assert.ok(new RegExp(controlRoomApplicationRegex).test(runtime.name));
 	}
 	for (const retired of [
-		"syfobrukertilgang",
 		"syfooppfolgingsplanservice",
 		"syfooppfolgingsplanservice-redis",
 		"syfooppfolgingsplanservice-redisexporter",

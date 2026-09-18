@@ -45,7 +45,6 @@ const VERIFIED_APM_SERVICES = new Set([
 	"syfo-dokumentporten",
 	"syfo-oppfolgingsplan-backend",
 	"syfo-oppfolgingsplan-frontend",
-	"syfobrukertilgang",
 	"syfomotebehov",
 	"syfooppdfgen",
 	"sykepengedager-informasjon",
@@ -577,20 +576,6 @@ export const applications: Application[] = [
 		lifecycle: active,
 		context: context(["oppfolgingsplan"], ["journey:follow-up-plan"]),
 		coverageProfile: "frontend-server",
-	}),
-	application({
-		name: "syfobrukertilgang",
-		repository: "navikt/syfobrukertilgang",
-		role: "backend-api",
-		criticality: "critical",
-		lifecycle: {
-			state: "retired",
-			retiredOn: "2026-09-18",
-			reason:
-				"NAIS-runtime ble slettet etter syfomotebehov V5-cutoveren. Standalone PrometheusRule-instanser er uverifisert oppryddingsgjeld i navikt/syfobrukertilgang#368 og navikt/syfobrukertilgang#369.",
-		},
-		context: context(["fellestjenester"], ["journey:access-control"]),
-		coverageProfile: "critical-http",
 	}),
 	application({
 		name: "syfomotebehov",

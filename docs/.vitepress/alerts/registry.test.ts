@@ -12,20 +12,20 @@ import {
 const copyRegistry = () => structuredClone(alertRegistry) as AlertRegistry;
 
 describe("alert-register", () => {
-	test("avstemmer alle 37 PrometheusRule-instanser og to Grafana-regler", () => {
+	test("avstemmer alle 31 PrometheusRule-instanser og to Grafana-regler", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 
-		assert.equal(report.counts.rules, 30);
-		assert.equal(report.counts.prometheusRules, 28);
-		assert.equal(report.counts.prometheusInstances, 37);
+		assert.equal(report.counts.rules, 27);
+		assert.equal(report.counts.prometheusRules, 25);
+		assert.equal(report.counts.prometheusInstances, 31);
 		assert.equal(report.counts.grafanaRules, 2);
 		assert.equal(report.counts.grafanaInstances, 2);
 		assert.equal(alertRegistry.capturedAt, "2026-08-28T17:45:44Z");
 		assert.equal(alertRegistry.refreshedAt, "2026-08-29T11:53:41Z");
 		assert.deepEqual(report.counts.prometheusByEnvironment, {
 			"dev-gcp": 6,
-			"prod-gcp": 25,
-			"prod-fss": 6,
+			"prod-gcp": 22,
+			"prod-fss": 3,
 		});
 	});
 
@@ -64,7 +64,7 @@ describe("alert-register", () => {
 			prometheusRuleIds.has(ruleId),
 		);
 
-		assert.equal(observations.length, 37);
+		assert.equal(observations.length, 31);
 		assert.ok(
 			observations.every(
 				({ configuredState, evaluationState, evaluationHealth }) =>
@@ -181,18 +181,18 @@ describe("alert-register", () => {
 			({ kind }) => kind === "repository",
 		);
 
-		assert.equal(repositorySources.length, 13);
+		assert.equal(repositorySources.length, 11);
 		assert.equal(
 			repositorySources.filter(
 				({ evidenceKind }) => evidenceKind === "default-branch-snapshot",
 			).length,
-			11,
+			10,
 		);
 		assert.equal(
 			repositorySources.filter(
 				({ evidenceKind }) => evidenceKind === "historical-source-snapshot",
 			).length,
-			2,
+			1,
 		);
 		const historicalKinds = new Map(
 			repositorySources
@@ -207,10 +207,6 @@ describe("alert-register", () => {
 				]),
 		);
 		assert.equal(historicalKinds.get("source:lps-mottak-prod"), "file-removed");
-		assert.equal(
-			historicalKinds.get("source:brukertilgang-fss-historical"),
-			"deployment-superseded",
-		);
 		assert.deepEqual(
 			new Map(
 				repositorySources
@@ -221,7 +217,6 @@ describe("alert-register", () => {
 			),
 			new Map([
 				["source:lps-mottak-prod", "navikt/lps-oppfolgingsplan-mottak#637"],
-				["source:brukertilgang-fss-historical", "navikt/syfobrukertilgang#368"],
 			]),
 		);
 		for (const source of repositorySources) {
@@ -247,16 +242,6 @@ describe("alert-register", () => {
 			lifecycleById.get("rule:dokumentporten-terminal-varsel-error")?.state,
 			"migrating",
 		);
-		assert.equal(
-			lifecycleById.get("rule:brukertilgang-down")?.state,
-			"retiring",
-		);
-		assert.deepEqual(lifecycleById.get("rule:brukertilgang-down"), {
-			state: "retiring",
-			reason:
-				"Runtime er slettet etter syfomotebehov V5-cutoveren, men de tre prod-gcp- og de tre prod-fss-instansene er uverifisert oppryddingsgjeld.",
-			issue: "navikt/syfobrukertilgang#369",
-		});
 		assert.equal(
 			lifecycleById.get("rule:lps-altinn-consumer-lag")?.state,
 			"retiring",
@@ -323,7 +308,7 @@ describe("alert-register", () => {
 		);
 
 		const report = assertValidAlertRegistry(alertRegistry);
-		assert.equal(report.missingRunbooks.length, 18);
+		assert.equal(report.missingRunbooks.length, 15);
 		assert.ok(
 			expectedRunbooks.every(
 				([ruleId]) => !report.missingRunbooks.includes(ruleId),
@@ -372,7 +357,7 @@ describe("alert-register", () => {
 		);
 	});
 
-	test("vedtar én policy og én produksjonsrespons for alle 30 regler", () => {
+	test("vedtar én policy og én produksjonsrespons for alle 27 regler", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 
 		assert.equal(alertRegistry.schemaVersion, 2);
@@ -381,14 +366,14 @@ describe("alert-register", () => {
 			KEEP: 9,
 			TUNE: 4,
 			REPLACE: 4,
-			RETIRE: 11,
+			RETIRE: 8,
 			MIGRATE: 2,
 			EXTERNAL_ONLY: 0,
 		});
 		assert.deepEqual(report.policy.tierCounts, {
 			pager: 2,
-			ticket: 21,
-			"dashboard-only": 7,
+			ticket: 19,
+			"dashboard-only": 6,
 		});
 		assert.equal(
 			Object.values(report.policy.decisionCounts).reduce(
@@ -730,28 +715,7 @@ describe("alert-register", () => {
 		);
 	});
 
-	test("avviser retirement uten verifisert erstatning eller dokumentert bortfall", () => {
-		const registry = copyRegistry();
-		const rule = registry.rules.find(
-			({ id }) => id === "rule:brukertilgang-down",
-		);
-		assert.ok(rule);
-		if (rule.policy.decision !== "RETIRE") assert.fail("Forventet RETIRE.");
-		rule.policy.retirementGate = {
-			status: "ready",
-			basis: {
-				kind: "justified-removal",
-				reason: "",
-				evidence: [],
-			},
-		} as never;
-
-		assert.ok(
-			buildAlertRegistryReport(registry).errors.some((error) =>
-				error.includes("mangler begrunnet og dokumentert retirement"),
-			),
-		);
-
+	test("avviser retirement uten gyldig reviewtid eller begrunnet bortfall", () => {
 		const invalidReview = copyRegistry();
 		const reviewedRule = invalidReview.rules.find(
 			({ id }) => id === "rule:grafana-kafka-offset",
@@ -767,6 +731,25 @@ describe("alert-register", () => {
 		assert.ok(
 			buildAlertRegistryReport(invalidReview).errors.some((error) =>
 				error.includes("ugyldig reviewtid for retirement"),
+			),
+		);
+
+		const missingRemovalReason = copyRegistry();
+		const removalRule = missingRemovalReason.rules.find(
+			({ id }) => id === "rule:grafana-kafka-offset",
+		);
+		assert.ok(removalRule);
+		if (
+			removalRule.policy.decision !== "RETIRE" ||
+			removalRule.policy.retirementGate.status !== "ready" ||
+			removalRule.policy.retirementGate.basis.kind !== "justified-removal"
+		) {
+			assert.fail("Forventet begrunnet retirement.");
+		}
+		removalRule.policy.retirementGate.basis.reason = "";
+		assert.ok(
+			buildAlertRegistryReport(missingRemovalReason).errors.some((error) =>
+				error.includes("mangler begrunnet og dokumentert retirement"),
 			),
 		);
 	});
@@ -873,16 +856,8 @@ describe("alert-register", () => {
 				"topic:varselbus",
 			),
 		);
-		assert.equal(report.productionRuntimeClusterMismatches.length, 3);
-		assert.ok(
-			report.productionRuntimeClusterMismatches.every(
-				({ targetRef, environment, expectedCluster }) =>
-					targetRef === "app:syfobrukertilgang" &&
-					environment === "prod-fss" &&
-					expectedCluster === "prod-gcp",
-			),
-		);
-		assert.equal(report.historicalSourceDeployments.length, 4);
+		assert.equal(report.productionRuntimeClusterMismatches.length, 0);
+		assert.equal(report.historicalSourceDeployments.length, 1);
 		assert.ok(
 			report.historicalSourceDeployments.some(
 				({ ruleId, environment }) =>
@@ -890,23 +865,41 @@ describe("alert-register", () => {
 					environment === "prod-gcp",
 			),
 		);
-		assert.equal(report.deliveryAutomationGaps.length, 3);
+		assert.equal(report.deliveryAutomationGaps.length, 2);
 		assert.equal(
 			report.deliveryAutomationGaps.reduce(
 				(sum, gap) => sum + gap.affectedDeployments,
 				0,
 			),
-			10,
+			7,
 		);
 		assert.deepEqual(
 			report.deliveryAutomationGaps.map(({ sourceRef }) => sourceRef),
-			[
-				"source:brukertilgang",
-				"source:motebehov-prod",
-				"source:oppfolgingsplanservice-prod",
-			],
+			["source:motebehov-prod", "source:oppfolgingsplanservice-prod"],
 		);
 		assert.equal(report.unresolvedNotificationChannels.length, 2);
+	});
+
+	test("oppdager produksjonsregel i et annet cluster enn runtime", () => {
+		const registry = copyRegistry();
+		const observation = registry.observations.find(
+			({ ruleId, environment }) =>
+				ruleId === "rule:esyfovarsel-down" && environment === "prod-gcp",
+		);
+		assert.ok(observation);
+		observation.environment = "prod-fss";
+
+		assert.deepEqual(
+			buildAlertRegistryReport(registry).productionRuntimeClusterMismatches,
+			[
+				{
+					ruleId: "rule:esyfovarsel-down",
+					environment: "prod-fss",
+					targetRef: "app:esyfovarsel",
+					expectedCluster: "prod-gcp",
+				},
+			],
+		);
 	});
 
 	test("synliggjør navnekollisjoner og semantiske familier uten å overdrive duplikater", () => {
@@ -1024,7 +1017,7 @@ describe("alert-register", () => {
 		);
 
 		assert.equal(report.status, "unknown");
-		assert.equal(report.unknownEvaluationHealth.length, 39);
+		assert.equal(report.unknownEvaluationHealth.length, 33);
 		assert.match(report.reason ?? "", /evaluatorhelse/);
 	});
 

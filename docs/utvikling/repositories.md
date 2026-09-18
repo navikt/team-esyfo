@@ -254,10 +254,6 @@ API-er og bakgrunnstjenester — Kotlin med enten Spring Boot eller Ktor.
 <details class="deprecated-section">
 <summary>⚠️ Deprecated backend-repoer</summary>
 <div class="deprecated-card">
-<h4><a href="https://github.com/navikt/syfobrukertilgang">syfobrukertilgang</a></h4>
-<p>Arkivert og avviklet etter syfomotebehov V5-cutoveren; arbeidsgiverautorisasjon bruker nå Dine sykmeldtes TokenX-bundne nærmeste-leder-relasjon.</p>
-</div>
-<div class="deprecated-card">
 <h4><a href="https://github.com/navikt/syfooppfolgingsplanservice">syfooppfolgingsplanservice</a></h4>
 <p>Avviklet FSS-applikasjon som håndterte og lagret digitale oppfølgingsplaner. Erstattet av syfo-oppfolgingsplan-backend.</p>
 </div>
