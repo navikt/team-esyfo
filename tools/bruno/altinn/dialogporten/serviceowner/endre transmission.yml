@@ -1,0 +1,81 @@
+info:
+  name: endre transmission
+  type: http
+  seq: 7
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/v1/serviceowner/dialogs/{{dialogId}}/transmissions/{{transmissionId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "id": "",
+        "createdAt": "",
+        "extendedType": "",
+        "externalReference": "",
+        "type": "",
+        "sender": {
+          "actorType": "ServiceOwner"
+        },
+        "content": {
+          "title": {
+            "value": [
+              {
+                "value": "",
+                "languageCode": "nb"
+              }
+            ],
+            "mediaType": "text/plain"
+          },
+          "summary": {
+            "value": [
+              {
+                "value": "",
+                "languageCode": "nb"
+              }
+            ],
+            "mediaType": ""
+          }
+        },
+        "attachments": [
+          {
+            "id": "",
+            "displayName": [
+              {
+                "value": "",
+                "languageCode": ""
+              }
+            ],
+            "urls": [
+              {
+                "id": "",
+                "url": "",
+                "mediaType": "",
+                "consumerType": "Api"
+              },
+              {
+                "id": "",
+                "url": "",
+                "mediaType": "",
+                "consumerType": "Gui"
+              }
+            ],
+            "expiresAt": ""
+          }
+        ],
+        "isSilentUpdate": true
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: transmissionId
+      value: 019e011c-564c-71be-8605-339ef4618907
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

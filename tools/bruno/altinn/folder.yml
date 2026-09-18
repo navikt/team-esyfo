@@ -1,0 +1,25 @@
+info:
+  name: altinn
+  type: folder
+  seq: 2
+
+request:
+  auth:
+    type: bearer
+    token: "{{dialogportenToken}}"
+  variables:
+    - name: systemId
+      value: 215649202_kpfSys
+    - name: systemLeverandoerOrgnr
+      value: "215649202"
+    - name: systemKundeOrgnr
+      value: "311131788"
+
+docs:
+  content: |-
+    # Collection for Altin
+
+    See the docs in the subfolders for spesifics.
+
+    [Swagger @ Altinn](https://altinn-dev-api.azure-api.net/dialogporten/swagger/index.html#/)
+  type: text/markdown

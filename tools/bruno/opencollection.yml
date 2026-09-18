@@ -1,0 +1,14 @@
+opencollection: 1.0.0
+
+info:
+  name: esyfo-dev-tools
+
+docs:
+  content: Samling av endepunkter som er nyttige for å opprette system, systembrukere og hente dialoger fra Dialogporten.
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

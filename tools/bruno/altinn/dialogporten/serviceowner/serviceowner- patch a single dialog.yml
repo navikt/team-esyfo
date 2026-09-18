@@ -1,0 +1,39 @@
+info:
+  name: "serviceowner: patch a single dialog"
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/serviceowner/dialogs/:dialogId"
+  headers:
+    - name: Content-Type
+      value: application/json-patch+json
+    - name: If-Match
+      value: 4d7928c1-357d-40e0-8110-a1635f665ed7
+      disabled: true
+  params:
+    - name: dialogId
+      value: "{{dialogId}}"
+      type: path
+  body:
+    type: json
+    data: |-
+      [
+        {
+          "operationType": "Add",
+          "path": "/status",
+          "op": "Add",
+          "value": "Completed"
+        }
+      ]
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: See the [rfc](https://datatracker.ietf.org/doc/html/rfc6902) for details.

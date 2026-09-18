@@ -1,0 +1,121 @@
+info:
+  name: Gets a list of dialogs
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/serviceowner/dialogs"
+  params:
+    - name: serviceResource
+      value: ""
+      type: query
+      disabled: true
+    - name: party
+      value: ""
+      type: query
+      disabled: true
+    - name: endUserId
+      value: ""
+      type: query
+      disabled: true
+    - name: extendedStatus
+      value: ""
+      type: query
+      disabled: true
+    - name: externalReference
+      value: ""
+      type: query
+      disabled: true
+    - name: status
+      value: ""
+      type: query
+      disabled: true
+    - name: deleted
+      value: ""
+      type: query
+      disabled: true
+    - name: createdAfter
+      value: ""
+      type: query
+      disabled: true
+    - name: createdBefore
+      value: ""
+      type: query
+      disabled: true
+    - name: updatedAfter
+      value: ""
+      type: query
+      disabled: true
+    - name: updatedBefore
+      value: ""
+      type: query
+      disabled: true
+    - name: contentUpdatedAfter
+      value: ""
+      type: query
+      disabled: true
+    - name: contentUpdatedBefore
+      value: ""
+      type: query
+      disabled: true
+    - name: dueAfter
+      value: ""
+      type: query
+      disabled: true
+    - name: dueBefore
+      value: ""
+      type: query
+      disabled: true
+    - name: visibleAfter
+      value: ""
+      type: query
+      disabled: true
+    - name: visibleBefore
+      value: ""
+      type: query
+      disabled: true
+    - name: process
+      value: ""
+      type: query
+      disabled: true
+    - name: systemLabel
+      value: ""
+      type: query
+      disabled: true
+    - name: excludeApiOnly
+      value: ""
+      type: query
+      disabled: true
+    - name: search
+      value: ""
+      type: query
+      disabled: true
+    - name: serviceOwnerLabels
+      value: ""
+      type: query
+      disabled: true
+    - name: searchLanguageCode
+      value: ""
+      type: query
+      disabled: true
+    - name: orderBy
+      value: ""
+      type: query
+      disabled: true
+    - name: continuationToken
+      value: ""
+      type: query
+      disabled: true
+    - name: limit
+      value: ""
+      type: query
+      disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,15 @@
+variables:
+  - secret: true
+    name: privateKey
+  - secret: true
+    name: jwt_signed
+  - secret: true
+    name: clientId
+  - secret: true
+    name: keyId
+  - secret: true
+    name: scope
+  - secret: true
+    name: systemUserOrg
+  - secret: true
+    name: systemOwnerOrg

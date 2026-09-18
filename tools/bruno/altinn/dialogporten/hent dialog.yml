@@ -1,0 +1,34 @@
+info:
+  name: hent dialog
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: https://platform.tt02.altinn.no/dialogporten/api/v1/enduser/dialogs/{{dialogId}}
+  auth: inherit
+
+runtime:
+  variables:
+    - name: dialogId
+      value: 019a4a08-530e-7286-aac6-06b7f18fcc60
+  scripts:
+    - type: before-request
+      code: |-
+        const http = require("axios");
+        const systembrukerOrgnr = bru.getFolderVar("systemKundeOrgnr");
+
+        const tokenrespons = await http.get("https://esyfo-token.intern.dev.nav.no/dialogporten/" + systembrukerOrgnr)
+        req.setHeader("Authorization", "Bearer "+ tokenrespons.data);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Hent dialog fra Dialogporten.
+
+  Swagger: https://platform.tt02.altinn.no/dialogporten/swagger/index.html#/Enduser
