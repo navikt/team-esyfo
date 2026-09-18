@@ -1,0 +1,61 @@
+info:
+  name: "graphql: hent oppdaterte dialoger"
+  type: graphql
+  seq: 2
+
+graphql:
+  method: POST
+  url: https://platform.tt02.altinn.no/dialogporten/graphql
+  body:
+    query: |
+      query GetDialogsUpdatedRecently($partyId: String!, $updatedAfter: DateTime!) {
+        searchDialogs(input: { party: [$partyId], updatedAfter: $updatedAfter }) {
+          items {
+            id
+            updatedAt
+            status
+            content {
+              title {
+                value {
+                  value
+                }
+              }
+            }
+          }
+          hasNextPage
+          continuationToken
+          errors {
+            message
+          }
+        }
+      }
+    variables: |-
+      {
+        "partyId": "urn:altinn:organization:identifier-no:{{systemKundeOrgnr}}",
+        "updatedAfter": "2025-06-20T05:02:41Z"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: scopes
+      value: digdir:dialogporten
+  scripts:
+    - type: before-request
+      code: |-
+        const http = require("axios");
+        const systembrukerOrgnr = bru.getCollectionVar("systemKundeOrgnr")
+        const tokenrespons = await http.get("https://esyfo-token.intern.dev.nav.no/dialogporten/" + systembrukerOrgnr)
+        req.setHeader("Authorization", "Bearer "+ tokenrespons.data);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Hent dialoger fra Dialogporten.
+
+  Swagger: https://docs.altinn.studio/nb/dialogporten/reference/graphql/

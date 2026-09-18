@@ -1,0 +1,75 @@
+info:
+  name: "graphql: hent dialoger for organisasjon"
+  type: graphql
+  seq: 5
+
+graphql:
+  method: POST
+  url: https://platform.tt02.altinn.no/dialogporten/graphql
+  body:
+    query: |
+      query GetDialogsForParty($partyId: String!) {
+        searchDialogs(input: { party: [$partyId] }) {
+          items {
+            id
+            org
+            serviceResource
+            party
+            status
+            content {
+              title {
+                value {
+                  value
+                  languageCode
+                }
+                mediaType
+              }
+              summary {
+                value {
+                  value
+                  languageCode
+                }
+                mediaType
+              }
+            }
+            createdAt
+            updatedAt
+          }
+          hasNextPage
+          continuationToken
+          errors {
+            message
+          }
+        }
+      }
+    variables: |
+      {
+        "partyId": "urn:altinn:organization:identifier-no:{{systemKundeOrgnr}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: scopes
+      value: digdir:dialogporten
+  scripts:
+    - type: before-request
+      code: |-
+        const http = require("axios");
+        const systembrukerOrgnr = bru.getFolderVar("systemKundeOrgnr");
+
+        const tokenrespons = await http.get("https://esyfo-token.intern.dev.nav.no/dialogporten/" + systembrukerOrgnr)
+        console.log(tokenrespons.data)
+        req.setHeader("Authorization", "Bearer "+ tokenrespons.data);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Hent dialoger fra Dialogporten.
+
+  Swagger: https://docs.altinn.studio/nb/dialogporten/reference/graphql/

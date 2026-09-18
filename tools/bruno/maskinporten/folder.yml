@@ -1,0 +1,17 @@
+info:
+  name: maskinporten
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit
+
+docs:
+  content: |+
+    # Endepunkter for interaksjon med Maskinporten
+
+    ## JWT
+
+    To perform the token exchange with Maskinporten with the default MP client and system owner, you need the PEM (private key) located in the secret store in the Nais console.
+
+  type: text/markdown

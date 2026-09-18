@@ -1,0 +1,19 @@
+variables:
+  - name: baseUrl
+    value: https://platform.tt02.altinn.no/dialogporten
+  - name: ressurs
+    value: nav_syfo_dialog
+  - name: orgnummer
+    value: "315761093"
+  - name: oppfolgingRessurs
+    value: nav_syfo_dialog
+  - name: lenkeId
+    value: "123456789"
+  - name: dialogId
+    value: '""'
+  - name: revisionNumber
+    value: '""'
+  - secret: true
+    name: dialogportenToken
+  - secret: true
+    name: testbrukerToken
