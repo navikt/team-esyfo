@@ -49,7 +49,7 @@ Panelbeskrivelser og lenker til kontrakt og runbook ligger i panelmenyene. Dashb
 - Trace-datakilden avledes skjult fra kjøremiljøet: `prod-gcp-tempo` (`P8A28344D07741F8D`) for prod og `dev-gcp-tempo` (`P95CC91DC09CABFC8`) for dev.
 - Dashboard-UID er `team-esyfo-feiloversikt`, og ressursen skal ligge i Team eSyfo-mappen med UID `K-1b-N_4k`.
 
-Overgangstilstander står synlig i runtime-velgeren. Det gjør at `esyfovarsel` kan følges under migreringen til `syfo-budstikka`, og at `syfobrukertilgang` beholder nødvendig kontroll frem til utfasing er fullført.
+Overgangstilstander står synlig i runtime-velgeren. Det gjør at `esyfovarsel` kan følges under migreringen til `syfo-budstikka`.
 
 En aggregert kontroll 9. september 2026 bekreftet produksjonsmetadata for `aktivitetskrav-frontend`, `dialogmote-frontend`, `dinesykmeldte` og `syfo-oppfolgingsplan-frontend`. Samme vindu inneholdt også hendelser uten miljø, særlig fra `meroppfolging-frontend`. Derfor filtrerer vi ikke slike hendelser bort eller antar at de er fra produksjon. Nettleserens gruppelogglink bevarer både valgt feiltype og radens klassifiserte miljø.
 

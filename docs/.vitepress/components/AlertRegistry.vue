@@ -773,17 +773,26 @@ const linkLabel = (status: AlertRule["runbook"] | AlertRule["dashboard"]) => {
 					<code v-for="target in report.ownedTopicsWithoutEnabledProductionRule" :key="target">{{ shortId(target) }}</code>
 				</div>
 			</details>
-			<article class="gap-card gap-card--mismatch">
-				<h3><strong>{{ report.productionRuntimeClusterMismatches.length }}</strong> cluster-mismatch</h3>
+			<article
+				v-if="report.productionRuntimeClusterMismatches.length > 0"
+				class="gap-card gap-card--mismatch"
+			>
+				<h3>
+					<strong>{{ report.productionRuntimeClusterMismatches.length }}</strong>
+					cluster-mismatch
+				</h3>
 				<p>
-					Tre <code>syfobrukertilgang</code>-regler finnes i <code>prod-fss</code>, mens godkjent
-					runtimeinventar og <a :href="NAIS_APPLICATIONS_URL">live applikasjonsliste</a>
-					viser <code>prod-gcp</code>. Dette er
-					bekreftet restkonfigurasjon fra GCP-migreringen og skal ryddes kontrollert.
+					Den observerte produksjonsregelen ligger i et annet cluster enn det
+					godkjente runtimeinventaret. Verifiser hvilken konfigurasjon som gjelder,
+					og rydd opp i avviket.
 				</p>
 				<ul>
-					<li v-for="mismatch in report.productionRuntimeClusterMismatches" :key="`${mismatch.ruleId}-${mismatch.environment}`">
-						<code>{{ shortId(mismatch.ruleId) }}</code>: {{ mismatch.environment }} → forventet {{ mismatch.expectedCluster }}
+					<li
+						v-for="mismatch in report.productionRuntimeClusterMismatches"
+						:key="`${mismatch.ruleId}-${mismatch.environment}`"
+					>
+						<code>{{ shortId(mismatch.ruleId) }}</code>: {{ mismatch.environment }}
+						→ forventet {{ mismatch.expectedCluster }}
 					</li>
 				</ul>
 			</article>

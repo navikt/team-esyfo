@@ -337,7 +337,7 @@ export interface RuntimeInventory {
 		approvedOn?: IsoDate;
 		ownerTeam: "team-esyfo";
 		expected: {
-			applications: 26;
+			applications: 25;
 			jobs: 1;
 			ownedTopics: 10;
 			browserSurfaces: 11;

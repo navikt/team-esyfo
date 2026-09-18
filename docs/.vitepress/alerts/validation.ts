@@ -336,14 +336,14 @@ export const buildAlertRegistryReport = (
 		}
 	}
 
-	if (prometheusRules.length !== 28) {
+	if (prometheusRules.length !== 25) {
 		errors.push(
-			`Forventet 28 Prometheus-definisjoner, fant ${prometheusRules.length}.`,
+			`Forventet 25 Prometheus-definisjoner, fant ${prometheusRules.length}.`,
 		);
 	}
-	if (prometheusObservations.length !== 37) {
+	if (prometheusObservations.length !== 31) {
 		errors.push(
-			`Forventet 37 PrometheusRule-instanser, fant ${prometheusObservations.length}.`,
+			`Forventet 31 PrometheusRule-instanser, fant ${prometheusObservations.length}.`,
 		);
 	}
 	if (grafanaRules.length !== 2 || grafanaObservations.length !== 2) {
@@ -362,8 +362,8 @@ export const buildAlertRegistryReport = (
 	}
 	for (const [environment, expected] of [
 		["dev-gcp", 6],
-		["prod-gcp", 25],
-		["prod-fss", 6],
+		["prod-gcp", 22],
+		["prod-fss", 3],
 	] as const) {
 		if (prometheusByEnvironment[environment] !== expected) {
 			errors.push(

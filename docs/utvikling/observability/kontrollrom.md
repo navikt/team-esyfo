@@ -47,7 +47,7 @@ Prometheus `increase()` estimerer tellerøkning. Tellere presenteres avrundet ti
 
 ## Avgrensning og datagrunnlag
 
-Produksjonsflåten genereres fra [runtimeinventaret](./runtimeinventar): 26 operative GCP-appkomponenter, hvorav 24 har HTTP/SERVER-profil. Avviklet `syfooppfolgingsplanservice` i FSS er ikke med. `esyfovarsel` og `syfo-budstikka` er workers og skal ikke vurderes med HTTP-måledekning.
+Produksjonsflåten genereres fra [runtimeinventaret](./runtimeinventar): 25 operative GCP-appkomponenter, hvorav 23 har HTTP/SERVER-profil. Avviklede tjenester er ikke med. `esyfovarsel` og `syfo-budstikka` er workers og skal ikke vurderes med HTTP-måledekning.
 
 - HTTP-målinger: `traces_spanmetrics_calls_total` og `traces_spanmetrics_latency_bucket`, avgrenset til `service_namespace=team-esyfo`, `k8s_cluster_name=prod` og `span_kind=SPAN_KIND_SERVER`.
 - Kubernetes: produksjon i `team-esyfo`, deduplisert per deployment eller pod/container. Manglende teller eller nevner syntetiseres ikke til en målt verdi.

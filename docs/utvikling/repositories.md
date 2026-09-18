@@ -232,12 +232,6 @@ API-er og bakgrunnstjenester — Kotlin med enten Spring Boot eller Ktor.
 </div>
 
 <div class="repo-card">
-<h4><a href="https://github.com/navikt/syfobrukertilgang">syfobrukertilgang</a></h4>
-<p>Håndterer tilgangskontroll til sykefraværsoppfølgingen for brukere i selvbetjeningssonen.</p>
-<div class="tech-badges"><span>Kotlin</span><span>Ktor</span></div>
-</div>
-
-<div class="repo-card">
 <h4><a href="https://github.com/navikt/syfomotebehov">syfomotebehov</a></h4>
 <p>Lagrer og eksponerer data om behov for dialogmøte — brukes av bro-frontend.</p>
 <div class="tech-badges"><span>Kotlin</span><span>Spring Boot</span></div>

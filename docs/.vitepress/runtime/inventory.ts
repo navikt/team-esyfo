@@ -45,7 +45,6 @@ const VERIFIED_APM_SERVICES = new Set([
 	"syfo-dokumentporten",
 	"syfo-oppfolgingsplan-backend",
 	"syfo-oppfolgingsplan-frontend",
-	"syfobrukertilgang",
 	"syfomotebehov",
 	"syfooppdfgen",
 	"sykepengedager-informasjon",
@@ -577,24 +576,6 @@ export const applications: Application[] = [
 		lifecycle: active,
 		context: context(["oppfolgingsplan"], ["journey:follow-up-plan"]),
 		coverageProfile: "frontend-server",
-	}),
-	application({
-		name: "syfobrukertilgang",
-		repository: "navikt/syfobrukertilgang",
-		role: "backend-api",
-		criticality: "critical",
-		lifecycle: {
-			state: "retiring",
-			candidateReplacementRefs: ["app:esyfo-narmesteleder"],
-			consumerRefs: ["app:syfomotebehov"],
-			reason:
-				"Tjenesten skal fases ut. Default-branch-kartlegging viser syfomotebehov som aktiv konsument; syfooppfolgingsplanservice forsvinner 31. august 2026.",
-			decision:
-				"Kandidat er en tilsvarende tilgangssjekk i esyfo-narmesteleder. Endpoint, semantisk ekvivalens og dato er ikke besluttet.",
-			minimumCoverage: "critical-http",
-		},
-		context: context(["fellestjenester"], ["journey:access-control"]),
-		coverageProfile: "critical-http",
 	}),
 	application({
 		name: "syfomotebehov",
@@ -1429,7 +1410,7 @@ export const runtimeInventory: RuntimeInventory = {
 		approvedOn: "2026-08-28",
 		ownerTeam: "team-esyfo",
 		expected: {
-			applications: 26,
+			applications: 25,
 			jobs: 1,
 			ownedTopics: 10,
 			browserSurfaces: 11,

@@ -16,7 +16,6 @@ Disse applikasjonene betjener flere områder:
 | syfooppdfgen         | PDF-generering for sykefraværsdokumenter |
 | lumi                 | Tilbakemeldingswidget                    |
 | esyfovarsel          | Varsling på tvers av områder             |
-| syfobrukertilgang    | Tilgangsstyring for brukere              |
 | esyfo-microfrontends | Delte mikrofrontend-komponenter          |
 
 ## Dette området handler om
