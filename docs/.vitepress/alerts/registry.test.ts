@@ -251,6 +251,12 @@ describe("alert-register", () => {
 			lifecycleById.get("rule:brukertilgang-down")?.state,
 			"retiring",
 		);
+		assert.deepEqual(lifecycleById.get("rule:brukertilgang-down"), {
+			state: "retiring",
+			reason:
+				"Runtime er slettet etter syfomotebehov V5-cutoveren, men de tre prod-gcp- og de tre prod-fss-instansene er uverifisert oppryddingsgjeld.",
+			issue: "navikt/syfobrukertilgang#369",
+		});
 		assert.equal(
 			lifecycleById.get("rule:lps-altinn-consumer-lag")?.state,
 			"retiring",

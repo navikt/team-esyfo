@@ -1704,7 +1704,7 @@
       "semanticFamily": "legacy-zero-available-replicas",
       "lifecycle": {
         "state": "retiring",
-        "reason": "syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
+        "reason": "Runtime er slettet etter syfomotebehov V5-cutoveren, men de tre prod-gcp- og de tre prod-fss-instansene er uverifisert oppryddingsgjeld.",
         "issue": "navikt/syfobrukertilgang#369"
       },
       "policy": {
@@ -1715,7 +1715,7 @@
           "repository": "navikt/syfobrukertilgang",
           "scopeRef": "app:syfobrukertilgang"
         },
-        "rationale": "All-replicas-down er en midlertidig ticket-guardrail mens den antatt siste konsumenten og eventuelle øvrige konsumenter verifiseres og flyttes; regelen pensjoneres når cutover er bevist.",
+        "rationale": "Standalone-regelen beholdes som oppryddingsgjeld til live-avstemming har bevist at både GCP- og FSS-instansen er borte.",
         "operationalResponse": {
           "phase": "until-retired",
           "delivery": {
@@ -1726,8 +1726,8 @@
         "implementationIssue": "navikt/syfobrukertilgang#369",
         "retirementGate": {
           "status": "blocked",
-          "issue": "navikt/syfomotebehov#755",
-          "condition": "Alle produksjonskonsumenter må bruke verifisert erstatning i esyfo-narmesteleder."
+          "issue": "navikt/syfobrukertilgang#368",
+          "condition": "De tre prod-gcp- og de tre prod-fss-instansene må være fraværende i en ny live-avstemming."
         },
         "decidedAt": "2026-08-28T19:13:53Z"
       },
@@ -1766,7 +1766,7 @@
       },
       "riskNotes": [
         "NAIS-applikasjonslisten viser bare dev-gcp og prod-gcp; prod-fss-instansen er bekreftet restkonfigurasjon per 2026-08-28",
-        "må beholdes frem til faktisk cutover, deretter pensjoneres"
+        "runtime ble slettet 2026-09-18; beholdes til live-avstemming beviser at restinstansene er borte"
       ],
       "monitoredRefs": [
         "app:syfobrukertilgang"
@@ -1789,7 +1789,7 @@
       "semanticFamily": "legacy-nginx-http-5xx-ratio",
       "lifecycle": {
         "state": "retiring",
-        "reason": "syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
+        "reason": "Runtime er slettet etter syfomotebehov V5-cutoveren, men de tre prod-gcp- og de tre prod-fss-instansene er uverifisert oppryddingsgjeld.",
         "issue": "navikt/syfobrukertilgang#369"
       },
       "policy": {
@@ -1800,7 +1800,7 @@
           "repository": "navikt/syfobrukertilgang",
           "scopeRef": "app:syfobrukertilgang"
         },
-        "rationale": "5xx beholdes kun som ikke-avbrytende guardrail frem til tjenesten ikke lenger har konsumenter.",
+        "rationale": "Standalone-regelen beholdes som oppryddingsgjeld til live-avstemming har bevist at både GCP- og FSS-instansen er borte.",
         "operationalResponse": {
           "phase": "until-retired",
           "delivery": {
@@ -1811,8 +1811,8 @@
         "implementationIssue": "navikt/syfobrukertilgang#369",
         "retirementGate": {
           "status": "blocked",
-          "issue": "navikt/syfomotebehov#755",
-          "condition": "Tilgangscutover og observasjonsperiode må være verifisert før siste GCP-regel fjernes."
+          "issue": "navikt/syfobrukertilgang#368",
+          "condition": "De tre prod-gcp- og de tre prod-fss-instansene må være fraværende i en ny live-avstemming."
         },
         "decidedAt": "2026-08-28T19:13:53Z"
       },
@@ -1873,7 +1873,7 @@
       "semanticFamily": "legacy-nginx-http-4xx-ratio",
       "lifecycle": {
         "state": "retiring",
-        "reason": "syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
+        "reason": "Runtime er slettet etter syfomotebehov V5-cutoveren, men de tre prod-gcp- og de tre prod-fss-instansene er uverifisert oppryddingsgjeld.",
         "issue": "navikt/syfobrukertilgang#369"
       },
       "policy": {
@@ -1884,7 +1884,7 @@
           "repository": "navikt/syfobrukertilgang",
           "scopeRef": "app:syfobrukertilgang"
         },
-        "rationale": "Generisk 4xx-rate er diagnostikk og skal ikke varsle; endelig regelcleanup følger tjenestens cutover.",
+        "rationale": "Generisk 4xx-rate er diagnostikk og beholdes som oppryddingsgjeld til live-avstemming har bevist at begge instansene er borte.",
         "operationalResponse": {
           "phase": "until-retired",
           "delivery": {
@@ -1894,8 +1894,8 @@
         "implementationIssue": "navikt/syfobrukertilgang#369",
         "retirementGate": {
           "status": "blocked",
-          "issue": "navikt/syfomotebehov#755",
-          "condition": "GCP-regelsettet fjernes samlet etter verifisert tilgangscutover."
+          "issue": "navikt/syfobrukertilgang#368",
+          "condition": "De tre prod-gcp- og de tre prod-fss-instansene må være fraværende i en ny live-avstemming."
         },
         "decidedAt": "2026-08-28T19:13:53Z"
       },

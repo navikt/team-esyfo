@@ -584,14 +584,10 @@ export const applications: Application[] = [
 		role: "backend-api",
 		criticality: "critical",
 		lifecycle: {
-			state: "retiring",
-			candidateReplacementRefs: ["app:esyfo-narmesteleder"],
-			consumerRefs: ["app:syfomotebehov"],
+			state: "retired",
+			retiredOn: "2026-09-18",
 			reason:
-				"Tjenesten skal fases ut. Default-branch-kartlegging viser syfomotebehov som aktiv konsument; syfooppfolgingsplanservice forsvinner 31. august 2026.",
-			decision:
-				"Kandidat er en tilsvarende tilgangssjekk i esyfo-narmesteleder. Endpoint, semantisk ekvivalens og dato er ikke besluttet.",
-			minimumCoverage: "critical-http",
+				"NAIS-runtime ble slettet etter syfomotebehov V5-cutoveren. Standalone PrometheusRule-instanser er uverifisert oppryddingsgjeld i navikt/syfobrukertilgang#368 og navikt/syfobrukertilgang#369.",
 		},
 		context: context(["fellestjenester"], ["journey:access-control"]),
 		coverageProfile: "critical-http",
@@ -1429,7 +1425,7 @@ export const runtimeInventory: RuntimeInventory = {
 		approvedOn: "2026-08-28",
 		ownerTeam: "team-esyfo",
 		expected: {
-			applications: 26,
+			applications: 25,
 			jobs: 1,
 			ownedTopics: 10,
 			browserSurfaces: 11,

@@ -295,7 +295,7 @@ const topicLagLabel = (topic: Topic) =>
 	</div>
 
 	<details class="sunset-details">
-		<summary>{{ sunsetApplications.length }} workloader utenfor 26-baseline avvikles</summary>
+		<summary>{{ sunsetApplications.length }} workloader utenfor 25-baseline avvikles</summary>
 		<ul>
 			<li v-for="app in sunsetApplications" :key="app.id">
 				<code>{{ runtimeLabel(app.runtime) }}</code> — {{ lifecycleLabel(app.lifecycle) }}

@@ -258,7 +258,7 @@ const notificationMigration: AlertLifecycle = {
 const retiringAccess: AlertLifecycle = {
 	state: "retiring",
 	reason:
-		"syfobrukertilgang skal fases ut etter at syfomotebehov har flyttet tilgangssjekken.",
+		"Runtime er slettet etter syfomotebehov V5-cutoveren, men de tre prod-gcp- og de tre prod-fss-instansene er uverifisert oppryddingsgjeld.",
 	issue: "navikt/syfobrukertilgang#369",
 };
 const followUpPlanAlertCleanup: AlertLifecycle = {
@@ -1221,11 +1221,11 @@ export const alertRules: AlertRule[] = [
 		lifecycle: retiringAccess,
 		policy: retireBlockedPolicy(
 			teamOwner("navikt/syfobrukertilgang", "app:syfobrukertilgang"),
-			"All-replicas-down er en midlertidig ticket-guardrail mens den antatt siste konsumenten og eventuelle øvrige konsumenter verifiseres og flyttes; regelen pensjoneres når cutover er bevist.",
+			"Standalone-regelen beholdes som oppryddingsgjeld til live-avstemming har bevist at både GCP- og FSS-instansen er borte.",
 			ticket(),
 			"navikt/syfobrukertilgang#369",
-			"navikt/syfomotebehov#755",
-			"Alle produksjonskonsumenter må bruke verifisert erstatning i esyfo-narmesteleder.",
+			"navikt/syfobrukertilgang#368",
+			"De tre prod-gcp- og de tre prod-fss-instansene må være fraværende i en ny live-avstemming.",
 		),
 		targetRefs: ["app:syfobrukertilgang"],
 		externalTargets: [],
@@ -1243,7 +1243,7 @@ export const alertRules: AlertRule[] = [
 		},
 		riskNotes: [
 			"NAIS-applikasjonslisten viser bare dev-gcp og prod-gcp; prod-fss-instansen er bekreftet restkonfigurasjon per 2026-08-28",
-			"må beholdes frem til faktisk cutover, deretter pensjoneres",
+			"runtime ble slettet 2026-09-18; beholdes til live-avstemming beviser at restinstansene er borte",
 		],
 	}),
 	prometheusRule({
@@ -1256,11 +1256,11 @@ export const alertRules: AlertRule[] = [
 		lifecycle: retiringAccess,
 		policy: retireBlockedPolicy(
 			teamOwner("navikt/syfobrukertilgang", "app:syfobrukertilgang"),
-			"5xx beholdes kun som ikke-avbrytende guardrail frem til tjenesten ikke lenger har konsumenter.",
+			"Standalone-regelen beholdes som oppryddingsgjeld til live-avstemming har bevist at både GCP- og FSS-instansen er borte.",
 			ticket(),
 			"navikt/syfobrukertilgang#369",
-			"navikt/syfomotebehov#755",
-			"Tilgangscutover og observasjonsperiode må være verifisert før siste GCP-regel fjernes.",
+			"navikt/syfobrukertilgang#368",
+			"De tre prod-gcp- og de tre prod-fss-instansene må være fraværende i en ny live-avstemming.",
 		),
 		targetRefs: ["app:syfobrukertilgang"],
 		externalTargets: [],
@@ -1288,11 +1288,11 @@ export const alertRules: AlertRule[] = [
 		lifecycle: retiringAccess,
 		policy: retireBlockedPolicy(
 			teamOwner("navikt/syfobrukertilgang", "app:syfobrukertilgang"),
-			"Generisk 4xx-rate er diagnostikk og skal ikke varsle; endelig regelcleanup følger tjenestens cutover.",
+			"Generisk 4xx-rate er diagnostikk og beholdes som oppryddingsgjeld til live-avstemming har bevist at begge instansene er borte.",
 			dashboardOnly(),
 			"navikt/syfobrukertilgang#369",
-			"navikt/syfomotebehov#755",
-			"GCP-regelsettet fjernes samlet etter verifisert tilgangscutover.",
+			"navikt/syfobrukertilgang#368",
+			"De tre prod-gcp- og de tre prod-fss-instansene må være fraværende i en ny live-avstemming.",
 		),
 		targetRefs: ["app:syfobrukertilgang"],
 		externalTargets: [],

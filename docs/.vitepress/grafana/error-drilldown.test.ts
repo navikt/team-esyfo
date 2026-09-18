@@ -377,7 +377,7 @@ describe("feiloversikt-dashboard", () => {
 	});
 
 	test("genererer runtime- og browserscope separat fra inventaret", () => {
-		assert.equal(dashboardApplications.length, 26);
+		assert.equal(dashboardApplications.length, 25);
 		assert.deepEqual(
 			dashboardApplicationOptions.map(({ value }) => value),
 			currentApplications.map(({ runtime }) => runtime.name),

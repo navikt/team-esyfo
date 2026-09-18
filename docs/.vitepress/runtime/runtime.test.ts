@@ -51,7 +51,7 @@ describe("runtimeinventar", () => {
 		const result = validateInventory(runtimeInventory, { asOf: "2026-08-28" });
 		assert.deepEqual(result.errors, []);
 		assert.deepEqual(result.counts, {
-			applications: 26,
+			applications: 25,
 			jobs: 1,
 			ownedTopics: 10,
 			browserSurfaces: 11,
@@ -482,18 +482,17 @@ describe("runtimeinventar", () => {
 		}
 	});
 
-	test("beholder planlagt utfasing i aktiv kontroll uten oppdiktet dato", () => {
+	test("registrerer syfobrukertilgang som avviklet etter V5-cutover", () => {
 		const resource = runtimeInventory.applications.find(
 			({ id }) => id === "app:syfobrukertilgang",
 		);
 		assert.ok(resource);
-		assert.equal(resource.lifecycle.state, "retiring");
-		if (resource.lifecycle.state !== "retiring") return;
-		assert.equal(resource.lifecycle.targetDate, undefined);
-		assert.deepEqual(resource.lifecycle.consumerRefs, ["app:syfomotebehov"]);
-		assert.deepEqual(resource.lifecycle.candidateReplacementRefs, [
-			"app:esyfo-narmesteleder",
-		]);
+		assert.deepEqual(resource.lifecycle, {
+			state: "retired",
+			retiredOn: "2026-09-18",
+			reason:
+				"NAIS-runtime ble slettet etter syfomotebehov V5-cutoveren. Standalone PrometheusRule-instanser er uverifisert oppryddingsgjeld i navikt/syfobrukertilgang#368 og navikt/syfobrukertilgang#369.",
+		});
 	});
 });
 
@@ -503,7 +502,7 @@ describe("runtime drift", () => {
 			now: "2026-08-28T10:30:00Z",
 		});
 		assert.equal(report.status, "ok");
-		assert.equal(report.sunsetInRuntime.length, 3);
+		assert.equal(report.sunsetInRuntime.length, 4);
 		assert.equal(report.excludedInRuntime.length, 1);
 	});
 
@@ -1044,7 +1043,7 @@ describe("dekningsevidens", () => {
 			{ now: "2026-08-28T10:05:00Z" },
 		);
 		assert.equal(report.status, "gaps");
-		assert.equal(report.summary.application.complete, 26);
+		assert.equal(report.summary.application.complete, 25);
 		assert.equal(report.summary.job.complete, 1);
 		assert.equal(report.summary.topic.complete, 10);
 		assert.equal(report.summary["browser-surface"].complete, 0);
