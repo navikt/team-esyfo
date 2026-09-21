@@ -481,8 +481,8 @@ export const buildAidDashboard = () => {
 				spec: {
 					rows: [
 						row("Oppfølgingsplaner i forsøket", [
-							layoutItem("panel-28", 0, 0, 8, 7),
-							layoutItem("panel-29", 8, 0, 16, 7),
+							layoutItem("panel-28", 0, 0, 12, 7),
+							layoutItem("panel-29", 12, 0, 12, 7),
 						]),
 						row("Valg av evalueringspåminnelse · tiltaksgruppen", [
 							layoutItem("panel-30", 0, 0, 24, 5),
@@ -503,10 +503,10 @@ export const buildAidDashboard = () => {
 						row(
 							"Teknisk kontroll · produksjon · alle grupper",
 							[
-								layoutItem("panel-34", 0, 0, 12, 6),
-								layoutItem("panel-22", 12, 0, 12, 6),
-								layoutItem("panel-24", 0, 6, 24, 10),
-								layoutItem("panel-20", 0, 16, 24, 5),
+								layoutItem("panel-34", 0, 0, 24, 6),
+								layoutItem("panel-22", 0, 6, 24, 6),
+								layoutItem("panel-24", 0, 12, 24, 10),
+								layoutItem("panel-20", 0, 22, 24, 5),
 							],
 							true,
 						),

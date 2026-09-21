@@ -326,6 +326,29 @@ test("every panel is laid out once without overlap within a row", () => {
 	assert.equal(new Set(names).size, names.length);
 });
 
+test("plan comparison has room for full group names at laptop width", () => {
+	assert.deepEqual(
+		rows()[0].spec.layout.spec.items.map(({ spec }) => ({
+			panel: spec.element.name,
+			x: spec.x,
+			width: spec.width,
+		})),
+		[
+			{ panel: "panel-28", x: 0, width: 12 },
+			{ panel: "panel-29", x: 12, width: 12 },
+		],
+	);
+});
+
+test("diagnostic tables use the full row width on normal screens", () => {
+	const section = rowWithPanel(34);
+	assert.equal(section.spec.collapse, true);
+	for (const { spec } of section.spec.layout.spec.items) {
+		assert.equal(spec.x, 0);
+		assert.equal(spec.width, 24);
+	}
+});
+
 test("exception behaviour has exactly three visible counts without API results", () => {
 	const section = rowWithPanel(35);
 	assert.equal(section.spec.title, "Unntaksvurdering · tiltaksgruppen");
