@@ -340,6 +340,15 @@ test("plan comparison has room for full group names at laptop width", () => {
 	);
 });
 
+test("diagnostic tables use the full row width on normal screens", () => {
+	const section = rowWithPanel(34);
+	assert.equal(section.spec.collapse, true);
+	for (const { spec } of section.spec.layout.spec.items) {
+		assert.equal(spec.x, 0);
+		assert.equal(spec.width, 24);
+	}
+});
+
 test("exception behaviour has exactly three visible counts without API results", () => {
 	const section = rowWithPanel(35);
 	assert.equal(section.spec.title, "Unntaksvurdering · tiltaksgruppen");

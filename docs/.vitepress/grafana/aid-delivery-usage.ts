@@ -503,10 +503,10 @@ export const buildAidDashboard = () => {
 						row(
 							"Teknisk kontroll · produksjon · alle grupper",
 							[
-								layoutItem("panel-34", 0, 0, 12, 6),
-								layoutItem("panel-22", 12, 0, 12, 6),
-								layoutItem("panel-24", 0, 6, 24, 10),
-								layoutItem("panel-20", 0, 16, 24, 5),
+								layoutItem("panel-34", 0, 0, 24, 6),
+								layoutItem("panel-22", 0, 6, 24, 6),
+								layoutItem("panel-24", 0, 12, 24, 10),
+								layoutItem("panel-20", 0, 22, 24, 5),
 							],
 							true,
 						),
