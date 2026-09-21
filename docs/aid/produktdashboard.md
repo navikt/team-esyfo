@@ -9,8 +9,7 @@ produktresultater, eller gi en automatisk dom over om pakken virker.
 
 Hovedvisningen viser produksjonsdata og avgrenses til forsøket. Ferdigstilte
 oppfølgingsplaner og de to forskjellige påminnelsene får hver sin seksjon.
-En liten leveringskontroll er synlig, mens
-tekniske detaljer ligger sammenfoldet. Vi fjerner generelle backendtotaler og
+Leveringskontroll og tekniske detaljer ligger sammenfoldet. Vi fjerner generelle backendtotaler og
 lange metodeforklaringer fra hovedflaten, ikke fra datainnsamlingen eller
 dokumentasjonen.
 
@@ -91,19 +90,21 @@ at hver ferdigstilling teller, også senere oppdateringer. Målingen skiller ikk
 første plan fra oppdateringer og teller ikke unike ansatte eller alle planer
 i databasen. Dekningen er beskrevet i [målegrunnlaget](./dashboard).
 
-Seksjonen har tre forskjellige funksjoner:
+Seksjonen har to funksjoner:
 
 - **Antall:** horisontale stolper med antall ferdigstillinger per gruppe i
   valgt tidsrom.
 - **Utvikling:** trend fra samme kilde og med samme gruppeavgrensning.
-- **Utfyllingssiden:** registrerte visninger fordelt på gruppe og variant
-  med eller uten AID-tilpasninger, slik at vi kan se om forsøksopplevelsen
-  når fram.
 
-En visning betyr at utfyllingssiden kom inn i skjermbildet. Det er ikke en
-visning av en ferdig plan, en unik leder eller dokumentasjon på at alle
-felter eller tekster ble lest. Visningene brukes til leveringskontroll, ikke
-som nevner for en konverteringsprosent.
+Visninger av utfyllingssiden er tatt ut av hovedoversikten. Innsamlingen
+beholdes, og teknisk kontroll viser fortsatt hvilken utfyllingsvariant som
+ble valgt ved åpning. Vi innfører ingen konverteringsprosent fra visninger
+til ferdigstillinger.
+
+Det viktigste neste spørsmålet er når første plan blir ferdigstilt i forhold
+til planfristen. Det krever nytt datagrunnlag; dagens trend erstattes ikke med
+en tilsynelatende resultatmåling basert på de samme aktivitetstellerne.
+Se [neste avgrensede leveranse](./resultatmaaling#neste-avgrensede-leveranse).
 
 Begge forsøksgrupper vises alltid sammen, uten en gruppevelger. Tiltaksgruppen
 beholdes også når varianten uten AID-tilpasninger ble vist. Tildeling og
@@ -169,10 +170,12 @@ En bestilling bekrefter heller ikke utsending. «Ingen aktiv bestilling» ved
 en visning kan ha flere forklaringer, blant annet en tidligere avbestilling.
 Den er ikke et sikkert mål på «ikke svart» eller et nei til tilbudet.
 
-En kompakt, synlig oversikt viser om tilbudet var tilgjengelig, skjult eller
-ikke kunne vurderes. **Skjult er ikke automatisk feil.** Tilbudet kan være
-skjult i en legitim tilstand; årsaken må undersøkes før det gis en
-feilforklaring eller en rød status.
+Teknisk kontroll viser om tilbudet var tilgjengelig, skjult eller ikke kunne
+vurderes, fordelt på gruppe. Vi har ikke en ekstra tilgjengelighetstabell i
+hovedoversikten. Vurderingene gjelder påminnelsesmodulen på siden for én
+sykmelding, ikke alle besøk i Dine sykmeldte. **Skjult er ikke automatisk feil.**
+Tilbudet kan være skjult i en legitim tilstand; årsaken må undersøkes før det
+gis en feilforklaring eller en rød status.
 
 ## 4. Fast sammenligning og ett felles tidsrom
 
@@ -256,7 +259,7 @@ brukerreise eller planresultater per person.
 | Ferdigstilte oppfølgingsplaner per gruppe | Hvor stor andel av gruppen som får en plan |
 | Med/uten evalueringspåminnelse når valget tilbys | Hvorfor brukerne valgte slik, eller om de evaluerte |
 | Bestilling og avbestilling av påminnelse før fireukersfristen | Aktive bestillinger, utsendte eller leste varsler |
-| Visninger av utfyllingssiden med og uten AID-tilpasninger | Om innholdet er lest, forstått eller nyttig |
+| Valg av utfyllingsvariant under teknisk kontroll | Om innholdet er sett, forstått eller nyttig |
 | Utvikling i registrert bruk | Kausal effekt av pakken eller én påminnelse |
 
 Microsoft skiller mellom stabile segmenter og segmenter som selv påvirkes

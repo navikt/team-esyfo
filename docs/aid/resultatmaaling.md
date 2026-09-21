@@ -42,6 +42,54 @@ Evalueringspåminnelsen i planskjemaet er en annen påminnelse. De to målingene
 
 Spørsmålsdrevet inndeling, synlige definisjoner, side-ved-side-sammenligning og skillet mellom resultat og forklaring er nyttige konsepter fra prototypens målerammeverk og analysevisning. Tallene og regnereglene er ikke et produksjonsgrunnlag. Vi kopierer ikke en obligatorisk brukertrakt, resten av landet som kontroll, kausal konklusjon fra valgt segment eller analyse av sykefraværets varighet.
 
+## Neste avgrensede leveranse
+
+**Status: spesifisert, ikke implementert eller aktivert.** Dashboardryddingen
+endrer ingen datainnsamling. Før ny tidsmåling innføres, må bruk av planfristen
+som tidsreferanse og nødvendige interne koblinger være avklart.
+
+Første nye visning skal svare på **når første plan ferdigstilles**, med tiltak
+og kontroll ved siden av hverandre. Den skal skille første plan fra senere
+ferdigstillinger i samme oppfølging og vise om første plan kom innen eller
+etter den avtalte fireukersfristen. Manglende eller tvetydig grunnlag skal
+vises separat, aldri tolkes som sen plan. Fristens eksakte grense og tidssone
+skal inngå i definisjonen og testene.
+
+Dette første trinnet gjelder registrerte planer i Nav-løsningen, ikke andelen
+av alle aktuelle oppfølginger som får plan. LPS, oppfølginger uten plan og
+historikk før målingen har nødvendig grunnlag må ikke antas dekket. Dagens
+ferdigstillingsteller kan ikke etterpå omtolkes til første planer.
+
+Beregn kategoriene nær de autoritative kildene. Behold person-, virksomhets-
+og plankoblinger internt i et avklart, tilgangsstyrt grunnlag; Grafana skal
+bare motta tillatte aggregater. Forsøksgruppe og faktisk tilbudt variant må
+bevares fra riktig tidspunkt, ikke rekonstrueres fra en senere vurdering.
+Ingen ny generell analyseplattform eller avhengighet til `isyfo-analyse`
+er nødvendig. Målefeil må ikke gjøre en ellers gyldig ferdigstilling mislykket.
+
+Før utrulling må tester dekke minst:
+
+- Første plan, senere ferdigstilling og to samtidige ferdigstillinger.
+- Samme person hos to arbeidsgivere og flere oppfølginger hos samme arbeidsgiver.
+- Fristgrensen, manglende eller korrigerte periodeopplysninger og ukjent gruppe.
+- Feilregistrerte/skjulte planer etter en eksplisitt definisjon; dagens
+  synlighet er ikke i seg selv en komplett historisk måleregel.
+- At identifikatorer, individuelle datoer og planinnhold ikke eksporteres.
+
+Neste resultatvisning er **senere planoppdatering innen opprinnelig
+evalueringsdato**, fordelt på påminnelsesvalget i utgangsplanen der valget faktisk
+ble tilbudt. Begge valg har evalueringsdato i lagringen. Utgangsplanen er ikke
+sitt eget resultat, og en senere plan skal ikke flytte evalueringsdatoen eller
+omklassifisere det opprinnelige valget. Også oppfølginger uten oppdatering må
+inngå når observasjonsvinduet er ferdig. En oppdatering dokumenterer ikke et
+gjennomført evalueringsmøte.
+
+Fireukerspåminnelsen kommer etter dette. Dagens bestillingsstatus overskrives,
+og utsending kan stoppes fordi en plan allerede finnes. En sammenligning av
+sendt/ikke sendt vil dermed også sortere etter om planen allerede var laget.
+Avklar relevant målgruppe, historisk valg og observasjonsvindu før den kobles
+til senere ferdigstillinger. Bestilt, sendt og lest må fortsatt skilles.
+
 ## Leveranserekkefølge
 
 1. **App- og dashboardansvarlig:** rull ut eksisterende instrumentering og verifiser de første reelle hendelsene i dev/prod. Det nye evalueringspanelet er bakoverkompatibelt; manglende felt er «Ikke registrert».

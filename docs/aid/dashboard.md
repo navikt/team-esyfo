@@ -9,14 +9,14 @@ beskrevet i [AID som produktdashboard](./produktdashboard).
 
 ## Innhold og tidsrom
 
-Oppsettet har 15 paneler: elleve datapaneler i produktoversikten og fire tekniske
+Oppsettet har 13 paneler: ni datapaneler i produktoversikten og fire tekniske
 paneler i en sammenfoldet kontrollseksjon.
 
 | Seksjon | Innhold | Avgrensning |
 | --- | --- | --- |
-| Oppfølgingsplaner i forsøket | Ferdigstillinger, trend og visninger av utfyllingssiden | Tiltak og kontroll vises sammen |
+| Oppfølgingsplaner i forsøket | Ferdigstillinger og trend | Tiltak og kontroll vises sammen |
 | Valg av evalueringspåminnelse | Ferdigstilte planer med og uten valgt påminnelse | Tiltaksgruppen med AID-tilpasninger |
-| Påminnelse før fireukersfristen | Tilbud vist, påminnelse slått på eller av, og tilgjengelighet | Tiltaksgruppen i Dine sykmeldte |
+| Påminnelse før fireukersfristen | Tilbud vist og påminnelse slått på eller av | Tiltaksgruppen i Dine sykmeldte |
 | Unntaksvurdering | Åpnet unntaksteksten, trykket «Send» og trykket «Lag plan» etter åpning | Tiltaksgruppen med unntaksvalget tilgjengelig |
 | Teknisk kontroll | Tilgjengelighet, tildeling og resultater fra appene | Alle grupper, inkludert utenfor forsøket og ukjent |
 
@@ -57,7 +57,7 @@ forsøket omfatter virksomheter med registrert adresse i Troms eller Finnmark
 fordeling mellom tiltak og kontroll; geografien gjelder ikke den ansattes
 bosted. [Regel og fordeling](https://github.com/navikt/flaggskipet/blob/ecb6fd285cf655525d26bbeefc2084f788e9d388/src/main/kotlin/no/nav/flaggskipet/domain/vurdering/Tiltakspakker.kt)
 
-## Ferdigstilte oppfølgingsplaner og visninger av utfyllingssiden
+## Ferdigstilte oppfølgingsplaner
 
 Ferdigstillinger og trend bruker serverhendelsen `aid_plan_opprettet` fra
 oppfølgingsplan-frontend. Til tross for hendelsesnavnet registrerer den
@@ -86,10 +86,12 @@ De viser verken prosent, måloppnåelse eller antall unike personer.
 Trendens punkter teller **siste 24 timer ved hvert tidspunkt**, ikke
 kalenderdager. Vinduene overlapper og kan ikke summeres til periodetotaler.
 
-Visninger av utfyllingssiden kommer fra nettleserhendelsen `aid_oppfolgingsplan`.
-Utfyllingssiden må ha kommet inn i skjermbildet. Det er ikke en visning av en
-ferdigstilt plan, eller bevis på at lederen begynte å skrive eller leste alle
-tekstene. Visninger er ikke en nevner for andelen som ferdigstiller plan.
+Visninger av utfyllingssiden er tatt ut av dashboardet. Innsamlingen og den
+testede spørringen beholdes; visningene er ikke en nevner for andelen som
+ferdigstiller plan. Valg av utfyllingsvariant kan fortsatt undersøkes under
+teknisk kontroll. Tidspunkt for første plan i forhold til planfristen er et
+[neste måletrinn](./resultatmaaling#neste-avgrensede-leveranse), ikke noe dagens
+kalendertrend viser.
 
 ## De to påminnelsene
 
@@ -123,7 +125,10 @@ tilbudet vist, påminnelse slått på og påminnelse slått av i tiltaksgruppen.
 De er separate hendelser, ikke en trakt. Flere hendelser kan gjelde samme
 oppfølging. En bestilling er ikke en utsending eller en aktiv bestillingstelling.
 
-Tilgjengelighet registreres når tilstanden er vurdert. «Tilgjengelig» betyr
+Tilgjengelighet vises bare under teknisk kontroll. Den registreres når
+påminnelsesmodulens tilstand på siden for én sykmelding er vurdert. Gjentatte
+besøk kan telles; dette er ikke antall personer eller alle besøk i Dine
+sykmeldte. «Tilgjengelig» betyr
 at tilbudet kan vises, ikke at det er sett. «Ikke tilgjengelig» kan være
 forventet, for eksempel når bestillingsvinduet er over eller en plan allerede
 er ferdigstilt. Målingen skiller ikke disse årsakene. Den er ikke automatisk en feil.
