@@ -468,10 +468,13 @@ describe("feiloversikt-dashboard", () => {
 		assert.equal(main.collapse, false);
 		assert.equal(metadata.collapse, true);
 		assert.equal(metadata.title, "Forbedre loggdata");
-		assert.deepEqual(collectByKey(metadata.layout, "name"), ["panel-4"]);
+		assert.deepEqual(collectByKey(metadata.layout, "name"), [
+			"panel-4",
+			"panel-9",
+		]);
 		assert.deepEqual(
 			main.layout.spec.items?.map(({ spec }) => spec.element.name),
-			["panel-1", "panel-7", "panel-2", "panel-3", "panel-6"],
+			["panel-1", "panel-7", "panel-2", "panel-3", "panel-6", "panel-8"],
 		);
 		assert.deepEqual(
 			main.layout.spec.items?.slice(0, 2).map(({ spec }) => spec.width),
@@ -483,12 +486,12 @@ describe("feiloversikt-dashboard", () => {
 			browser.variables?.map(({ spec }) => spec.name),
 			["browser_environment", "browser_app"],
 		);
-		assert.equal(Object.keys(panels()).length, 7);
+		assert.equal(Object.keys(panels()).length, 9);
 		assert.ok(!serializeErrorDashboard().includes('"group": "stat"'));
 		assert.ok(!serializeErrorDashboard().includes('"group": "text"'));
 	});
 
-	test("bruker sju avgrensede Loki-queryer med minst ett minutts refresh", () => {
+	test("bruker ni avgrensede Loki-queryer med minst ett minutts refresh", () => {
 		for (const query of [
 			runtimeTrendQuery,
 			runtimeByClassificationQuery,
@@ -533,7 +536,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.ok(!serialized.includes('"10s"'));
 		assert.match(serialized, /"maxDataPoints": 240/);
 		assert.match(serialized, /"interval": "1m"/);
-		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 7);
+		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 9);
 	});
 
 	test("viser en operativ hovedtabell med eksplisitt handling", () => {
@@ -546,7 +549,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(main, /"operation_display":"Operasjon"/);
 		assert.match(main, /"action":"Handling"/);
 		assert.match(main, /"Value #Runtimefeil etter type":"Hendelser"/);
-		assert.match(main, /Logger for denne gruppen/);
+		assert.match(main, /Vis forklaring/);
 		assert.ok(!main.includes("Feilgruppe"));
 		assert.ok(!main.includes("Logghendelser"));
 	});
@@ -929,7 +932,7 @@ test("runtime-rader tilbyr både presist loggsøk, enkel loggvisning og APM", ()
 		string,
 		unknown
 	>;
-	for (const id of ["panel-2", "panel-4", "panel-6"]) {
+	for (const id of ["panel-4", "panel-6"]) {
 		const serialized = JSON.stringify(elements[id]);
 		assert.match(serialized, /Feil i APM/);
 		assert.match(serialized, /Alle tjenestelogger/);
@@ -970,11 +973,12 @@ test("gruppelogger rydder beregnede hjelpefelt etter filtrering uten å endre r�
 test("laptoptabellen har én hendelse og samlede detaljer, men beholder råfelt til presise lenker", () => {
 	const main = JSON.stringify(panels()["panel-2"]);
 	assert.match(main, /"error_type_display":"Hendelse"/);
-	assert.match(main, /"error_details":"Detaljer"/);
+	assert.match(main, /"error_details":"Kode og operasjon"/);
 	assert.match(main, /"id":"custom.hideFrom.viz","value":true/);
 	assert.match(main, /"wrapText":true/);
 	assert.match(main, /"enablePagination":false/);
-	assert.match(main, /Logger i gruppen med trace/);
+	assert.match(main, /Vis forklaring/);
+	assert.doesNotMatch(main, /\/explore\?panes=/);
 	assert.match(
 		JSON.stringify(panels()["panel-7"]),
 		/Vis feilgrupper for tjenesten/,

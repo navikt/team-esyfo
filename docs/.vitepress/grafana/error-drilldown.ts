@@ -23,8 +23,13 @@ import {
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
 import {
+	runtimeDiagnosticLabels,
+	runtimeTraceLogsDataLink,
+} from "./error-diagnostics.ts";
+import {
 	apmDataLink,
 	encodeExploreState,
+	errorDetailsDataLink,
 	lokiExploreDataLink,
 	runtimeLogsDataLink,
 } from "./runtime-links.ts";
@@ -277,6 +282,30 @@ ${runtimeSignatureLabels}
 | keep service_name, contract_state_display, action
 [$__auto]))`;
 
+export const runtimeDiagnosticCoverageQuery = `sum by(service_name, diagnostic_state) (count_over_time(${runtimeSelector}
+${runtimeErrorPipeline}
+${runtimeDiagnosticLabels}
+| keep service_name, diagnostic_state
+[$__auto]))`;
+
+const abandonedProcessingPipeline = `${runtimeErrorPipeline.replace("(?i)(error|critical|fatal)", "(?i)(warn|warning)")}
+| service_name="syfo-budstikka"
+| json event_type
+| __error__=""
+| event_type=~\`^(delivery[.]marked_failed|inbox[.]poison_message[.]dead_lettered)$\``;
+
+export const runtimeAbandonedProcessingQuery = `sum by(service_name, event_type, action) (count_over_time(${runtimeSelector}
+${abandonedProcessingPipeline}
+| label_format action=\`Se logger\`
+| keep service_name, event_type, action
+[$__auto]))`;
+
+export const runtimeAbandonedProcessingDataLink = () =>
+	lokiExploreDataLink(`${runtimeRowSelector}
+${abandonedProcessingPipeline}
+| event_type=\`${grafanaVariable('__data.fields["event_type"]')}\`
+| drop event_type, __error__, __error_details__`);
+
 const runtimeRejectionLabels = `| json operation, error_code, rejection_reason
 | drop __error__, __error_details__
 ${safeLabel("safe_operation", "operation", runtimeErrorIngestionOperationPattern)}
@@ -341,8 +370,9 @@ const runtimeRowSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"
 const dropRuntimeHelpers = `| drop safe_event_type, safe_event, safe_top_exception_type, safe_nested_exception_type, safe_top_error_type, safe_nested_error_type, safe_top_err_type, safe_nested_err_type, safe_runtime_error_type, safe_error_code, safe_code, safe_feilkode, safe_runtime_type_code, safe_status, safe_operation, safe_rejection_reason, safe_upstream_status, safe_trace_id, top_exception_type, nested_exception_type, top_error_type, nested_error_type, top_err_type, nested_err_type, runtime_type, error_type_display, error_code_display, operation_display, error_level, error_details, error_context, contract_state, contract_state_display, rejection_reason_display, legacy_system_denial, upstream_status_display`;
 const dropBrowserHelpers = `| drop browser_parse_error, browser_environment, browser_environment_display, browser_apm_path, safe_browser_type, browser_type_display`;
 
-export const runtimeErrorGroupDataLink = (withTrace = false) =>
-	lokiExploreDataLink(`${runtimeRowSelector}
+export const runtimeErrorGroupQuery = (
+	withTrace = false,
+) => `${runtimeRowSelector}
 ${runtimeErrorPipeline}
 ${withTrace ? runtimeTraceParser : runtimeSignatureParser}
 ${withTrace ? runtimeTraceLabels : runtimeSignatureLabels}
@@ -351,7 +381,12 @@ ${runtimeLevelLabel}
 | error_code_display=\`${ROW_ERROR_CODE}\`
 | operation_display=\`${ROW_OPERATION}\`
 | error_level=\`${ROW_LEVEL}\`
-${withTrace ? '| safe_trace_id!="" | safe_trace_id!="00000000000000000000000000000000"\n' : ""}${dropRuntimeHelpers}`);
+${withTrace ? '| safe_trace_id!="" | safe_trace_id!="00000000000000000000000000000000"\n' : ""}`;
+
+export const runtimeErrorGroupDataLink = (withTrace = false) =>
+	lokiExploreDataLink(
+		`${runtimeErrorGroupQuery(withTrace)}${dropRuntimeHelpers}`,
+	);
 
 export const runtimeContractGapDataLink = () =>
 	lokiExploreDataLink(`${runtimeRowSelector}
@@ -411,7 +446,7 @@ const runtimeInvestigationLinks = (groupUrl: string) => [
 	...runtimeServiceLinks(ROW_SERVICE),
 ];
 
-const lokiQuery = (
+export const lokiQuery = (
 	refId: string,
 	expr: string,
 	queryType: "instant" | "range",
@@ -438,7 +473,7 @@ const lokiQuery = (
 	},
 });
 
-const queryGroup = (
+export const queryGroup = (
 	query: ReturnType<typeof lokiQuery>,
 	transformations: Array<Record<string, unknown>> = [],
 	queryOptions: Record<string, unknown> = {},
@@ -616,7 +651,7 @@ const organizeTable = (
 	},
 });
 
-const tablePanel = ({
+export const tablePanel = ({
 	id,
 	title,
 	description,
@@ -708,7 +743,7 @@ const tablePanel = ({
 	},
 });
 
-const tracedErrorsPanel = () => ({
+export const tracedErrorsPanel = () => ({
 	kind: "Panel",
 	spec: {
 		data: queryGroup(
@@ -794,7 +829,7 @@ const tracedErrorsPanel = () => ({
 				},
 			],
 		),
-		description: `Utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste loggede feilene med trace-ID for tjenestene valgt i filteret, ikke en valgt rad i tabellen over. For én feilgruppe: velg Undersøk → Logger i gruppen med trace. Identiske feil i samme trace er slått sammen. Sporet må være lagret og fortsatt finnes. HTTP-status gjelder tjenesten som ble kalt.`,
+		description: `Utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste loggede feilene med trace-ID for tjenestene valgt i filteret. Velg Vis forklaring på en feilgruppe for bare den gruppens hendelser. Logger i hele forløpet viser alle nivåer på tvers av tjenestene; Åpne trace krever at sporet er lagret. Identiske feil i samme trace er slått sammen.`,
 		id: 3,
 		links: runtimePanelLinks(),
 		title: "Siste feil med trace · valgt tjenesteutvalg",
@@ -818,13 +853,19 @@ const tracedErrorsPanel = () => ({
 							properties: [
 								{
 									id: "links",
-									value: [dataLink("Åpne trace", traceDataLink(ROW_VALUE))],
+									value: [
+										dataLink(
+											"Logger i hele forløpet",
+											runtimeTraceLogsDataLink(ROW_VALUE),
+										),
+										dataLink("Åpne trace", traceDataLink(ROW_VALUE)),
+									],
 								},
 								{
 									id: "custom.cellOptions",
 									value: { type: "data-links" },
 								},
-								{ id: "custom.width", value: 105 },
+								{ id: "custom.width", value: 180 },
 							],
 						},
 						{
@@ -892,6 +933,7 @@ const primaryLayout = () => ({
 			layoutItem("panel-2", 0, 6, 24, 14),
 			layoutItem("panel-3", 0, 20, 24, 11),
 			layoutItem("panel-6", 0, 31, 24, 11),
+			layoutItem("panel-8", 0, 42, 24, 7),
 		],
 	},
 });
@@ -899,11 +941,14 @@ const primaryLayout = () => ({
 const runtimeMetadataLayout = () => ({
 	kind: "GridLayout",
 	spec: {
-		items: [layoutItem("panel-4", 0, 0, 24, 7)],
+		items: [
+			layoutItem("panel-4", 0, 0, 24, 7),
+			layoutItem("panel-9", 0, 7, 24, 8),
+		],
 	},
 });
 
-const runtimeVariables = () => [
+export const runtimeVariables = () => [
 	{
 		kind: "CustomVariable",
 		spec: {
@@ -1002,7 +1047,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				id: 2,
 				title: "Hva feiler?",
 				description:
-					"Loggede hendelser i hele tidsrommet, gruppert på tjeneste, feiltype, kode, operasjon og nivå. Inntil 25 grupper per ERROR-, CRITICAL- og FATAL-nivå. Undersøk gir logger for feilgruppen, tjenestelogger eller feil i APM. Bare gruppeloggen beholder den nøyaktige grupperingen.",
+					"Loggede hendelser i hele tidsrommet, gruppert på tjeneste, feiltype, kode, operasjon og nivå. Inntil 25 grupper per nivå. Undersøk åpner en forklaring med kaltjeneste, teknisk utfall og konkrete hendelser for akkurat denne gruppen, også uten trace.",
 				refId: "Runtimefeil etter type",
 				expr: runtimeByClassificationQuery,
 				renameByName: {
@@ -1010,7 +1055,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					error_level: "Nivå",
 					error_code_display: "Kode",
 					error_type_display: "Hendelse",
-					error_details: "Detaljer",
+					error_details: "Kode og operasjon",
 					operation_display: "Operasjon",
 					service_name: "Tjeneste",
 				},
@@ -1025,15 +1070,10 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					operation_display: 7,
 				},
 				actionLinks: [
-					dataLink(
-						"Logger for denne gruppen · Explore",
-						runtimeErrorGroupDataLink(),
-					),
-					dataLink(
-						"Logger i gruppen med trace",
-						runtimeErrorGroupDataLink(true),
-					),
-					...runtimeServiceLinks(ROW_SERVICE),
+					{
+						...dataLink("Vis forklaring", errorDetailsDataLink()),
+						targetBlank: false,
+					},
 				],
 				panelLinks: runtimePanelLinks(),
 				hiddenFields: [
@@ -1044,9 +1084,50 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				widths: {
 					error_details: 230,
 					service_name: 200,
+					action: 155,
 				},
 			}),
 			"panel-3": tracedErrorsPanel(),
+			"panel-8": tablePanel({
+				id: 8,
+				title: "Oppgitte behandlinger · WARN",
+				description:
+					"Permanent mislykkede leveranser og meldinger flyttet til deadletter i Budstikka. Disse navngitte WARN-hendelsene telles separat fra runtimefeil og API-avvisninger. Antall hendelser er ikke antall mottakere.",
+				refId: "Oppgitte behandlinger",
+				expr: runtimeAbandonedProcessingQuery,
+				renameByName: {
+					service_name: "Tjeneste",
+					event_type: "Utfall",
+					action: "Handling",
+				},
+				indexByName: {
+					service_name: 0,
+					event_type: 1,
+					"Value #Oppgitte behandlinger": 2,
+					action: 3,
+				},
+				actionLinks: [
+					dataLink("Logger for utfallet", runtimeAbandonedProcessingDataLink()),
+				],
+			}),
+			"panel-9": tablePanel({
+				id: 9,
+				title: "Finnes det en teknisk forklaring?",
+				description:
+					"Måler tilgjengelige diagnosefelt separat fra hendelsesidentitet. Kaltjeneste og teknisk utfall betyr at upstream og status eller klassifisert feiltype finnes; det beviser ikke rotårsak. En operatørtest må i tillegg vise at forløpet kan forklares.",
+				refId: "Diagnostisk dekning",
+				expr: runtimeDiagnosticCoverageQuery,
+				renameByName: {
+					service_name: "Tjeneste",
+					diagnostic_state: "Tilgjengelig diagnostikk",
+				},
+				indexByName: {
+					service_name: 0,
+					diagnostic_state: 1,
+					"Value #Diagnostisk dekning": 2,
+				},
+				actionLinks: [],
+			}),
 			"panel-6": tablePanel({
 				id: 6,
 				title: "Registrerte API-avvisninger · WARN",

@@ -22,7 +22,7 @@
 		"alert-register:export": "node scripts/alert-registry.ts export",
 		"alert-register:drift": "node scripts/alert-registry.ts drift",
 		"grafana-dashboard:test": "node --test .vitepress/grafana/*.test.ts",
-		"error-dashboard:test": "node --test .vitepress/grafana/error-drilldown.test.ts",
+		"error-dashboard:test": "node --test .vitepress/grafana/error-*.test.ts",
 		"error-dashboard:check": "node scripts/error-drilldown.ts check",
 		"error-dashboard:export": "node scripts/error-drilldown.ts export",
 		"control-room:test": "node --test .vitepress/grafana/control-room.test.ts",
