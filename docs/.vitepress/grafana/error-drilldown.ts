@@ -838,7 +838,7 @@ export const tracedErrorsPanel = () => ({
 									id: "custom.cellOptions",
 									value: { type: "data-links" },
 								},
-								{ id: "custom.width", value: 180 },
+								{ id: "custom.width", value: 290 },
 							],
 						},
 						{
