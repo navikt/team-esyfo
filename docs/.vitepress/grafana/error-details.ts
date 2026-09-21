@@ -7,7 +7,7 @@ import {
 } from "./dashboard-kit.ts";
 import {
 	runtimeContextLabels,
-	runtimeDiagnosticLabels,
+	runtimeErrorDetailsLabels,
 	runtimeEventContextDataLink,
 } from "./error-diagnostics.ts";
 import {
@@ -17,7 +17,6 @@ import {
 	runtimeErrorGroupDataLink,
 	runtimeErrorGroupQuery,
 	runtimeVariables,
-	tablePanel,
 	tracedErrorsPanel,
 } from "./error-drilldown.ts";
 import { ERROR_DETAILS_UID, runtimeLogsDataLink } from "./runtime-links.ts";
@@ -50,23 +49,16 @@ export const selectedErrorGroupQuery = (withTrace = false) => {
 	return query;
 };
 
-export const errorDiagnosticDistributionQuery = `sum by(service_name, error_type_display, error_code_display, operation_display, error_level, safe_upstream, diagnostic_details, action) (count_over_time(${selectedErrorGroupQuery()}
-${runtimeDiagnosticLabels}
-| label_format action=\`Rålogger\`
-| keep service_name, error_type_display, error_code_display, operation_display, error_level, safe_upstream, diagnostic_details, action
-[$__auto]))`;
-
 export const recentErrorSamplesQuery = `${selectedErrorGroupQuery()}
-${runtimeDiagnosticLabels}
+${runtimeErrorDetailsLabels}
 ${runtimeContextLabels}
 | label_format action=\`Logger rundt hendelsen\`
-| line_format \`{{ .diagnostic_details }}\`
-| keep service_name, diagnostic_details, safe_upstream, safe_failure_stage, safe_exception_type, safe_cause_type, error_code_display, operation_display, context_from, context_to, action`;
+| line_format \`{{ .error_details }}\`
+| keep service_name, error_type_display, error_code_display, operation_display, error_level, error_details, context_from, context_to, action`;
 
 export const selectedErrorTracesQuery = `${selectedErrorGroupQuery(true)}
-${runtimeDiagnosticLabels}
-| label_format error_details=\`{{ .diagnostic_details }}\`
-| line_format \`{{ .diagnostic_details }}\`
+${runtimeErrorDetailsLabels}
+| line_format \`{{ .error_details }}\`
 | keep service_name, error_type_display, error_code_display, error_context, upstream_status_display, safe_trace_id, error_details`;
 
 const samplePanel = () => {
@@ -78,10 +70,8 @@ const samplePanel = () => {
 	Object.assign(query.spec.query.spec, { maxLines: 50 });
 	const hidden = [
 		"service_name",
-		"safe_upstream",
-		"safe_failure_stage",
-		"safe_exception_type",
-		"safe_cause_type",
+		"error_type_display",
+		"error_level",
 		"error_code_display",
 		"operation_display",
 		"context_from",
@@ -115,10 +105,10 @@ const samplePanel = () => {
 						options: {
 							excludeByName: {},
 							includeByName: {},
-							indexByName: { Time: 0, diagnostic_details: 1, action: 2 },
+							indexByName: { Time: 0, error_details: 1, action: 2 },
 							renameByName: {
 								Time: "Tidspunkt",
-								diagnostic_details: "Hva vet vi?",
+								error_details: "Tekniske felt",
 								action: "Undersøk",
 							},
 						},
@@ -152,7 +142,7 @@ const samplePanel = () => {
 							{
 								matcher: { id: "byName", options: "action" },
 								properties: [
-									{ id: "custom.width", value: 185 },
+									{ id: "custom.width", value: 290 },
 									{ id: "custom.cellOptions", value: { type: "data-links" } },
 									{
 										id: "links",
@@ -160,6 +150,10 @@ const samplePanel = () => {
 											dataLink(
 												"Logger rundt hendelsen",
 												runtimeEventContextDataLink(),
+											),
+											dataLink(
+												"Rålogger for gruppen",
+												runtimeErrorGroupDataLink(),
 											),
 										],
 									},
@@ -202,7 +196,7 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 	const traces = tracedErrorsPanel();
 	traces.spec.title = "Forløp med trace · bare denne feilgruppen";
 	traces.spec.description =
-		"Velg Logger i hele forløpet for alle nivåer og relevante tjenester med samme trace-ID. Åpne trace krever at sporet er samplet, eksportert og fortsatt lagret. Hvis ingen trace finnes, bruk Logger rundt hendelsen over.";
+		"Velg Logger med samme trace for alle nivåer og relevante tjenester med samme trace-ID i det valgte tidsrommet. Åpne trace krever at sporet er samplet, eksportert og fortsatt lagret. Hvis ingen trace finnes, bruk Logger rundt hendelsen over.";
 	traces.spec.data.spec.queries[0].spec.query.spec.expr =
 		selectedErrorTracesQuery;
 	const selectorVariables = runtimeVariables().map((item) =>
@@ -211,6 +205,7 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 					...item,
 					spec: {
 						...item.spec,
+						hide: "hideVariable",
 						multi: false,
 						includeAll: false,
 						current: { text: "Velg en feil fra Feiloversikt", value: "" },
@@ -225,41 +220,8 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 			...base.spec,
 			title: "Team eSyfo – Feildetaljer",
 			description:
-				"Forklaring og konkrete hendelser for én valgt feilgruppe. Tilgjengelig diagnostikk vises også når trace mangler.",
+				"Konkrete hendelser og tekniske felt for én valgt feilgruppe, også uten trace.",
 			elements: {
-				"panel-1": tablePanel({
-					id: 1,
-					title: "Hva vet vi om feilen?",
-					description:
-						"Observerte tekniske utfall i valgt feilgruppe. Flere rader betyr at samme hendelse har ulike utfall. HTTP-status og exceptiontype er observerte fakta, ikke nødvendigvis rotårsaken. Manglende strukturerte felt kan undersøkes i råloggen.",
-					refId: "Tekniske utfall",
-					expr: errorDiagnosticDistributionQuery,
-					renameByName: {
-						safe_upstream: "Kaltjeneste",
-						diagnostic_details: "Forklaring",
-						error_code_display: "Kode",
-						action: "Undersøk",
-					},
-					indexByName: {
-						diagnostic_details: 0,
-						error_code_display: 1,
-						"Value #Tekniske utfall": 2,
-						action: 3,
-						safe_upstream: 4,
-					},
-					hiddenFields: [
-						"service_name",
-						"error_type_display",
-						"operation_display",
-						"error_level",
-						"safe_upstream",
-						"error_code_display",
-					],
-					actionLinks: [
-						dataLink("Rålogger for gruppen", runtimeErrorGroupDataLink()),
-					],
-					widths: { action: 190 },
-				}),
 				"panel-2": samplePanel(),
 				"panel-3": traces,
 				"panel-4": {
@@ -280,7 +242,8 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 							spec: {
 								options: {
 									mode: "markdown",
-									content: "**${event}** · ${code} · ${operation}",
+									content:
+										"**${app}** · ${event} · ${code} · ${operation} · ${level}",
 								},
 								fieldConfig: { defaults: {}, overrides: [] },
 							},
@@ -293,9 +256,8 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 				spec: {
 					items: [
 						layoutItem("panel-4", 0, 0, 24, 3),
-						layoutItem("panel-1", 0, 3, 24, 8),
-						layoutItem("panel-2", 0, 11, 24, 12),
-						layoutItem("panel-3", 0, 23, 24, 10),
+						layoutItem("panel-2", 0, 3, 24, 12),
+						layoutItem("panel-3", 0, 15, 24, 10),
 					],
 				},
 			},
@@ -309,7 +271,7 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 			links: [
 				{
 					type: "link",
-					title: "Til feiloversikt",
+					title: "Feil for denne tjenesten",
 					icon: "dashboard",
 					tooltip: "",
 					tags: [],

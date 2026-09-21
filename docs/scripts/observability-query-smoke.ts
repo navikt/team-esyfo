@@ -30,13 +30,17 @@ import {
 	runtimeRejectionDataLink,
 	runtimeRejectionsQuery,
 	runtimeTrendQuery,
-	runtimeDiagnosticCoverageQuery,
-	runtimeAbandonedProcessingQuery,
-	runtimeAbandonedProcessingDataLink,
 	tracedRuntimeErrorsQuery,
 } from "../.vitepress/grafana/error-drilldown.ts";
-import { selectedErrorGroupQuery, errorDiagnosticDistributionQuery, recentErrorSamplesQuery, selectedErrorTracesQuery } from "../.vitepress/grafana/error-details.ts";
-import { runtimeTraceLogsDataLink, runtimeEventContextDataLink } from "../.vitepress/grafana/error-diagnostics.ts";
+import {
+	selectedErrorGroupQuery,
+	recentErrorSamplesQuery,
+	selectedErrorTracesQuery,
+} from "../.vitepress/grafana/error-details.ts";
+import {
+	runtimeTraceLogsDataLink,
+	runtimeEventContextDataLink,
+} from "../.vitepress/grafana/error-diagnostics.ts";
 import { runtimePodLogsDataLink } from "../.vitepress/grafana/runtime-links.ts";
 
 // Only synthetic data is sent to the loopback-bound test container.
@@ -50,16 +54,50 @@ const secondTrace = "abcdef1234567890abcdef1234567890";
 const diagnosticTrace = "aaaaaaaa11111111bbbbbbbb22222222";
 const diagnosticService = "dialogmote-frontend";
 const diagnosticFixtures = [
-	{ upstream: "dinesykmeldte-backend", upstream_status: 404, failure_kind: "http", failure_stage: "response" },
-	{ upstream: "dinesykmeldte-backend", failure_kind: "dns", cause_type: "UnknownHostException", trace_id: diagnosticTrace },
-	{ upstream: "dinesykmeldte-backend", failure_kind: "timeout", cause_type: "SocketTimeoutException" },
-	{ upstream: "alice@example.com", failure_kind: "sensitive custom cause", cause_type: "12345678901", upstream_status: "bad value" },
-	{ upstream: "dinesykmeldte-backend", exception_type: "TypeError" },
-	{ upstream: "dinesykmeldte-backend", failure_kind: "unknown", cause_type: "UnknownException", exception_type: "Error" },
+	{
+		upstream: "dinesykmeldte-backend",
+		upstream_status: 404,
+		exception_type: "ResponseException",
+		cause_type: "NotFoundException",
+	},
+	{
+		upstream: "dinesykmeldte-backend",
+		cause_type: "UnknownHostException",
+		trace_id: diagnosticTrace,
+	},
+	{
+		upstream: "database",
+		exception_type: "SQLTransientConnectionException",
+		cause_type: "SocketTimeoutException",
+		sql_state: "08001",
+		task_name: "no.nav.syfo.task.UpdateTask",
+	},
+	{
+		upstream: "alice@example.com",
+		cause_type: "12345678901",
+		upstream_status: "bad value",
+		sql_state: "private value",
+		task_name: "alice@example.com",
+	},
+	{
+		upstream: "dinesykmeldte-backend",
+		exception_type: "TypeError",
+		cause_type: "TypeError",
+	},
+	{},
 ];
 const renderDetail = (query: string) => {
-	const values: Record<string, string> = { runtime_environment: "prod", app: diagnosticService, event: "dinesykmeldte_fetch_failed", code: "UPSTREAM_HTTP_ERROR", operation: "fetch_sykmeldt", level: "error" };
-	return query.replace(/\$\{([^:]+):doublequote\}/g, (_, name: string) => JSON.stringify(values[name]));
+	const values: Record<string, string> = {
+		runtime_environment: "prod",
+		app: diagnosticService,
+		event: "dinesykmeldte_fetch_failed",
+		code: "UPSTREAM_HTTP_ERROR",
+		operation: "fetch_sykmeldt",
+		level: "error",
+	};
+	return query.replace(/\$\{([^:]+):doublequote\}/g, (_, name: string) =>
+		JSON.stringify(values[name]),
+	);
 };
 const runtimeLabels = {
 	service_namespace: "team-esyfo",
@@ -219,16 +257,34 @@ async function checkLogQueries(url: string) {
 			streams: [
 				{
 					stream: { ...runtimeLabels, service_name: diagnosticService },
-					values: diagnosticFixtures.map((fields, index) => [String(BigInt(now - 90000 - index * 1000) * 1000000n), JSON.stringify({ event_type: "dinesykmeldte_fetch_failed", error_code: "UPSTREAM_HTTP_ERROR", operation: "fetch_sykmeldt", message: "Synthetic private payload alice@example.com 12345678901", ...fields })]),
+					values: diagnosticFixtures.map((fields, index) => [
+						String(BigInt(now - 90000 - index * 1000) * 1000000n),
+						JSON.stringify({
+							event_type: "dinesykmeldte_fetch_failed",
+							error_code: "UPSTREAM_HTTP_ERROR",
+							operation: "fetch_sykmeldt",
+							message:
+								"Synthetic private payload alice@example.com 12345678901",
+							...fields,
+						}),
+					]),
 				},
 				{
-					stream: { ...runtimeLabels, service_name: "dinesykmeldte-backend", detected_level: "info" },
-					values: [[String(BigInt(now - 91000) * 1000000n), JSON.stringify({ event_type: "lookup_completed", trace_id: diagnosticTrace })]],
+					stream: {
+						...runtimeLabels,
+						service_name: "dinesykmeldte-backend",
+						detected_level: "info",
+					},
+					values: [
+						[
+							String(BigInt(now - 91000) * 1000000n),
+							JSON.stringify({
+								event_type: "lookup_completed",
+								trace_id: diagnosticTrace,
+							}),
+						],
+					],
 				},
-				...["syfo-budstikka", "wrong-terminal-service"].map(app => ({
-					stream: { ...runtimeLabels, service_name: app, detected_level: "warn" },
-					values: ["delivery.marked_failed", "inbox.poison_message.dead_lettered", "delivery.retrying"].map((event_type, index) => [String(BigInt(now - 60000 - index * 1000) * 1000000n), JSON.stringify({ event_type })]),
-				})),
 				...["esyfo-narmesteleder", "wrong-denial-service"].map((app) => ({
 					stream: {
 						...runtimeLabels,
@@ -453,40 +509,126 @@ async function checkLogQueries(url: string) {
 		return records;
 	};
 	const errors: Vector[] = await request(runtimeByClassificationQuery);
-	const diagnosticGroups: Vector[] = await request(runtimeByClassificationQuery, diagnosticService);
-	assert.equal(diagnosticGroups.length, 1, "Different technical causes retain the same stable group");
+	const diagnosticGroups: Vector[] = await request(
+		runtimeByClassificationQuery,
+		diagnosticService,
+	);
+	assert.equal(
+		diagnosticGroups.length,
+		1,
+		"Different technical causes retain the same stable group",
+	);
 	assert.equal(total(diagnosticGroups), 6);
-	const distribution: Vector[] = await request(renderDetail(errorDiagnosticDistributionQuery));
-	assert.equal(total(distribution), 6, "Details account for every event, including missing trace and missing diagnostics");
-	assert.ok(distribution.some(({metric}) => metric.diagnostic_details.includes("HTTP 404") && metric.diagnostic_details.includes("dinesykmeldte-backend")));
-	assert.ok(distribution.some(({metric}) => metric.diagnostic_details.includes("kunne ikke slås opp")));
-	assert.ok(distribution.some(({metric}) => metric.diagnostic_details.includes("brukte for lang tid")));
-	assert.doesNotMatch(JSON.stringify(distribution), /alice@example|12345678901|sensitive custom|bad value|Synthetic private/);
-	await checkRowLinks([{ metric: distribution[0].metric, value: diagnosticGroups[0].value }], runtimeErrorGroupDataLink());
-	const samples: Stream[] = await request(renderDetail(recentErrorSamplesQuery), service, true);
-	assert.equal(samples.flatMap(({values}) => values).length, 6);
-	assert.doesNotMatch(JSON.stringify(samples), /alice@example|12345678901|Synthetic private/);
-	for (const {stream, values} of samples) {
+	const samples: Stream[] = await request(
+		renderDetail(recentErrorSamplesQuery),
+		service,
+		true,
+	);
+	assert.equal(
+		samples.flatMap(({ values }) => values).length,
+		6,
+		"Every event remains visible, including missing trace and missing technical fields",
+	);
+	const details = samples.flatMap(({ values }) =>
+		values.map(([, line]) => line),
+	);
+	assert.ok(
+		details.includes(
+			"dinesykmeldte-backend · HTTP 404 · ResponseException · Årsakstype: NotFoundException",
+		),
+		"Status must not hide either exception type",
+	);
+	assert.ok(
+		details.includes(
+			"dinesykmeldte-backend · Årsakstype: UnknownHostException",
+		),
+	);
+	assert.ok(
+		details.includes(
+			"database · SQLTransientConnectionException · Årsakstype: SocketTimeoutException · SQLState 08001 · Jobb: no.nav.syfo.task.UpdateTask",
+		),
+		"Show the original SQLState without a derived database category",
+	);
+	assert.ok(
+		details.includes("dinesykmeldte-backend · TypeError"),
+		"Do not repeat an identical exception and cause type",
+	);
+	assert.equal(
+		details.filter(
+			(line) => line === "Ingen tekniske felt oppgitt – se rålogger",
+		).length,
+		2,
+	);
+	await checkRowLinks(
+		[{ metric: samples[0].stream, value: diagnosticGroups[0].value }],
+		runtimeErrorGroupDataLink(),
+	);
+	assert.doesNotMatch(
+		JSON.stringify(samples),
+		/alice@example|12345678901|Synthetic private/,
+	);
+	for (const { stream, values } of samples) {
 		const time = Number(BigInt(values[0][0]) / 1000000n);
 		assert.ok(Math.abs(Number(stream.context_from) - (time - 120000)) < 1000);
 		assert.ok(Math.abs(Number(stream.context_to) - (time + 120000)) < 1000);
 	}
-	const selectedTraces: Stream[] = await request(renderDetail(selectedErrorTracesQuery), service, true);
-	assert.equal(selectedTraces.flatMap(({values}) => values).length, 1);
-	const decodeLink = (link: string) => JSON.parse(new URL(link.replaceAll("${runtime_environment:raw}", "prod"), "https://grafana.test").searchParams.get("panes")!).A;
+	const selectedTraces: Stream[] = await request(
+		renderDetail(selectedErrorTracesQuery),
+		service,
+		true,
+	);
+	assert.equal(selectedTraces.flatMap(({ values }) => values).length, 1);
+	const decodeLink = (link: string) =>
+		JSON.parse(
+			new URL(
+				link.replaceAll("${runtime_environment:raw}", "prod"),
+				"https://grafana.test",
+			).searchParams.get("panes")!,
+		).A;
 	const tracePane = decodeLink(runtimeTraceLogsDataLink(diagnosticTrace));
-	const correlated: Stream[] = await request(tracePane.queries[0].expr, service, true);
-	assert.deepEqual(new Set(correlated.map(({stream}) => stream.service_name)), new Set([diagnosticService, "dinesykmeldte-backend"]));
-	for (const invalid of ["", "00000000000000000000000000000000"]) assert.deepEqual(await request(decodeLink(runtimeTraceLogsDataLink(invalid)).queries[0].expr, service, true), []);
-	const contextPane = decodeLink(runtimeEventContextDataLink().replace(/\$\{__data.fields\["([^"]+)"\]\}/g, (_, field: string) => encodeURIComponent(samples[0].stream[field])));
-	assert.equal(Number(contextPane.range.to) - Number(contextPane.range.from), 240000);
+	const correlated: Stream[] = await request(
+		tracePane.queries[0].expr,
+		service,
+		true,
+	);
+	assert.deepEqual(
+		new Set(correlated.map(({ stream }) => stream.service_name)),
+		new Set([diagnosticService, "dinesykmeldte-backend"]),
+	);
+	for (const invalid of ["", "00000000000000000000000000000000"])
+		assert.deepEqual(
+			await request(
+				decodeLink(runtimeTraceLogsDataLink(invalid)).queries[0].expr,
+				service,
+				true,
+			),
+			[],
+		);
+	const contextPane = decodeLink(
+		runtimeEventContextDataLink().replace(
+			/\$\{__data.fields\["([^"]+)"\]\}/g,
+			(_, field: string) => encodeURIComponent(samples[0].stream[field]),
+		),
+	);
+	assert.equal(
+		Number(contextPane.range.to) - Number(contextPane.range.from),
+		240000,
+	);
 	assert.doesNotMatch(contextPane.queries[0].expr, /detected_level|event_type/);
-	const coverage: Vector[] = await request(runtimeDiagnosticCoverageQuery, diagnosticService);
-	assert.deepEqual(Object.fromEntries(coverage.map(({metric, value}) => [metric.diagnostic_state, Number(value[1])])), { "Kaltjeneste og teknisk utfall": 3, "Delvis teknisk forklaring": 1, "Mangler teknisk forklaring": 2 });
-	const abandoned: Vector[] = await request(runtimeAbandonedProcessingQuery, ".*");
-	assert.equal(total(abandoned), 2, "Only the two named terminal WARN outcomes count");
-	await checkRowLinks(abandoned, runtimeAbandonedProcessingDataLink());
-	assert.equal((await request(renderDetail(selectedErrorGroupQuery()).replace('error_level="error"', 'error_level="fatal"'), service, true)).length, 0, "The selected severity is exact");
+	assert.equal(
+		(
+			await request(
+				renderDetail(selectedErrorGroupQuery()).replace(
+					'error_level="error"',
+					'error_level="fatal"',
+				),
+				service,
+				true,
+			)
+		).length,
+		0,
+		"The selected severity is exact",
+	);
 	assert.equal(
 		total(errors),
 		8,

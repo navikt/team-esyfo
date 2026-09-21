@@ -468,13 +468,10 @@ describe("feiloversikt-dashboard", () => {
 		assert.equal(main.collapse, false);
 		assert.equal(metadata.collapse, true);
 		assert.equal(metadata.title, "Forbedre loggdata");
-		assert.deepEqual(collectByKey(metadata.layout, "name"), [
-			"panel-4",
-			"panel-9",
-		]);
+		assert.deepEqual(collectByKey(metadata.layout, "name"), ["panel-4"]);
 		assert.deepEqual(
 			main.layout.spec.items?.map(({ spec }) => spec.element.name),
-			["panel-1", "panel-7", "panel-2", "panel-3", "panel-6", "panel-8"],
+			["panel-1", "panel-7", "panel-2", "panel-3", "panel-6"],
 		);
 		assert.deepEqual(
 			main.layout.spec.items?.slice(0, 2).map(({ spec }) => spec.width),
@@ -486,12 +483,12 @@ describe("feiloversikt-dashboard", () => {
 			browser.variables?.map(({ spec }) => spec.name),
 			["browser_environment", "browser_app"],
 		);
-		assert.equal(Object.keys(panels()).length, 9);
+		assert.equal(Object.keys(panels()).length, 7);
 		assert.ok(!serializeErrorDashboard().includes('"group": "stat"'));
 		assert.ok(!serializeErrorDashboard().includes('"group": "text"'));
 	});
 
-	test("bruker ni avgrensede Loki-queryer med minst ett minutts refresh", () => {
+	test("bruker sju avgrensede Loki-queryer med minst ett minutts refresh", () => {
 		for (const query of [
 			runtimeTrendQuery,
 			runtimeByClassificationQuery,
@@ -536,7 +533,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.ok(!serialized.includes('"10s"'));
 		assert.match(serialized, /"maxDataPoints": 240/);
 		assert.match(serialized, /"interval": "1m"/);
-		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 9);
+		assert.equal(collectByKey(buildErrorDashboard(), "expr").length, 7);
 	});
 
 	test("viser en operativ hovedtabell med eksplisitt handling", () => {
@@ -549,7 +546,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(main, /"operation_display":"Operasjon"/);
 		assert.match(main, /"action":"Handling"/);
 		assert.match(main, /"Value #Runtimefeil etter type":"Hendelser"/);
-		assert.match(main, /Vis forklaring/);
+		assert.match(main, /Vis hendelser/);
 		assert.ok(!main.includes("Feilgruppe"));
 		assert.ok(!main.includes("Logghendelser"));
 	});
@@ -977,7 +974,7 @@ test("laptoptabellen har én hendelse og samlede detaljer, men beholder råfelt 
 	assert.match(main, /"id":"custom.hideFrom.viz","value":true/);
 	assert.match(main, /"wrapText":true/);
 	assert.match(main, /"enablePagination":false/);
-	assert.match(main, /Vis forklaring/);
+	assert.match(main, /Vis hendelser/);
 	assert.doesNotMatch(main, /\/explore\?panes=/);
 	assert.match(
 		JSON.stringify(panels()["panel-7"]),
