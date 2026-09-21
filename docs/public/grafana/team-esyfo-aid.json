@@ -2146,7 +2146,7 @@
                           "name": "panel-28"
                         },
                         "height": 7,
-                        "width": 8,
+                        "width": 12,
                         "x": 0,
                         "y": 0
                       }
@@ -2159,8 +2159,8 @@
                           "name": "panel-29"
                         },
                         "height": 7,
-                        "width": 16,
-                        "x": 8,
+                        "width": 12,
+                        "x": 12,
                         "y": 0
                       }
                     }
