@@ -107,10 +107,9 @@ test("production and group scope are fixed with no global or row-local selectors
 });
 
 test("product view excludes the rest of the service while diagnostic groups remain available", () => {
-	for (const id of [28, 29, 23])
+	for (const id of [28, 29])
 		assert.match(expr(id), /gruppe=~"tiltak\|kontroll"/);
-	for (const id of [30, 31, 32, 33, 15])
-		assert.match(expr(id), /gruppe="tiltak"/);
+	for (const id of [30, 31, 32, 33]) assert.match(expr(id), /gruppe="tiltak"/);
 	assert.doesNotMatch(serializeAidDashboard(), /syfo_oppfolgingsplan_backend_/);
 	assert.equal(rows().at(-1)?.spec.collapse, true);
 	assert.match(rows().at(-1)?.spec.title ?? "", /alle grupper/);
@@ -231,18 +230,42 @@ test("reminder cards count views or confirmed operations, not attempts and resul
 		assert.doesNotMatch(q, /plan_group|vector\(0\)/);
 	}
 	assert.match(elements()["panel-32"].spec.description, /Ikke antall aktive/);
-	assert.match(elements()["panel-15"].spec.description, /kan være forventet/);
+	assert.match(elements()["panel-34"].spec.description, /kan være forventet/);
 });
 
-test("delivery remains visible and unknown does not become control", () => {
-	assert.match(expr(23), /sum by \(gruppe, skjemavariant\)/);
-	assert.match(expr(23), /hendelse="vist"/);
-	assert.equal(rowWithPanel(23).spec.collapse, false);
-	const mapping = labels(23, "Gruppe");
+test("product overview omits form views and duplicate reminder availability", () => {
+	assert.equal(elements()["panel-23"], undefined);
+	assert.equal(elements()["panel-15"], undefined);
+	assert.deepEqual(
+		rows()[0].spec.layout.spec.items.map((item) => item.spec.element.name),
+		["panel-28", "panel-29"],
+	);
+	assert.deepEqual(
+		rowWithPanel(31).spec.layout.spec.items.map(
+			(item) => item.spec.element.name,
+		),
+		["panel-31", "panel-32", "panel-33"],
+	);
+	const visiblePanels = rows()
+		.filter((row) => !row.spec.collapse)
+		.flatMap((row) => row.spec.layout.spec.items);
+	assert.equal(visiblePanels.length, 9);
+});
+
+test("delivery diagnostics remain collapsed and unknown does not become control", () => {
+	assert.equal(rowWithPanel(22).spec.collapse, true);
+	assert.equal(rowWithPanel(34).spec.collapse, true);
+	assert.match(expr(22), /hendelse="beslutning"/);
+	assert.match(
+		elements()["panel-34"].spec.description,
+		/på siden for én sykmelding/,
+	);
+	assert.match(elements()["panel-34"].spec.description, /Gjentatte besøk/);
+	const mapping = labels(22, "Gruppe");
 	assert.equal(mapping.ukjent.text, "Gruppe mangler");
 	assert.equal(mapping.utenfor_scope.text, "Utenfor forsøket");
 	assert.equal(mapping.kontroll.text, "Kontrollgruppen");
-	const versions = labels(23, "Oppfølgingsplan");
+	const versions = labels(22, "Oppfølgingsplan");
 	assert.equal(versions.tiltak.text, "Med AID-tilpasninger");
 	assert.equal(versions.standard.text, "Uten AID-tilpasninger");
 });

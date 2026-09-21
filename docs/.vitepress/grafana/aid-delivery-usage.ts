@@ -4,7 +4,6 @@ import {
 	aidProductEvaluationQuery,
 	aidProductPlanCreationsQuery,
 	aidProductPlanTrendQuery,
-	aidProductPlanViewsQuery,
 } from "./aid-product-queries.ts";
 import { aidCount, aidFailuresQuery } from "./aid-reminder-queries.ts";
 import {
@@ -35,10 +34,6 @@ export const aidReminderOrdersQuery = aidCount(
 export const aidReminderCancellationsQuery = aidCount(
 	'| gruppe="tiltak" | variant="aid" | hendelse="avbestill" | utfall="bekreftet"',
 	"gruppe",
-);
-export const aidReminderAvailabilityQuery = aidCount(
-	'| gruppe="tiltak" | hendelse="beslutning"',
-	"utfall",
 );
 export const aidReminderAvailabilityByGroupQuery = aidCount(
 	'| hendelse="beslutning"',
@@ -405,13 +400,6 @@ export const buildAidDashboard = () => {
 			[query(aidProductPlanTrendQuery, "loki", "{{gruppe}}", true)],
 			"timeseries",
 		),
-		"panel-23": panel(
-			23,
-			"Visninger av utfyllingssiden",
-			"Visninger av siden der oppfølgingsplanen fylles ut, fordelt på forsøksgruppe og AID-tilpasninger. Tiltaksgruppen kan også få siden uten AID-tilpasninger. En visning betyr at utfyllingsområdet kom inn i skjermbildet, ikke at innholdet ble lest eller planen ferdigstilt.",
-			[query(aidProductPlanViewsQuery, "loki", "Visninger")],
-			"table",
-		),
 		"panel-30": panel(
 			30,
 			"Ferdigstilte planer med og uten evalueringspåminnelse",
@@ -444,17 +432,10 @@ export const buildAidDashboard = () => {
 			[query(aidReminderCancellationsQuery, "loki", "Avbestillinger")],
 			"stat",
 		),
-		"panel-15": panel(
-			15,
-			"Kunne tilbudet om påminnelse vises?",
-			"Vurderinger i tiltaksgruppen. Tilgjengelig betyr at tilbudet kan vises, ikke at det er sett. Ikke tilgjengelig kan være forventet, for eksempel når påminnelsen ikke lenger er aktuell; årsaken fremgår ikke av denne målingen. Ingen vurderinger er ikke bevis på feilfri levering.",
-			[query(aidReminderAvailabilityQuery, "loki", "Vurderinger")],
-			"table",
-		),
 		"panel-34": panel(
 			34,
 			"Påminnelse før fireukersfristen – tilgjengelighet per gruppe",
-			"Kontroll av tilgjengelighet, inkludert utenfor forsøket og manglende gruppetilhørighet. Ikke en telling av personer eller arbeidsgivere. Utenfor forsøket er ikke kontrollgruppen.",
+			"Vurderinger av påminnelsestilbudet på siden for én sykmelding i Dine sykmeldte. Gjentatte besøk kan telles; dette er ikke antall personer eller alle besøk i tjenesten. Tilgjengelig betyr at tilbudet kan vises, ikke at det er sett. Ikke tilgjengelig kan være forventet, for eksempel når en plan allerede er ferdigstilt eller bestillingsvinduet er over. Årsaken fremgår ikke av denne målingen. Utenfor forsøket er ikke kontrollgruppen.",
 			[query(aidReminderAvailabilityByGroupQuery, "loki", "Vurderinger")],
 			"table",
 		),
@@ -502,7 +483,6 @@ export const buildAidDashboard = () => {
 						row("Oppfølgingsplaner i forsøket", [
 							layoutItem("panel-28", 0, 0, 8, 7),
 							layoutItem("panel-29", 8, 0, 16, 7),
-							layoutItem("panel-23", 0, 7, 24, 4),
 						]),
 						row("Valg av evalueringspåminnelse · tiltaksgruppen", [
 							layoutItem("panel-30", 0, 0, 24, 5),
@@ -513,7 +493,6 @@ export const buildAidDashboard = () => {
 								layoutItem("panel-31", 0, 0, 8, 4),
 								layoutItem("panel-32", 8, 0, 8, 4),
 								layoutItem("panel-33", 16, 0, 8, 4),
-								layoutItem("panel-15", 0, 4, 24, 5),
 							],
 						),
 						row("Unntaksvurdering · tiltaksgruppen", [
