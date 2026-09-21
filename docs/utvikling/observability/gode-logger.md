@@ -109,6 +109,8 @@ definisjonen: WARN, `event_type=api_request_rejected` og en lokal, lukket
 `rejection_reason`. Ikke bruk den for alle 4xx, teknisk svikt eller når en
 fallback gir tilgang. Behold eksisterende HTTP-respons og feilhåndtering.
 
+Velg en melding som sier hvilken operasjon som mislyktes, for eksempel «Kunne ikke hente dialogmøtebrev». Ved klientfeil bør hendelsen også oppgi avhengighet, teknisk feiltype, fase og HTTP-status når den finnes. Se [diagnosefeltene](./runtime-feilkontrakt#diagnosefelt-som-detaljvisningen-kan-vise). Transportfeil skal beholde årsaken gjennom mellomlagene; boundary-laget eier den terminale loggen.
+
 ## 4. Behold diagnostikk og personvern
 
 Send et vurdert feilobjekt separat, som i eksemplene. Biblioteket videresender
@@ -147,6 +149,7 @@ Kontroller i scenariet:
 - riktig nivå, melding og felt, og nøyaktig én terminal hendelse;
 - at vellykket fallback og kansellering ikke blir feilaktige avvisninger;
 - at nødvendig diagnostikk beholdes, også i exception og `cause`;
+- at minst HTTP-feil uten trace, timeout og én annen transportfeil kan skilles i faktisk JSON, og at kjente domenesvar skilles fra ukjente svar med samme status;
 - at aktiv trace følger det asynkrone forløpet uten hjemmelaget reserve-ID;
 - at syntetiske sensitive verdier faktisk legges i inngangen, men ikke finnes
   noe sted i den serialiserte loggen.

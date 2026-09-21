@@ -79,9 +79,26 @@ og eksisterende redaksjon med syntetiske canaryverdier. APMs scrubbing brukes
 for APM-data; den gjør ikke automatisk rå logger trygge. Ikke bygg en parallell,
 generisk scrubbingmotor eller en egen throwable-type for kontraktens skyld.
 
-PDL anbefaler logging av GraphQL-`errors`, som ikke inneholder personinformasjon.
+[PDLs dokumentasjon, D.2–D.3](https://pdl-docs.ansatt.nav.no/ekstern/index.html),
+anbefaler logging av GraphQL-`errors`, som ikke inneholder personinformasjon.
 Behold denne feildiagnostikken. PDLs `data`, requestvariabler og lokal
 personkontekst er noe annet og skal ikke følge med.
+
+## Diagnosefelt som detaljvisningen kan vise
+
+Disse feltene er valgfrie, app-eide tillegg til v1.0.0, ikke nye obligatoriske signaturfelter eller indekserte Loki-labels:
+
+| Felt | Bruk |
+| --- | --- |
+| `upstream` | Kodeeid navn på den konkrete avhengigheten, for eksempel `pdl` eller `dinesykmeldte-backend`. Aldri URL eller klient-ID. |
+| `failure_kind` | `dns`, `timeout`, `connection`, `tls`, `http`, `invalid_response`, `token`, `domain`, `configuration` eller `unknown`. Bruk en kjent underliggende årsak; ikke gjett fra fritekst. |
+| `failure_stage` | Kodeeid fase, for eksempel `token_exchange`, `request`, `response` eller `processing`. |
+| `cause_type`, `exception_type` | Teknisk klassenavn, uten melding, body eller requestkontekst. Generiske/ukjente typer gir ingen diagnostisk dekning alene. |
+| `outcome` | `failed`, `retrying`, `retry_exhausted`, `rejected`, `degraded`, `dead_lettered`, `skipped`, `stopped` eller `adjusted`, i samsvar med faktisk behandling. |
+
+`upstream_status` finnes bare når et HTTP-svar finnes. En DNS-feil har ingen slik status. `error_code` bør skille bekreftede domenesvar, for eksempel `ALREADY_RESPONDED` og `NO_UTSENDT_VARSEL`, fra en ukjent 409. Status alene er ikke grunnlag for å nedgradere en feil.
+
+Feltene gjør første feilsøkingssteg enklere. De erstatter ikke stackframes, trygg årsakskjede, SQLState eller PDLs `errors[]` i råloggen. For et klientobjekt som kan inneholde token eller body, velger appen eksplisitt nyttige tekniske felt og tester faktisk serialisering. En generell «Upstream request failed» med bare en hendelsesidentitet er ikke tilstrekkelig diagnostikk.
 
 ## Hva betyr kontraktstatus i dashboardet?
 

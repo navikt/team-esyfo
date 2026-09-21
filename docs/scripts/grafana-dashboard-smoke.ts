@@ -11,12 +11,14 @@ import {
 } from "../.vitepress/grafana/control-room.ts";
 import {
 	GRAFANA_VERSION,
+	LOKI_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "../.vitepress/grafana/dashboard-kit.ts";
 import {
 	ERROR_DASHBOARD_FOLDER_UID,
 	ERROR_DASHBOARD_UID,
 } from "../.vitepress/grafana/error-drilldown.ts";
+import { ERROR_DETAILS_UID } from "../.vitepress/grafana/runtime-links.ts";
 
 const execFileAsync = promisify(execFile);
 const username = "admin";
@@ -24,9 +26,15 @@ const password = randomBytes(24).toString("base64url");
 const containerName = `team-esyfo-grafana-smoke-${process.pid}-${randomBytes(4).toString("hex")}`;
 const auth = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
 const image = `grafana/grafana:${GRAFANA_VERSION}`;
+const preview = process.argv.includes("--preview");
+const previewLoki = process.env.LOKI_PREVIEW_URL;
 let baseUrl = "";
 
-const dashboardArtifacts = [CONTROL_ROOM_UID, ERROR_DASHBOARD_UID].map((uid) => ({
+const dashboardArtifacts = [
+	CONTROL_ROOM_UID,
+	ERROR_DASHBOARD_UID,
+	ERROR_DETAILS_UID,
+].map((uid) => ({
 	artifactPath: fileURLToPath(
 		new URL(`../public/grafana/${uid}.json`, import.meta.url),
 	),
@@ -281,6 +289,9 @@ try {
 		GF_ANALYTICS_REPORTING_ENABLED: "false",
 		GF_SECURITY_ADMIN_PASSWORD: password,
 		GF_SECURITY_ADMIN_USER: username,
+		GF_AUTH_ANONYMOUS_ENABLED: String(preview),
+		// Explore requires Editor; preview is loopback-only with synthetic data.
+		GF_AUTH_ANONYMOUS_ORG_ROLE: preview ? "Editor" : "Viewer",
 	};
 	try {
 		await execFileAsync("docker", ["image", "inspect", image], {
@@ -304,6 +315,13 @@ try {
 			containerName,
 			"--publish",
 			"127.0.0.1::3000",
+			...(process.platform === "linux"
+				? ["--add-host", "host.docker.internal:host-gateway"]
+				: []),
+			"--env",
+			"GF_AUTH_ANONYMOUS_ENABLED",
+			"--env",
+			"GF_AUTH_ANONYMOUS_ORG_ROLE",
 			"--env",
 			"GF_SECURITY_ADMIN_USER",
 			"--env",
@@ -330,6 +348,21 @@ try {
 	assert.ok(portMatch, `Uventet lokal portbinding: ${publishedPort.trim()}`);
 	baseUrl = `http://127.0.0.1:${portMatch[1]}`;
 	await waitForGrafana();
+	if (preview) {
+		assert.ok(previewLoki, "Preview requires the synthetic query-smoke Loki URL");
+		assert.match(previewLoki, /^http:\/\/127\.0\.0\.1:\d+$/);
+		await requestJson("/api/datasources", 200, {
+			method: "POST",
+			body: JSON.stringify({
+				name: "Synthetic Loki",
+				uid: LOKI_DATASOURCE_UID,
+				type: "loki",
+				access: "proxy",
+				url: previewLoki.replace("127.0.0.1", "host.docker.internal"),
+				isDefault: true,
+			}),
+		});
+	}
 
 	await requestJson(
 		"/apis/folder.grafana.app/v1/namespaces/default/folders",
@@ -387,6 +420,11 @@ try {
 	console.log(
 		`Grafana ${GRAFANA_VERSION} smoke OK for ${summaries.length} dashboards:\n- ${summaries.join("\n- ")}`,
 	);
+	if (preview) {
+		console.log(`GRAFANA_PREVIEW_URL=${baseUrl}`);
+		console.log("Only synthetic data; stop with SIGINT or SIGTERM after visual verification.");
+		await new Promise(() => setInterval(() => undefined, 60000));
+	}
 } catch (error) {
 	primaryFailure = error;
 	throw error;

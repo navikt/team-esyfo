@@ -9,22 +9,27 @@ Dashboardet er en feilsøkingsflate, ikke oversikten over all teknisk helse. Tra
 Den primære, åpne delen har én rekkefølge:
 
 1. **Loggede feil per minutt** viser utviklingen med samme enhet uansett tidsrom. **Hvor skjer feilene?** viser antall hendelser per tjeneste i hele tidsrommet som horisontale stolper.
-2. **Hva feiler?** prioriterer tjeneste og hendelse. **Detaljer** samler kode og operasjon når de tilfører informasjon. CRITICAL og FATAL fremgår også der. Topp 25 beregnes separat per nivå, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser. En tjenestestolpe åpner tjenestens feilgrupper.
-3. **Siste feil med trace · valgt tjenesteutvalg** gir et utvalg fra de 100 nyeste trace-koblede feilene. Dette er ikke forløp for en valgt rad i tabellen over; bruk radens **Logger i gruppen med trace** for det.
+2. **Hva feiler?** prioriterer tjeneste og hendelse. **Kode og operasjon** samler kode og operasjon når de tilfører informasjon. CRITICAL og FATAL fremgår også der. Topp 25 beregnes separat per nivå, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser. En tjenestestolpe åpner tjenestens feilgrupper.
+3. **Siste feil med trace · valgt tjenesteutvalg** gir et utvalg fra de 100 nyeste trace-koblede feilene. Dette er ikke forløp for en valgt rad i tabellen over; bruk radens **Vis forklaring** for den gruppens hendelser.
 4. **Registrerte API-avvisninger · WARN** viser inntil 50 grupper separat fra ERROR, med avvisningsgrunn først og kode/operasjon samlet under **Detaljer**. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
 
 Avvisningspanelet omfatter `detected_level=warn|warning` med `event_type=api_request_rejected`, ikke alle WARN eller HTTP 4xx. Flaggskipet #81 leverer denne hendelsen med lukket `rejection_reason`. Manglende eller ugyldig årsak får samme verdi, **Årsak ikke oppgitt**, i både grupperingen og loggsøket. Gruppelinken bevarer også avvisningsgrunnen i søket. WARN legges ikke inn i ERROR-tallene, og panelet alene beviser ikke full dekning av avvisninger i flåten.
 
 En avgrenset overgangsleser gjenkjenner også den kodeeide meldingen `System user does not have access to nav_syfo_oppgi-narmesteleder resource`, bare for `esyfo-narmesteleder` og bare på WARN. Den vises som **Systembrukertilgang ikke innvilget**. Rå melding og identifikatorer returneres ikke til panelet. En hendelse som også har kanonisk `api_request_rejected`, telles bare én gang med den kanoniske årsaken. Produsentkontrakt og funksjonell avklaring følges i [esyfo-narmesteleder #516](https://github.com/navikt/esyfo-narmesteleder/issues/516); overgangsleseren kan fjernes når kontrakten og nødvendig historikk tillater det. Avvisningen beviser ikke i seg selv manglende delegering: PDPs `Deny`, `NotApplicable` og `Indeterminate` blir i dag samme boolean-resultat.
 
-I runtime-tabellene åpner **Undersøk** en meny:
+I **Hva feiler?** åpner **Vis forklaring** den egne detaljvisningen for samme miljø, tidsrom, tjeneste, hendelse, kode, operasjon og nivå. Den viser først hva appen faktisk har oppgitt: kaltjeneste, HTTP-status, feiltype, fase og utfall. For eksempel skiller den «Kallet brukte for lang tid · dinesykmeldte-backend» fra «Tjenesten svarte HTTP 404 · dinesykmeldte-backend». Dette er observerte fakta, ikke en påstand om rotårsak.
 
-- **Logger for denne gruppen · Explore** bevarer miljø, tidsrom og eksakt gruppering. Spørringen er ferdig; du trenger ikke skrive LogQL. Explore beholdes fordi grupperingen også støtter eldre loggformater og utledede felt.
-- **Logger i gruppen med trace** beholder samme feilgruppe, men viser bare hendelser med gyldig trace-ID. Tomt betyr at denne gruppen ikke har registrert en slik ID i tidsrommet. Det beviser ikke at tracing er avslått.
-- **Alle tjenestelogger** åpner den enklere Logs Drilldown-visningen i samme miljø og tidsrom. Denne utvider bevisst fra feilgruppen til tjenesten, slik at du kan lese sammenhengen.
-- **Feil i APM** åpner tjenestens Issues-fane med riktig miljø og tidsrom. APM har egen gruppering og videre tracing; dette er ikke nødvendigvis samme feilgruppe som i tabellen.
+**Konkrete hendelser · med og uten trace** viser de 50 nyeste treffene i gruppen. Herfra finnes tre måter å undersøke videre:
 
-I trace-tabellen åpner **Åpne trace** det konkrete sporet direkte i Explore, med valgt Tempo-datakilde og tidsrom, uten et separat metrikksøk i Traces Drilldown. Tjenestecellen gir menyen til logger og APM. En trace-ID betyr ikke at sporet nødvendigvis er lagret eller fortsatt tilgjengelig. Tabellen er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall, men beholder ulike feil i samme trace.
+- **Logger rundt hendelsen** åpner alle nivåer for samme tjeneste fra to minutter før til to minutter etter hendelsens tidspunkt. Dette fungerer uten trace. Vinduet kan også inneholde andre samtidige forløp.
+- **Logger i hele forløpet** følger en gyldig trace-ID på tvers av teamets tjenester og loggnivåer. Dermed kan også INFO og WARN før terminalfeilen gi sammenheng. **Åpne trace** åpner selve sporet i valgt Tempo-datakilde når det er samplet, eksportert og fortsatt lagret.
+- **Rålogger for gruppen** er det avanserte søket etter alle hendelser i den opprinnelige feilgruppen. Den lange kompatibilitetsspørringen starter sammenfoldet i Explore, slik at resultatet får plassen. Søkets antall kan være større enn én rad i forklaringstabellen, fordi raden viser ett teknisk utfall innenfor gruppen.
+
+Detaljvisningens **Alle tjenestelogger** åpner Logs Drilldown i samme miljø og tidsrom. **Til feiloversikt** går tilbake med samme tjenesteutvalg. Kontraktsgap og API-avvisninger beholder egne presise gruppesøk og snarveier til logger/APM.
+
+Trace-tabellen på hovedoversikten er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall. En trace-ID beviser ikke at sporet er lagret. Manglende trace skjuler heller ikke hendelsene i detaljvisningen.
+
+**Oppgitte behandlinger · WARN** viser bare Budstikkas `delivery.marked_failed` og `inbox.poison_message.dead_lettered`. Dette er permanent mislykkede leveranser og meldinger flyttet til deadletter, ikke alle WARN. De telles separat fra ERROR og API-avvisninger; antallet er logghendelser, ikke mottakere.
 
 Hjelpefeltene som spørringen beregner, fjernes fra Explore-resultatet etter at gruppen er filtrert. Den opprinnelige logglinjen, appens feildiagnostikk, podmetadata og trace-ID beholdes. Dette er opprydding i visningen, ikke scrubbing av loggene.
 
@@ -32,7 +37,7 @@ Tabellene er tilpasset en laptop på 1366–1440 px, også med Grafana-menyen å
 
 I tillegg finnes:
 
-- **Forbedre loggdata**, en sammenfoldet del som viser hendelser uten gyldig `event_type`. Disse feilene er allerede med i hovedtabellen, ikke ekstra feil. Delen arver miljø og tjeneste fra **Feil i tjenestene**.
+- **Forbedre loggdata** viser både manglende hendelsesidentitet og **Finnes det en teknisk forklaring?**. Sistnevnte skiller kaltjeneste med teknisk utfall, delvis forklaring og manglende teknisk forklaring. Generisk `Error`, `Exception`, `UnknownError` og `UnknownException` teller ikke som forklaring alene. Målingen beviser ikke at feilen er forstått. Disse hendelsene er allerede med i hovedtabellen; dette er ikke ekstra feil. Delen starter sammenfoldet og arver miljø og tjeneste.
 - **Nettleserfeil · eget utvalg**, med egen inventarstyrt flatevelger og miljøvelger. Den påvirkes ikke av runtime-valgene. Standard er alle miljøer, også ukjent, med miljø oppgitt per rad.
 
 Nettlesertabellen grupperer på brede JavaScript-typer som `Error`, ikke på rotårsak. **Se logger** finner radens nøyaktige tjeneste, miljø og type. **APM · alle typer (ukjent miljø → alle)** åpner flatens egne feilgrupper, alle typer, i samme miljø og tidsrom. For **Ukjent** åpnes alle miljøer; dashboardet gjetter ikke produksjon. APMs gruppering gjenbrukes i stedet for en ny fingerprint-løsning i teamets dashboard.
@@ -72,7 +77,7 @@ Eldre fallbackfelt beholdes midlertidig for at dashboardet skal være operativt 
 
 Kode er valgfri metadata og velges separat fra `error_code`, `code`, `feilkode`, en streng uppercase legacy-kode i `type`, eller HTTP `4xx`/`5xx` fra det tvetydige legacyfeltet `status`. Manglende kode vises som `—`; den gjør ikke hendelsen til en egen feilklasse. Operasjon er også valgfri, kodeeid kontekst og vises i hovedtabellen, men er ikke en erstatning for `event_type`.
 
-`upstream_status` er et eget, valgfritt JSON-number fra `100` til `599`. Det beskriver HTTP-responsen fra tjenesten operasjonen kalte og vises bare som **HTTP-status fra kall** i trace-tabellen. Feltet endrer ikke feiltype, kode eller gruppering i hovedtabellen. Legacy `status` fyller ikke denne kolonnen; slik unngår dashboardet å gjette om en eldre status gjelder egen respons, en upstream eller noe annet. Loki kan områdevalidere den uttrukne verdien, men producerens serialiseringstest må bevise at JSON-typen faktisk er number.
+`upstream_status` er et eget, valgfritt JSON-number fra `100` til `599`. Det beskriver HTTP-responsen fra tjenesten operasjonen kalte og vises i forklaringen og trace-tabellens detaljer. Feltet endrer ikke feiltype, kode eller gruppering i hovedtabellen. Legacy `status` brukes ikke som HTTP-status fra kall; slik unngår dashboardet å gjette om en eldre status gjelder egen respons, en upstream eller noe annet. Loki kan områdevalidere den uttrukne verdien, men producerens serialiseringstest må bevise at JSON-typen faktisk er number.
 
 `logger_name` er fjernet fra operatørflaten. Navn som `Application` eller `ControllerExceptionHandler` forteller hvor en logglinje ble skrevet, men sjelden hva som feilet. Nye og endrede loggpunkter skal følge [runtime-feilkontrakten](./runtime-feilkontrakt), som definerer stabil hendelsestype, tillatt metadata, konformitetstest og migrering av legacylogger.
 
@@ -86,7 +91,7 @@ Browserfeltet `type` behandles strengere: bare en lukket liste med kjente JavaSc
 
 Trace-ID må være 32 hextegn og kan ikke være W3C/OTel sin ugyldige null-ID. ID-en skjules bak handlingen **Åpne trace**. Loki-resultatet omskrives til den validerte feiltypen før det når tabellen.
 
-Et rått loggsøk åpnes etter et eksplisitt loggvalg: **Undersøk → Logger for denne gruppen · Explore**, **Alle tjenestelogger**, eller nettleserdelens **Se logger**. Gruppelinken filtrerer på den samme, utledede feiltypen, koden og operasjonen; der er den opprinnelige `message`-teksten tilgjengelig. Kontraktsgap og nettlesergrupper har tilsvarende avgrensede lenker.
+Et rått loggsøk åpnes etter et eksplisitt loggvalg: **Vis forklaring → Rålogger for gruppen**, **Alle tjenestelogger**, eller nettleserdelens **Se logger**. Gruppelinken filtrerer på den samme, utledede feiltypen, koden og operasjonen; der er den opprinnelige `message`-teksten tilgjengelig. Kontraktsgap og nettlesergrupper har tilsvarende avgrensede lenker.
 
 For nye loggpunkter: følg [Legg til en god logg](./gode-logger). Samme versjonerte JSON Schema testes mot appens faktiske serialiserte logger i CI. Det erstatter ikke tester av riktig loggnivå, nyttig diagnostikk og fravær av persondata.
 
@@ -108,8 +113,8 @@ Standard refresh er ett minutt. Intervallene 5 og 10 sekunder er fjernet. Loggda
 Bruk en vanlig laptop, gjerne 1366 × 768, og et tidsrom med kjente hendelser:
 
 1. Finn en tjeneste i Kontrollrommet. Åpne **Undersøk tjenesten**, deretter **Feiloversikt**. Tjeneste og tidsrom skal følge med. Topplenken **Alle tjenesters feil** utvider bevisst til alle.
-2. Velg en feilgruppe og **Logger for denne gruppen**. Sjekk at samme gruppe og tidsrom åpnes, og at forklaringen er lesbar uten å skrive en query. Explore har en resultatgrense; et stort antall i tabellen betyr ikke at alle linjene lastes samtidig.
-3. Velg **Logger i gruppen med trace**, og åpne et lagret spor når det finnes. Sammenlign med den separate trace-tabellen, som er et utvalg for tjenestene.
+2. Velg **Vis forklaring** på en feilgruppe. Sjekk samme identitet og tidsrom, og at forklaringen er lesbar før avansert loggsøk. Finn en hendelse uten trace og åpne logger rundt tidspunktet.
+3. Velg **Logger i hele forløpet** på en trace. Sjekk at også andre nivåer og relevante tjenester blir med. Åpne et lagret spor når det finnes. Sammenlign med hovedoversiktens trace-tabell, som er et utvalg for tjenestene.
 4. Finn en nettleserrad. Sjekk at **Se logger** finner den samme typen og miljøet. APM-valget utvider til alle typer; en rad med ukjent miljø skal ikke påstå produksjon.
 5. Finn en historisk omstart. Podlenken skal beholde pod og tidsrom. Manglende logger eller avslutningsårsak skal ikke tolkes som null omstarter. Sammenlign et tidsrom uten data: ukjent/ingen treff skal ikke se ut som bekreftet frisk drift.
 
@@ -117,7 +122,7 @@ Noter forventning, faktisk resultat og en lenke med tidsrom hvis noe er uklart. 
 
 ## Dashboard som kode
 
-Kilden ligger i `.vitepress/grafana/error-drilldown.ts`. Den reviewbare [Grafana-ressursen](/team-esyfo/grafana/team-esyfo-feiloversikt.json) genereres deterministisk og er artefakten som publiseres. Dashboardet er `editable=false`; endringer skal gå via kode og review.
+Kildene ligger i `.vitepress/grafana/error-drilldown.ts`, `error-details.ts` og `error-diagnostics.ts`. De reviewbare ressursene [Feiloversikt](/team-esyfo/grafana/team-esyfo-feiloversikt.json) og [Feildetaljer](/team-esyfo/grafana/team-esyfo-feildetaljer.json) genereres deterministisk og publiseres sammen. Dashboardet er `editable=false`; endringer skal gå via kode og review.
 
 Kjør fra `docs/`:
 
@@ -130,22 +135,25 @@ pnpm grafana-dashboard:smoke
 pnpm build
 ```
 
-Testene dekker panelhierarki, lokal variabelarv, separate allowlister, eksakte radlenker, klassifisering, browsermiljø og tracevalidering. Query-smoken kjører de faktiske queryene mot syntetiske Loki-hendelser, også uten JSON, uten miljø og med videresendte browserlogger. Den følger dessuten hver aggregert feil-, avvisnings-, kontraktsgap- og nettleserrad til det genererte loggsøket og krever samme antall treff. En separat test hindrer at tekstendrende value mappings bryter radlenkene. Dette erstatter ikke en faktisk klikkontroll i Grafana. `grafana-dashboard:smoke` importerer ressursen i samme Grafana-versjon som produksjon og sammenligner ressurs, DTO, layout, `preload`, `editable` og `liveNow` semantisk. Se [designprinsippene](./dashboard-design).
+Testene dekker panelhierarki, lokal variabelarv, separate allowlister, eksakte radlenker, klassifisering, browsermiljø og tracevalidering. Query-smoken kjører de faktiske queryene mot syntetiske Loki-hendelser, også uten JSON, uten miljø og med videresendte browserlogger. Den følger dessuten hver aggregert feil-, avvisnings-, kontraktsgap- og nettleserrad til det genererte loggsøket og krever samme antall treff. En separat test hindrer at tekstendrende value mappings bryter radlenkene. Smoken tester også HTTP uten trace, DNS/timeout, generiske ukjente årsaker, diagnostikkcanaries, tidsvindu rundt hendelser, trace på tvers av tjenester og de to terminale WARN-utfallene. Dette erstatter ikke en faktisk klikkontroll i Grafana. `grafana-dashboard:smoke` importerer ressursen i samme Grafana-versjon som produksjon og sammenligner ressurs, DTO, layout, `preload`, `editable` og `liveNow` semantisk. Se [designprinsippene](./dashboard-design).
 
-Publisering til produksjons-Grafana er foreløpig manuell. Den committede JSON-filen er fasit. Før overwrite skal gjeldende live-dashboard eksporteres som rollback-kopi. Importer deretter den genererte ressursen med samme UID og mappe, hent live-ressursen tilbake og sammenlign semantisk med artefakten.
+Publisering til produksjons-Grafana er foreløpig manuell. De committede JSON-filene er fasit. Importer den nye detaljressursen før oversikten, slik at første-klikk-lenken virker hele tiden. Før overwrite skal gjeldende live-dashboard eksporteres som rollback-kopi. Importer deretter den genererte ressursen med samme UID og mappe, hent live-ressursen tilbake og sammenlign semantisk med artefakten.
 
 Verifiser minst:
 
 - `prod-gcp` og `dev-gcp`, `All` og én runtime-tjeneste
 - at nettleserpanelet ikke arver runtime-miljø, og at egen miljøvelger og gruppelenke bevarer prod/test/ukjent korrekt
 - at første skjermbilde viser miljø, trend, feilgrupper og handling uten forklaringsvegg
-- at feilgruppehandlingen åpner Explore med riktig miljø, tjeneste, type, kode og tidsrom
+- at feilgruppehandlingen åpner Feildetaljer med riktig miljø, tjeneste, type, kode, operasjon, nivå og tidsrom
+- at HTTP-status og teknisk årsak er synlige uten trace, at kontekstlenken bruker hendelsens tidspunkt, og at Explore-queryen starter sammenfoldet
 - at avvisningspanelet er åpent, viser WARN separat og åpner samme tjeneste, operasjon, kode og avvisningsgrunn i Explore
-- at trace-tabellen har sju kolonner og ingen identiske `(trace, tjeneste, feiltype, kode, operasjon, HTTP-status fra kall)`-rader
+- at trace-tabellen har fem synlige kolonner og ingen identiske `(trace, tjeneste, feiltype, kode, operasjon, HTTP-status fra kall)`-rader
 - at loggdatakontrollen starter lukket og arver riktig runtime-utvalg når den åpnes
 - Query Inspector-resultat for bytes skannet, svartid, serieantall og parserfeil i standardvinduet
 
 Ugyldige runtime-miljøverdier skal gi no-data, aldri blande miljøer. UI-smoken beviser import og roundtrip lokalt, men produksjons-Loki må fortsatt verifiseres live.
+
+For en lokal klikkontroll med bare syntetiske data, start `node scripts/observability-query-smoke.ts --preview`. Bruk den utskrevne adressen som `LOKI_PREVIEW_URL` når du starter `node scripts/grafana-dashboard-smoke.ts --preview` i en annen terminal. Grafana bindes til loopback med anonym lesetilgang. Stopp begge prosessene etter kontrollen; testcontainerne ryddes da bort.
 
 ## Referanser
 

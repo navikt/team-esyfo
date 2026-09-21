@@ -30,10 +30,19 @@ export const encodeExploreState = (value: unknown) => {
 	);
 };
 
-export const lokiExploreDataLink = (expr: string) => {
+export const ERROR_DETAILS_UID = "team-esyfo-feildetaljer";
+
+export const errorDetailsDataLink = () =>
+	`/d/${ERROR_DETAILS_UID}?var-runtime_environment=${grafanaVariable("runtime_environment:raw")}&var-app=${grafanaVariable('__data.fields["service_name"]')}&var-event=${grafanaVariable('__data.fields["error_type_display"]')}&var-code=${grafanaVariable('__data.fields["error_code_display"]')}&var-operation=${grafanaVariable('__data.fields["operation_display"]')}&var-level=${grafanaVariable('__data.fields["error_level"]')}&from=${FROM}&to=${TO}`;
+
+export const lokiExploreDataLink = (
+	expr: string,
+	range = { from: FROM, to: TO },
+) => {
 	const panes = {
 		A: {
 			datasource: LOKI_DATASOURCE_UID,
+			compact: true,
 			queries: [
 				{
 					datasource: { type: "loki", uid: LOKI_DATASOURCE_UID },
@@ -44,7 +53,7 @@ export const lokiExploreDataLink = (expr: string) => {
 					refId: "A",
 				},
 			],
-			range: { from: FROM, to: TO },
+			range,
 		},
 	};
 	return `/explore?panes=${encodeExploreState(panes)}&schemaVersion=1&orgId=1`;
