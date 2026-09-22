@@ -22,10 +22,7 @@ import {
 	PROD_TEMPO_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
-import {
-	runtimeDiagnosticLabels,
-	runtimeTraceLogsDataLink,
-} from "./error-diagnostics.ts";
+import { runtimeTraceLogsDataLink } from "./error-diagnostics.ts";
 import {
 	apmDataLink,
 	encodeExploreState,
@@ -281,30 +278,6 @@ ${runtimeSignatureLabels}
 | label_format action=\`Undersøk\`
 | keep service_name, contract_state_display, action
 [$__auto]))`;
-
-export const runtimeDiagnosticCoverageQuery = `sum by(service_name, diagnostic_state) (count_over_time(${runtimeSelector}
-${runtimeErrorPipeline}
-${runtimeDiagnosticLabels}
-| keep service_name, diagnostic_state
-[$__auto]))`;
-
-const abandonedProcessingPipeline = `${runtimeErrorPipeline.replace("(?i)(error|critical|fatal)", "(?i)(warn|warning)")}
-| service_name="syfo-budstikka"
-| json event_type
-| __error__=""
-| event_type=~\`^(delivery[.]marked_failed|inbox[.]poison_message[.]dead_lettered)$\``;
-
-export const runtimeAbandonedProcessingQuery = `sum by(service_name, event_type, action) (count_over_time(${runtimeSelector}
-${abandonedProcessingPipeline}
-| label_format action=\`Se logger\`
-| keep service_name, event_type, action
-[$__auto]))`;
-
-export const runtimeAbandonedProcessingDataLink = () =>
-	lokiExploreDataLink(`${runtimeRowSelector}
-${abandonedProcessingPipeline}
-| event_type=\`${grafanaVariable('__data.fields["event_type"]')}\`
-| drop event_type, __error__, __error_details__`);
 
 const runtimeRejectionLabels = `| json operation, error_code, rejection_reason
 | drop __error__, __error_details__
@@ -829,7 +802,7 @@ export const tracedErrorsPanel = () => ({
 				},
 			],
 		),
-		description: `Utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste loggede feilene med trace-ID for tjenestene valgt i filteret. Velg Vis forklaring på en feilgruppe for bare den gruppens hendelser. Logger i hele forløpet viser alle nivåer på tvers av tjenestene; Åpne trace krever at sporet er lagret. Identiske feil i samme trace er slått sammen.`,
+		description: `Utvalg fra de ${RECENT_RUNTIME_EVENT_LIMIT} nyeste loggede feilene med trace-ID for tjenestene valgt i filteret. Velg Vis hendelser på en feilgruppe for bare den gruppens hendelser. Logger med samme trace viser alle nivåer på tvers av tjenestene; Åpne trace krever at sporet er lagret. Identiske feil i samme trace er slått sammen.`,
 		id: 3,
 		links: runtimePanelLinks(),
 		title: "Siste feil med trace · valgt tjenesteutvalg",
@@ -855,7 +828,7 @@ export const tracedErrorsPanel = () => ({
 									id: "links",
 									value: [
 										dataLink(
-											"Logger i hele forløpet",
+											"Logger med samme trace",
 											runtimeTraceLogsDataLink(ROW_VALUE),
 										),
 										dataLink("Åpne trace", traceDataLink(ROW_VALUE)),
@@ -865,7 +838,7 @@ export const tracedErrorsPanel = () => ({
 									id: "custom.cellOptions",
 									value: { type: "data-links" },
 								},
-								{ id: "custom.width", value: 180 },
+								{ id: "custom.width", value: 290 },
 							],
 						},
 						{
@@ -933,7 +906,6 @@ const primaryLayout = () => ({
 			layoutItem("panel-2", 0, 6, 24, 14),
 			layoutItem("panel-3", 0, 20, 24, 11),
 			layoutItem("panel-6", 0, 31, 24, 11),
-			layoutItem("panel-8", 0, 42, 24, 7),
 		],
 	},
 });
@@ -941,10 +913,7 @@ const primaryLayout = () => ({
 const runtimeMetadataLayout = () => ({
 	kind: "GridLayout",
 	spec: {
-		items: [
-			layoutItem("panel-4", 0, 0, 24, 7),
-			layoutItem("panel-9", 0, 7, 24, 8),
-		],
+		items: [layoutItem("panel-4", 0, 0, 24, 7)],
 	},
 });
 
@@ -1047,7 +1016,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				id: 2,
 				title: "Hva feiler?",
 				description:
-					"Loggede hendelser i hele tidsrommet, gruppert på tjeneste, feiltype, kode, operasjon og nivå. Inntil 25 grupper per nivå. Undersøk åpner en forklaring med kaltjeneste, teknisk utfall og konkrete hendelser for akkurat denne gruppen, også uten trace.",
+					"Loggede hendelser i hele tidsrommet, gruppert på tjeneste, feiltype, kode, operasjon og nivå. Inntil 25 grupper per nivå. Undersøk åpner konkrete hendelser og tekniske felt for akkurat denne gruppen, også uten trace.",
 				refId: "Runtimefeil etter type",
 				expr: runtimeByClassificationQuery,
 				renameByName: {
@@ -1071,7 +1040,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				},
 				actionLinks: [
 					{
-						...dataLink("Vis forklaring", errorDetailsDataLink()),
+						...dataLink("Vis hendelser", errorDetailsDataLink()),
 						targetBlank: false,
 					},
 				],
@@ -1088,46 +1057,6 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				},
 			}),
 			"panel-3": tracedErrorsPanel(),
-			"panel-8": tablePanel({
-				id: 8,
-				title: "Oppgitte behandlinger · WARN",
-				description:
-					"Permanent mislykkede leveranser og meldinger flyttet til deadletter i Budstikka. Disse navngitte WARN-hendelsene telles separat fra runtimefeil og API-avvisninger. Antall hendelser er ikke antall mottakere.",
-				refId: "Oppgitte behandlinger",
-				expr: runtimeAbandonedProcessingQuery,
-				renameByName: {
-					service_name: "Tjeneste",
-					event_type: "Utfall",
-					action: "Handling",
-				},
-				indexByName: {
-					service_name: 0,
-					event_type: 1,
-					"Value #Oppgitte behandlinger": 2,
-					action: 3,
-				},
-				actionLinks: [
-					dataLink("Logger for utfallet", runtimeAbandonedProcessingDataLink()),
-				],
-			}),
-			"panel-9": tablePanel({
-				id: 9,
-				title: "Finnes det en teknisk forklaring?",
-				description:
-					"Måler tilgjengelige diagnosefelt separat fra hendelsesidentitet. Kaltjeneste og teknisk utfall betyr at upstream og status eller klassifisert feiltype finnes; det beviser ikke rotårsak. En operatørtest må i tillegg vise at forløpet kan forklares.",
-				refId: "Diagnostisk dekning",
-				expr: runtimeDiagnosticCoverageQuery,
-				renameByName: {
-					service_name: "Tjeneste",
-					diagnostic_state: "Tilgjengelig diagnostikk",
-				},
-				indexByName: {
-					service_name: 0,
-					diagnostic_state: 1,
-					"Value #Diagnostisk dekning": 2,
-				},
-				actionLinks: [],
-			}),
 			"panel-6": tablePanel({
 				id: 6,
 				title: "Registrerte API-avvisninger · WARN",

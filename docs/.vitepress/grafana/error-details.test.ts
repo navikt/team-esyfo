@@ -61,7 +61,7 @@ test("detaljqueryer siterer URL-verdier og beholder identitet og legacy-fallback
 	assert.match(selectedErrorTracesQuery, /safe_trace_id!=""/);
 	assert.match(
 		recentErrorSamplesQuery,
-		/\| line_format `{{ .diagnostic_details }}`/,
+		/\| line_format `{{ .error_details }}`/,
 	);
 	assert.match(recentErrorSamplesQuery, /context_from/);
 });
@@ -96,14 +96,19 @@ test("uten trace finnes alle tjenestelogger rundt hendelsens tidspunkt", () => {
 	assert.equal(state.compact, true);
 });
 
-test("detaljvisningen viser forklaring før hendelser og trace med begrenset utvalg", () => {
+test("detaljvisningen viser konkrete hendelser og trace uten ekstra analysepaneler", () => {
 	const dashboard = buildErrorDetailsDashboard();
 	assert.equal(dashboard.metadata.name, ERROR_DETAILS_UID);
 	const serialized = serializeErrorDetailsDashboard();
 	assert.match(serialized, /"maxLines": 50/);
-	assert.match(serialized, /Hva vet vi om feilen/);
+	assert.match(serialized, /Tekniske felt/);
+	assert.doesNotMatch(
+		serialized,
+		/Tekniske utfall|diagnostic_state|failure_kind/,
+	);
+	assert.match(serialized, /Feil for denne tjenesten/);
 	assert.match(serialized, /med og uten trace/);
-	assert.match(serialized, /Logger i hele forløpet/);
+	assert.match(serialized, /Logger med samme trace/);
 	assert.match(serialized, /Rålogger for gruppen/);
 	assert.equal(serialized, serializeErrorDetailsDashboard());
 	const spec = dashboard.spec as {
@@ -115,7 +120,7 @@ test("detaljvisningen viser forklaring før hendelser og trace med begrenset utv
 		spec.variables.find(({ spec }) => spec.name === "app")?.spec.multi,
 		false,
 	);
-	for (const name of ["event", "code", "operation", "level"])
+	for (const name of ["app", "event", "code", "operation", "level"])
 		assert.equal(
 			spec.variables.find(({ spec }) => spec.name === name)?.spec.hide,
 			"hideVariable",
