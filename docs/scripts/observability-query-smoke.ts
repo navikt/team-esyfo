@@ -41,7 +41,10 @@ import {
 	runtimeTraceLogsDataLink,
 	runtimeEventContextDataLink,
 } from "../.vitepress/grafana/error-diagnostics.ts";
-import { runtimePodLogsDataLink } from "../.vitepress/grafana/runtime-links.ts";
+import {
+	errorDetailsDataLink,
+	runtimePodLogsDataLink,
+} from "../.vitepress/grafana/runtime-links.ts";
 
 // Only synthetic data is sent to the loopback-bound test container.
 const exec = promisify(execFile);
@@ -86,14 +89,16 @@ const diagnosticFixtures = [
 	},
 	{},
 ];
-const renderDetail = (query: string) => {
+const renderDetail = (query: string, overrides: Record<string, string> = {}) => {
 	const values: Record<string, string> = {
 		runtime_environment: "prod",
 		app: diagnosticService,
+		container: ".*",
 		event: "dinesykmeldte_fetch_failed",
 		code: "UPSTREAM_HTTP_ERROR",
 		operation: "fetch_sykmeldt",
 		level: "error",
+		...overrides,
 	};
 	return query.replace(/\$\{([^:]+):doublequote\}/g, (_, name: string) =>
 		JSON.stringify(values[name]),
@@ -255,6 +260,20 @@ async function checkLogQueries(url: string) {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			streams: [
+				...["esyfo-narmesteleder", "texas", "texas-extra", ""].map(
+					(container, index) => ({
+						stream: {
+							...runtimeLabels,
+							service_name: "esyfo-narmesteleder",
+							k8s_container_name: undefined,
+						},
+						values: [[
+							String(BigInt(now - 95000 - index * 1000) * 1000000n),
+							JSON.stringify({ message: "Synthetic source failure" }),
+							container ? { k8s_container_name: container } : {},
+						]],
+					}),
+				),
 				{
 					stream: { ...runtimeLabels, service_name: diagnosticService },
 					values: diagnosticFixtures.map((fields, index) => [
@@ -419,7 +438,7 @@ async function checkLogQueries(url: string) {
 			};
 		}
 	>;
-	for (const [id, shortCount] of [["panel-32", 14]] as const) {
+	for (const [id, shortCount] of [["panel-32", 18]] as const) {
 		const query =
 			controlPanels[id].spec.data.spec.queries[0].spec.query.spec.expr;
 		const total = (rows: Vector[]) =>
@@ -744,6 +763,62 @@ async function checkLogQueries(url: string) {
 		[safeTrace],
 		"The trace action opens only the valid non-zero trace subset of the same group",
 	);
+	const sourceGroups: Vector[] = await request(
+		runtimeByClassificationQuery,
+		"esyfo-narmesteleder",
+	);
+	assert.equal(
+		sourceGroups.length, 4,
+		"Identical app and sidecar events remain separate groups",
+	);
+	assert.equal(total(sourceGroups), 4);
+	assert.equal(
+		total(await request(runtimeByServiceQuery, "esyfo-narmesteleder")), 4,
+		"Sidecar errors still count",
+	);
+	await checkRowLinks(sourceGroups, runtimeErrorGroupDataLink());
+	for (const { metric } of sourceGroups) {
+		const link = errorDetailsDataLink().replace(
+			/\$\{__data.fields\["([^"]+)"\]\}/g,
+			(_, field: string) => encodeURIComponent(metric[field]),
+		);
+		const params = new URL(link, "https://grafana.test").searchParams;
+		const selected = {
+			app: params.get("var-app")!,
+			container: params.get("var-container")!,
+			event: params.get("var-event")!,
+			code: params.get("var-code")!,
+			operation: params.get("var-operation")!,
+			level: params.get("var-level")!,
+		};
+		const logs: Stream[] = await request(
+			renderDetail(recentErrorSamplesQuery, selected), service, true,
+		);
+		assert.equal(
+			logs.flatMap(({ values }) => values).length, 1,
+			"Detail link preserves exact source, including texas vs texas-extra",
+		);
+		assert.equal(logs[0].stream.container_display, metric.container_display);
+	}
+	const legacy: Stream[] = await request(
+		renderDetail(selectedErrorGroupQuery(), {
+			app: "esyfo-narmesteleder", event: "Ikke oppgitt av appen",
+			code: "—", operation: "—",
+		}), service, true,
+	);
+	assert.equal(
+		legacy.flatMap(({ values }) => values).length, 4,
+		"Old links without a container still find every source",
+	);
+	const sourceGaps: Vector[] = await request(
+		runtimeContractGapQuery, "esyfo-narmesteleder",
+	);
+	assert.equal(
+		total(sourceGaps), 3,
+		"Texas is not an app contract gap; missing and other sources remain visible",
+	);
+	await checkRowLinks(sourceGaps, runtimeContractGapDataLink());
+
 	const contractGaps: Vector[] = await request(runtimeContractGapQuery);
 	assert.equal(total(contractGaps), 5);
 	await checkRowLinks(contractGaps, runtimeContractGapDataLink());

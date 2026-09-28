@@ -1,3 +1,4 @@
+import { withSourceVersion } from "./source-version.ts";
 import {
 	BUDSTIKKA_RUNBOOK_URL,
 	CONTROL_ROOM_GUIDE_URL,
@@ -1034,7 +1035,7 @@ const dinesykmeldteSeriesOverrides = (
 		})),
 	);
 
-export const buildControlRoomDashboard = (): GrafanaDashboardResource => ({
+export const buildControlRoomDashboard = (): GrafanaDashboardResource => withSourceVersion({
 	apiVersion: "dashboard.grafana.app/v2",
 	kind: "Dashboard",
 	metadata: {

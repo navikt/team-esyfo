@@ -9,7 +9,7 @@ Dashboardet er en feilsøkingsflate, ikke oversikten over all teknisk helse. Tra
 Den primære, åpne delen har én rekkefølge:
 
 1. **Loggede feil per minutt** viser utviklingen med samme enhet uansett tidsrom. **Hvor skjer feilene?** viser antall hendelser per tjeneste i hele tidsrommet som horisontale stolper.
-2. **Hva feiler?** prioriterer tjeneste og hendelse. **Kode og operasjon** samler kode og operasjon når de tilfører informasjon. CRITICAL og FATAL fremgår også der. Topp 25 beregnes separat per nivå, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser. En tjenestestolpe åpner tjenestens feilgrupper.
+2. **Hva feiler?** prioriterer tjeneste, container og hendelse. **Container** er loggkilden fra Kubernetes; `texas` er sidecaren for tokenhåndtering, ikke appens egen logger. **Kode og operasjon** samler kode og operasjon når de tilfører informasjon. CRITICAL og FATAL fremgår også der. Topp 25 beregnes separat per nivå, slik at sjeldne alvorlige nivåer ikke forsvinner bak vanlige ERROR-hendelser. En tjenestestolpe åpner tjenestens feilgrupper.
 3. **Siste feil med trace · valgt tjenesteutvalg** gir et utvalg fra de 100 nyeste trace-koblede feilene. Dette er ikke forløp for en valgt rad i tabellen over; bruk radens **Vis hendelser** for den gruppens hendelser.
 4. **Registrerte API-avvisninger · WARN** viser inntil 50 grupper separat fra ERROR, med avvisningsgrunn først og kode/operasjon samlet under **Detaljer**. Gjentatte avvisninger kan avsløre klient- eller konfigurasjonsfeil selv om serveren avviser korrekt.
 
@@ -29,13 +29,15 @@ Detaljvisningens **Alle tjenestelogger** åpner Logs Drilldown i samme miljø og
 
 Trace-tabellen på hovedoversikten er deduplisert på trace, tjeneste, feiltype, kode, operasjon og HTTP-status fra kall. En trace-ID beviser ikke at sporet er lagret. Manglende trace skjuler heller ikke hendelsene i detaljvisningen.
 
-Hjelpefeltene som spørringen beregner, fjernes fra Explore-resultatet etter at gruppen er filtrert. Den opprinnelige logglinjen, appens feildiagnostikk, podmetadata og trace-ID beholdes. Dette er opprydding i visningen, ikke scrubbing av loggene.
+Hjelpefeltene som spørringen beregner, fjernes fra Explore-resultatet etter at gruppen er filtrert. Nye gruppelenker beholder også containeren, slik at identiske app- og Texas-feil ikke blandes. Eldre detaljlenker uten container viser fortsatt gruppen på tvers av containere. Manglende containermetadata vises som **Ukjent**.
 
-Tabellene er tilpasset en laptop på 1366–1440 px, også med Grafana-menyen åpen. Feilgrupper, avvisninger og trace-tabell har fem synlige kolonner og intern scrolling fremfor mange små sider. Støttefelter skjules bare i tabellen; presise lenker beholder dem.
+Den opprinnelige logglinjen, appens feildiagnostikk, podmetadata og trace-ID beholdes. Dette er opprydding i visningen, ikke scrubbing av loggene.
+
+Tabellene er tilpasset en laptop på 1366–1440 px, også med Grafana-menyen åpen. Feilgrupper har seks synlige kolonner med container; avvisninger og trace-tabell har fem. Tabellene bruker intern scrolling fremfor mange små sider. Støttefelter skjules bare i tabellen; presise lenker beholder dem.
 
 I tillegg finnes:
 
-- **Forbedre loggdata** viser hendelser uten gyldig `event_type`. Disse hendelsene er allerede med i hovedtabellen, ikke ekstra feil. Delen starter sammenfoldet og arver miljø og tjeneste.
+- **Forbedre loggdata** viser hendelser uten gyldig `event_type`, unntatt fra Texas som ikke følger appens loggkontrakt. Texas-feil telles og vises fortsatt i hovedoversikten. Disse hendelsene er allerede med i hovedtabellen, ikke ekstra feil. Delen starter sammenfoldet og arver miljø og tjeneste.
 - **Nettleserfeil · eget utvalg**, med egen inventarstyrt flatevelger og miljøvelger. Den påvirkes ikke av runtime-valgene. Standard er alle miljøer, også ukjent, med miljø oppgitt per rad.
 
 Nettlesertabellen grupperer på brede JavaScript-typer som `Error`, ikke på rotårsak. **Se logger** finner radens nøyaktige tjeneste, miljø og type. **APM · alle typer (ukjent miljø → alle)** åpner flatens egne feilgrupper, alle typer, i samme miljø og tidsrom. For **Ukjent** åpnes alle miljøer; dashboardet gjetter ikke produksjon. APMs gruppering gjenbrukes i stedet for en ny fingerprint-løsning i teamets dashboard.
@@ -135,6 +137,8 @@ pnpm build
 
 Testene dekker panelhierarki, lokal variabelarv, separate allowlister, eksakte radlenker, klassifisering, browsermiljø og tracevalidering. Query-smoken kjører de faktiske queryene mot syntetiske Loki-hendelser, også uten JSON, uten miljø og med videresendte browserlogger. Den følger dessuten hver aggregert feil-, avvisnings-, kontraktsgap- og nettleserrad til det genererte loggsøket og krever samme antall treff. En separat test hindrer at tekstendrende value mappings bryter radlenkene. Smoken tester også HTTP og exceptiontype på samme hendelse uten trace, originale exceptiontyper og SQLState, manglende tekniske felt, diagnostikkcanaries, tidsvindu rundt hendelser og trace på tvers av tjenester. Dette erstatter ikke en faktisk klikkontroll i Grafana. `grafana-dashboard:smoke` importerer ressursen i samme Grafana-versjon som produksjon og sammenligner ressurs, DTO, layout, `preload`, `editable` og `liveNow` semantisk. Se [designprinsippene](./dashboard-design).
 
+**Kildeversjon** øverst i Kontrollrom, Feiloversikt og Feildetaljer er en kort, deterministisk hash av det genererte dashboardinnholdet. Lenken åpner den tilsvarende JSON-filen på `main`; sammenlign samme lenketittel der for å oppdage en gammel import. Versjonen beskriver dashboardoppsettet, ikke tidspunktet eller ferskheten til målingene.
+
 Publisering til produksjons-Grafana er foreløpig manuell. De committede JSON-filene er fasit. Importer den nye detaljressursen før oversikten, slik at første-klikk-lenken virker hele tiden. Før overwrite skal gjeldende live-dashboard eksporteres som rollback-kopi. Importer deretter den genererte ressursen med samme UID og mappe, hent live-ressursen tilbake og sammenlign semantisk med artefakten.
 
 Verifiser minst:
@@ -142,7 +146,7 @@ Verifiser minst:
 - `prod-gcp` og `dev-gcp`, `All` og én runtime-tjeneste
 - at nettleserpanelet ikke arver runtime-miljø, og at egen miljøvelger og gruppelenke bevarer prod/test/ukjent korrekt
 - at første skjermbilde viser miljø, trend, feilgrupper og handling uten forklaringsvegg
-- at feilgruppehandlingen åpner Feildetaljer med riktig miljø, tjeneste, type, kode, operasjon, nivå og tidsrom
+- at feilgruppehandlingen åpner Feildetaljer med riktig miljø, tjeneste, container, type, kode, operasjon, nivå og tidsrom
 - at HTTP-status og teknisk årsak er synlige uten trace, at kontekstlenken bruker hendelsens tidspunkt, og at Explore-queryen starter sammenfoldet
 - at avvisningspanelet er åpent, viser WARN separat og åpner samme tjeneste, operasjon, kode og avvisningsgrunn i Explore
 - at trace-tabellen har fem synlige kolonner og ingen identiske `(trace, tjeneste, feiltype, kode, operasjon, HTTP-status fra kall)`-rader
