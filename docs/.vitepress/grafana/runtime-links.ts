@@ -33,7 +33,7 @@ export const encodeExploreState = (value: unknown) => {
 export const ERROR_DETAILS_UID = "team-esyfo-feildetaljer";
 
 export const errorDetailsDataLink = () =>
-	`/d/${ERROR_DETAILS_UID}?var-runtime_environment=${grafanaVariable("runtime_environment:raw")}&var-app=${grafanaVariable('__data.fields["service_name"]')}&var-event=${grafanaVariable('__data.fields["error_type_display"]')}&var-code=${grafanaVariable('__data.fields["error_code_display"]')}&var-operation=${grafanaVariable('__data.fields["operation_display"]')}&var-level=${grafanaVariable('__data.fields["error_level"]')}&from=${FROM}&to=${TO}`;
+	`/d/${ERROR_DETAILS_UID}?var-runtime_environment=${grafanaVariable("runtime_environment:raw")}&var-app=${grafanaVariable('__data.fields["service_name"]')}&var-container=${grafanaVariable('__data.fields["container_display"]')}&var-event=${grafanaVariable('__data.fields["error_type_display"]')}&var-code=${grafanaVariable('__data.fields["error_code_display"]')}&var-operation=${grafanaVariable('__data.fields["operation_display"]')}&var-level=${grafanaVariable('__data.fields["error_level"]')}&from=${FROM}&to=${TO}`;
 
 export const lokiExploreDataLink = (
 	expr: string,

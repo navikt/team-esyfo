@@ -20,6 +20,7 @@ const pane = (link: string) =>
 test("første klikk bevarer den valgte feilgruppen uten å vise queryeditor", () => {
 	const row = {
 		service_name: "flaggskipet",
+		container_display: "texas",
 		error_type_display: "Ikke oppgitt av appen",
 		error_code_display: "—",
 		operation_display: "—",
@@ -37,6 +38,7 @@ test("første klikk bevarer den valgte feilgruppen uten å vise queryeditor", ()
 	assert.equal(url.pathname, `/d/${ERROR_DETAILS_UID}`);
 	assert.equal(url.searchParams.get("var-event"), row.error_type_display);
 	assert.equal(url.searchParams.get("var-code"), "—");
+	assert.equal(url.searchParams.get("var-container"), "texas");
 	assert.equal(url.searchParams.get("var-level"), "fatal");
 	assert.equal(url.searchParams.get("var-runtime_environment"), "dev");
 	assert.equal(url.searchParams.get("from"), "1000");
@@ -48,6 +50,7 @@ test("detaljqueryer siterer URL-verdier og beholder identitet og legacy-fallback
 	for (const name of [
 		"runtime_environment",
 		"app",
+		"container",
 		"event",
 		"code",
 		"operation",
@@ -120,7 +123,7 @@ test("detaljvisningen viser konkrete hendelser og trace uten ekstra analysepanel
 		spec.variables.find(({ spec }) => spec.name === "app")?.spec.multi,
 		false,
 	);
-	for (const name of ["app", "event", "code", "operation", "level"])
+	for (const name of ["app", "container", "event", "code", "operation", "level"])
 		assert.equal(
 			spec.variables.find(({ spec }) => spec.name === name)?.spec.hide,
 			"hideVariable",

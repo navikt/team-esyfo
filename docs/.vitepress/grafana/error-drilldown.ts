@@ -1,3 +1,4 @@
+import { withSourceVersion } from "./source-version.ts";
 import {
 	combineRuntimePatterns,
 	runtimeErrorIngestionErrorCodePattern,
@@ -55,6 +56,7 @@ const FROM = grafanaVariable("__from");
 const TO = grafanaVariable("__to");
 const ROW_VALUE = grafanaVariable("__value.raw");
 const ROW_SERVICE = grafanaVariable('__data.fields["service_name"]');
+const ROW_CONTAINER = grafanaVariable('__data.fields["container_display"]');
 const ROW_ERROR_TYPE = grafanaVariable('__data.fields["error_type_display"]');
 const ROW_ERROR_CODE = grafanaVariable('__data.fields["error_code_display"]');
 const ROW_OPERATION = grafanaVariable('__data.fields["operation_display"]');
@@ -181,6 +183,7 @@ const safeLabel = (target: string, source: string, pattern: string) =>
 	`| label_format ${target}=\`{{ if and .${source} (not (regexReplaceAll "${pattern}" .${source} "")) }}{{ .${source} }}{{ end }}\``;
 
 const runtimeSignatureLabels = `| drop __error__, __error_details__
+| label_format container_display=\`{{ if .k8s_container_name }}{{ .k8s_container_name }}{{ else }}Ukjent{{ end }}\`
 ${safeLabel("safe_event_type", "event_type", safeEventTypePattern)}
 ${safeLabel("safe_event", "event", safeEventTypePattern)}
 ${safeLabel(
@@ -260,18 +263,19 @@ const codeAndOperationDetailsLabel = (operationCondition: string) =>
 const runtimeDetailsLabel = `${codeAndOperationDetailsLabel('and (ne .operation_display "—") (ne .operation_display .error_type_display)')}
 | label_format error_details=\`{{ if and .error_level (ne .error_level "error") }}{{ .error_level | upper }}{{ if .error_details }} · {{ end }}{{ end }}{{ .error_details }}\``;
 
-export const runtimeByClassificationQuery = `topk by(error_level) (25, sum by(error_level, service_name, error_type_display, error_code_display, operation_display, error_details, action) (count_over_time(${runtimeSelector}
+export const runtimeByClassificationQuery = `topk by(error_level) (25, sum by(error_level, service_name, container_display, error_type_display, error_code_display, operation_display, error_details, action) (count_over_time(${runtimeSelector}
 ${runtimeErrorPipeline}
 ${runtimeSignatureParser}
 ${runtimeSignatureLabels}
 ${runtimeLevelLabel}
 ${runtimeDetailsLabel}
 | label_format action=\`Undersøk\`
-| keep error_level, service_name, error_type_display, error_code_display, operation_display, error_details, action
+| keep error_level, service_name, container_display, error_type_display, error_code_display, operation_display, error_details, action
 [$__auto])))`;
 
 export const runtimeContractGapQuery = `sum by(service_name, contract_state_display, action) (count_over_time(${runtimeSelector}
 ${runtimeErrorPipeline}
+| k8s_container_name!="texas"
 ${runtimeSignatureParser}
 ${runtimeSignatureLabels}
 | contract_state!="canonical"
@@ -340,7 +344,7 @@ const runtimeRowSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"
 
 // Only remove parser aliases and derived labels. The original line, platform
 // metadata, producer diagnostics and trace fields remain available in Explore.
-const dropRuntimeHelpers = `| drop safe_event_type, safe_event, safe_top_exception_type, safe_nested_exception_type, safe_top_error_type, safe_nested_error_type, safe_top_err_type, safe_nested_err_type, safe_runtime_error_type, safe_error_code, safe_code, safe_feilkode, safe_runtime_type_code, safe_status, safe_operation, safe_rejection_reason, safe_upstream_status, safe_trace_id, top_exception_type, nested_exception_type, top_error_type, nested_error_type, top_err_type, nested_err_type, runtime_type, error_type_display, error_code_display, operation_display, error_level, error_details, error_context, contract_state, contract_state_display, rejection_reason_display, legacy_system_denial, upstream_status_display`;
+const dropRuntimeHelpers = `| drop safe_event_type, safe_event, safe_top_exception_type, safe_nested_exception_type, safe_top_error_type, safe_nested_error_type, safe_top_err_type, safe_nested_err_type, safe_runtime_error_type, safe_error_code, safe_code, safe_feilkode, safe_runtime_type_code, safe_status, safe_operation, safe_rejection_reason, safe_upstream_status, safe_trace_id, top_exception_type, nested_exception_type, top_error_type, nested_error_type, top_err_type, nested_err_type, runtime_type, container_display, error_type_display, error_code_display, operation_display, error_level, error_details, error_context, contract_state, contract_state_display, rejection_reason_display, legacy_system_denial, upstream_status_display`;
 const dropBrowserHelpers = `| drop browser_parse_error, browser_environment, browser_environment_display, browser_apm_path, safe_browser_type, browser_type_display`;
 
 export const runtimeErrorGroupQuery = (
@@ -350,6 +354,7 @@ ${runtimeErrorPipeline}
 ${withTrace ? runtimeTraceParser : runtimeSignatureParser}
 ${withTrace ? runtimeTraceLabels : runtimeSignatureLabels}
 ${runtimeLevelLabel}
+| container_display=\`${ROW_CONTAINER}\`
 | error_type_display=\`${ROW_ERROR_TYPE}\`
 | error_code_display=\`${ROW_ERROR_CODE}\`
 | operation_display=\`${ROW_OPERATION}\`
@@ -364,6 +369,7 @@ export const runtimeErrorGroupDataLink = (withTrace = false) =>
 export const runtimeContractGapDataLink = () =>
 	lokiExploreDataLink(`${runtimeRowSelector}
 ${runtimeErrorPipeline}
+| k8s_container_name!="texas"
 ${runtimeSignatureParser}
 ${runtimeSignatureLabels}
 | contract_state_display=\`${ROW_CONTRACT_GAP}\`
@@ -978,7 +984,7 @@ export const runtimeVariables = () => [
 	},
 ];
 
-export const buildErrorDashboard = (): GrafanaDashboardResource => ({
+export const buildErrorDashboard = (): GrafanaDashboardResource => withSourceVersion({
 	apiVersion: "dashboard.grafana.app/v2",
 	kind: "Dashboard",
 	metadata: {
@@ -1016,11 +1022,12 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				id: 2,
 				title: "Hva feiler?",
 				description:
-					"Loggede hendelser i hele tidsrommet, gruppert på tjeneste, feiltype, kode, operasjon og nivå. Inntil 25 grupper per nivå. Undersøk åpner konkrete hendelser og tekniske felt for akkurat denne gruppen, også uten trace.",
+					"Loggede hendelser i hele tidsrommet, gruppert på tjeneste, container, feiltype, kode, operasjon og nivå. Container viser hvem som skrev loggen; texas er en sidecar og følger ikke appens loggkontrakt. Inntil 25 grupper per nivå. Undersøk åpner konkrete hendelser og tekniske felt for akkurat denne gruppen, også uten trace.",
 				refId: "Runtimefeil etter type",
 				expr: runtimeByClassificationQuery,
 				renameByName: {
 					action: "Handling",
+					container_display: "Container",
 					error_level: "Nivå",
 					error_code_display: "Kode",
 					error_type_display: "Hendelse",
@@ -1030,13 +1037,14 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				},
 				indexByName: {
 					service_name: 0,
-					error_type_display: 1,
-					error_details: 2,
-					"Value #Runtimefeil etter type": 3,
-					action: 4,
-					error_level: 5,
-					error_code_display: 6,
-					operation_display: 7,
+					container_display: 1,
+					error_type_display: 2,
+					error_details: 3,
+					"Value #Runtimefeil etter type": 4,
+					action: 5,
+					error_level: 6,
+					error_code_display: 7,
+					operation_display: 8,
 				},
 				actionLinks: [
 					{
@@ -1051,6 +1059,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 					"operation_display",
 				],
 				widths: {
+					container_display: 170,
 					error_details: 230,
 					service_name: 200,
 					action: 155,
@@ -1093,7 +1102,7 @@ export const buildErrorDashboard = (): GrafanaDashboardResource => ({
 				id: 4,
 				title: "Feil uten standardisert hendelsestype",
 				description:
-					"Feilene er med i oversikten, men mangler en gyldig event_type. Eldre typefelt er en fallback; avvist format er ubrukelig metadata; ikke oppgitt betyr at typefelt mangler. Kode og operasjon er valgfri metadata. Dette er forbedringsarbeid, ikke flere feil i tillegg til tabellen over.",
+					"Appens logger som mangler en gyldig event_type. Texas er ikke med her, siden sidecaren ikke følger appens loggkontrakt; feilene fra Texas er fortsatt med i oversikten. Eldre typefelt er en fallback; avvist format er ubrukelig metadata; ikke oppgitt betyr at typefelt mangler. Kode og operasjon er valgfri metadata. Dette er forbedringsarbeid, ikke flere feil i tillegg til tabellen over.",
 				refId: "Runtime-kontraktsgap",
 				expr: runtimeContractGapQuery,
 				renameByName: {

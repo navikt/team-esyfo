@@ -1,3 +1,4 @@
+import { withSourceVersion } from "./source-version.ts";
 import {
 	dataLink,
 	GRAFANA_VERSION,
@@ -35,6 +36,11 @@ export const selectedErrorGroupQuery = (withTrace = false) => {
 			'service_name="${__data.fields["service_name"]}"',
 			`service_name=${variable("app")}`,
 		);
+	// Older links have no container. Their default matches every source.
+	query = query.replace(
+		'container_display=`${__data.fields["container_display"]}`',
+		`container_display=~${variable("container")}`,
+	);
 	for (const [field, name] of [
 		["error_type_display", "event"],
 		["error_code_display", "code"],
@@ -54,7 +60,7 @@ ${runtimeErrorDetailsLabels}
 ${runtimeContextLabels}
 | label_format action=\`Logger rundt hendelsen\`
 | line_format \`{{ .error_details }}\`
-| keep service_name, error_type_display, error_code_display, operation_display, error_level, error_details, context_from, context_to, action`;
+| keep service_name, container_display, error_type_display, error_code_display, operation_display, error_level, error_details, context_from, context_to, action`;
 
 export const selectedErrorTracesQuery = `${selectedErrorGroupQuery(true)}
 ${runtimeErrorDetailsLabels}
@@ -105,9 +111,10 @@ const samplePanel = () => {
 						options: {
 							excludeByName: {},
 							includeByName: {},
-							indexByName: { Time: 0, error_details: 1, action: 2 },
+							indexByName: { Time: 0, container_display: 1, error_details: 2, action: 3 },
 							renameByName: {
 								Time: "Tidspunkt",
+								container_display: "Container",
 								error_details: "Tekniske felt",
 								action: "Undersøk",
 							},
@@ -135,6 +142,10 @@ const samplePanel = () => {
 								matcher: { id: "byName", options: field },
 								properties: [{ id: "custom.hideFrom.viz", value: true }],
 							})),
+							{
+								matcher: { id: "byName", options: "container_display" },
+								properties: [{ id: "custom.width", value: 170 }],
+							},
 							{
 								matcher: { id: "byName", options: "Time" },
 								properties: [{ id: "custom.width", value: 195 }],
@@ -213,7 +224,7 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 				}
 			: item,
 	);
-	return {
+	return withSourceVersion({
 		...base,
 		metadata: { ...base.metadata, name: ERROR_DETAILS_UID },
 		spec: {
@@ -263,6 +274,7 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 			},
 			variables: [
 				...selectorVariables,
+				groupVariable("container", ".*"),
 				groupVariable("event", ""),
 				groupVariable("code", "—"),
 				groupVariable("operation", "—"),
@@ -298,7 +310,7 @@ export const buildErrorDetailsDashboard = (): GrafanaDashboardResource => {
 				},
 			],
 		},
-	};
+	});
 };
 
 export const serializeErrorDetailsDashboard = () =>

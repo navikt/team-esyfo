@@ -4005,6 +4005,18 @@
         "asDropdown": false,
         "includeVars": false,
         "keepTime": false
+      },
+      {
+        "type": "link",
+        "title": "Kildeversjon 6de3d0b0f2",
+        "icon": "external link",
+        "tooltip": "Sammenlign kildeversjonen med JSON-filen på main. Ulik versjon betyr at denne importen avviker fra main.",
+        "tags": [],
+        "asDropdown": false,
+        "includeVars": false,
+        "keepTime": false,
+        "targetBlank": true,
+        "url": "https://github.com/navikt/team-esyfo/blob/main/docs/public/grafana/team-esyfo-kontrollrom.json"
       }
     ],
     "liveNow": false,

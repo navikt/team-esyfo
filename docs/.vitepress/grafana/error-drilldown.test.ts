@@ -147,6 +147,7 @@ const runtimeContractState = (fixture: RuntimeFixture) => {
 const decodedExplorePane = (url: string) => {
 	const materialized = url
 		.replaceAll('${__data.fields["service_name"]}', "sample-service")
+		.replaceAll('${__data.fields["container_display"]}', "texas")
 		.replaceAll('${__data.fields["error_type_display"]}', "sample_error")
 		.replaceAll('${__data.fields["error_code_display"]}', "SAMPLE_CODE")
 		.replaceAll('${__data.fields["operation_display"]}', "sample.operation")
@@ -592,7 +593,7 @@ describe("feiloversikt-dashboard", () => {
 			Record<string, unknown>
 		>;
 		assert.deepEqual(
-			links.map(({ title }) => title),
+			links.slice(0, 2).map(({ title }) => title),
 			["Kontrollrom", "Om målingene"],
 		);
 		assert.equal(
@@ -638,6 +639,7 @@ describe("feiloversikt-dashboard", () => {
 		assert.match(expr, /error_code_display=`SAMPLE_CODE`/);
 		assert.match(expr, /operation_display=`sample.operation`/);
 		assert.match(expr, /error_level=`error`/);
+		assert.match(expr, /container_display=`texas`/);
 		assert.ok(!url.includes("$app"));
 	});
 
