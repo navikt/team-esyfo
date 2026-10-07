@@ -19,10 +19,10 @@ sequenceDiagram
     Note right of graphql: OAuth2 OBO via @navikt/oasis
     graphql->>backend: GET /api/minesykmeldte
     graphql->>backend: GET /api/virksomheter
-    backend->>db: henter sykmeldte, lesestatus og aktivitetsvarsler
+    backend->>db: henter sykmeldte, lesestatus og hendelser
     backend-->>graphql: returnerer oversikt
     graphql-->>frontend: mapper data til UI
-    frontend-->>arbeidsgiver: viser ansatte, status og varsler
+    frontend-->>arbeidsgiver: viser ansatte, status og nye hendelser
 ```
 
 ### 2. Åpne detaljside og navigere videre
@@ -50,13 +50,13 @@ sequenceDiagram
     sidemeny-->>oppfolgingsplan: lenker videre til oppfølgingsplan-frontend
 ```
 
-### 3. Aktivitetsvarsler via Kafka
+### 3. Hendelser via Kafka
 
-[Aktivitetsvarsler](/ordbok#aktivitetsvarsel) er beskjeder som forteller nærmesteleder at noe har skjedd — for eksempel en ny søknad eller en hendelse i sykefraværsforløpet. Andre tjenester publiserer varsler til Kafka, backend konsumerer dem og viser dem som uleste beskjeder i oversikten.
+Hendelser forteller nærmesteleder at noe nytt har skjedd for en ansatt — for eksempel om dialogmøter, oppfølgingsplaner eller en søknad som ikke er sendt inn. Andre tjenester publiserer hendelsene til Kafka. Backend konsumerer dem, lagrer dem i tabellen `hendelser` og viser dem som nye i oversikten og i lenkepanelene for den ansatte.
 
 ```mermaid
 sequenceDiagram
-    participant varsler as sykepengesoknad-narmesteleder-varsler / esyfovarsel
+    participant varsler as esyfovarsel / syfo-budstikka / sykepengesoknad-narmesteleder-varsler
     participant kafka as «Kafka»<br/>team-esyfo.dinesykmeldte-hendelser-v2
     participant backend as dinesykmeldte-backend
     participant db as PostgreSQL
@@ -66,8 +66,8 @@ sequenceDiagram
 
     varsler->>kafka: skriver opprettHendelse eller ferdigstillHendelse
     backend->>kafka: konsumerer topicet
-    backend->>db: lagrer eller ferdigstiller aktivitetsvarsel
-    arbeidsgiver->>frontend: åpner oversikt eller beskjeder
+    backend->>db: lagrer eller ferdigstiller hendelse
+    arbeidsgiver->>frontend: åpner oversikt eller en hendelse
     frontend->>graphql: mutation for lesestatus
     graphql->>backend: PUT /api/hendelse/{id}/lest eller /api/hendelser/read
     backend->>db: oppdaterer lesestatus
@@ -82,7 +82,7 @@ sequenceDiagram
 | `teamsykmelding.syfo-narmesteleder-leesah` | Inn     | Oppdaterer koblingen mellom leder og sykmeldt i backend           |
 | `teamsykmelding.syfo-sendt-sykmelding`     | Inn     | Gir backend nye og oppdaterte sykmeldinger                        |
 | `flex.sykepengesoknad`                     | Inn     | Gir backend søknadsdata som vises for arbeidsgiver                |
-| `team-esyfo.dinesykmeldte-hendelser-v2`    | Inn     | Gir aktivitetsvarsler og ferdigstilling av varsler til oversikten |
+| `team-esyfo.dinesykmeldte-hendelser-v2`    | Inn     | Gir hendelser og ferdigstilling av hendelser til oversikten       |
 
 ## Systemer
 

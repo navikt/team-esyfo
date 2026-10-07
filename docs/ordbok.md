@@ -18,12 +18,6 @@ Krav om at den sykmeldte skal vurdere aktivitet tidlig i sykefraværet, med mind
 
 ---
 
-### Aktivitetsvarsel {#aktivitetsvarsel}
-
-Beskjed om noe arbeidsgiver bør følge opp, for eksempel en søknad eller aktivitet i forløpet.
-
----
-
 ### Altinn {#altinn}
 
 Altinn er en ekstern plattform for innsending og utveksling av meldinger mellom virksomheter og offentlige tjenester, blant annet brukt i løsninger for nærmeste leder.
@@ -116,7 +110,7 @@ Angir om personen kan besvare kartleggingsskjemaet.
 
 ### Lesestatus {#lesestatus}
 
-Markering som viser om arbeidsgiver har åpnet en sykmelding, søknad eller beskjed.
+Markering som viser om arbeidsgiver har åpnet en sykmelding, søknad eller hendelse.
 
 ---
 

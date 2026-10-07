@@ -18,15 +18,15 @@ Arbeidsgiver (nærmesteleder) logger inn på nav.no og åpner Dine sykmeldte. Hv
 
 #### 2. 👀 Ser oversikt over sykmeldte ansatte
 
-Arbeidsgiver får en samlet liste over sykmeldte ansatte med navn, startdato for sykefravær og status for oppfølging. Oversikten viser også beskjeder og andre signaler som hjelper lederen å prioritere oppfølgingen.
+Arbeidsgiver får en samlet liste over sykmeldte ansatte med navn, startdato for sykefravær og status for oppfølging. Oversikten viser også nye hendelser og andre signaler som hjelper lederen å prioritere oppfølgingen.
 
-#### 3. 🔔 Ser varsler og uleste beskjeder
+#### 3. 🔔 Ser nye hendelser
 
-Andre systemer publiserer [aktivitetsvarsler](/ordbok#aktivitetsvarsel) (for eksempel nye søknader eller hendelser i sykefraværsforløpet) til Kafka. Varslene vises som uleste beskjeder i oversikten og markeres som lest når nærmesteleder åpner dem.
+Andre systemer publiserer hendelser om dialogmøter, oppfølgingsplaner og søknader som ikke er sendt inn, til Kafka. Hendelsene vises som nye i oversikten og i lenkepanelene for den ansatte, og markeres som lest når nærmesteleder åpner dem.
 
 #### 4. 📄 Åpner en ansatt og ser detaljer
 
-Fra oversikten kan arbeidsgiver åpne en ansatt og se sykmeldinger, søknader og beskjeder. På detaljsidene brukes en felles sidemeny som gjør det enkelt å bytte mellom innhold for samme person.
+Fra oversikten kan arbeidsgiver åpne en ansatt og se sykmeldinger, søknader og nye hendelser om dialogmøter og oppfølgingsplaner. På detaljsidene brukes en felles sidemeny som gjør det enkelt å bytte mellom innhold for samme person.
 
 #### 5. 🔀 Går videre til andre oppfølgingsflater
 
