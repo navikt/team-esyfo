@@ -86,7 +86,7 @@ export const areas = [
 				system: "dinesykmeldte-backend",
 				direction: "inn",
 				description:
-					"Leverer oversikt, sykmeldinger, søknader og aktivitetsvarsler til frontend",
+					"Leverer oversikt, sykmeldinger, søknader og hendelser til frontend",
 			},
 			{
 				system: "dinesykmeldte-sidemeny",
