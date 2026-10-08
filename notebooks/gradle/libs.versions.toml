@@ -1,7 +1,7 @@
 [versions]
 kotlin-version = "2.4.20"
 coroutines = "1.11.0"
-logback-version = "1.6.4"
+logback-version = "1.6.5"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
