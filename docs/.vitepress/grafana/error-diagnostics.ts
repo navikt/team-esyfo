@@ -6,10 +6,12 @@ import { lokiExploreDataLink } from "./runtime-links.ts";
 const validated = (target: string, source: string, pattern: string) =>
 	`| label_format ${target}=\`{{ if and .${source} (not (regexReplaceAll "${pattern}" .${source} "")) }}{{ .${source} }}{{ end }}\``;
 
+export const safeUpstreamPattern = "^[a-z][a-z0-9_.-]{0,79}$";
+
 // Show source facts without classifying a root cause or adding grouping dimensions.
 export const runtimeErrorDetailsLabels = `| json upstream, upstream_status, cause_type, exception_type, sql_state, task_name
 | drop __error__, __error_details__
-${validated("safe_upstream", "upstream", "^[a-z][a-z0-9_.-]{0,79}$")}
+${validated("safe_upstream", "upstream", safeUpstreamPattern)}
 ${validated("safe_upstream_status", "upstream_status", "^[1-5][0-9]{2}$")}
 ${validated("safe_cause_type", "cause_type", "^([A-Za-z][A-Za-z0-9_.:$]{0,143})?(Error|Exception)$")}
 ${validated("safe_exception_type", "exception_type", "^([A-Za-z][A-Za-z0-9_.:$]{0,143})?(Error|Exception)$")}

@@ -656,6 +656,11 @@
                           },
                           {
                             "targetBlank": true,
+                            "title": "Feillogger",
+                            "url": "/a/grafana-lokiexplore-app/explore/service/${__value.raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__value.raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+                          },
+                          {
+                            "targetBlank": true,
                             "title": "Logger",
                             "url": "/a/grafana-lokiexplore-app/explore/service/${__value.raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__value.raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
                           },
@@ -1001,6 +1006,11 @@
                     },
                     {
                       "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+                    },
+                    {
+                      "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
                     },
@@ -1144,6 +1154,11 @@
                       "targetBlank": true,
                       "title": "Feiloversikt",
                       "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
                     },
                     {
                       "targetBlank": true,
@@ -1291,6 +1306,11 @@
                     },
                     {
                       "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+                    },
+                    {
+                      "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
                     },
@@ -1385,6 +1405,11 @@
               "targetBlank": true,
               "title": "Feiloversikt",
               "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
             },
             {
               "targetBlank": true,
@@ -1504,6 +1529,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -1576,6 +1606,11 @@
                     },
                     {
                       "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+                    },
+                    {
+                      "targetBlank": true,
                       "title": "Logger",
                       "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
                     },
@@ -1645,6 +1680,11 @@
               "targetBlank": true,
               "title": "Feiloversikt",
               "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${service:raw}"
+            },
+            {
+              "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/${service:raw}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${service:raw}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
             },
             {
               "targetBlank": true,
@@ -2093,6 +2133,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -2229,6 +2274,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -2346,6 +2396,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/syfo-budstikka/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-budstikka&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/syfo-budstikka/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-budstikka&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -2423,6 +2478,11 @@
                       "targetBlank": true,
                       "title": "Feiloversikt",
                       "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-budstikka"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/syfo-budstikka/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-budstikka&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
                     },
                     {
                       "targetBlank": true,
@@ -2536,6 +2596,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -2613,6 +2678,11 @@
                       "targetBlank": true,
                       "title": "Feiloversikt",
                       "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfo-oppfolgingsplan-backend"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/syfo-oppfolgingsplan-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfo-oppfolgingsplan-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
                     },
                     {
                       "targetBlank": true,
@@ -2842,6 +2912,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -2909,6 +2984,11 @@
                       "targetBlank": true,
                       "title": "Feiloversikt",
                       "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
                     },
                     {
                       "targetBlank": true,
@@ -3061,6 +3141,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -3133,6 +3218,11 @@
                       "targetBlank": true,
                       "title": "Feiloversikt",
                       "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=dinesykmeldte-backend"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/dinesykmeldte-backend/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Cdinesykmeldte-backend&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
                     },
                     {
                       "targetBlank": true,
@@ -3309,6 +3399,11 @@
             },
             {
               "targetBlank": true,
+              "title": "Feillogger",
+              "url": "/a/grafana-lokiexplore-app/explore/service/syfomotebehov/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfomotebehov&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+            },
+            {
+              "targetBlank": true,
               "title": "Logger",
               "url": "/a/grafana-lokiexplore-app/explore/service/syfomotebehov/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfomotebehov&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
             },
@@ -3388,6 +3483,11 @@
                       "targetBlank": true,
                       "title": "Feiloversikt",
                       "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=syfomotebehov"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/syfomotebehov/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7Csyfomotebehov&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
                     },
                     {
                       "targetBlank": true,
@@ -4008,7 +4108,7 @@
       },
       {
         "type": "link",
-        "title": "Kildeversjon 6de3d0b0f2",
+        "title": "Kildeversjon c43197fa10",
         "icon": "external link",
         "tooltip": "Sammenlign kildeversjonen med JSON-filen på main. Ulik versjon betyr at denne importen avviker fra main.",
         "tags": [],

@@ -7,7 +7,7 @@
 ## Slik bruker vi det
 
 1. Start i **Oversikt**, som er standardfanen. Tabellen **Tjenester i produksjon** beholder forventede tjenester selv når måledata mangler. Bruk **Undersøk tjenesten** fra tabellen for å åpne riktig tjeneste direkte.
-2. Fanen **Undersøk en tjeneste** har en lokal tjenestevelger og lenker til logger, APM, minne/ressurser, Feiloversikt og runbook. Valget endrer ikke produksjonsoversikten. Lenken **Alle tjenesters feil** øverst åpner hele teamets feiloversikt; lenkene i detaljpanelene beholder valgt tjeneste og tidsrom. Replikaer, omstarter og logger vises for valgt tjeneste; HTTP-grafer vises bare for tjenester med HTTP-målinger som del av kontrakten.
+2. Fanen **Undersøk en tjeneste** har en lokal tjenestevelger og lenker til **Feillogger** (bare error-nivå), **Logger** (alle nivåer), APM, minne/ressurser, Feiloversikt og runbook. Valget endrer ikke produksjonsoversikten. Lenken **Alle tjenesters feil** øverst åpner hele teamets feiloversikt; lenkene i detaljpanelene beholder valgt tjeneste og tidsrom. Replikaer, omstarter og logger vises for valgt tjeneste; HTTP-grafer vises bare for tjenester med HTTP-målinger som del av kontrakten.
 3. Følg tjenestens egne signaler når de finnes: meldingsbehandling for Oppfølgingsplan og Budstikka, varslingsjobben for esyfovarsel og rutespesifikke svar for Dine sykmeldte. Målegap står ved tjenesten i oversikten, ikke i en egen statusrad.
 
 Det er ingen globale område- eller tjenestefiltre. Oversikten viser alle tjenestene uten sidebytte. Tidsrommet er felles: hendelsestall følger tidsvelgeren, både i oversikten og under **Undersøk en tjeneste**. Toppkortene teller hendelser, ikke berørte tjenester. Tabellen viser fordelingen per tjeneste.
