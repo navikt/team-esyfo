@@ -13,6 +13,12 @@ export const apmDataLink = (
 export const runtimeLogsDataLink = (service: string, environment = "prod") =>
 	`/a/grafana-lokiexplore-app/explore/service/${service}/logs?from=${FROM}&to=${TO}&var-ds=${LOKI_DATASOURCE_UID}&var-filters=service_name%7C%3D%7C${service}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7C${environment}`;
 
+export const runtimeErrorLogsDataLink = (
+	service: string,
+	environment = "prod",
+) =>
+	`${runtimeLogsDataLink(service, environment)}&var-levels=detected_level%7C%3D%7Cerror`;
+
 export const encodeExploreState = (value: unknown) => {
 	const variables: string[] = [];
 	const withTokens = JSON.stringify(value, (_key, child) => {

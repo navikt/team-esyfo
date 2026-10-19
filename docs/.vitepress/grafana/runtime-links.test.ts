@@ -2,9 +2,32 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
 	apmDataLink,
+	runtimeErrorLogsDataLink,
 	runtimeLogsDataLink,
 	runtimePodLogsDataLink,
 } from "./runtime-links.ts";
+
+test("error log links keep service filters and add an error level filter", () => {
+	const url = new URL(
+		runtimeErrorLogsDataLink("esyfo-narmesteleder"),
+		"https://grafana.example.test",
+	);
+	assert.deepEqual(url.searchParams.getAll("var-filters"), [
+		"service_name|=|esyfo-narmesteleder",
+		"service_namespace|=|team-esyfo",
+		"k8s_cluster_name|=|prod",
+	]);
+	assert.deepEqual(url.searchParams.getAll("var-levels"), [
+		"detected_level|=|error",
+	]);
+	assert.equal(
+		new URL(
+			runtimeLogsDataLink("esyfo-narmesteleder"),
+			"https://grafana.example.test",
+		).searchParams.has("var-levels"),
+		false,
+	);
+});
 
 test("pod logs filter structured metadata outside the stream selector and preserve time", () => {
 	const link = runtimePodLogsDataLink("${service:raw}", "${__value.raw}");

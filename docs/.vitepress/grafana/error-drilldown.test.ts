@@ -14,6 +14,7 @@ import {
 	activeApplicationIds,
 	runtimeInventory,
 } from "../runtime/inventory.ts";
+import { safeUpstreamPattern } from "./error-diagnostics.ts";
 import {
 	browserByTypeQuery,
 	browserErrorGroupDataLink,
@@ -728,6 +729,24 @@ describe("feiloversikt-dashboard", () => {
 		assert.ok(displayLine?.includes(".safe_upstream_status"));
 		assert.ok(!displayLine?.includes(".safe_status"));
 		assert.match(runtimeByClassificationQuery, /else if \.safe_status/);
+
+		assert.match(tracedRuntimeErrorsQuery, /\| json .*\bupstream,/);
+		assert.ok(
+			tracedRuntimeErrorsQuery.includes(
+				`label_format safe_upstream=\`{{ if and .upstream (not (regexReplaceAll "${safeUpstreamPattern}" .upstream "")) }}`,
+			),
+		);
+		for (const valid of ["arbeidsgiver-altinn-tilganger", "pdl", "dokarkiv"]) {
+			assert.ok(fullMatch(safeUpstreamPattern, valid));
+		}
+		for (const invalid of ["Alice", "a b", "12345678901", "https://x.test"]) {
+			assert.ok(!fullMatch(safeUpstreamPattern, invalid));
+		}
+		const detailsLine = tracedRuntimeErrorsQuery
+			.split("\n")
+			.find((line) => line.includes("HTTP {{ .upstream_status_display }}"));
+		assert.ok(detailsLine?.includes("{{ .safe_upstream }}"));
+		assert.ok(!detailsLine?.includes("{{ .upstream }}"));
 	});
 
 	test("browserfeltet har lukket typeallowlist og eget eksplisitt miljø", () => {

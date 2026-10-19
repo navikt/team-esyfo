@@ -24,6 +24,7 @@ import {
 } from "./dashboard-kit.ts";
 import {
 	apmDataLink,
+	runtimeErrorLogsDataLink,
 	runtimeLogsDataLink,
 	runtimePodLogsDataLink,
 } from "./runtime-links.ts";
@@ -253,6 +254,7 @@ export const serviceInvestigationDataLink = (service: string) =>
 const serviceDataLinks = (service: string) => [
 	dataLink("APM og tracing", apmDataLink(service)),
 	dataLink("Feiloversikt", errorDashboardDataLink(service)),
+	dataLink("Feillogger", runtimeErrorLogsDataLink(service)),
 	dataLink("Logger", runtimeLogsDataLink(service)),
 	dataLink("Minne og ressurser", apmDataLink(service, "prod", "backend")),
 	dataLink("Runbook", RUNTIME_RUNBOOK_URL),

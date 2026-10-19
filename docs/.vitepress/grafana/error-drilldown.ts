@@ -23,7 +23,10 @@ import {
 	PROD_TEMPO_DATASOURCE_UID,
 	TEAM_ESYFO_DASHBOARD_FOLDER_UID,
 } from "./dashboard-kit.ts";
-import { runtimeTraceLogsDataLink } from "./error-diagnostics.ts";
+import {
+	runtimeTraceLogsDataLink,
+	safeUpstreamPattern,
+} from "./error-diagnostics.ts";
 import {
 	apmDataLink,
 	encodeExploreState,
@@ -158,7 +161,7 @@ ${runtimeErrorPipeline}
 [$__auto])))`;
 
 const runtimeSignatureParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
-const runtimeTraceParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, upstream_status, trace_id, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
+const runtimeTraceParser = `| json event_type, event, error_code, code, feilkode, runtime_type="type", status, operation, upstream, upstream_status, trace_id, top_exception_type="exception_type", nested_exception_type="exception.type", top_error_type="error_type", nested_error_type="error.type", top_err_type="err_type", nested_err_type="err.type"`;
 
 export const safeEventTypePattern = runtimeErrorIngestionEventTypePattern;
 export const safeGenericErrorTypePattern =
@@ -234,6 +237,7 @@ ${safeLabel("safe_operation", "operation", runtimeErrorIngestionOperationPattern
 | label_format contract_state_display=\`{{ if eq .contract_state "canonical" }}Kanonisk feiltype{{ else if eq .contract_state "legacy_type" }}Eldre typefelt{{ else if eq .contract_state "rejected" }}Avvist format{{ else }}Ikke oppgitt av appen{{ end }}\``;
 
 const runtimeTraceLabels = `${runtimeSignatureLabels}
+${safeLabel("safe_upstream", "upstream", safeUpstreamPattern)}
 ${safeLabel(
 	"safe_upstream_status",
 	"upstream_status",
@@ -313,7 +317,7 @@ ${runtimeTraceParser}
 ${runtimeTraceLabels}
 ${runtimeLevelLabel}
 ${runtimeDetailsLabel}
-| label_format error_details=\`{{ .error_details }}{{ if ne .upstream_status_display "—" }}{{ if .error_details }} · {{ end }}HTTP {{ .upstream_status_display }}{{ end }}\`
+| label_format error_details=\`{{ .error_details }}{{ if .safe_upstream }}{{ if .error_details }} · {{ end }}{{ .safe_upstream }}{{ end }}{{ if ne .upstream_status_display "—" }}{{ if or .error_details .safe_upstream }} · {{ end }}HTTP {{ .upstream_status_display }}{{ end }}\`
 | safe_trace_id!=""
 | safe_trace_id!="00000000000000000000000000000000"
 | line_format \`{{ .error_type_display }}\`
@@ -344,7 +348,7 @@ const runtimeRowSelector = `{service_namespace="team-esyfo", k8s_cluster_name=~"
 
 // Only remove parser aliases and derived labels. The original line, platform
 // metadata, producer diagnostics and trace fields remain available in Explore.
-const dropRuntimeHelpers = `| drop safe_event_type, safe_event, safe_top_exception_type, safe_nested_exception_type, safe_top_error_type, safe_nested_error_type, safe_top_err_type, safe_nested_err_type, safe_runtime_error_type, safe_error_code, safe_code, safe_feilkode, safe_runtime_type_code, safe_status, safe_operation, safe_rejection_reason, safe_upstream_status, safe_trace_id, top_exception_type, nested_exception_type, top_error_type, nested_error_type, top_err_type, nested_err_type, runtime_type, container_display, error_type_display, error_code_display, operation_display, error_level, error_details, error_context, contract_state, contract_state_display, rejection_reason_display, legacy_system_denial, upstream_status_display`;
+const dropRuntimeHelpers = `| drop safe_event_type, safe_event, safe_top_exception_type, safe_nested_exception_type, safe_top_error_type, safe_nested_error_type, safe_top_err_type, safe_nested_err_type, safe_runtime_error_type, safe_error_code, safe_code, safe_feilkode, safe_runtime_type_code, safe_status, safe_operation, safe_rejection_reason, safe_upstream, safe_upstream_status, safe_trace_id, top_exception_type, nested_exception_type, top_error_type, nested_error_type, top_err_type, nested_err_type, runtime_type, container_display, error_type_display, error_code_display, operation_display, error_level, error_details, error_context, contract_state, contract_state_display, rejection_reason_display, legacy_system_denial, upstream_status_display`;
 const dropBrowserHelpers = `| drop browser_parse_error, browser_environment, browser_environment_display, browser_apm_path, safe_browser_type, browser_type_display`;
 
 export const runtimeErrorGroupQuery = (
