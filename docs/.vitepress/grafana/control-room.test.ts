@@ -255,8 +255,8 @@ test("holder alle operative produksjonstjenester synlige uten avviklede ressurse
 				isCurrentLifecycle(lifecycle) && runtime.cluster === "prod-gcp",
 		),
 	);
-	assert.equal(controlRoomApplications.length, 25);
-	assert.equal(controlRoomServerApplications.length, 23);
+	assert.equal(controlRoomApplications.length, 26);
+	assert.equal(controlRoomServerApplications.length, 24);
 	assert.equal(controlRoomSunsetApplications.length, 0);
 	for (const { runtime } of controlRoomApplications) {
 		assert.ok(expectedScopeVectorQuery.includes(runtime.name));
