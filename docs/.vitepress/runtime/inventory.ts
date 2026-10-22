@@ -422,6 +422,18 @@ export const applications: Application[] = [
 		coverageProfile: "standard-http",
 	}),
 	application({
+		name: "esyfo-pdfgen",
+		repository: "navikt/esyfo-pdfgen",
+		role: "backend-api",
+		criticality: "high",
+		lifecycle: active,
+		context: context(
+			["oppfolgingsplan", "meroppfolging"],
+			["journey:document-delivery"],
+		),
+		coverageProfile: "standard-http",
+	}),
+	application({
 		name: "esyfovarsel",
 		repository: "navikt/esyfovarsel",
 		role: "worker",
@@ -1410,7 +1422,7 @@ export const runtimeInventory: RuntimeInventory = {
 		approvedOn: "2026-08-28",
 		ownerTeam: "team-esyfo",
 		expected: {
-			applications: 25,
+			applications: 26,
 			jobs: 1,
 			ownedTopics: 10,
 			browserSurfaces: 11,

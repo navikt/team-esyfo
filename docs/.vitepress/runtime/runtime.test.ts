@@ -51,7 +51,7 @@ describe("runtimeinventar", () => {
 		const result = validateInventory(runtimeInventory, { asOf: "2026-08-28" });
 		assert.deepEqual(result.errors, []);
 		assert.deepEqual(result.counts, {
-			applications: 25,
+			applications: 26,
 			jobs: 1,
 			ownedTopics: 10,
 			browserSurfaces: 11,
@@ -1031,7 +1031,7 @@ describe("dekningsevidens", () => {
 			{ now: "2026-08-28T10:05:00Z" },
 		);
 		assert.equal(report.status, "gaps");
-		assert.equal(report.summary.application.complete, 25);
+		assert.equal(report.summary.application.complete, 26);
 		assert.equal(report.summary.job.complete, 1);
 		assert.equal(report.summary.topic.complete, 10);
 		assert.equal(report.summary["browser-surface"].complete, 0);

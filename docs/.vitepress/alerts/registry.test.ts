@@ -834,7 +834,7 @@ describe("alert-register", () => {
 	test("viser runtime-, topic- og clusterdrift uten å kalle det grønt", () => {
 		const report = assertValidAlertRegistry(alertRegistry);
 
-		assert.equal(report.currentRuntimeWithoutProductionRule.length, 18);
+		assert.equal(report.currentRuntimeWithoutProductionRule.length, 19);
 		assert.ok(
 			report.currentRuntimeWithoutProductionRule.includes(
 				"app:sykepengedager-informasjon",
