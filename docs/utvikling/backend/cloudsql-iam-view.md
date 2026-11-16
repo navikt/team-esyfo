@@ -57,7 +57,7 @@ gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
   --filter="type=CLOUD_IAM_SERVICE_ACCOUNT"
 ```
 
-Nais CLI har ingen kommando for dette; `nais postgres` lager passordbrukere eller gir tilgang til personlige brukere.
+Nais CLI har ingen kommando for dette; `nais cloudsql` lager passordbrukere eller gir tilgang til personlige brukere.
 
 ## 4. Grant med guard i Flyway
 
