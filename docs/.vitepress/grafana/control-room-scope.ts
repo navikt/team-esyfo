@@ -24,6 +24,7 @@ export const BROWSER_RUNBOOK_URL = `${RUNBOOK_BASE_URL}/browser`;
 export const PIPELINE_RUNBOOK_URL = `${RUNBOOK_BASE_URL}/pipelines-og-jobber`;
 export const MOTEBEHOV_RUNBOOK_URL = `${RUNBOOK_BASE_URL}/syfomotebehov-tilgjengelighet`;
 export const DESERIALIZATION_RUNBOOK_URL = `${RUNBOOK_BASE_URL}/oppfolgingsplan-deserialisering`;
+export const TEXAS_RUNBOOK_URL = `${RUNBOOK_BASE_URL}/texas`;
 export const BUDSTIKKA_RUNBOOK_URL =
 	"https://github.com/navikt/syfo-budstikka/blob/main/docs/helsesjekk.md";
 

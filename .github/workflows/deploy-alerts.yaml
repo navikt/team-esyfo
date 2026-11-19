@@ -1,0 +1,44 @@
+name: Deploy alerts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'nais/alerts/**'
+      - '.github/workflows/test-alerts.yaml'
+      - '.github/workflows/deploy-alerts.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-alerts
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  test:
+    name: Test alerts
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test-alerts.yaml
+
+  deploy:
+    name: Deploy alerts to prod-gcp
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Deploy PrometheusRules to prod-gcp
+        uses: nais/deploy/actions/deploy@30ed20fc7021e78d03ca9544b0c561d37f826296 # v3
+        env:
+          CLUSTER: prod-gcp
+          # Nye regelfiler i nais/alerts må legges til her, kommaseparert, for å bli deployet.
+          RESOURCE: nais/alerts/texas.yaml

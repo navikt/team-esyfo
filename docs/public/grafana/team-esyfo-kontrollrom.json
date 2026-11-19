@@ -911,6 +911,314 @@
           }
         }
       },
+      "panel-38": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PA58DA793C7250F1B"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": true,
+                        "expr": "sum by (service_name, identity_provider) (label_replace(increase(texas_handler_errors_total{app=\"texas\", k8s_cluster_name=\"prod\", downstream_app_namespace=\"team-esyfo\", error_kind=\"UpstreamFailure\"}[$__rate_interval]), \"service_name\", \"$1\", \"downstream_app_name\", \"(.*)\"))",
+                        "instant": false,
+                        "interval": "",
+                        "legendFormat": "{{service_name}} · {{identity_provider}}",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Feilede tokenkall"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Tokenkall fra Texas som feilet med nettverksfeil eller timeout etter alle forsøk, eller med uleselig svar, per app og identitetstilbyder (TokenX, Entra ID, Maskinporten og andre) og måleintervall. Appen fikk HTTP 500 fra Texas. HTTP-feil fra identitetstilbyderen telles som UpstreamOAuthError og er ikke med. Samme utvalg som varselet TexasUpstreamFailuresAcrossPods. Den første feilen i en pod kan mangle i grafen fordi increase() ikke ser første måling i en ny serie; varselet teller den. Ingen data betyr ingen registrerte feil eller manglende måling. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
+          "id": 38,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/texas"
+            }
+          ],
+          "title": "Texas · feilede tokenkall per identitetstilbyder",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "APM og tracing",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&tab=overview&from=${__from}&to=${__to}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Logger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Runbook",
+                      "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "blue",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
+      "panel-39": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "PEA2100DC89AE9FE2"
+                      },
+                      "group": "loki",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "sum by (service_name) (count_over_time({service_namespace=\"team-esyfo\", k8s_cluster_name=\"prod\", service_name=~\"^(aktivitetskrav-backend|aktivitetskrav-frontend|aktivitetskrav-microfrontend|bro-frontend|dialogmote-frontend|dialogmote-microfrontend|dinesykmeldte|dinesykmeldte-backend|esyfo-narmesteleder|esyfo-pdfgen|esyfovarsel|flaggskipet|lps-oppfolgingsplan-mottak|lumi-api|lumi-dashboard|meroppfolging-backend|meroppfolging-frontend|meroppfolging-microfrontend|narmesteleder-frontend|syfo-budstikka|syfo-dokumentporten|syfo-oppfolgingsplan-backend|syfo-oppfolgingsplan-frontend|syfomotebehov|syfooppdfgen|sykepengedager-informasjon)$\"}\n|= \"retrying upstream request\"\n| k8s_container_name=\"texas\"\n[$__auto]))",
+                        "legendFormat": "{{service_name}}",
+                        "queryType": "range"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "Nye forsøk"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Logglinjer «retrying upstream request» fra Texas-sidecaren per app og måleintervall. Gjelder alle identitetstilbydere, fordi Texas ikke logger URL ved HTTP-feil fra upstream. Et nytt forsøk er ikke en feil for appen; neste forsøk kan ha lyktes. Bruk panelet som tidlig tegn og for å avgrense berørte apper. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
+          "id": 39,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Runbook",
+              "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/texas"
+            }
+          ],
+          "title": "Texas · nye forsøk mot identitetstilbyder",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 8,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "APM og tracing",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&tab=overview&from=${__from}&to=${__to}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feiloversikt",
+                      "url": "/d/team-esyfo-feiloversikt/team-esyfo-feiloversikt?orgId=1&from=${__from}&to=${__to}&var-runtime_environment=prod&var-app=${__field.labels.service_name}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Feillogger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod&var-levels=detected_level%7C%3D%7Cerror"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Logger",
+                      "url": "/a/grafana-lokiexplore-app/explore/service/${__field.labels.service_name}/logs?from=${__from}&to=${__to}&var-ds=PEA2100DC89AE9FE2&var-filters=service_name%7C%3D%7C${__field.labels.service_name}&var-filters=service_namespace%7C%3D%7Cteam-esyfo&var-filters=k8s_cluster_name%7C%3D%7Cprod"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Minne og ressurser",
+                      "url": "/a/nais-apm-app/services/team-esyfo/${__field.labels.service_name}?environment=prod&tab=backend&from=${__from}&to=${__to}"
+                    },
+                    {
+                      "targetBlank": true,
+                      "title": "Runbook",
+                      "url": "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/http-runtime"
+                    }
+                  ],
+                  "noValue": "Ukjent",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "blue",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "13.1.2"
+          }
+        }
+      },
       "panel-12": {
         "kind": "Panel",
         "spec": {
@@ -3621,6 +3929,32 @@
                         "x": 0,
                         "y": 4
                       }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-38"
+                        },
+                        "height": 7,
+                        "width": 12,
+                        "x": 0,
+                        "y": 32
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-39"
+                        },
+                        "height": 7,
+                        "width": 12,
+                        "x": 12,
+                        "y": 32
+                      }
                     }
                   ]
                 }
@@ -4108,7 +4442,7 @@
       },
       {
         "type": "link",
-        "title": "Kildeversjon 1a5e47dcd5",
+        "title": "Kildeversjon 6258333132",
         "icon": "external link",
         "tooltip": "Sammenlign kildeversjonen med JSON-filen på main. Ulik versjon betyr at denne importen avviker fra main.",
         "tags": [],

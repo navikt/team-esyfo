@@ -168,6 +168,10 @@ export default withMermaid(
 											link: "/utvikling/observability/runbooks/pipelines-og-jobber",
 										},
 										{
+											text: "Texas og identitetstilbydere",
+											link: "/utvikling/observability/runbooks/texas",
+										},
+										{
 											text: "syfomotebehov tilgjengelighet",
 											link: "/utvikling/observability/runbooks/syfomotebehov-tilgjengelighet",
 										},
