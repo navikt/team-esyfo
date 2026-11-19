@@ -947,7 +947,7 @@
               "transformations": []
             }
           },
-          "description": "Tokenkall fra Texas som feilet med nettverksfeil eller timeout etter alle forsøk, eller med uleselig svar, per app og identitetstilbyder (TokenX, Entra ID, Maskinporten og andre) og måleintervall. Appen fikk HTTP 500 fra Texas. HTTP-feil fra identitetstilbyderen telles som UpstreamOAuthError og er ikke med. Samme utvalg som varselet TexasUpstreamFailuresAcrossPods. Den første feilen i en pod kan mangle i grafen fordi increase() ikke ser første måling i en ny serie; varselet teller den. Ingen data betyr ingen registrerte feil eller manglende måling. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
+          "description": "Tokenkall fra Texas som feilet med nettverksfeil eller timeout etter alle forsøk, eller med uleselig svar, per app og identitetstilbyder (TokenX, Entra ID, Maskinporten og andre) og måleintervall. Appen fikk HTTP 500 fra Texas. HTTP-feil fra identitetstilbyderen telles som UpstreamOAuthError og er ikke med. Samme utvalg som varselet TexasUpstreamFailuresAcrossApps. Den første feilen i en pod kan mangle i grafen fordi increase() ikke ser første måling i en ny serie; varselet teller den. Varselet går først når minst tre apper har feil mot samme identitetstilbyder. Ingen data betyr ingen registrerte feil eller manglende måling. Last* under grafen er siste observerte verdi i tidsrommet, ikke nødvendigvis en oppdatert måling.",
           "id": 38,
           "links": [
             {
@@ -4442,7 +4442,7 @@
       },
       {
         "type": "link",
-        "title": "Kildeversjon 6258333132",
+        "title": "Kildeversjon 7414e187c5",
         "icon": "external link",
         "tooltip": "Sammenlign kildeversjonen med JSON-filen på main. Ulik versjon betyr at denne importen avviker fra main.",
         "tags": [],

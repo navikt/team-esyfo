@@ -151,7 +151,7 @@ ${runtimeErrorPipeline}
 [$__range]))`;
 export const fleetRuntimeErrorCountQuery = `sum(${runtimeErrorsByServiceQuery})`;
 
-// Samme utvalg som TexasUpstreamFailuresAcrossPods i nais/alerts/texas.yaml.
+// Samme utvalg som TexasUpstreamFailuresAcrossApps i nais/alerts/texas.yaml.
 const texasUpstreamFailureSelector = `${TEXAS_ERRORS_METRIC}{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", error_kind="UpstreamFailure"}`;
 export const texasUpstreamFailuresByServiceQuery = `sum by (service_name, identity_provider) (label_replace(increase(${texasUpstreamFailureSelector}[$__rate_interval]), "service_name", "$1", "downstream_app_name", "(.*)"))`;
 // Texas logger retries uten URL ved HTTP-feil fra upstream, så panelet kan ikke avgrenses per identitetstilbyder.
@@ -1121,7 +1121,7 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => withSou
 				id: 38,
 				title: "Texas · feilede tokenkall per identitetstilbyder",
 				description:
-					"Tokenkall fra Texas som feilet med nettverksfeil eller timeout etter alle forsøk, eller med uleselig svar, per app og identitetstilbyder (TokenX, Entra ID, Maskinporten og andre) og måleintervall. Appen fikk HTTP 500 fra Texas. HTTP-feil fra identitetstilbyderen telles som UpstreamOAuthError og er ikke med. Samme utvalg som varselet TexasUpstreamFailuresAcrossPods. Den første feilen i en pod kan mangle i grafen fordi increase() ikke ser første måling i en ny serie; varselet teller den. Ingen data betyr ingen registrerte feil eller manglende måling.",
+					"Tokenkall fra Texas som feilet med nettverksfeil eller timeout etter alle forsøk, eller med uleselig svar, per app og identitetstilbyder (TokenX, Entra ID, Maskinporten og andre) og måleintervall. Appen fikk HTTP 500 fra Texas. HTTP-feil fra identitetstilbyderen telles som UpstreamOAuthError og er ikke med. Samme utvalg som varselet TexasUpstreamFailuresAcrossApps. Den første feilen i en pod kan mangle i grafen fordi increase() ikke ser første måling i en ny serie; varselet teller den. Varselet går først når minst tre apper har feil mot samme identitetstilbyder. Ingen data betyr ingen registrerte feil eller manglende måling.",
 				query: prometheusQuery(
 					"Feilede tokenkall",
 					texasUpstreamFailuresByServiceQuery,

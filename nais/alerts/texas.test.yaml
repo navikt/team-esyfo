@@ -5,21 +5,21 @@ rule_files:
 evaluation_interval: 1m
 
 tests:
-  - name: Tre podder med økende feil mot samme identitetstilbyder utløser varselet etter to minutter
+  - name: Tre apper med økende feil mot samme identitetstilbyder utløser varselet etter to minutter
     interval: 1m
     input_series:
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
-      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-2", identity_provider="tokenx", error_kind="UpstreamFailure"}'
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-c", nais_pod_name="app-c-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-b", nais_pod_name="app-b-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
     alert_rule_test:
       - eval_time: 12m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []
       - eval_time: 13m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts:
           - exp_labels: &tokenx_labels
               identity_provider: tokenx
@@ -28,7 +28,7 @@ tests:
               response: ticket
               alert_type: custom
             exp_annotations: &tokenx_annotations
-              summary: "Kall fra Texas til tokenx har feilet i 3 podder i team-esyfo de siste 5 minuttene"
+              summary: "Kall fra Texas til tokenx har feilet i 3 apper i team-esyfo de siste 5 minuttene"
               consequence: "Apper får HTTP 500 fra Texas når tokenkall mot tokenx feiler med nettverksfeil, timeout eller uleselig svar. Kall til andre tjenester kan feile for brukerne."
               action: "Følg runbooken: sjekk Nais-status, avgrens berørte apper i Kontrollrom og vurder brukerimpact. Identitetstilbyderne driftes utenfor teamet, så eskaler til Nais hvis feilen ikke allerede er kjent."
               runbook_url: "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/texas"
@@ -39,19 +39,19 @@ tests:
     input_series:
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
-      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-2", identity_provider="tokenx", error_kind="UpstreamFailure"}'
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-e", nais_pod_name="app-e-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-b", nais_pod_name="app-b-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-c", nais_pod_name="app-c-1", identity_provider="entra_id", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
-      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-c", nais_pod_name="app-c-2", identity_provider="entra_id", error_kind="UpstreamFailure"}'
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-f", nais_pod_name="app-f-1", identity_provider="entra_id", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-d", nais_pod_name="app-d-1", identity_provider="entra_id", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x10"
     alert_rule_test:
       - eval_time: 13m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts:
           - exp_labels: *tokenx_labels
             exp_annotations: *tokenx_annotations
@@ -62,13 +62,13 @@ tests:
               response: ticket
               alert_type: custom
             exp_annotations:
-              summary: "Kall fra Texas til entra_id har feilet i 3 podder i team-esyfo de siste 5 minuttene"
+              summary: "Kall fra Texas til entra_id har feilet i 3 apper i team-esyfo de siste 5 minuttene"
               consequence: "Apper får HTTP 500 fra Texas når tokenkall mot entra_id feiler med nettverksfeil, timeout eller uleselig svar. Kall til andre tjenester kan feile for brukerne."
               action: "Følg runbooken: sjekk Nais-status, avgrens berørte apper i Kontrollrom og vurder brukerimpact. Identitetstilbyderne driftes utenfor teamet, så eskaler til Nais hvis feilen ikke allerede er kjent."
               runbook_url: "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/texas"
               dashboard_url: "https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom/team-esyfo-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m"
 
-  - name: Podder med feil mot ulike identitetstilbydere legges ikke sammen
+  - name: Apper med feil mot ulike identitetstilbydere legges ikke sammen
     interval: 1m
     input_series:
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
@@ -81,12 +81,12 @@ tests:
         values: "0x10 1+1x10"
     alert_rule_test:
       - eval_time: 15m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []
 
   # increase() ser ingen økning i første sample av en ny serie. Texas lager serien ved
-  # første feil, så en pod som aldri har feilet før må telles fordi serien er ny.
-  - name: Nye feilserier i tre podder teller selv uten senere økning
+  # første feil, så en app som aldri har feilet før må telles fordi serien er ny.
+  - name: Nye feilserier i tre apper teller selv uten senere økning
     interval: 1m
     input_series:
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
@@ -97,12 +97,12 @@ tests:
         values: "_x10 1x10"
     alert_rule_test:
       - eval_time: 13m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts:
           - exp_labels: *tokenx_labels
             exp_annotations: *tokenx_annotations
       - eval_time: 18m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []
 
   - name: Gamle feilserier som kommer tilbake etter et scrape-hull teller ikke som nye
@@ -116,10 +116,10 @@ tests:
         values: "1x10 _x10 1x10"
     alert_rule_test:
       - eval_time: 24m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []
 
-  - name: To podder er under terskelen
+  - name: To apper er under terskelen
     interval: 1m
     input_series:
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
@@ -128,11 +128,28 @@ tests:
         values: "0x10 1+1x10"
     alert_rule_test:
       - eval_time: 15m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []
 
-  # Texas har en serie per path, så én pod kan ha flere feilserier.
-  - name: Flere feilserier i samme pod teller som én pod
+  # Varselet skal fange feil i flere apper, ikke én app med mange podder.
+  - name: Mange podder i to apper er under terskelen
+    interval: 1m
+    input_series:
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
+        values: "0x10 1+1x10"
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-2", identity_provider="tokenx", error_kind="UpstreamFailure"}'
+        values: "0x10 1+1x10"
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-3", identity_provider="tokenx", error_kind="UpstreamFailure"}'
+        values: "_x10 1x10"
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-b", nais_pod_name="app-b-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
+        values: "0x10 1+1x10"
+    alert_rule_test:
+      - eval_time: 13m
+        alertname: TexasUpstreamFailuresAcrossApps
+        exp_alerts: []
+
+  # Texas har en serie per path, så én app kan ha flere feilserier.
+  - name: Flere feilserier i samme app teller som én app
     interval: 1m
     input_series:
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", path="/api/v1/token", identity_provider="tokenx", error_kind="UpstreamFailure"}'
@@ -145,10 +162,10 @@ tests:
         values: "_x10 1x10"
     alert_rule_test:
       - eval_time: 15m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []
 
-  # To gyldige podder er med, så én feilaktig talt serie ville gitt tre podder.
+  # To gyldige apper er med, så én feilaktig talt serie ville gitt tre apper.
   - name: Andre apper, feiltyper, team og klynger teller ikke
     interval: 1m
     input_series:
@@ -166,7 +183,7 @@ tests:
         values: "0x10 1+1x10"
     alert_rule_test:
       - eval_time: 15m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []
 
   - name: Varselet går over når feilene stopper
@@ -174,11 +191,11 @@ tests:
     input_series:
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x5 6x15"
-      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-a", nais_pod_name="app-a-2", identity_provider="tokenx", error_kind="UpstreamFailure"}'
+      - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-c", nais_pod_name="app-c-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x5 6x15"
       - series: 'texas_handler_errors_total{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", downstream_app_name="app-b", nais_pod_name="app-b-1", identity_provider="tokenx", error_kind="UpstreamFailure"}'
         values: "0x10 1+1x5 6x15"
     alert_rule_test:
       - eval_time: 25m
-        alertname: TexasUpstreamFailuresAcrossPods
+        alertname: TexasUpstreamFailuresAcrossApps
         exp_alerts: []

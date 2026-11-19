@@ -1,6 +1,6 @@
 # Runbook: Texas og identitetstilbydere
 
-Varselet `TexasUpstreamFailuresAcrossPods` går til `#esyfo-alarm` som ticket når minst tre podder i team-esyfo har fått endelige feil fra Texas mot samme identitetstilbyder de siste fem minuttene, og tilstanden har vart i to minutter. Labelen `identity_provider` i varselet viser hvilken tilbyder det gjelder: `tokenx`, `entra_id`, `maskinporten`, `idporten` eller `ansattporten`. Feiler flere tilbydere samtidig, kommer ett varsel per tilbyder. Regelen ligger i [`nais/alerts/texas.yaml`](https://github.com/navikt/team-esyfo/blob/main/nais/alerts/texas.yaml). Den er ikke en pager.
+Varselet `TexasUpstreamFailuresAcrossApps` går til `#esyfo-alarm` som ticket når minst tre apper i team-esyfo har fått endelige feil fra Texas mot samme identitetstilbyder de siste fem minuttene, og tilstanden har vart i to minutter. Labelen `identity_provider` i varselet viser hvilken tilbyder det gjelder: `tokenx`, `entra_id`, `maskinporten`, `idporten` eller `ansattporten`. Flere podder i samme app teller som én app, så én app med problemer utløser ikke varselet. Feiler flere tilbydere samtidig, kommer ett varsel per tilbyder. Regelen ligger i [`nais/alerts/texas.yaml`](https://github.com/navikt/team-esyfo/blob/main/nais/alerts/texas.yaml). Den er ikke en pager.
 
 Texas er sidecaren som henter og veksler token for appen. TokenX driftes av Nais, Entra ID av Microsoft, og Maskinporten og ID-porten av Digdir. Vi kan sjelden rette feilen selv, men vi må vite hvilke apper og brukerflyter som rammes, og sørge for at Nais vet om det.
 
@@ -18,7 +18,7 @@ Varselet dekker ikke HTTP-feil fra identitetstilbyderen. Svarer tilbyderen med H
 ## Bekreft signalet
 
 1. Åpne Kontrollrommet og se panelene `Texas · feilede tokenkall per identitetstilbyder` og `Texas · nye forsøk mot identitetstilbyder` på Oversikt.
-2. Bekreft hvilke apper og podder som teller, i Metrics Explore:
+2. Bekreft hvilke apper som teller, og hvilke podder som har feil, i Metrics Explore:
 
    ```promql
    sum by (identity_provider, downstream_app_name, nais_pod_name) (
@@ -26,7 +26,7 @@ Varselet dekker ikke HTTP-feil fra identitetstilbyderen. Svarer tilbyderen med H
    )
    ```
 
-   Spørringen viser bare økning innenfor vinduet. En pod som fikk sin første feil nylig, kan derfor mangle her selv om varselet teller den.
+   Spørringen viser bare økning innenfor vinduet. En pod som fikk sin første feil nylig, kan derfor mangle her selv om varselet teller appen.
 
 3. Se feiltype og retries i Loki. Ikke kopier rå logglinjer til Slack eller GitHub:
 
@@ -36,7 +36,7 @@ Varselet dekker ikke HTTP-feil fra identitetstilbyderen. Svarer tilbyderen med H
 
 4. Skill:
    - Mange apper samtidig: sannsynlig feil hos identitetstilbyderen, i nettverket eller i Nais-plattformen.
-   - Én app med flere podder: sjekk appens egen konfigurasjon, nylig deploy og `accessPolicy`.
+   - Feil i bare én app, som vises i panelet uten å utløse varselet: sjekk appens egen konfigurasjon, nylig deploy og `accessPolicy`.
    - Retries uten `UpstreamFailure`: sjekk også `error_kind="UpstreamOAuthError"` for samme tilbyder. Øker den samtidig, svarer tilbyderen med HTTP-feil også etter siste forsøk. Øker den ikke, tok Texas seg inn igjen, og ingen tiltak er nødvendig.
 
 ## Avklar konsekvens
@@ -61,10 +61,10 @@ Varselet dekker ikke HTTP-feil fra identitetstilbyderen. Svarer tilbyderen med H
 
 Regelen er bygget på Texas' kildekode og ikke på observerte produksjonsdata. Før regelen føres i [alert-registeret](../alert-register) må en person bekrefte i Metrics Explore at:
 
-- `texas_handler_errors_total` finnes for team-esyfo i prod, med labelene `app="texas"`, `downstream_app_namespace="team-esyfo"`, `downstream_app_name`, `nais_pod_name`, `k8s_cluster_name`, `identity_provider` og `error_kind`.
+- `texas_handler_errors_total` finnes for team-esyfo i prod, med labelene `app="texas"`, `downstream_app_namespace="team-esyfo"`, `downstream_app_name`, `k8s_cluster_name`, `identity_provider` og `error_kind`.
 - PrometheusRule-ressursen `team-esyfo-texas-alerts` er lastet i prod-gcp.
 - Texas-loggene i Loki har `k8s_container_name="texas"` og samme `service_name` som appen, slik retry-panelet forutsetter.
 
-Mangler `nais_pod_name`, teller regelen apper i stedet for podder, og terskelen må vurderes på nytt. Mangler `app` eller `downstream_app_namespace`, eller har de andre verdier, går varselet aldri.
+Mangler `downstream_app_name`, teller regelen alle apper som én, og varselet går aldri. Mangler `app` eller `downstream_app_namespace`, eller har de andre verdier, går varselet aldri.
 
 Kjente grenser i regelen: Etter et innsamlingsavbrudd på over en time ser alle eksisterende feilserier nye ut i fem minutter, og varselet kan gå uten nye feil. Starter en container på nytt i samme pod og fortsetter en serie innen en time, kan første feil etter omstarten mangle. Får en eksisterende feilserie nye labeler, for eksempel etter en Texas-oppgradering, ser den også ny ut i fem minutter.
