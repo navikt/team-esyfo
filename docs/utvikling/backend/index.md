@@ -12,6 +12,8 @@ Se [repooversikten](/utvikling/repositories) for aktive backendrepoer og eierska
 
 🛠️ [Backend-verktøy](./verktoy) — IntelliJ, Bruno, k9s og andre nyttige hjelpemidler
 
+🔐 [Lesetilgang til et view i Cloud SQL](./cloudsql-iam-view) — Gi en IAM-servicekonto, for eksempel fra DVH, `SELECT` på ett view
+
 Arkitekturen er i stor grad basert på mikrotjenester, benytter DDD-prinsipper og vertikale lag (hver bounded context er en pakke/mappe som har services, DAOs etc. under seg).
 Kafka er det primære kommunikasjonsmønsteret mellom tjenester, men vi har også noen REST-API-er.
 Vi har besluttet å bruke inbox/outbox pattern for å bedre robustheten i tjenestene.

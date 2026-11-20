@@ -206,6 +206,10 @@ export default withMermaid(
 								{ text: "Linting", link: "/utvikling/backend/linting" },
 								{ text: "Verktøy", link: "/utvikling/backend/verktoy" },
 								{
+									text: "Cloud SQL: lesetilgang til view",
+									link: "/utvikling/backend/cloudsql-iam-view",
+								},
+								{
 									text: "API-testing (Bruno)",
 									link: "/utvikling/backend/verktoy#bruno",
 								},
