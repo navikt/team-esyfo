@@ -11,5 +11,8 @@
   (eller `pnpm --dir docs build` med avhengighetene installert). Bygget kjører
   også typesjekk, inventar-/dashboardkontroller og tester.
 - Notebook-bygg: `cd notebooks && ./gradlew build --no-daemon`.
+- `nais/alerts/` har teamfelles PrometheusRules som ikke hører til én app. De
+  deployes til prod-gcp av `deploy-alerts.yaml`. Test dem med
+  `nais/alerts/test.sh` (krever `yq` og Docker, eller `PROMTOOL`).
 - Wikien og notebook-utdata kan publiseres; bruk syntetiske eksempler uten
   persondata, interne payloads eller innloggingsopplysninger.

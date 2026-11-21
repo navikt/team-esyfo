@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { runtimeInventory } from "../runtime/inventory.ts";
 import { isCurrentLifecycle } from "../runtime/lifecycle.ts";
@@ -55,8 +55,11 @@ import {
 	serviceInvestigationDataLink,
 	sykmeldingConsumerCommittedLagQuery,
 	sykmeldingConsumerPollAgeByPodQuery,
+	TEXAS_ERRORS_METRIC,
 	telemetryAgeByServiceQuery,
 	telemetryStateByServiceQuery,
+	texasRetriesByServiceQuery,
+	texasUpstreamFailuresByServiceQuery,
 } from "./control-room.ts";
 import {
 	CONTROL_ROOM_BASELINE_AS_OF,
@@ -69,6 +72,7 @@ import {
 	MOTEBEHOV_RUNBOOK_URL,
 	PIPELINE_RUNBOOK_URL,
 	RUNTIME_RUNBOOK_URL,
+	TEXAS_RUNBOOK_URL,
 } from "./control-room-scope.ts";
 import {
 	grafanaVariable,
@@ -210,6 +214,8 @@ const fleetQueries = [
 	readyRatioByServiceQuery,
 	telemetryStateByServiceQuery,
 	lowestReadyRatioQuery,
+	texasUpstreamFailuresByServiceQuery,
+	texasRetriesByServiceQuery,
 ];
 
 test("bevarer identitet, produksjon og verifiserte datakilder", () => {
@@ -359,7 +365,15 @@ test("viser fire felles oversiktskort og tjenestetabellen som standard", () => {
 	);
 	assert.deepEqual(
 		overviewItems().map(({ spec }) => spec.element.name),
-		["panel-2", "panel-32", "panel-4", "panel-5", "panel-10"],
+		[
+			"panel-2",
+			"panel-32",
+			"panel-4",
+			"panel-5",
+			"panel-10",
+			"panel-38",
+			"panel-39",
+		],
 	);
 	assert.equal(overviewItems()[4].spec.y, 4);
 	for (const id of ["panel-2", "panel-32", "panel-4"]) {
@@ -990,6 +1004,7 @@ test("gir nyttige APM-, trace-, logg-, feil- og runbooklenker", () => {
 		[PIPELINE_RUNBOOK_URL, "pipelines-og-jobber.md"],
 		[MOTEBEHOV_RUNBOOK_URL, "syfomotebehov-tilgjengelighet.md"],
 		[DESERIALIZATION_RUNBOOK_URL, "oppfolgingsplan-deserialisering.md"],
+		[TEXAS_RUNBOOK_URL, "texas.md"],
 	]) {
 		assert.ok(urls.includes(url));
 		assert.ok(
@@ -1036,15 +1051,61 @@ test("holder browser utenfor produksjonskontrollrommet og persondata utenfor res
 		values(buildControlRoomDashboard(), "group").filter(
 			(group) => group === "loki",
 		).length,
-		3,
+		4,
 	);
 	assert.ok(serialized.includes('"autoRefresh": "2m"'));
 	assert.ok(serialized.includes('"from": "now-1h"'));
 });
 
+test("viser feil fra Texas per identitetstilbyder med samme utvalg som varselet og retries som støttesignal", () => {
+	const alertRule = readFileSync(
+		new URL("../../../nais/alerts/texas.yaml", import.meta.url),
+		"utf8",
+	);
+	for (const matcher of [
+		'app="texas"',
+		'k8s_cluster_name="prod"',
+		'downstream_app_namespace="team-esyfo"',
+		'error_kind="UpstreamFailure"',
+	]) {
+		assert.ok(texasUpstreamFailuresByServiceQuery.includes(matcher), matcher);
+		assert.ok(alertRule.includes(matcher), matcher);
+	}
+	assert.ok(!texasUpstreamFailuresByServiceQuery.includes("identity_provider="));
+	assert.ok(alertRule.includes("count by (identity_provider)"));
+	assert.ok(alertRule.includes(TEXAS_ERRORS_METRIC));
+	assert.ok(texasUpstreamFailuresByServiceQuery.includes(TEXAS_ERRORS_METRIC));
+	assert.match(
+		texasUpstreamFailuresByServiceQuery,
+		/"service_name", "\$1", "downstream_app_name"/,
+	);
+	assert.match(
+		texasUpstreamFailuresByServiceQuery,
+		/^sum by \(service_name, identity_provider\)/,
+	);
+	assert.match(texasRetriesByServiceQuery, /k8s_container_name="texas"/);
+	assert.match(texasRetriesByServiceQuery, /\|= "retrying upstream request"/);
+	assert.match(texasRetriesByServiceQuery, /\[\$__auto\]/);
+
+	const [failures, retries] = overviewItems().slice(5);
+	assert.equal(failures.spec.y, 4 + controlRoomApplications.length + 2);
+	assert.equal(retries.spec.y, failures.spec.y);
+	for (const id of ["panel-38", "panel-39"]) {
+		const panel = panels()[id];
+		assert.equal(panel.spec.vizConfig.group, "timeseries");
+		assert.ok((values(panel, "url") as string[]).includes(TEXAS_RUNBOOK_URL));
+	}
+	assert.match(panels()["panel-38"].spec.description, /HTTP 500/);
+	assert.match(panels()["panel-38"].spec.description, /HTTP-feil fra identitetstilbyderen/);
+	assert.match(
+		panels()["panel-39"].spec.description,
+		/neste forsøk kan ha lyktes/,
+	);
+});
+
 test("har unik, deterministisk fanelayout uten overlapp eller foreldreløse paneler", () => {
 	const panelMap = panels();
-	assert.equal(Object.keys(panelMap).length, 19);
+	assert.equal(Object.keys(panelMap).length, 21);
 	const ids = Object.values(panelMap).map(({ spec }) => spec.id);
 	assert.equal(new Set(ids).size, ids.length);
 	const names: string[] = [];

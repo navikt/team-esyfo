@@ -7,6 +7,7 @@ Runbookene er inngangen fra Kontrollrom når et signal krever vurdering. De besk
 - [HTTP og runtime](./http-runtime): generisk RED-, Loki-, restart-, replika- og telemetrytriage.
 - [Browser](./browser): Faro-unntak, dekningsgap, sideidentitet og privacy.
 - [Pipelines og jobber](./pipelines-og-jobber): forventet kjøring, progresjon, ferskhet og terminale utfall.
+- [Texas og identitetstilbydere](./texas): endelige feil mot TokenX, Entra ID, Maskinporten og andre, og retries fra Texas-sidecaren på tvers av apper.
 
 ## Pagerkandidater
 
