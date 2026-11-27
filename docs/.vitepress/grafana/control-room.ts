@@ -11,6 +11,7 @@ import {
 	MOTEBEHOV_RUNBOOK_URL,
 	PIPELINE_RUNBOOK_URL,
 	RUNTIME_RUNBOOK_URL,
+	TEXAS_RUNBOOK_URL,
 } from "./control-room-scope.ts";
 import {
 	dataLink,
@@ -59,6 +60,7 @@ export const KAFKA_CONSUMER_GROUP_TOPIC_LAG_METRIC =
 	"kafka_consumergroup_group_topic_sum_lag";
 export const DESERIALIZATION_ERROR_METRIC =
 	"syfo_oppfolgingsplan_backend_sykmelding_deserialization_error_total";
+export const TEXAS_ERRORS_METRIC = "texas_handler_errors_total";
 
 const expectedApplicationVector = (
 	applications: typeof controlRoomApplications,
@@ -148,6 +150,15 @@ export const runtimeErrorsByServiceQuery = `sum by (service_name) (count_over_ti
 ${runtimeErrorPipeline}
 [$__range]))`;
 export const fleetRuntimeErrorCountQuery = `sum(${runtimeErrorsByServiceQuery})`;
+
+// Samme utvalg som TexasUpstreamFailuresAcrossApps i nais/alerts/texas.yaml.
+const texasUpstreamFailureSelector = `${TEXAS_ERRORS_METRIC}{app="texas", k8s_cluster_name="prod", downstream_app_namespace="team-esyfo", error_kind="UpstreamFailure"}`;
+export const texasUpstreamFailuresByServiceQuery = `sum by (service_name, identity_provider) (label_replace(increase(${texasUpstreamFailureSelector}[$__rate_interval]), "service_name", "$1", "downstream_app_name", "(.*)"))`;
+// Texas logger retries uten URL ved HTTP-feil fra upstream, så panelet kan ikke avgrenses per identitetstilbyder.
+export const texasRetriesByServiceQuery = `sum by (service_name) (count_over_time(${fleetRuntimeSelector}
+|= "retrying upstream request"
+| k8s_container_name="texas"
+[$__auto]))`;
 
 const fleetRestartsByContainer = `sum by (container) (max by (pod, container) (increase(${RESTARTS_METRIC}{${fleetKubeContainerSelector}}[$__range])))`;
 export const restartsByServiceQuery = `sum by (service_name) (label_replace(${fleetRestartsByContainer}, "service_name", "$1", "container", "(.*)"))`;
@@ -309,6 +320,7 @@ const lokiQuery = (
 	refId: string,
 	expr: string,
 	queryType: "instant" | "range" = "instant",
+	legendFormat?: string,
 ): PanelQuery => ({
 	kind: "PanelQuery",
 	spec: {
@@ -321,6 +333,7 @@ const lokiQuery = (
 				direction: "backward",
 				editorMode: "code",
 				expr,
+				...(legendFormat ? { legendFormat } : {}),
 				queryType,
 			},
 			version: "v0",
@@ -1104,6 +1117,36 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => withSou
 				decimals: 0,
 			}),
 			"panel-10": fleetTablePanel(),
+			"panel-38": timeSeriesPanel({
+				id: 38,
+				title: "Texas · feilede tokenkall per identitetstilbyder",
+				description:
+					"Tokenkall fra Texas som feilet med nettverksfeil eller timeout etter alle forsøk, eller med uleselig svar, per app og identitetstilbyder (TokenX, Entra ID, Maskinporten og andre) og måleintervall. Appen fikk HTTP 500 fra Texas. HTTP-feil fra identitetstilbyderen telles som UpstreamOAuthError og er ikke med. Samme utvalg som varselet TexasUpstreamFailuresAcrossApps. Den første feilen i en pod kan mangle i grafen fordi increase() ikke ser første måling i en ny serie; varselet teller den. Varselet går først når minst tre apper har feil mot samme identitetstilbyder. Ingen data betyr ingen registrerte feil eller manglende måling.",
+				query: prometheusQuery(
+					"Feilede tokenkall",
+					texasUpstreamFailuresByServiceQuery,
+					"range",
+					"{{service_name}} · {{identity_provider}}",
+				),
+				unit: "short",
+				thresholds: neutralThresholds,
+				links: [dataLink("Runbook", TEXAS_RUNBOOK_URL)],
+			}),
+			"panel-39": timeSeriesPanel({
+				id: 39,
+				title: "Texas · nye forsøk mot identitetstilbyder",
+				description:
+					"Logglinjer «retrying upstream request» fra Texas-sidecaren per app og måleintervall. Gjelder alle identitetstilbydere, fordi Texas ikke logger URL ved HTTP-feil fra upstream. Et nytt forsøk er ikke en feil for appen; neste forsøk kan ha lyktes. Bruk panelet som tidlig tegn og for å avgrense berørte apper.",
+				query: lokiQuery(
+					"Nye forsøk",
+					texasRetriesByServiceQuery,
+					"range",
+					"{{service_name}}",
+				),
+				unit: "short",
+				thresholds: neutralThresholds,
+				links: [dataLink("Runbook", TEXAS_RUNBOOK_URL)],
+			}),
 			"panel-12": timeSeriesPanel({
 				id: 12,
 				title: "Kall per sekund",
@@ -1376,6 +1419,20 @@ export const buildControlRoomDashboard = (): GrafanaDashboardResource => withSou
 											4,
 											24,
 											controlRoomApplications.length + 2,
+										),
+										layoutItem(
+											"panel-38",
+											0,
+											controlRoomApplications.length + 6,
+											12,
+											7,
+										),
+										layoutItem(
+											"panel-39",
+											12,
+											controlRoomApplications.length + 6,
+											12,
+											7,
 										),
 									],
 								},

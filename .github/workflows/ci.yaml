@@ -29,9 +29,15 @@ jobs:
       contents: read
     uses: ./.github/workflows/build-notebooks.yaml
 
+  test-alerts:
+    name: Test alerts
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test-alerts.yaml
+
   merge-gate:
     name: Merge gate
-    needs: [build, build-notebooks]
+    needs: [build, build-notebooks, test-alerts]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -44,6 +50,7 @@ jobs:
           results=(
             "build=${{ needs.build.result }}"
             "build-notebooks=${{ needs.build-notebooks.result }}"
+            "test-alerts=${{ needs.test-alerts.result }}"
           )
           for result in "${results[@]}"; do
             name="${result%%=*}"

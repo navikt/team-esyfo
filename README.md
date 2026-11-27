@@ -17,3 +17,5 @@ Dokumentasjon, verktøy og notebooks for Team eSyfo — ekstern sykefraværsoppf
 [Kotlin Notebooks](notebooks/README.md)
 
 [Bruno kolleksjon for lokal testing](tools/bruno/README.md)
+
+[Teamfelles alert-regler](nais/alerts/) — PrometheusRules på tvers av apper, testet med `nais/alerts/test.sh`

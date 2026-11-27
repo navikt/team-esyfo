@@ -1,0 +1,61 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: team-esyfo-texas-alerts
+  namespace: team-esyfo
+  labels:
+    team: team-esyfo
+spec:
+  groups:
+    - name: team-esyfo-texas-alerts
+      rules:
+        # Texas teller en UpstreamFailure når et kall mot en identitetstilbyder feiler med
+        # nettverksfeil eller timeout etter alle retries, eller gir et uleselig svar. Appen får
+        # HTTP 500. HTTP 5xx/408/429 fra identitetstilbyderen telles som UpstreamOAuthError og
+        # er ikke med. Varselet teller apper med slike feil siste 5 minutter, per identitetstilbyder.
+        # Texas lager tellerserien ved første feil. increase() ser ikke det første
+        # samplet, så en serie som er ny siste 5 minutter teller også som en feilende app.
+        - alert: TexasUpstreamFailuresAcrossApps
+          expr: |
+            count by (identity_provider) (
+              sum by (identity_provider, downstream_app_name) (
+                increase(
+                  texas_handler_errors_total{
+                    app="texas",
+                    k8s_cluster_name="prod",
+                    downstream_app_namespace="team-esyfo",
+                    error_kind="UpstreamFailure"
+                  }[5m]
+                ) > 0
+                or
+                (
+                  texas_handler_errors_total{
+                    app="texas",
+                    k8s_cluster_name="prod",
+                    downstream_app_namespace="team-esyfo",
+                    error_kind="UpstreamFailure"
+                  } > 0
+                  unless ignoring(__name__)
+                  last_over_time(
+                    texas_handler_errors_total{
+                      app="texas",
+                      k8s_cluster_name="prod",
+                      downstream_app_namespace="team-esyfo",
+                      error_kind="UpstreamFailure"
+                    }[1h] offset 5m
+                  )
+                )
+              )
+            ) >= 3
+          for: 2m
+          annotations:
+            summary: "Kall fra Texas til {{ $labels.identity_provider }} har feilet i {{ $value }} apper i team-esyfo de siste 5 minuttene"
+            consequence: "Apper får HTTP 500 fra Texas når tokenkall mot {{ $labels.identity_provider }} feiler med nettverksfeil, timeout eller uleselig svar. Kall til andre tjenester kan feile for brukerne."
+            action: "Følg runbooken: sjekk Nais-status, avgrens berørte apper i Kontrollrom og vurder brukerimpact. Identitetstilbyderne driftes utenfor teamet, så eskaler til Nais hvis feilen ikke allerede er kjent."
+            runbook_url: "https://navikt.github.io/team-esyfo/utvikling/observability/runbooks/texas"
+            dashboard_url: "https://grafana.nav.cloud.nais.io/d/team-esyfo-kontrollrom/team-esyfo-kontrollrom?orgId=1&from=now-1h&to=now&timezone=browser&refresh=2m"
+          labels:
+            namespace: team-esyfo
+            severity: warning
+            response: ticket
+            alert_type: custom

@@ -51,6 +51,8 @@ Prometheus-reglene rutes i dag via NAIS-teaminnstillingen til `#esyfo-alarm`. Gr
 
 Registeret forskutterer ikke umergede eller uverifiserte regler. [Oppfølgingsplan #454](https://github.com/navikt/syfo-oppfolgingsplan-backend/pull/454) legger ferskhetsfilter på de tre køtilstandsreglene og foreslår en fjerde regel for gammelt eller manglende snapshot. [syfomotebehov #756](https://github.com/navikt/syfomotebehov/pull/756) ble merget 4. september 2026. Den erstatter legacy availability/ingress-regler i kildekoden med urutede kandidater i observasjonsmodus (`shadow`) og retter workflowens path-filter. Merge er ikke bevis på live-reglene. Runbookene beskriver hvordan kandidatene skal verifiseres, men tabellen og v2-eksporten beholder siste live-attesterte definisjon til deploy og faktiske regler er avstemt i NAIS. Da skal kilde-SHA, uttrykk, fingerprint, timing, instanser, faktisk varslingsrute og observasjon oppdateres i én samlet registerendring. Registermodellen må samtidig kunne representere en eksplisitt urutet PrometheusRule; dagens standardfabrikk legger ellers feilaktig NAIS-ruten `#esyfo-alarm` på alle slike regler.
 
+Den teamfelles regelen `TexasUpstreamFailuresAcrossApps` i [`nais/alerts/texas.yaml`](https://github.com/navikt/team-esyfo/blob/main/nais/alerts/texas.yaml) er en aktiv ticket-regel til `#esyfo-alarm`, ikke en shadow-kandidat. Den føres inn i tabellen først når workflowen har deployert den til prod-gcp og [runbookens live-verifisering](./runbooks/texas#live-verifisering) er gjort.
+
 ## Oppdatering og kontroll
 
 Kjør fra `docs/`:
